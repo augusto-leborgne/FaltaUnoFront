@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/alert-dialog"
 import { CompressedMap } from "./compressed-map"
 import { apiService } from "@/lib/api"
+import { AddressAutocomplete } from "./address-autocomplete"
+import type { google } from "google-maps"
 
 export function CreateMatch() {
   const router = useRouter()
@@ -36,6 +38,11 @@ export function CreateMatch() {
   const [showDialog, setShowDialog] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+
+  const [locationCoordinates, setLocationCoordinates] = useState<{
+    lat: number
+    lng: number
+  } | null>(null)
 
   const handleBack = () => {
     router.back()
@@ -59,8 +66,8 @@ export function CreateMatch() {
         location: {
           name: formData.location,
           address: formData.location,
-          latitude: -34.6037, // Default coordinates - should be obtained from geocoding
-          longitude: -58.3816,
+          latitude: locationCoordinates?.lat || -34.6037,
+          longitude: locationCoordinates?.lng || -58.3816,
         },
         captain: {
           id: "current-user-id", // Should come from auth context
@@ -84,6 +91,40 @@ export function CreateMatch() {
 
   const handleInputChange = (field: string, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleLocationChange = (address: string, placeDetails?: google.maps.places.PlaceResult) => {
+    console.log("[v0] Location change - Address:", address)
+    console.log("[v0] Location change - Place details:", placeDetails)
+
+    setFormData((prev) => ({ ...prev, location: address }))
+
+    if (placeDetails?.geometry?.location) {
+      let coordinates: { lat: number; lng: number }
+
+      if (typeof placeDetails.geometry.location.lat === "function") {
+        coordinates = {
+          lat: placeDetails.geometry.location.lat(),
+          lng: placeDetails.geometry.location.lng(),
+        }
+      } else {
+        coordinates = {
+          lat: placeDetails.geometry.location.lat,
+          lng: placeDetails.geometry.location.lng,
+        }
+      }
+
+      console.log("[v0] Setting coordinates from place details:", coordinates)
+      setLocationCoordinates(coordinates)
+    } else {
+      console.log("[v0] No place details or geometry available")
+      if (!locationCoordinates) {
+        console.log("[v0] No previous coordinates, setting to null")
+        setLocationCoordinates(null)
+      } else {
+        console.log("[v0] Keeping previous coordinates:", locationCoordinates)
+      }
+    }
   }
 
   const pricePerPlayer = formData.totalPrice / formData.totalPlayers
@@ -185,11 +226,10 @@ export function CreateMatch() {
           <label className="block text-sm font-medium text-gray-900 mb-2">Ubicación</label>
           <div className="relative">
             <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              type="text"
-              placeholder="Ej: Polideportivo Norte"
+            <AddressAutocomplete
               value={formData.location}
-              onChange={(e) => handleInputChange("location", e.target.value)}
+              onChange={handleLocationChange}
+              placeholder="Ej: Polideportivo Norte, Montevideo"
               className="pl-10 py-3 rounded-xl border-gray-300"
               required
               disabled={isLoading}
@@ -197,7 +237,11 @@ export function CreateMatch() {
           </div>
           {formData.location && (
             <div className="mt-3">
-              <CompressedMap location={formData.location} />
+              <CompressedMap
+                location={formData.location}
+                lat={locationCoordinates?.lat}
+                lng={locationCoordinates?.lng}
+              />
             </div>
           )}
         </div>

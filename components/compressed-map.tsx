@@ -14,9 +14,15 @@ interface CompressedMapProps {
 export function CompressedMap({ location, lat = -34.9011, lng = -56.1645, className = "" }: CompressedMapProps) {
   const [showFullMap, setShowFullMap] = useState(false)
 
+  const hasSpecificLocation = lat !== -34.9011 || lng !== -56.1645
+
   const handleMapClick = () => {
     setShowFullMap(true)
   }
+
+  console.log("[v0] CompressedMap - Location:", location)
+  console.log("[v0] CompressedMap - Coordinates:", { lat, lng })
+  console.log("[v0] CompressedMap - Has specific location:", hasSpecificLocation)
 
   return (
     <>
@@ -47,7 +53,7 @@ export function CompressedMap({ location, lat = -34.9011, lng = -56.1645, classN
 
         {/* Location marker */}
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-          <div className="bg-green-600 rounded-full p-2 shadow-lg">
+          <div className={`rounded-full p-2 shadow-lg ${hasSpecificLocation ? "bg-green-600" : "bg-orange-500"}`}>
             <MapPin className="w-4 h-4 text-white" />
           </div>
         </div>
@@ -61,6 +67,7 @@ export function CompressedMap({ location, lat = -34.9011, lng = -56.1645, classN
         <div className="absolute bottom-2 left-2 right-2">
           <div className="bg-white/90 backdrop-blur-sm rounded-lg px-2 py-1">
             <p className="text-xs font-medium text-gray-800 truncate">{location}</p>
+            {!hasSpecificLocation && <p className="text-xs text-orange-600 font-medium">Ubicación aproximada</p>}
           </div>
         </div>
       </div>

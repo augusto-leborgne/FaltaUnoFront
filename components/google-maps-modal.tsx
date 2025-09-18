@@ -21,7 +21,7 @@ export function GoogleMapsModal({ isOpen, onClose, location, lat, lng }: GoogleM
     const loadGoogleMaps = () => {
       if (typeof window !== "undefined" && !window.google) {
         const script = document.createElement("script")
-        script.src = `https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places`
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`
         script.async = true
         script.defer = true
         script.onload = initializeMap
@@ -106,10 +106,4 @@ export function GoogleMapsModal({ isOpen, onClose, location, lat, lng }: GoogleM
       </div>
     </div>
   )
-}
-
-declare global {
-  interface Window {
-    google: any
-  }
 }

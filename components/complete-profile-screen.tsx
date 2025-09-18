@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
 import { User, MapPin, Camera } from "lucide-react"
+import { AddressAutocomplete } from "./address-autocomplete"
+import type { google } from "google-maps"
 
 export function CompleteProfileScreen() {
   const router = useRouter()
@@ -22,6 +24,20 @@ export function CompleteProfileScreen() {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleAddressChange = (address: string, placeDetails?: google.maps.places.PlaceResult) => {
+    setFormData((prev) => ({ ...prev, address }))
+
+    // Extract city from place details if available
+    if (placeDetails?.address_components) {
+      const cityComponent = placeDetails.address_components.find(
+        (component) => component.types.includes("locality") || component.types.includes("administrative_area_level_1"),
+      )
+      if (cityComponent && !formData.city) {
+        setFormData((prev) => ({ ...prev, city: cityComponent.long_name }))
+      }
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -93,11 +109,10 @@ export function CompleteProfileScreen() {
               Ubicación
             </h3>
 
-            <Input
-              type="text"
-              placeholder="Dirección"
+            <AddressAutocomplete
               value={formData.address}
-              onChange={(e) => handleInputChange("address", e.target.value)}
+              onChange={handleAddressChange}
+              placeholder="Dirección"
               className="py-3 rounded-xl"
               required
             />
