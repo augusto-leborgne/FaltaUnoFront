@@ -1,0 +1,134 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: #ffffff;
+  --foreground: #4b5563;
+  --card: #f9f9f9;
+  --card-foreground: #4b5563;
+  --popover: #ffffff;
+  --popover-foreground: #4b5563;
+  --primary: #4caf50; /* Main brand color */
+  --primary-foreground: #ffffff; /* Text on primary buttons */
+  --secondary: #f57c00; /* Changed from yellow to orange for better contrast */
+  --secondary-foreground: #ffffff; /* White text on secondary buttons */
+  --muted: #f9f9f9; /* Background for cards */
+  --muted-foreground: #4b5563; /* Text on muted backgrounds */
+  --accent: #f57c00; /* Changed from yellow to orange for better contrast */
+  --accent-foreground: #ffffff; /* White text on accent elements */
+  --destructive: #d9534f; /* Color for any destructive actions */
+  --destructive-foreground: #ffffff; /* Text on destructive buttons */
+  --border: #e0e0e0; /* Light border color */
+  --input: #f9f9f9; /* Input field background */
+  --ring: rgba(76, 175, 80, 0.5); /* Ring color for focused elements */
+  --chart-1: #4caf50; /* Charts color */
+  --chart-2: #f57c00; /* Additional chart color */
+  --chart-3: #d9534f; /* Error chart color */
+  --chart-4: #f59e0b; /* Warning chart color */
+  --chart-5: #a16207; /* Info chart color */
+  --radius: 0.5rem; /* Rounded corners */
+  --sidebar: #ffffff; /* Sidebar background */
+  --sidebar-foreground: #4b5563; /* Sidebar text color */
+  --sidebar-primary: #4caf50; /* Sidebar primary color */
+  --sidebar-primary-foreground: #ffffff; /* Text on sidebar primary */
+  --sidebar-accent: #f57c00; /* Sidebar accent color */
+  --sidebar-accent-foreground: #ffffff; /* Text on sidebar accent */
+  --sidebar-border: #e0e0e0; /* Sidebar border color */
+  --sidebar-ring: rgba(76, 175, 80, 0.5); /* Sidebar ring color */
+}
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Added mobile-specific optimizations and safe area support */
+@supports (padding: max(0px)) {
+  .pb-safe-area-inset-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* Enhanced touch targets for mobile */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent zoom on input focus for iOS */
+@media screen and (max-width: 768px) {
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="password"],
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
+/* Smooth scrolling for mobile */
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Better button active states for mobile */
+button:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}
+
+/* Ensure proper viewport handling */
+body {
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
