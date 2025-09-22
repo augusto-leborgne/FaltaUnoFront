@@ -20,23 +20,7 @@ A Next.js application for organizing and joining football matches, designed to w
 - **Maps**: Google Maps Embed API with interactive pins
 - **State Management**: React hooks with API integration
 - **Authentication**: Google OAuth
-
-## Environment Variables
-
-Create a `.env.local` file with:
-
-\`\`\`env
-# Google Maps API Key
-GOOGLE_MAPS_API_KEY=AIzaSyC80XhhlgglzWXoYIb5yURHjWkOL7ze1Z8
-NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=AIzaSyC80XhhlgglzWXoYIb5yURHjWkOL7ze1Z8
-
-# Spring Boot Backend URL
-NEXT_PUBLIC_API_URL=http://localhost:8080/api
-
-# Google OAuth Configuration (get these from Google Cloud Console)
-GOOGLE_CLIENT_ID=your_google_client_id_here
-GOOGLE_CLIENT_SECRET=your_google_client_secret_here
-\`\`\`
+  
 
 ## Google Maps Setup
 
