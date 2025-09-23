@@ -76,7 +76,8 @@ export function CreateMatch() {
         },
       }
 
-      const response = await apiService.createMatch(matchData)
+      const response = await apiService.createMatch(matchData);
+      console.log('createMatch response', response);
 
       if (response.success) {
         setShowDialog(true)
