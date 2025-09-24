@@ -1,173 +1,128 @@
+// app/screens/NotificationsScreen.tsx  (o donde tengas el componente)
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowLeft, Check, X, Users, Calendar, MessageCircle, Star } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
+import { UsuarioAPI, InscripcionAPI } from "@/lib/api"
 
-type NotificationsScreenProps = {}
+type Notification = {
+  id: string
+  type: "match_invitation" | "friend_request" | "review_request" | "new_message" | "match_update"
+  title: string
+  message: string
+  time: string
+  read: boolean
+  avatar?: string
+  matchId?: string
+  userId?: string
+  matchTitle?: string
+}
 
-// Mock notifications data
-const mockNotifications = [
-  {
-    id: 1,
-    type: "match_invitation",
-    title: "Invitación a partido",
-    message: "Carlos te invitó a jugar el partido 'Fútbol en Parque Central'",
-    time: "Hace 5 min",
-    read: false,
-    avatar: "/placeholder.svg?height=40&width=40",
-    matchId: "match-1",
-    inviterId: "carlos-123",
-  },
-  {
-    id: 2,
-    type: "friend_request",
-    title: "Solicitud de amistad",
-    message: "María quiere ser tu amiga",
-    time: "Hace 15 min",
-    read: false,
-    avatar: "/placeholder.svg?height=40&width=40",
-    userId: "maria-456",
-  },
-  {
-    id: 3,
-    type: "match_update",
-    title: "Actualización de partido",
-    message: "El partido 'Fútbol 5 Pocitos' cambió de horario a las 19:00",
-    time: "Hace 1 hora",
-    read: true,
-    avatar: "/placeholder.svg?height=40&width=40",
-    matchId: "match-2",
-  },
-  {
-    id: 4,
-    type: "new_message",
-    title: "Nuevo mensaje",
-    message: "Tienes un nuevo mensaje en el chat del partido",
-    time: "Hace 2 horas",
-    read: true,
-    avatar: "/placeholder.svg?height=40&width=40",
-    matchId: "match-1",
-  },
-  {
-    id: 5,
-    type: "review_request",
-    title: "Reseña pendiente",
-    message: "Califica a los jugadores del partido 'Fútbol 5 Pocitos' que terminó ayer",
-    time: "Hace 1 día",
-    read: false,
-    avatar: "/placeholder.svg?height=40&width=40",
-    matchId: "match-3",
-    matchTitle: "Fútbol 5 Pocitos",
-  },
-  {
-    id: 6,
-    type: "review_request",
-    title: "Reseña pendiente",
-    message: "No olvides calificar a los jugadores del partido 'Fútbol en Parque Central'",
-    time: "Hace 2 días",
-    read: false,
-    avatar: "/placeholder.svg?height=40&width=40",
-    matchId: "match-1",
-    matchTitle: "Fútbol en Parque Central",
-  },
-]
-
-export function NotificationsScreen({}: NotificationsScreenProps) {
+export function NotificationsScreen() {
   const router = useRouter()
   const { toast } = useToast()
-  const [notifications, setNotifications] = useState(mockNotifications)
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const currentUserId = "current-user-id" // reemplazá por el id real desde auth / contexto
 
-  const handleBack = () => {
-    router.back()
-  }
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        setIsLoading(true)
 
-  const handleAcceptInvitation = (notificationId: number, matchId: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== notificationId))
-    toast({
-      title: "¡Invitación aceptada!",
-      description: "Te has unido al partido exitosamente",
-    })
-    // Navigate to match details
-    router.push(`/matches/${matchId}`)
-  }
+        // 1) reseñas pendientes
+        const pendingRes = await UsuarioAPI.getPendingReviews(currentUserId)
+        const reviewNotifications = (pendingRes.data || []).map((r: any) => ({
+          id: `review-${r.partido_id}`,
+          type: "review_request" as const,
+          title: "Reseña pendiente",
+          message: `Califica a los jugadores del partido '${r.nombre_ubicacion}'`,
+          time: r.fecha,
+          read: false,
+          matchId: r.partido_id,
+          matchTitle: r.nombre_ubicacion,
+        }))
 
-  const handleRejectInvitation = (notificationId: number) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== notificationId))
-    toast({
-      title: "Invitación rechazada",
-      description: "Has rechazado la invitación al partido",
-    })
-  }
+        // 2) invitaciones a partidos
+        const invitesRes = await UsuarioAPI.getMatchInvitations(currentUserId)
+        const inviteNotifications = (invitesRes.data || []).map((i: any) => ({
+          id: `invite-${i.id}`,
+          type: "match_invitation" as const,
+          title: i.title || "Invitación a partido",
+          message: i.message || `Te han invitado al partido ${i.matchId}`,
+          time: i.time || i.createdAt,
+          read: false,
+          matchId: i.matchId,
+        }))
 
-  const handleAcceptFriend = (notificationId: number, userId: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== notificationId))
-    toast({
-      title: "¡Nueva amistad!",
-      description: "Ahora son amigos",
-    })
-  }
+        // 3) solicitudes de amistad
+        const friendsRes = await UsuarioAPI.getFriendRequests(currentUserId)
+        const friendNotifications = (friendsRes.data || []).map((f: any) => ({
+          id: `friend-${f.id}`,
+          type: "friend_request" as const,
+          title: "Solicitud de amistad",
+          message: `Usuario ${f.requesterId} quiere ser tu amigo`,
+          time: f.createdAt,
+          read: false,
+          userId: f.requesterId,
+        }))
 
-  const handleRejectFriend = (notificationId: number) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== notificationId))
-    toast({
-      title: "Solicitud rechazada",
-      description: "Has rechazado la solicitud de amistad",
-    })
-  }
+        // 4) mensajes no leídos
+        const messagesRes = await UsuarioAPI.getUnreadMessages(currentUserId)
+        const messageNotifications = (messagesRes.data || []).map((m: any) => ({
+          id: `message-${m.id}`,
+          type: "new_message" as const,
+          title: "Nuevo mensaje",
+          message: m.message || m.contenido,
+          time: m.createdAt,
+          read: false,
+          userId: m.senderId || m.remitenteId,
+        }))
 
-  const handleReviewRequest = (notificationId: number, matchId: string) => {
-    setNotifications((prev) => prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n)))
-    router.push(`/matches/${matchId}/review`)
-  }
+        // 5) match updates (opcional)
+        const updatesRes = await UsuarioAPI.getMatchUpdates(currentUserId)
+        const updateNotifications = (updatesRes.data || []).map((u: any) => ({
+          id: `update-${u.partidoId || u.id}`,
+          type: "match_update" as const,
+          title: "Actualización de partido",
+          message: u.message || "Cambio en los datos del partido",
+          time: u.createdAt || u.updatedAt || "",
+          read: false,
+          matchId: u.partidoId,
+        }))
 
-  const handleNotificationClick = (notification: any) => {
-    // Mark as read
-    setNotifications((prev) => prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n)))
-
-    // Navigate based on type
-    switch (notification.type) {
-      case "match_update":
-      case "new_message":
-        router.push(`/matches/${notification.matchId}`)
-        break
-      case "friend_request":
-        router.push(`/users/${notification.userId}`)
-        break
-      case "review_request":
-        router.push(`/matches/${notification.matchId}/review`)
-        break
+        setNotifications([
+          ...reviewNotifications,
+          ...inviteNotifications,
+          ...friendNotifications,
+          ...messageNotifications,
+          ...updateNotifications,
+        ])
+      } catch (err) {
+        console.error(err)
+        toast({ title: "Error", description: "No se pudieron cargar las notificaciones" })
+      } finally {
+        setIsLoading(false)
+      }
     }
-  }
 
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case "match_invitation":
-      case "match_update":
-        return <Calendar className="w-5 h-5 text-primary" />
-      case "friend_request":
-        return <Users className="w-5 h-5 text-blue-600" />
-      case "new_message":
-        return <MessageCircle className="w-5 h-5 text-green-600" />
-      case "review_request":
-        return <Star className="w-5 h-5 text-orange-600" />
-      default:
-        return <Calendar className="w-5 h-5 text-gray-500" />
-    }
-  }
+    fetchNotifications()
+  }, [toast])
 
   const unreadCount = notifications.filter((n) => !n.read).length
 
+  // --- A partir de aquí puedes reutilizar exactamente tu JSX original para renderizar la lista ---
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="pt-16 pb-4 px-6 bg-white border-b border-gray-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <button onClick={handleBack} className="p-2 -ml-2">
+            <button onClick={() => router.back()} className="p-2 -ml-2">
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
             <div>
@@ -178,9 +133,11 @@ export function NotificationsScreen({}: NotificationsScreenProps) {
         </div>
       </div>
 
-      {/* Notifications List */}
+      {/* Notifications List: mantén tu JSX tal cual, usando "notifications" */}
       <div className="px-6 py-4 space-y-3">
-        {notifications.length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-12 text-gray-500">Cargando...</div>
+        ) : notifications.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Calendar className="w-8 h-8 text-gray-400" />
@@ -196,20 +153,42 @@ export function NotificationsScreen({}: NotificationsScreenProps) {
                 !notification.read ? "border-primary/20 bg-primary/5" : "border-gray-100"
               }`}
             >
+              {/* usa aquí exactamente el markup que ya tenías (avatar, icono, botones) */}
               <div className="flex items-start space-x-3">
                 <div className="relative">
                   <Avatar className="w-12 h-12">
                     <AvatarImage src={notification.avatar || "/placeholder.svg"} />
-                    <AvatarFallback className="bg-gray-200">{notification.title.charAt(0)}</AvatarFallback>
+                    <AvatarFallback className="bg-gray-200">
+                      {notification.title?.charAt(0) ?? "U"}
+                    </AvatarFallback>
                   </Avatar>
                   <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-1">
-                    {getNotificationIcon(notification.type)}
+                    {/* icon mapping */}
+                    {notification.type === "match_invitation" || notification.type === "match_update" ? (
+                      <Calendar className="w-5 h-5 text-primary" />
+                    ) : notification.type === "friend_request" ? (
+                      <Users className="w-5 h-5 text-blue-600" />
+                    ) : notification.type === "new_message" ? (
+                      <MessageCircle className="w-5 h-5 text-green-600" />
+                    ) : (
+                      <Star className="w-5 h-5 text-orange-600" />
+                    )}
                   </div>
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between">
-                    <div className="flex-1 cursor-pointer" onClick={() => handleNotificationClick(notification)}>
+                    <div className="flex-1 cursor-pointer" onClick={() => {
+                      // marcar como leido y navegar
+                      setNotifications(prev => prev.map(n => n.id === notification.id ? { ...n, read: true } : n))
+                      if (notification.type === "match_invitation" || notification.type === "match_update" || notification.type === "new_message") {
+                        router.push(`/matches/${notification.matchId}`)
+                      } else if (notification.type === "friend_request") {
+                        router.push(`/users/${notification.userId}`)
+                      } else if (notification.type === "review_request") {
+                        router.push(`/matches/${notification.matchId}/review`)
+                      }
+                    }}>
                       <h3 className="font-medium text-gray-900 mb-1">
                         {notification.title}
                         {!notification.read && (
@@ -221,51 +200,33 @@ export function NotificationsScreen({}: NotificationsScreenProps) {
                     </div>
                   </div>
 
-                  {/* Action buttons for invitations */}
+                  {/* Action buttons */}
                   {notification.type === "match_invitation" && (
                     <div className="flex space-x-2 mt-3">
-                      <Button
-                        size="sm"
-                        onClick={() => handleAcceptInvitation(notification.id, notification.matchId)}
-                        className="bg-primary hover:bg-primary/90 text-white"
-                      >
-                        <Check className="w-4 h-4 mr-1" />
-                        Aceptar
+                      <Button size="sm" onClick={() => { /* aceptar: llamar InscripcionAPI.join o endpoint que corresponda */ }} className="bg-primary hover:bg-primary/90 text-white">
+                        <Check className="w-4 h-4 mr-1" /> Aceptar
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleRejectInvitation(notification.id)}>
-                        <X className="w-4 h-4 mr-1" />
-                        Rechazar
+                      <Button size="sm" variant="outline" onClick={() => { /* rechazar */ }}>
+                        <X className="w-4 h-4 mr-1" /> Rechazar
                       </Button>
                     </div>
                   )}
 
                   {notification.type === "friend_request" && (
                     <div className="flex space-x-2 mt-3">
-                      <Button
-                        size="sm"
-                        onClick={() => handleAcceptFriend(notification.id, notification.userId)}
-                        className="bg-blue-600 hover:bg-blue-700 text-white"
-                      >
-                        <Check className="w-4 h-4 mr-1" />
-                        Aceptar
+                      <Button size="sm" onClick={() => { /* aceptar amistad */ }} className="bg-blue-600 hover:bg-blue-700 text-white">
+                        <Check className="w-4 h-4 mr-1" /> Aceptar
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleRejectFriend(notification.id)}>
-                        <X className="w-4 h-4 mr-1" />
-                        Rechazar
+                      <Button size="sm" variant="outline" onClick={() => { /* rechazar amistad */ }}>
+                        <X className="w-4 h-4 mr-1" /> Rechazar
                       </Button>
                     </div>
                   )}
 
-                  {/* Action button for review requests */}
                   {notification.type === "review_request" && (
                     <div className="flex space-x-2 mt-3">
-                      <Button
-                        size="sm"
-                        onClick={() => handleReviewRequest(notification.id, notification.matchId)}
-                        className="bg-orange-600 hover:bg-orange-700 text-white"
-                      >
-                        <Star className="w-4 h-4 mr-1" />
-                        Calificar ahora
+                      <Button size="sm" onClick={() => router.push(`/matches/${notification.matchId}/review`)} className="bg-orange-600 hover:bg-orange-700 text-white">
+                        <Star className="w-4 h-4 mr-1" /> Calificar ahora
                       </Button>
                     </div>
                   )}

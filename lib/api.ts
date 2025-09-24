@@ -166,7 +166,15 @@ export const UsuarioAPI = {
     })
     if (!res.ok) throw new Error(`Error al iniciar sesión: ${res.status}`)
     return res.json() as Promise<{ success: boolean; data: { token: string; user: Usuario } }>
-  }
+  },
+  getFriendRequests: (userId: string) =>
+    apiFetch<any[]>(`/api/usuarios/${userId}/friend-requests`),
+  getUnreadMessages: (userId: string) =>
+    apiFetch<any[]>(`/api/usuarios/${userId}/messages`),
+  getMatchInvitations: (userId: string) =>
+    apiFetch<any[]>(`/api/usuarios/${userId}/match-invitations`),
+   getMatchUpdates: (userId: string) =>
+    apiFetch<any[]>(`/api/usuarios/${userId}/match-updates`),
 }
 
 /* ===========================
@@ -195,4 +203,6 @@ export const ReviewAPI = {
   listar: () => apiFetch<Review[]>('/api/reviews'),
   crear: (review: Partial<Review>) =>
     apiFetch<Review>('/api/reviews', { method: 'POST', body: JSON.stringify(review) }),
+  getPendingReviews: (userId: string) =>
+    apiFetch<PendingReviewFromAPI[]>(`/api/usuarios/${userId}/pending-reviews`),
 }
