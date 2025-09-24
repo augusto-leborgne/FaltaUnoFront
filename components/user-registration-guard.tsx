@@ -1,24 +1,18 @@
 "use client"
-
-import type React from "react"
-
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { AlertTriangle, Star } from "lucide-react"
+import { UsuarioAPI, PendingReviewFromAPI } from "@/lib/api"
 
 interface PendingReview {
   matchId: string
   matchType: string
   date: string
   location: string
-  playersToReview: {
-    id: number
-    name: string
-    avatar: string
-  }[]
+  playersToReview: { id: string; name: string; avatar?: string }[]
 }
 
 interface UserRegistrationGuardProps {
@@ -26,42 +20,41 @@ interface UserRegistrationGuardProps {
   userId: string
 }
 
-// This simulates a user who has completed all their reviews
-const mockPendingReviews: PendingReview[] = []
-
 export function UserRegistrationGuard({ children, userId }: UserRegistrationGuardProps) {
   const router = useRouter()
-  const [pendingReviews, setPendingReviews] = useState<PendingReview[]>(mockPendingReviews)
+  const [pendingReviews, setPendingReviews] = useState<PendingReview[]>([])
   const [isBlocked, setIsBlocked] = useState(false)
 
   useEffect(() => {
-    // In a real app, this would fetch from an API endpoint
-    const checkPendingReviews = async () => {
+    const fetchPendingReviews = async () => {
       try {
-        // Simulate API call
-        // const response = await fetch(`/api/users/${userId}/pending-reviews`)
-        // const data = await response.json()
-        // setPendingReviews(data.pendingReviews || [])
-
-        const hasPendingReviews = pendingReviews.length > 0
-        setIsBlocked(hasPendingReviews)
-      } catch (error) {
-        console.error("Error checking pending reviews:", error)
-        // On error, allow access (fail open)
+        const res = await UsuarioAPI.getPendingReviews(userId)
+        const reviews: PendingReview[] = res.data.map((r: PendingReviewFromAPI) => ({
+          matchId: r.partido_id,
+          matchType: r.tipo_partido,
+          date: r.fecha,
+          location: r.nombre_ubicacion,
+          playersToReview: r.jugadores_pendientes.map((u) => ({
+            id: u.id,
+            name: `${u.nombre} ${u.apellido}`,
+            avatar: u.foto_perfil || "/placeholder.svg",
+          })),
+        }))
+        setPendingReviews(reviews)
+        setIsBlocked(reviews.length > 0)
+      } catch (err) {
+        console.error("Error fetching pending reviews:", err)
         setIsBlocked(false)
       }
     }
-
-    checkPendingReviews()
-  }, [userId, pendingReviews])
+    fetchPendingReviews()
+  }, [userId])
 
   const handleCompleteReviews = (matchId: string) => {
     router.push(`/matches/${matchId}/review`)
   }
 
-  if (!isBlocked) {
-    return <>{children}</>
-  }
+  if (!isBlocked) return <>{children}</>
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
@@ -69,9 +62,7 @@ export function UserRegistrationGuard({ children, userId }: UserRegistrationGuar
         <div className="bg-yellow-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6">
           <AlertTriangle className="w-8 h-8 text-yellow-600" />
         </div>
-
         <h1 className="text-2xl font-bold text-foreground mb-4">Reseñas pendientes</h1>
-
         <p className="text-muted-foreground mb-6">
           Debes completar las reseñas de tus partidos anteriores antes de poder inscribirte en nuevos partidos.
         </p>
@@ -83,9 +74,7 @@ export function UserRegistrationGuard({ children, userId }: UserRegistrationGuar
                 <Badge className="bg-orange-100 text-gray-800">{review.matchType}</Badge>
                 <span className="text-sm text-muted-foreground">{review.date}</span>
               </div>
-
               <h3 className="font-semibold text-foreground mb-2">{review.location}</h3>
-
               <div className="flex items-center space-x-2 mb-3">
                 <span className="text-sm text-muted-foreground">Jugadores por reseñar:</span>
                 <div className="flex -space-x-2">
@@ -108,10 +97,7 @@ export function UserRegistrationGuard({ children, userId }: UserRegistrationGuar
                 </div>
               </div>
 
-              <Button
-                onClick={() => handleCompleteReviews(review.matchId)}
-                className="w-full bg-primary hover:bg-primary/90"
-              >
+              <Button onClick={() => handleCompleteReviews(review.matchId)} className="w-full bg-primary hover:bg-primary/90">
                 <Star className="w-4 h-4 mr-2" />
                 Completar reseñas
               </Button>
