@@ -3,9 +3,27 @@
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
+import { useEffect, useState } from "react"
+import { UsuarioAPI, Usuario } from "@/lib/api"
 
 export function WelcomeScreen() {
   const router = useRouter()
+  const [usuario, setUsuario] = useState<Usuario | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    (async () => {
+      try {
+        // Trae el perfil del usuario logueado
+        const res = await UsuarioAPI.obtener("id_del_usuario_autenticado")
+        setUsuario(res.data) // ✅ Extraemos solo 'data' del ApiResponse
+      } catch (err) {
+        console.error("No se pudo obtener usuario", err)
+      } finally {
+        setLoading(false)
+      }
+    })()
+  }, [])
 
   const handleStart = () => {
     router.push("/profile-setup")
@@ -15,7 +33,9 @@ export function WelcomeScreen() {
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-orange-100 flex flex-col">
       {/* Header */}
       <div className="pt-16 pb-8 text-center">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">¡Bienvenido!</h1>
+        <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          ¡Bienvenido{usuario ? `, ${usuario.nombre}` : ""}!
+        </h1>
       </div>
 
       {/* Hero Image */}
@@ -33,9 +53,15 @@ export function WelcomeScreen() {
           </div>
 
           <div className="text-center mb-12">
-            <p className="text-xl text-gray-600 font-medium leading-relaxed">
-              Reserva y únete a partidos de fútbol informales
-            </p>
+            {loading ? (
+              <p className="text-xl text-gray-600 font-medium leading-relaxed">
+                Cargando perfil...
+              </p>
+            ) : (
+              <p className="text-xl text-gray-600 font-medium leading-relaxed">
+                Reserva y únete a partidos de fútbol informales
+              </p>
+            )}
           </div>
 
           <Button

@@ -1,40 +1,54 @@
 // src/types/partido.ts
+
+/* ===========================
+   ENUMS Y TIPOS BASE
+=========================== */
 export type Nivel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
 export type EstadoPartido = 'PENDIENTE' | 'CONFIRMADO' | 'CANCELADO' | 'FINALIZADO';
+export type TipoPartido = 'F5' | 'F7' | 'F8' | 'F9' | 'F11';
+export type Genero = 'Mixto' | 'Hombres' | 'Mujeres';
 
-export interface Ubicacion {
-  nombreUbicacion: string;
-  direccionUbicacion?: string;
-  latitud?: number | null;
-  longitud?: number | null;
-}
-
+/* ===========================
+   USUARIO MINIMO (para UI)
+=========================== */
 export interface UsuarioMin {
   id: string;
-  firstName?: string;
-  lastName?: string;
+  nombre?: string;
+  apellido?: string;
   email?: string;
-  rating?: number | null;
-  // agrega campos que uses en UI
+  _raw?: any; // opcional si necesitás el objeto completo del backend
 }
 
-export interface PartidoFront {
+/* ===========================
+   ENTIDAD PARTIDO
+=========================== */
+export interface Partido {
   id?: string;
-  tipoPartido: 'F5' | 'F7' | 'F8' | 'F9' | 'F11' | string;
-  genero?: 'Mixto' | 'Hombres' | 'Mujeres' | string;
+
+  tipo_partido: TipoPartido;
+  genero?: Genero;
+
   fecha: string;               // yyyy-MM-dd
   hora: string;                // HH:mm:ss
-  duracionMinutos: number;
-  ubicacion: Ubicacion;        // object convenience for UI
-  precioTotal: number;
-  cantidadJugadores: number;
-  jugadoresActuales?: number;
+  duracion: number;            // minutos
+
+  nombre_ubicacion: string;
+  direccion_ubicacion?: string;
+  latitud?: number | null;
+  longitud?: number | null;
+
+  precio_total: number;
+  cantidad_jugadores: number;
+  jugadores_actuales?: number;
+
   estado?: EstadoPartido;
-  organizadorId?: string;      // enviar al crear
+
+  organizador_id?: string;
   organizador?: UsuarioMin;    // cuando el backend devuelve objeto
-  jugadores?: UsuarioMin[];
+  jugadores?: UsuarioMin[];    // lista de jugadores inscritos
+
   descripcion?: string;
-  createdAt?: string;
-  // campo raw si necesitás
-  _raw?: any;
+  created_at?: string;
+
+  _raw?: any;                  // opcional, para guardar datos crudos si necesitás
 }

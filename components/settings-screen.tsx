@@ -12,7 +12,8 @@ const positions = ["Arquero", "Zaguero", "Lateral", "Mediocampista", "Volante", 
 
 export function SettingsScreen() {
   const router = useRouter()
-  const [authMethod] = useState<"email" | "google" | "apple" | "facebook">("google") // This would come from user data
+  const [authMethod] = useState<"email" | "google" | "apple" | "facebook">("google") // viene del usuario
+
   const [formData, setFormData] = useState({
     name: "Tu",
     surname: "Usuario",
@@ -21,8 +22,9 @@ export function SettingsScreen() {
     position: "Mediocampista",
     height: "175",
     weight: "70",
-    bio: "Jugador apasionado por el fútbol",
   })
+
+  const [avatar, setAvatar] = useState<string>("/placeholder.svg?height=96&width=96")
 
   const [notificationPreferences, setNotificationPreferences] = useState({
     matchInvitations: true,
@@ -33,23 +35,32 @@ export function SettingsScreen() {
     generalUpdates: false,
   })
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleNotificationToggle = (field: string) => {
+  const handleNotificationToggle = (field: keyof typeof notificationPreferences) => {
     setNotificationPreferences((prev) => ({ ...prev, [field]: !prev[field] }))
   }
 
+  const handleBack = () => router.back()
+
   const handleSave = () => {
-    // Save profile changes and notification preferences
-    console.log("Saving profile:", formData)
-    console.log("Saving notification preferences:", notificationPreferences)
+    console.log("Guardando perfil:", formData)
+    console.log("Guardando preferencias de notificación:", notificationPreferences)
+    console.log("Foto subida:", avatar)
     router.back()
   }
 
-  const handleBack = () => {
-    router.back()
+  const handleUploadPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = () => {
+        if (reader.result) setAvatar(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
   }
 
   return (
@@ -69,12 +80,13 @@ export function SettingsScreen() {
         <div className="text-center mb-8">
           <div className="relative inline-block">
             <Avatar className="w-24 h-24">
-              <AvatarImage src="/placeholder.svg?height=96&width=96" />
+              <AvatarImage src={avatar} />
               <AvatarFallback className="bg-orange-100 text-2xl">TU</AvatarFallback>
             </Avatar>
-            <button className="absolute -bottom-2 -right-2 bg-green-600 text-white rounded-full p-2 shadow-lg">
+            <label className="absolute -bottom-2 -right-2 bg-green-600 text-white rounded-full p-2 shadow-lg cursor-pointer">
               <Camera className="w-4 h-4" />
-            </button>
+              <input type="file" accept="image/*" onChange={handleUploadPhoto} className="hidden" />
+            </label>
           </div>
           <p className="text-sm text-gray-500 mt-2">Toca para cambiar foto</p>
         </div>
@@ -122,9 +134,7 @@ export function SettingsScreen() {
             />
             {authMethod !== "email" && (
               <p className="text-xs text-gray-500 mt-1">
-                {/* Updated message to be more specific about social login */}
-                Registrado con {authMethod === "google" ? "Google" : authMethod === "apple" ? "Apple" : "Facebook"}, no
-                se puede editar
+                Registrado con {authMethod === "google" ? "Google" : authMethod === "apple" ? "Apple" : "Facebook"}, no se puede editar
               </p>
             )}
           </div>
@@ -185,152 +195,46 @@ export function SettingsScreen() {
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="bio" className="text-sm font-medium text-gray-700">
-              Biografía
-            </Label>
-            <textarea
-              id="bio"
-              value={formData.bio}
-              onChange={(e) => handleInputChange("bio", e.target.value)}
-              rows={3}
-              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              placeholder="Cuéntanos sobre ti..."
-            />
-          </div>
-
+          {/* Notification Preferences */}
           <div className="bg-gray-50 rounded-2xl p-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
               <Bell className="w-5 h-5 mr-2" />
               Preferencias de notificaciones
             </h3>
+
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-gray-900">Invitaciones a partidos</p>
-                  <p className="text-sm text-gray-500">Recibe notificaciones cuando te inviten a jugar</p>
-                </div>
-                <button
-                  onClick={() => handleNotificationToggle("matchInvitations")}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    notificationPreferences.matchInvitations ? "bg-green-600" : "bg-gray-300"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      notificationPreferences.matchInvitations ? "translate-x-6" : "translate-x-1"
+              {(Object.keys(notificationPreferences) as (keyof typeof notificationPreferences)[]).map((key) => (
+                <div key={key} className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-gray-900">{key}</p>
+                  </div>
+                  <button
+                    onClick={() => handleNotificationToggle(key)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      notificationPreferences[key] ? "bg-green-600" : "bg-gray-300"
                     }`}
-                  />
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-gray-900">Solicitudes de amistad</p>
-                  <p className="text-sm text-gray-500">Notificaciones de nuevas solicitudes de amistad</p>
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        notificationPreferences[key] ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
                 </div>
-                <button
-                  onClick={() => handleNotificationToggle("friendRequests")}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    notificationPreferences.friendRequests ? "bg-green-600" : "bg-gray-300"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      notificationPreferences.friendRequests ? "translate-x-6" : "translate-x-1"
-                    }`}
-                  />
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-gray-900">Actualizaciones de partidos</p>
-                  <p className="text-sm text-gray-500">Cambios de horario, cancelaciones, etc.</p>
-                </div>
-                <button
-                  onClick={() => handleNotificationToggle("matchUpdates")}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    notificationPreferences.matchUpdates ? "bg-green-600" : "bg-gray-300"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      notificationPreferences.matchUpdates ? "translate-x-6" : "translate-x-1"
-                    }`}
-                  />
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-gray-900">Solicitudes de reseñas</p>
-                  <p className="text-sm text-gray-500">Recordatorios para calificar jugadores</p>
-                </div>
-                <button
-                  onClick={() => handleNotificationToggle("reviewRequests")}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    notificationPreferences.reviewRequests ? "bg-green-600" : "bg-gray-300"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      notificationPreferences.reviewRequests ? "translate-x-6" : "translate-x-1"
-                    }`}
-                  />
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-gray-900">Nuevos mensajes</p>
-                  <p className="text-sm text-gray-500">Mensajes en chats de partidos</p>
-                </div>
-                <button
-                  onClick={() => handleNotificationToggle("newMessages")}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    notificationPreferences.newMessages ? "bg-green-600" : "bg-gray-300"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      notificationPreferences.newMessages ? "translate-x-6" : "translate-x-1"
-                    }`}
-                  />
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-gray-900">Actualizaciones generales</p>
-                  <p className="text-sm text-gray-500">Novedades de la app y promociones</p>
-                </div>
-                <button
-                  onClick={() => handleNotificationToggle("generalUpdates")}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    notificationPreferences.generalUpdates ? "bg-green-600" : "bg-gray-300"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      notificationPreferences.generalUpdates ? "translate-x-6" : "translate-x-1"
-                    }`}
-                  />
-                </button>
-              </div>
+              ))}
             </div>
           </div>
-        </div>
 
-        {/* Save Button */}
-        <div className="mt-8 pb-8">
-          <Button
-            onClick={handleSave}
-            className="w-full bg-green-600 hover:bg-green-700 text-white py-4 text-lg font-semibold rounded-2xl"
-          >
-            <Save className="w-5 h-5 mr-2" />
-            Guardar cambios
-          </Button>
+          {/* Save Button */}
+          <div className="mt-8 pb-8">
+            <Button
+              onClick={handleSave}
+              className="w-full bg-green-600 hover:bg-green-700 text-white py-4 text-lg font-semibold rounded-2xl"
+            >
+              <Save className="w-5 h-5 mr-2" />
+              Guardar cambios
+            </Button>
+          </div>
         </div>
       </div>
     </div>
