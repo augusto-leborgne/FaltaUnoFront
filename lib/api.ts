@@ -1,4 +1,4 @@
-// lib/api.ts
+// src/lib/api.ts
 const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/+$/, '');
 
 export interface ApiResponse<T> {
@@ -46,10 +46,10 @@ export interface Match {
     latitude: number;
     longitude: number;
   };
-  captain: {
+  captain?: {
     id: string;
-    name: string;
-    rating: number;
+    name?: string;
+    rating?: number;
   };
   players: User[];
 }
@@ -65,6 +65,9 @@ export interface Review {
   comment?: string;
   createdAt: string;
 }
+
+// serializadores (crea el archivo src/lib/apiSerializers.ts con las funciones matchToApi/matchFromApi)
+import { matchToApi, matchFromApi } from './apiSerializers';
 
 class ApiService {
   private async request<T>(endpoint: string, options: RequestInit = {}, useCredentials = false): Promise<ApiResponse<T>> {
@@ -100,11 +103,9 @@ class ApiService {
     return { data: body as T, success: true } as ApiResponse<T>;
   }
 
-  // auth
+  // --- Auth ---
   async login(email: string, password: string) {
-    // useCredentials=true to accept cookies if backend sets session cookie
     const res = await this.request<{ token?: string; user?: User }>('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }, true);
-    // if backend returns token, save it (JWT flow)
     if (res.data?.token) {
       localStorage.setItem('authToken', res.data.token);
     }
@@ -122,50 +123,86 @@ class ApiService {
     return this.request<{ verified: boolean }>('/auth/verify-identity', { method: 'POST', body: JSON.stringify({ cedula }) }, false);
   }
 
-  // user
+  // --- User ---
   async getProfile(useCredentials = true) {
-    return this.request<User>('/users/profile', {}, useCredentials);
+    return this.request<User>('/api/usuarios/profile', {}, useCredentials);
   }
 
   async updateProfile(userData: Partial<User>, useCredentials = true) {
-    return this.request<User>('/users/profile', { method: 'PUT', body: JSON.stringify(userData) }, useCredentials);
+    return this.request<User>('/api/usuarios/profile', { method: 'PUT', body: JSON.stringify(userData) }, useCredentials);
   }
 
-  // matches
+  // --- Matches (adapted to backend Spanish endpoints) ---
+  // filters should be plain object of query params expected by backend (snake_case)
   async getMatches(filters?: Record<string, any>) {
     const qs = filters ? '?' + new URLSearchParams(filters as any).toString() : '';
-    return this.request<Match[]>(`/matches${qs}`);
+    const res = await this.request<any[]>(`/api/partidos${qs}`);
+    // map each backend partido -> frontend Match
+    return { ...res, data: (res.data ?? []).map(matchFromApi) } as ApiResponse<Match[]>;
   }
 
   async getMatch(id: string) {
-    return this.request<Match>(`/matches/${id}`);
+    const res = await this.request<any>(`/api/partidos/${id}`);
+    return { ...res, data: matchFromApi(res.data) } as ApiResponse<Match>;
   }
 
-  // matchData: estructura que tu backend espera
+  // createMatch accepts frontend Match-like shape (without id/currentPlayers/players/status)
   async createMatch(matchData: Omit<Match, 'id' | 'currentPlayers' | 'players' | 'status'>, useCredentials = true) {
-    return this.request<Match>('/matches', { method: 'POST', body: JSON.stringify(matchData) }, useCredentials);
+    const payload = matchToApi(matchData);
+    const res = await this.request<any>('/api/partidos', { method: 'POST', body: JSON.stringify(payload) }, useCredentials);
+    return { ...res, data: matchFromApi(res.data) } as ApiResponse<Match>;
   }
 
+  // --- Inscripciones (join/leave) ---
   async joinMatch(matchId: string, useCredentials = true) {
-    return this.request<{ success: boolean }>(`/matches/${matchId}/join`, { method: 'POST' }, useCredentials);
+    // backend expects { partido_id, usuario_id }
+    const currentUserRaw = typeof window !== 'undefined' ? localStorage.getItem('currentUser') : null;
+    const usuario = currentUserRaw ? JSON.parse(currentUserRaw) : null;
+    const usuarioId = usuario?.id ?? null;
+    if (!usuarioId) throw new Error('Usuario no autenticado');
+
+    const payload = { partido_id: matchId, usuario_id: usuarioId };
+    return this.request<{ success: boolean }>('/api/inscripciones', { method: 'POST', body: JSON.stringify(payload) }, useCredentials);
   }
 
   async leaveMatch(matchId: string, useCredentials = true) {
-    return this.request<{ success: boolean }>(`/matches/${matchId}/leave`, { method: 'POST' }, useCredentials);
+    const currentUserRaw = typeof window !== 'undefined' ? localStorage.getItem('currentUser') : null;
+    const usuario = currentUserRaw ? JSON.parse(currentUserRaw) : null;
+    const usuarioId = usuario?.id ?? null;
+    if (!usuarioId) throw new Error('Usuario no autenticado');
+
+    // DELETE /api/inscripciones?partido_id=...&usuario_id=...
+    const qs = `?partido_id=${encodeURIComponent(matchId)}&usuario_id=${encodeURIComponent(usuarioId)}`;
+    return this.request<{ success: boolean }>(`/api/inscripciones${qs}`, { method: 'DELETE' }, useCredentials);
   }
 
-  // user matches (example, can be real API)
+  // matches related to logged user (organizer or player)
   async getUserMatches(useCredentials = true) {
-    return this.request<Match[]>('/users/me/matches', {}, useCredentials);
+    const res = await this.request<any[]>('/api/usuarios/me/partidos', {}, useCredentials);
+    return { ...res, data: (res.data ?? []).map(matchFromApi) } as ApiResponse<Match[]>;
   }
 
-  // reviews
+  // --- Reviews ---
   async submitReview(reviewData: Omit<Review, 'id' | 'createdAt'>, useCredentials = true) {
-    return this.request<Review>('/reviews', { method: 'POST', body: JSON.stringify(reviewData) }, useCredentials);
+    // Build payload adapted to backend Spanish schema
+    const payload: any = {
+      partido_id: reviewData.matchId,
+      usuario_que_califica_id: reviewData.reviewerId,
+      usuario_calificado_id: reviewData.reviewedId,
+      nivel: reviewData.punctuality ?? reviewData.nivel ?? reviewData.puntaje_nivel,
+      deportividad: reviewData.technique ?? reviewData.deportividad ?? reviewData.puntaje_deportividad,
+      companerismo: reviewData.attitude ?? reviewData.companerismo ?? reviewData.puntaje_companerismo,
+      comentario: reviewData.comment ?? reviewData.comentario ?? ''
+    };
+
+    const res = await this.request<any>('/api/reviews', { method: 'POST', body: JSON.stringify(payload) }, useCredentials);
+    return res;
   }
 
   async getPendingReviews(useCredentials = true) {
-    return this.request<Match[]>('/reviews/pending', {}, useCredentials);
+    const res = await this.request<any[]>('/api/reviews/pending', {}, useCredentials);
+    // backend returns matches; map them to frontend Match
+    return { ...res, data: (res.data ?? []).map(matchFromApi) } as ApiResponse<Match[]>;
   }
 }
 
