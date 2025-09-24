@@ -1,6 +1,5 @@
 "use client"
 
-import type React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,17 +7,20 @@ import { useRouter } from "next/navigation"
 import { User, MapPin, Camera } from "lucide-react"
 import { AddressAutocomplete } from "./address-autocomplete"
 import type { google } from "google-maps"
+import { Usuario, UsuarioAPI } from "@/lib/api"
 
 export function CompleteProfileScreen() {
   const router = useRouter()
   const [formData, setFormData] = useState({
-    phone: "",
+    nombre: "",
+    apellido: "",
+    celular: "",
     birthDate: "",
     address: "",
     city: "",
     position: "",
     experience: "",
-    bio: "",
+    photoFile: null as File | null,
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -29,10 +31,9 @@ export function CompleteProfileScreen() {
   const handleAddressChange = (address: string, placeDetails?: google.maps.places.PlaceResult) => {
     setFormData((prev) => ({ ...prev, address }))
 
-    // Extract city from place details if available
     if (placeDetails?.address_components) {
       const cityComponent = placeDetails.address_components.find(
-        (component) => component.types.includes("locality") || component.types.includes("administrative_area_level_1"),
+        (component) => component.types.includes("locality") || component.types.includes("administrative_area_level_1")
       )
       if (cityComponent && !formData.city) {
         setFormData((prev) => ({ ...prev, city: cityComponent.long_name }))
@@ -40,19 +41,47 @@ export function CompleteProfileScreen() {
     }
   }
 
+  const handleFileChange = (file: File | null) => {
+    setFormData((prev) => ({ ...prev, photoFile: file }))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!formData.photoFile) {
+      alert("Debes subir una foto de perfil")
+      return
+    }
+
     setIsSubmitting(true)
 
-    // Simulate profile completion
-    setTimeout(() => {
-      // Save profile data to localStorage
-      localStorage.setItem("userProfile", JSON.stringify(formData))
-      localStorage.setItem("isProfileComplete", "true")
+    try {
+      // Primero subimos la foto
+      const photoRes = await UsuarioAPI.subirFoto("me", formData.photoFile) // "me" reemplazar por userId si necesario
 
+      // Preparamos payload sin bio
+      const payload: Partial<Usuario> = {
+        nombre: formData.nombre,
+        apellido: formData.apellido,
+        celular: formData.celular,
+        edad: formData.birthDate ? new Date().getFullYear() - new Date(formData.birthDate).getFullYear() : undefined,
+        ubicacion: formData.address,
+        posicion: formData.position as Usuario['posicion'] | undefined,
+        perfilCompleto: true,
+        foto_perfil: photoRes.data.url,
+      }
+
+
+      // Guardamos en backend
+      await UsuarioAPI.crear(payload)
+
+      router.push("/verificacion") // siguiente paso: verificación
+    } catch (err: any) {
+      console.error(err)
+      alert("Ocurrió un error al completar tu perfil")
+    } finally {
       setIsSubmitting(false)
-      router.push("/")
-    }, 2000)
+    }
   }
 
   return (
@@ -71,9 +100,13 @@ export function CompleteProfileScreen() {
             <div className="w-24 h-24 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
               <Camera className="w-8 h-8 text-gray-400" />
             </div>
-            <Button type="button" variant="outline" className="text-sm bg-transparent">
-              Agregar Foto
-            </Button>
+            <Input
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleFileChange(e.target.files?.[0] || null)}
+              className="mx-auto"
+              required
+            />
           </div>
 
           {/* Contact Information */}
@@ -84,10 +117,28 @@ export function CompleteProfileScreen() {
             </h3>
 
             <Input
+              type="text"
+              placeholder="Nombre"
+              value={formData.nombre}
+              onChange={(e) => handleInputChange("nombre", e.target.value)}
+              className="py-3 rounded-xl"
+              required
+            />
+
+            <Input
+              type="text"
+              placeholder="Apellido"
+              value={formData.apellido}
+              onChange={(e) => handleInputChange("apellido", e.target.value)}
+              className="py-3 rounded-xl"
+              required
+            />
+
+            <Input
               type="tel"
               placeholder="Teléfono"
-              value={formData.phone}
-              onChange={(e) => handleInputChange("phone", e.target.value)}
+              value={formData.celular}
+              onChange={(e) => handleInputChange("celular", e.target.value)}
               className="py-3 rounded-xl"
               required
             />
@@ -157,14 +208,6 @@ export function CompleteProfileScreen() {
               <option value="avanzado">Avanzado</option>
               <option value="profesional">Profesional</option>
             </select>
-
-            <textarea
-              placeholder="Cuéntanos sobre ti como jugador (opcional)"
-              value={formData.bio}
-              onChange={(e) => handleInputChange("bio", e.target.value)}
-              className="w-full py-3 px-4 rounded-xl border border-gray-300 resize-none"
-              rows={3}
-            />
           </div>
 
           <Button

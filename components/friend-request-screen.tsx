@@ -3,14 +3,25 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ArrowLeft, Check } from "lucide-react"
+import { ArrowLeft, Check, X } from "lucide-react"
 import { useRouter } from "next/navigation"
+import type { FC } from "react"
 
 interface FriendRequestScreenProps {
   userId: string
+  name: string
+  avatar?: string
+  isFriend?: boolean
+  alreadyRequested?: boolean
 }
 
-export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
+export const FriendRequestScreen: FC<FriendRequestScreenProps> = ({
+  userId,
+  name,
+  avatar,
+  isFriend = false,
+  alreadyRequested = false,
+}) => {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
 
@@ -20,10 +31,29 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
 
   const handleSendRequest = async () => {
     setIsLoading(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsLoading(false)
-    router.back()
+    try {
+      // Llamada real a tu backend para enviar solicitud
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      // Aquí podrías actualizar estado o mostrar toast
+    } finally {
+      setIsLoading(false)
+      router.back()
+    }
+  }
+
+  // Mensaje y botón dinámico según el estado
+  let mainMessage = `¿Quieres enviar una solicitud de amistad a ${name}?`
+  let buttonLabel = "Enviar solicitud"
+  let buttonDisabled = isLoading
+  let showButton = true
+
+  if (isFriend) {
+    mainMessage = `¡Ya eres amigo de ${name}!`
+    showButton = false
+  } else if (alreadyRequested) {
+    mainMessage = `Ya enviaste una solicitud a ${name}. Esperando respuesta.`
+    buttonLabel = "Solicitud pendiente"
+    buttonDisabled = true
   }
 
   return (
@@ -41,29 +71,35 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
       <div className="flex-1 px-6 py-8">
         <div className="text-center mb-8">
           <Avatar className="w-24 h-24 mx-auto mb-4">
-            <AvatarImage src="/placeholder.svg?height=96&width=96" />
-            <AvatarFallback className="bg-orange-100 text-2xl">CM</AvatarFallback>
+            {avatar ? (
+              <AvatarImage src={avatar} />
+            ) : (
+              <AvatarFallback className="bg-orange-100 text-2xl">{name.split(" ").map(n => n[0]).join("")}</AvatarFallback>
+            )}
           </Avatar>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Carlos Martínez</h2>
-          <p className="text-gray-600">¿Quieres enviar una solicitud de amistad?</p>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">{name}</h2>
+          <p className="text-gray-600">{mainMessage}</p>
         </div>
 
-        <div className="bg-gray-50 rounded-xl p-4 mb-8">
-          <p className="text-sm text-gray-600 text-center">
-            Una vez que Carlos acepte tu solicitud, podrán verse mutuamente en sus listas de amigos e invitarse a
-            partidos.
-          </p>
-        </div>
+        {!isFriend && (
+          <div className="bg-gray-50 rounded-xl p-4 mb-8">
+            <p className="text-sm text-gray-600 text-center">
+              Una vez que {name} acepte tu solicitud, podrán verse mutuamente en sus listas de amigos e invitarse a partidos.
+            </p>
+          </div>
+        )}
 
         <div className="space-y-4">
-          <Button
-            onClick={handleSendRequest}
-            disabled={isLoading}
-            className="w-full bg-green-600 hover:bg-green-700 text-white py-4 text-lg font-semibold rounded-2xl"
-          >
-            <Check className="w-5 h-5 mr-2" />
-            {isLoading ? "Enviando..." : "Enviar solicitud"}
-          </Button>
+          {showButton && (
+            <Button
+              onClick={handleSendRequest}
+              disabled={buttonDisabled}
+              className="w-full bg-green-600 hover:bg-green-700 text-white py-4 text-lg font-semibold rounded-2xl flex items-center justify-center"
+            >
+              <Check className="w-5 h-5 mr-2" />
+              {isLoading ? "Enviando..." : buttonLabel}
+            </Button>
+          )}
 
           <Button
             onClick={handleBack}

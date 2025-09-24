@@ -48,7 +48,6 @@ export function AddressAutocomplete({
         script.defer = true
 
         window.initMap = () => {
-          console.log("[v0] Google Maps API loaded via callback")
           setTimeout(() => {
             setIsLoaded(true)
             setApiStatus("success")
@@ -56,13 +55,9 @@ export function AddressAutocomplete({
           }, 100)
         }
 
-        script.onload = () => {
-          console.log("[v0] Google Maps script loaded")
-        }
-
         script.onerror = (e) => {
-          console.error("[v0] Error loading Google Maps API:", e)
-          setError("Error loading Google Maps API. Please check your API key and network connection.")
+          console.error("Error loading Google Maps API:", e)
+          setError("Error loading Google Maps API. Usando entrada manual como respaldo.")
           setFallbackMode(true)
           setApiStatus("error")
         }
@@ -78,20 +73,6 @@ export function AddressAutocomplete({
     const initializeAutocomplete = () => {
       if (inputRef.current && window.google && !autocompleteRef.current) {
         try {
-          if (!window.google.maps) {
-            throw new Error("Google Maps API not available")
-          }
-
-          if (!window.google.maps.places) {
-            throw new Error("Places API not available - please enable Places API in Google Cloud Console")
-          }
-
-          if (!window.google.maps.places.Autocomplete) {
-            throw new Error("Places Autocomplete service not available")
-          }
-
-          console.log("[v0] Initializing Places Autocomplete")
-
           autocompleteRef.current = new window.google.maps.places.Autocomplete(inputRef.current, {
             types: ["address"],
             componentRestrictions: { country: "uy" },
@@ -100,42 +81,20 @@ export function AddressAutocomplete({
 
           geocoderRef.current = new window.google.maps.Geocoder()
 
-          autocompleteRef.current.addListener("place_changed", () => {
-            try {
-              const place = autocompleteRef.current?.getPlace()
-              console.log("[v0] Place selected:", place?.formatted_address)
-              console.log("[v0] Place geometry:", place?.geometry)
-              console.log("[v0] Place location:", place?.geometry?.location)
-              if (place && place.formatted_address) {
-                onChange(place.formatted_address, place)
-                setError(null)
-                setApiStatus("success")
-              } else {
-                console.log("[v0] Place selected but no formatted_address available")
-              }
-            } catch (err) {
-              console.error("[v0] Error getting place details:", err)
-              setError("Error retrieving place details. Using manual input.")
-              setFallbackMode(true)
+          autocompleteRef.current?.addListener("place_changed", () => {
+            const place = autocompleteRef.current?.getPlace()
+            if (place && place.formatted_address) {
+              onChange(place.formatted_address, place)
+              setError(null)
+              setApiStatus("success")
             }
           })
 
-          setError(null)
           setFallbackMode(false)
           setApiStatus("success")
-          console.log("[v0] Places Autocomplete initialized successfully")
         } catch (err) {
-          console.error("[v0] Places API initialization error:", err)
-          const errorMessage = err instanceof Error ? err.message : "Unknown error"
-
-          if (errorMessage.includes("Places API")) {
-            setError(
-              "Places API not enabled. Please enable 'Places API' in Google Cloud Console and ensure it's associated with your API key.",
-            )
-          } else {
-            setError(`Google Maps initialization error: ${errorMessage}`)
-          }
-
+          console.error("Places API initialization error:", err)
+          setError("Error inicializando Google Places. Usando entrada manual.")
           setFallbackMode(true)
           setApiStatus("error")
         }
@@ -155,37 +114,26 @@ export function AddressAutocomplete({
   }, [onChange])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value
-    onChange(newValue)
+    onChange(e.target.value)
   }
 
   const handleInputBlur = () => {
-    console.log("[v0] Input blur - fallbackMode:", fallbackMode, "value:", value)
     if (value && geocoderRef.current && value.length > 10) {
-      console.log("[v0] Attempting geocoding for:", value)
       geocoderRef.current.geocode(
-        {
-          address: value,
-          componentRestrictions: { country: "UY" },
-        },
+        { address: value, componentRestrictions: { country: "UY" } },
         (results, status) => {
-          console.log("[v0] Geocoding status:", status)
-          console.log("[v0] Geocoding results:", results)
           if (status === "OK" && results && results[0]) {
-            console.log("[v0] Geocoding successful:", results[0])
             const location = results[0].geometry.location
             const mockPlaceResult: google.maps.places.PlaceResult = {
               formatted_address: results[0].formatted_address,
               geometry: {
-                location: location,
+                location,
                 viewport: results[0].geometry.viewport,
               },
               place_id: results[0].place_id,
               name: results[0].formatted_address,
             }
             onChange(results[0].formatted_address || value, mockPlaceResult)
-          } else {
-            console.log("[v0] Geocoding failed:", status)
           }
         },
       )
@@ -218,30 +166,7 @@ export function AddressAutocomplete({
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription className="text-sm">
-            <strong>Configuración de Google Maps requerida:</strong>
-            <br />
-            <strong>Paso 1:</strong> Ve a{" "}
-            <a
-              href="https://console.cloud.google.com/apis/credentials"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline font-medium"
-            >
-              Google Cloud Console → Credenciales
-            </a>
-            <br />
-            <strong>Paso 2:</strong> Edita tu clave API y en "Restricciones de API" selecciona "Restringir clave"
-            <br />
-            <strong>Paso 3:</strong> Habilita estas APIs:
-            <br />• Maps JavaScript API ✓
-            <br />• Places API ✓
-            <br />• Geocoding API ✓
-            <br />
-            <strong>Paso 4:</strong> Guarda y espera 5 minutos para que los cambios surtan efecto
-            <br />
-            <em className="text-muted-foreground">
-              Actualmente usando entrada manual con geocodificación como respaldo.
-            </em>
+            <strong>Error Google Maps:</strong> {error}
           </AlertDescription>
         </Alert>
       )}
@@ -251,7 +176,6 @@ export function AddressAutocomplete({
 
 declare global {
   interface Window {
-    google: typeof google
     initMap?: () => void
   }
 }
