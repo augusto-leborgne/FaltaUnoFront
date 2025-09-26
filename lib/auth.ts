@@ -30,5 +30,5 @@ export const AuthService = {
     }
   },
 
-  isLoggedIn: () => !!localStorage.getItem(STORAGE_TOKEN_KEY)
+  isLoggedIn: () => localStorage.getItem(STORAGE_TOKEN_KEY) != null
 }

@@ -9,6 +9,7 @@ import { UserRegistrationGuard } from "@/components/user-registration-guard"
 import { Clock, Calendar, Star, Bell, Newspaper, TrendingUp, Award } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { PartidoAPI, ReviewAPI, PendingReviewFromAPI, Partido } from "@/lib/api"
+import { AuthService } from "@/lib/auth"
 
 interface NewsUpdate {
   id: number
@@ -128,6 +129,12 @@ export function HomeScreen() {
   const [upcomingMatches, setUpcomingMatches] = useState<MatchView[]>([])
   const [pendingReviews, setPendingReviews] = useState<ReviewView[]>([])
   const [isLoading, setIsLoading] = useState(true)
+
+  if (!AuthService.isLoggedIn()) {
+    console.log('not logged in');
+    router.push('/matches');
+    return;
+  }
 
   useEffect(() => {
     const fetchData = async () => {
