@@ -130,53 +130,109 @@ export function HomeScreen() {
   const [pendingReviews, setPendingReviews] = useState<ReviewView[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-  if (!AuthService.isLoggedIn()) {
-    console.log('not logged in');
-    router.push('/matches');
-    return;
-  }
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true)
-        const [matchesRes, reviewsRes] = await Promise.all([
-          PartidoAPI.listar(),
-          ReviewAPI.getPendingReviews("current-user-id"),
-        ])
-
-        if (matchesRes.success) {
-          const mappedMatches = matchesRes.data.map((m) => ({
-            id: m.id,
-            tipo_partido: m.tipo_partido,
-            estado: m.estado,
-            fecha: m.fecha,
-            hora: m.hora,
-            nombre_ubicacion: m.nombre_ubicacion,
-            jugadores_actuales: m.jugadores_actuales ?? 0,
-            cantidad_jugadores: m.cantidad_jugadores,
-          }))
-          setUpcomingMatches(mappedMatches)
-        }
-
-        if (reviewsRes.success) {
-          const mappedReviews = reviewsRes.data.map((r) => ({
-            id: r.partido_id,
-            tipo_partido: r.tipo_partido,
-            fecha: r.fecha,
-            nombre_ubicacion: r.nombre_ubicacion,
-            jugadores_pendientes: r.jugadores_pendientes.length,
-          }))
-          setPendingReviews(mappedReviews)
-        }
-      } catch (error) {
-        console.error("Error fetching data:", error)
-      } finally {
-        setIsLoading(false)
+    useEffect(() => {
+      // redirigir en cliente si no está logeado
+      if (!AuthService.isLoggedIn()) {
+        router.push("/login");
+        return;
       }
-    }
-    fetchData()
-  }, [])
+
+      // obtener userId del storage (solo en cliente)
+      const user = AuthService.getUser();
+      const userId = user?.id ?? null;
+
+      // helper: fetch con timeout/abort
+      const fetchWithTimeout = async (resource: RequestInfo, options: RequestInit = {}, timeout = 4000) => {
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), timeout);
+        try {
+          const res = await fetch(resource, { signal: controller.signal, ...options });
+          clearTimeout(id);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        } finally {
+          clearTimeout(id);
+        }
+      };
+
+      let mounted = true;
+      setIsLoading(true);
+
+      (async () => {
+        try {
+          // Si no hay userId, evitamos llamadas que fallarán; dejamos arrays vacíos
+          if (!userId) {
+            setUpcomingMatches([]);
+            setPendingReviews([]);
+            return;
+          }
+
+          // Llamadas en paralelo, no bloqueantes para el render
+          const matchesPromise = fetchWithTimeout(
+            `${process.env.NEXT_PUBLIC_API_URL ?? ""}/api/partidos/mine?userId=${encodeURIComponent(userId)}&limit=10`,
+            { headers: { "Content-Type": "application/json" } },
+            4000
+          ).catch((err) => {
+            console.warn("matches fetch failed:", err);
+            return null;
+          });
+
+          const reviewsPromise = fetchWithTimeout(
+            `${process.env.NEXT_PUBLIC_API_URL ?? ""}/api/usuarios/${encodeURIComponent(userId)}/pending-reviews?limit=10`,
+            { headers: { "Content-Type": "application/json" } },
+            4000
+          ).catch((err) => {
+            console.warn("reviews fetch failed:", err);
+            return null;
+          });
+
+          const [matchesData, reviewsData] = await Promise.all([matchesPromise, reviewsPromise]);
+
+          if (!mounted) return;
+
+          if (matchesData) {
+            // adaptar si backend devuelve {partidos: [...] } o array
+            const rawMatches = Array.isArray(matchesData) ? matchesData : (matchesData.partidos ?? matchesData.data ?? []);
+            const mappedMatches = rawMatches.map((m: any) => ({
+              id: m.id,
+              tipo_partido: m.tipoPartido ?? m.tipo_partido ?? m.tipo,
+              estado: m.estado,
+              fecha: m.fecha,
+              hora: m.hora,
+              nombre_ubicacion: m.nombreUbicacion ?? m.nombre_ubicacion ?? m.nombre,
+              jugadores_actuales: m.jugadoresActuales ?? m.jugadores_actuales ?? m.jugadores_actuales ?? 0,
+              cantidad_jugadores: m.maxJugadores ?? m.cantidad_jugadores ?? m.cantidad_jugadores ?? 0,
+            }));
+            setUpcomingMatches(mappedMatches);
+          } else {
+            setUpcomingMatches([]); // fallback
+          }
+
+          if (reviewsData) {
+            const rawReviews = Array.isArray(reviewsData) ? reviewsData : (reviewsData.data ?? reviewsData.pending ?? []);
+            const mappedReviews = rawReviews.map((r: any) => ({
+              id: r.partido_id ?? r.id ?? r.partidoId,
+              tipo_partido: r.tipo_partido ?? r.tipoPartido,
+              fecha: r.fecha,
+              nombre_ubicacion: r.nombre_ubicacion ?? r.nombreUbicacion,
+              jugadores_pendientes: Array.isArray(r.jugadores_pendientes) ? r.jugadores_pendientes.length : (r.jugadores_pendientes ?? 0),
+            }));
+            setPendingReviews(mappedReviews);
+          } else {
+            setPendingReviews([]);
+          }
+        } catch (err) {
+          console.error("Error fetching data:", err);
+        } finally {
+          if (mounted) setIsLoading(false);
+        }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [router]);
+
 
   const handleMatchClick = (matchId: string) => router.push(`/matches/${matchId}`)
   const handleReviewMatch = (matchId: string) => router.push(`/matches/${matchId}/review`)

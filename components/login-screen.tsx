@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
 import { UsuarioAPI } from "@/lib/api"
+import { useSearchParams } from "next/navigation"
 
 export function LoginScreen() {
   const router = useRouter()
@@ -12,25 +13,36 @@ export function LoginScreen() {
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const search = useSearchParams();
+  const returnTo = search.get("returnTo") ?? null;
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    setError("")
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
     try {
-      const response = await UsuarioAPI.login(email, password)
+      const response = await UsuarioAPI.login(email, password);
       if (response.success) {
-        localStorage.setItem("user", JSON.stringify(response.data.user))
-        router.push(response.data.user.perfilCompleto ? (response.data.user.cedulaVerificada ? "/" : "/verification") : "/complete-profile")
+        localStorage.setItem("authToken", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        // redirigir al returnTo si viene, sino la lógica de perfil existente
+        if (returnTo) {
+          router.push(returnTo);
+        } else {
+          const u = response.data.user;
+          router.push(u.perfilCompleto ? (u.cedulaVerificada ? "/" : "/verification") : "/complete-profile");
+        }
+      } else {
+        setError("Error al iniciar sesión");
       }
     } catch (err) {
-      setError("Error al iniciar sesión. Verifica tus credenciales.")
-      console.error("Login error:", err)
+      setError("Error al iniciar sesión. Verifica tus credenciales.");
+      console.error("Login error:", err);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleSocialAuth = (provider: string) => {
     window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/oauth2/authorization/${provider}`
