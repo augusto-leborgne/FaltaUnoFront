@@ -159,14 +159,34 @@ export const UsuarioAPI = {
     return res.json()
   },
   login: async (email: string, password: string) => {
-    const res = await fetch(`${API_BASE}/api/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    })
-    if (!res.ok) throw new Error(`Error al iniciar sesión: ${res.status}`)
-    return res.json() as Promise<{ success: boolean; data: { token: string; user: Usuario } }>
-  },
+  const tryEndpoints = [
+    `${API_BASE}/auth/login`,
+    `${API_BASE}/api/login`,
+  ];
+
+  let lastErr: any = null;
+  for (const url of tryEndpoints) {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) {
+        // intentar siguiente endpoint
+        const text = await res.text().catch(() => "");
+        lastErr = new Error(`Error al iniciar sesión (${res.status}): ${text}`);
+        continue;
+      }
+      // se espera { success: boolean, data: { token, user } } según frontend actual
+      return (await res.json()) as { success: boolean; data: { token: string; user: Usuario } };
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+
+  throw lastErr ?? new Error("No se pudo conectar al endpoint de login");
+},
   getFriendRequests: (userId: string) =>
     apiFetch<any[]>(`/api/usuarios/${userId}/friend-requests`),
   getUnreadMessages: (userId: string) =>
