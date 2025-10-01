@@ -1,123 +1,96 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { useRouter } from "next/navigation"
-import { User, ChevronDown } from "lucide-react"
+import React, { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useRouter } from "next/navigation";
+import { User, ChevronDown } from "lucide-react";
+import { AddressAutocomplete } from "./address-autocomplete";
+import { UsuarioAPI } from "@/lib/api";
+import { AuthService } from "@/lib/auth";
+import type { google } from "google-maps";
 
 export function ProfileSetupForm() {
-  const router = useRouter()
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
     surname: "",
-    email: "",
-    phone: "", // Added phone number field
+    phone: "",
     position: "",
     height: "",
     weight: "",
     photo: null as File | null,
-  })
-  const [showPositionDropdown, setShowPositionDropdown] = useState(false)
-  const [authMethod, setAuthMethod] = useState<"email" | "google" | "apple" | "facebook">("email")
-  const [showSmsVerification, setShowSmsVerification] = useState(false) // Added SMS verification state
-  const [smsCode, setSmsCode] = useState("") // Added SMS code state
+    address: "",
+    placeDetails: null as google.maps.places.PlaceResult | null,
+  });
+  const [showPositionDropdown, setShowPositionDropdown] = useState(false);
+  const [showSmsVerification, setShowSmsVerification] = useState(false);
+  const [smsCode, setSmsCode] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
 
-  const positions = ["Arquero", "Zaguero", "Lateral", "Mediocampista", "Volante", "Delantero"]
+  const positions = ["Arquero", "Zaguero", "Lateral", "Mediocampista", "Volante", "Delantero"];
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!formData.photo) {
-      alert("La foto es obligatoria")
-      return
-    }
-    if (!formData.phone) {
-      alert("El número de teléfono es obligatorio")
-      return
-    }
-    setShowSmsVerification(true)
-  }
+    e.preventDefault();
+    if (!formData.photo) return alert("La foto es obligatoria");
+    if (!formData.phone) return alert("El número de teléfono es obligatorio");
+    if (!formData.address) return alert("La ubicación es obligatoria");
+
+    setShowSmsVerification(true);
+  };
 
   const handleSmsVerification = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (smsCode.length !== 6) {
-      alert("Ingresa el código de 6 dígitos")
-      return
-    }
-    router.push("/verification")
-  }
+    e.preventDefault();
+    if (smsCode.length !== 6) return alert("Ingresa el código de 6 dígitos");
+    handleUploadAndSaveProfile();
+  };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setFormData((prev) => ({ ...prev, photo: file }))
-    }
-  }
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0] ?? null;
+    if (f) setFormData(prev => ({ ...prev, photo: f }));
+  };
 
   const handlePositionSelect = (position: string) => {
-    setFormData((prev) => ({ ...prev, position }))
-    setShowPositionDropdown(false)
-  }
+    setFormData(prev => ({ ...prev, position }));
+    setShowPositionDropdown(false);
+  };
 
-  const handleSocialLogin = (method: "google" | "apple" | "facebook") => {
-    setAuthMethod(method)
-    // Here would be the actual social login implementation
-  }
+  async function handleUploadAndSaveProfile() {
+    if (!formData.photo) return alert("Foto requerida");
+    setIsUploading(true);
+    try {
+      await UsuarioAPI.subirFoto(formData.photo, "me");
 
-  if (showSmsVerification) {
-    return (
-      <div className="min-h-screen bg-white flex flex-col">
-        <div className="pt-16 pb-8 text-center border-b border-gray-100">
-          <h1 className="text-2xl font-bold text-gray-900">Verificar teléfono</h1>
-          <p className="text-gray-600 mt-2">Enviamos un código a {formData.phone}</p>
-        </div>
+      const perfilPayload = {
+        nombre: formData.name,
+        apellido: formData.surname,
+        celular: formData.phone,
+        posicion: formData.position,
+        altura: formData.height,
+        peso: formData.weight,
+        direccion: formData.address,
+        placeDetails: formData.placeDetails ? JSON.stringify(formData.placeDetails) : null,
+      };
 
-        <div className="flex-1 px-6 py-8">
-          <form onSubmit={handleSmsVerification} className="space-y-6">
-            <Input
-              placeholder="Código de 6 dígitos"
-              value={smsCode}
-              onChange={(e) => setSmsCode(e.target.value)}
-              className="p-4 text-lg border-gray-200 rounded-2xl bg-gray-50 focus:bg-white min-h-[56px] text-center text-2xl tracking-widest"
-              maxLength={6}
-              required
-            />
-
-            <Button
-              type="submit"
-              className="w-full bg-green-500 hover:bg-green-600 active:bg-green-700 text-white py-4 text-lg font-semibold rounded-2xl min-h-[56px] touch-manipulation"
-              size="lg"
-            >
-              Verificar
-            </Button>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowSmsVerification(false)}
-              className="w-full py-4 text-lg font-semibold rounded-2xl min-h-[56px] touch-manipulation"
-            >
-              Cambiar número
-            </Button>
-          </form>
-        </div>
-      </div>
-    )
+      await UsuarioAPI.actualizarPerfil(perfilPayload, "me");
+      router.push("/verification");
+    } catch (err) {
+      console.error("Error al guardar perfil:", err);
+      alert("Error al guardar perfil. Intenta nuevamente.");
+    } finally {
+      setIsUploading(false);
+    }
   }
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Header */}
       <div className="pt-16 pb-8 text-center border-b border-gray-100">
         <h1 className="text-2xl font-bold text-gray-900">Crea tu perfil</h1>
       </div>
 
       <div className="flex-1 px-6 py-8">
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Profile Photo */}
           <div className="bg-gray-50 rounded-2xl p-6 flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Avatar className="w-16 h-16 bg-orange-100">
@@ -131,157 +104,65 @@ export function ProfileSetupForm() {
               </div>
             </div>
             <label className="cursor-pointer">
-              <Button
-                type="button"
-                variant="outline"
-                className="bg-orange-100 border-orange-200 text-gray-700 hover:bg-orange-200 active:bg-orange-300 touch-manipulation pointer-events-none"
-              >
+              <Button type="button" variant="outline" className="bg-orange-100 border-orange-200 text-gray-700 hover:bg-orange-200 active:bg-orange-300 touch-manipulation">
                 {formData.photo ? "Cambiar" : "Agregar"}
               </Button>
-              <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" required />
+              <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" required />
             </label>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Input
-              placeholder="Nombre"
-              value={formData.name}
-              onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-              className="p-4 text-lg border-gray-200 rounded-2xl bg-gray-50 focus:bg-white min-h-[56px]"
-              required
-            />
-            <Input
-              placeholder="Apellido"
-              value={formData.surname}
-              onChange={(e) => setFormData((prev) => ({ ...prev, surname: e.target.value }))}
-              className="p-4 text-lg border-gray-200 rounded-2xl bg-gray-50 focus:bg-white min-h-[56px]"
+            <Input placeholder="Nombre" value={formData.name} onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))} required />
+            <Input placeholder="Apellido" value={formData.surname} onChange={e => setFormData(prev => ({ ...prev, surname: e.target.value }))} required />
+          </div>
+
+          <div>
+            <AddressAutocomplete
+              value={formData.address}
+              onChange={(address, placeDetails) => setFormData(prev => ({ ...prev, address, placeDetails: placeDetails ?? null }))}
+              placeholder="Ubicación"
               required
             />
           </div>
 
-          <Input
-            placeholder="Número de teléfono"
-            type="tel"
-            value={formData.phone}
-            onChange={(e) => setFormData((prev) => ({ ...prev, phone: e.target.value }))}
-            className="w-full p-4 text-lg border-gray-200 rounded-2xl bg-gray-50 focus:bg-white min-h-[56px]"
-            required
-          />
-
-          <div className="space-y-4">
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setAuthMethod("email")}
-                className={`px-4 py-2 rounded-xl text-sm font-medium ${
-                  authMethod === "email" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"
-                }`}
-              >
-                Email
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSocialLogin("google")}
-                className={`px-4 py-2 rounded-xl text-sm font-medium ${
-                  authMethod === "google" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"
-                }`}
-              >
-                Google
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSocialLogin("apple")}
-                className={`px-4 py-2 rounded-xl text-sm font-medium ${
-                  authMethod === "apple" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"
-                }`}
-              >
-                Apple
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSocialLogin("facebook")}
-                className={`px-4 py-2 rounded-xl text-sm font-medium ${
-                  authMethod === "facebook" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-600"
-                }`}
-              >
-                Facebook
-              </button>
-            </div>
-
-            {authMethod === "email" && (
-              <Input
-                placeholder="Email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
-                className="w-full p-4 text-lg border-gray-200 rounded-2xl bg-gray-50 focus:bg-white min-h-[56px]"
-                required
-              />
-            )}
-          </div>
-
-          {/* Position Dropdown */}
           <div className="relative">
-            <button
-              type="button"
-              onClick={() => setShowPositionDropdown(!showPositionDropdown)}
-              className="w-full p-4 text-lg border border-gray-200 rounded-2xl bg-gray-50 focus:bg-white min-h-[56px] text-left flex items-center justify-between"
-            >
-              <span className={formData.position ? "text-gray-900" : "text-gray-500"}>
-                {formData.position || "Posición favorita"}
-              </span>
-              <ChevronDown className="w-5 h-5 text-gray-400" />
-            </button>
+            <Button type="button" variant="outline" onClick={() => setShowPositionDropdown(!showPositionDropdown)} className="w-full text-left py-3 px-4 rounded-xl border border-gray-300 bg-white">
+              {formData.position || "Selecciona tu posición"}
+              <ChevronDown className="w-5 h-5 float-right" />
+            </Button>
             {showPositionDropdown && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-2xl shadow-lg z-10">
-                {positions.map((position) => (
-                  <button
-                    key={position}
-                    type="button"
-                    onClick={() => handlePositionSelect(position)}
-                    className="w-full p-4 text-left hover:bg-gray-50 first:rounded-t-2xl last:rounded-b-2xl"
-                  >
-                    {position}
-                  </button>
+              <div className="absolute mt-1 w-full bg-white border border-gray-300 rounded-xl z-50">
+                {positions.map(pos => (
+                  <div key={pos} onClick={() => handlePositionSelect(pos)} className="p-3 hover:bg-gray-100 cursor-pointer">
+                    {pos}
+                  </div>
                 ))}
               </div>
             )}
           </div>
 
-          {/* Height and Weight */}
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              placeholder="Altura (cm)"
-              type="number"
-              inputMode="numeric"
-              value={formData.height}
-              onChange={(e) => setFormData((prev) => ({ ...prev, height: e.target.value }))}
-              className="p-4 text-lg border-gray-200 rounded-2xl bg-gray-50 focus:bg-white min-h-[56px]"
-              required
-            />
-            <Input
-              placeholder="Peso (kg)"
-              type="number"
-              inputMode="numeric"
-              value={formData.weight}
-              onChange={(e) => setFormData((prev) => ({ ...prev, weight: e.target.value }))}
-              className="p-4 text-lg border-gray-200 rounded-2xl bg-gray-50 focus:bg-white min-h-[56px]"
-              required
-            />
-          </div>
+          {showSmsVerification && (
+            <div className="mt-6">
+              <h3 className="text-gray-900 font-semibold mb-2">Código de verificación SMS</h3>
+              <Input
+                placeholder="XXXXXX"
+                value={smsCode}
+                onChange={e => setSmsCode(e.target.value)}
+                maxLength={6}
+              />
+              <Button type="button" onClick={handleSmsVerification} className="w-full mt-4">
+                Verificar y Guardar Perfil
+              </Button>
+            </div>
+          )}
 
-          {/* Submit Button */}
-          <div className="pt-8 pb-24">
-            <Button
-              type="submit"
-              className="w-full bg-green-500 hover:bg-green-600 active:bg-green-700 text-white py-4 text-lg font-semibold rounded-2xl min-h-[56px] touch-manipulation"
-              size="lg"
-            >
-              Continuar a verificación
+          {!showSmsVerification && (
+            <Button type="submit" className="w-full">
+              Continuar
             </Button>
-          </div>
+          )}
         </form>
       </div>
     </div>
-  )
+  );
 }

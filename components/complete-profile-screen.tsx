@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { useRouter } from "next/navigation"
-import { User, MapPin, Camera } from "lucide-react"
-import { AddressAutocomplete } from "./address-autocomplete"
-import type { google } from "google-maps"
-import { Usuario, UsuarioAPI } from "@/lib/api"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useRouter } from "next/navigation";
+import { User, Camera, MapPin } from "lucide-react";
+import { AddressAutocomplete } from "./address-autocomplete";
+import type { google } from "google-maps";
+import { UsuarioAPI, Usuario } from "@/lib/api";
 
 export function CompleteProfileScreen() {
-  const router = useRouter()
+  const router = useRouter();
   const [formData, setFormData] = useState({
     nombre: "",
     apellido: "",
@@ -21,72 +21,77 @@ export function CompleteProfileScreen() {
     position: "",
     experience: "",
     photoFile: null as File | null,
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
-  }
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
 
   const handleAddressChange = (address: string, placeDetails?: google.maps.places.PlaceResult) => {
-    setFormData((prev) => ({ ...prev, address }))
+    setFormData((prev) => ({ ...prev, address }));
 
     if (placeDetails?.address_components) {
       const cityComponent = placeDetails.address_components.find(
-        (component) => component.types.includes("locality") || component.types.includes("administrative_area_level_1")
-      )
-      if (cityComponent && !formData.city) {
-        setFormData((prev) => ({ ...prev, city: cityComponent.long_name }))
+        (component) =>
+          component.types.includes("locality") ||
+          component.types.includes("administrative_area_level_1")
+      );
+      if (cityComponent) {
+        setFormData((prev) => ({ ...prev, city: cityComponent.long_name }));
       }
     }
-  }
+  };
 
   const handleFileChange = (file: File | null) => {
-    setFormData((prev) => ({ ...prev, photoFile: file }))
-  }
+    setFormData((prev) => ({ ...prev, photoFile: file }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!formData.photoFile) {
-      alert("Debes subir una foto de perfil")
-      return
+      alert("Debes subir una foto de perfil");
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     try {
-      // Primero subimos la foto
-      const photoRes = await UsuarioAPI.subirFoto("me", formData.photoFile) // "me" reemplazar por userId si necesario
+      const uploadRes = await UsuarioAPI.subirFoto(formData.photoFile, "me");
+      let fotoUrl: string | undefined;
+      if (uploadRes && (uploadRes as any).data?.url) fotoUrl = (uploadRes as any).data.url;
 
-      // Preparamos payload sin bio
       const payload: Partial<Usuario> = {
-        nombre: formData.nombre,
-        apellido: formData.apellido,
-        celular: formData.celular,
-        edad: formData.birthDate ? new Date().getFullYear() - new Date(formData.birthDate).getFullYear() : undefined,
-        ubicacion: formData.address,
-        posicion: formData.position as Usuario['posicion'] | undefined,
-        perfilCompleto: true,
-        foto_perfil: photoRes.data.url,
-      }
+        nombre: formData.nombre || undefined,
+        apellido: formData.apellido || undefined,
+        celular: formData.celular || undefined,
+        edad: formData.birthDate
+          ? new Date().getFullYear() - new Date(formData.birthDate).getFullYear()
+          : undefined,
+        ubicacion: formData.address || undefined,
+        posicion: formData.position || undefined,
+        foto_perfil: fotoUrl || undefined,
+      };
 
+      await UsuarioAPI.actualizarPerfil(payload);
 
-      // Guardamos en backend
-      await UsuarioAPI.crear(payload)
-
-      router.push("/verificacion") // siguiente paso: verificación
+      router.push("/verificacion");
     } catch (err: any) {
-      console.error(err)
-      alert("Ocurrió un error al completar tu perfil")
+      console.error("Error completando perfil:", err);
+      if (String(err).includes("401")) {
+        alert("No autenticado. Inicia sesión nuevamente.");
+        router.push("/login");
+      } else {
+        alert("Ocurrió un error al completar tu perfil");
+      }
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Header */}
       <div className="pt-20 pb-8 text-center px-6">
         <User className="w-16 h-16 text-green-600 mx-auto mb-6" />
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Completa tu Perfil</h1>
@@ -95,7 +100,6 @@ export function CompleteProfileScreen() {
 
       <div className="flex-1 px-6 pb-8">
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Profile Photo */}
           <div className="text-center">
             <div className="w-24 h-24 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
               <Camera className="w-8 h-8 text-gray-400" />
@@ -109,7 +113,6 @@ export function CompleteProfileScreen() {
             />
           </div>
 
-          {/* Contact Information */}
           <div className="space-y-4">
             <h3 className="font-semibold text-gray-900 flex items-center gap-2">
               <User className="w-5 h-5" />
@@ -153,7 +156,6 @@ export function CompleteProfileScreen() {
             />
           </div>
 
-          {/* Location */}
           <div className="space-y-4">
             <h3 className="font-semibold text-gray-900 flex items-center gap-2">
               <MapPin className="w-5 h-5" />
@@ -178,7 +180,6 @@ export function CompleteProfileScreen() {
             />
           </div>
 
-          {/* Football Information */}
           <div className="space-y-4">
             <h3 className="font-semibold text-gray-900">⚽ Información Futbolística</h3>
 
@@ -220,5 +221,5 @@ export function CompleteProfileScreen() {
         </form>
       </div>
     </div>
-  )
+  );
 }

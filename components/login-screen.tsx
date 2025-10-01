@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
 import { UsuarioAPI } from "@/lib/api"
+import { AuthService } from "@/lib/auth"
 import { useSearchParams } from "next/navigation"
 
 export function LoginScreen() {
@@ -17,32 +18,35 @@ export function LoginScreen() {
   const returnTo = search.get("returnTo") ?? null;
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError("");
-
+    e.preventDefault()
+    setIsLoading(true)
+    setError("")
     try {
-      const response = await UsuarioAPI.login(email, password);
-      if (response.success) {
-        localStorage.setItem("authToken", response.data.token);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-        // redirigir al returnTo si viene, sino la lógica de perfil existente
-        if (returnTo) {
-          router.push(returnTo);
+      const res = await UsuarioAPI.login(email, password)
+      if (res && (res as any).success) {
+        const token = (res as any).data?.token
+        const user = (res as any).data?.user
+        if (token) AuthService.setToken(token)
+        if (user) AuthService.setUser(user)
+        // redirigir
+        if (returnTo) return router.push(returnTo)
+        const u = user
+        if (!u) return router.push("/complete-profile")
+        if ((u as any).perfilCompleto) {
+          router.push((u as any).cedulaVerificada ? "/" : "/verification")
         } else {
-          const u = response.data.user;
-          router.push(u.perfilCompleto ? (u.cedulaVerificada ? "/" : "/verification") : "/complete-profile");
+          router.push("/complete-profile")
         }
       } else {
-        setError("Error al iniciar sesión");
+        setError("Credenciales inválidas")
       }
     } catch (err) {
-      setError("Error al iniciar sesión. Verifica tus credenciales.");
-      console.error("Login error:", err);
+      console.error("Login error:", err)
+      setError("Error al iniciar sesión. Verifica tus credenciales.")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleSocialAuth = (provider: string) => {
     window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/oauth2/authorization/${provider}`
@@ -64,9 +68,7 @@ export function LoginScreen() {
         <form onSubmit={handleSubmit} className="space-y-6 mb-8">
           <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={isLoading} />
           <Input type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} required disabled={isLoading} />
-          <Button type="submit" disabled={isLoading} className="w-full bg-green-600 text-white py-4 rounded-2xl">
-            {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
-          </Button>
+          <Button type="submit" disabled={isLoading} className="w-full bg-green-600 text-white py-4 rounded-2xl">{isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}</Button>
         </form>
 
         <div className="flex items-center my-8">
@@ -80,12 +82,7 @@ export function LoginScreen() {
         <Button onClick={() => handleSocialAuth("apple")} variant="outline" className="w-full py-4 rounded-2xl">Apple</Button>
 
         <div className="text-center mt-8 pb-8">
-          <p className="text-sm text-gray-500">
-            ¿No tienes cuenta?{" "}
-            <button onClick={() => router.push("/register")} className="text-green-600 font-medium">
-              Regístrate aquí
-            </button>
-          </p>
+          <p className="text-sm text-gray-500">¿No tienes cuenta? <button onClick={() => router.push("/register")} className="text-green-600 font-medium">Regístrate aquí</button></p>
         </div>
       </div>
     </div>

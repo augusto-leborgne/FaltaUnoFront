@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { BottomNavigation } from "@/components/bottom-navigation"
@@ -33,7 +33,7 @@ export function UserProfileScreen({ userId }: UserProfileScreenProps) {
     const fetchReviews = async () => {
       try {
         const res = await ReviewAPI.listar()
-        const userReviews = res.data.filter(r => r.usuario_calificado_id === userId)
+        const userReviews = (res.data || []).filter(r => r.usuario_calificado_id === userId)
         setReviews(userReviews)
       } catch (err) {
         console.error("Error fetching reviews:", err)
@@ -42,15 +42,46 @@ export function UserProfileScreen({ userId }: UserProfileScreenProps) {
 
     const fetchContacts = async () => {
       try {
+        // Traemos todos los usuarios y normalizamos los campos que pueden ser null/undefined
         const res = await UsuarioAPI.listar()
-        const otherUsers: UsuarioMin[] = res.data
+        const otherUsers = (res.data || [])
           .filter(u => u.id !== userId)
-          .map(u => ({
-            id: u.id,
-            nombre: u.nombre,
-            apellido: u.apellido,
-            foto_perfil: u.foto_perfil ?? "/placeholder.svg", // <- forzamos string
-          }))
+          .map(u => {
+            // aseguramos que nombre/apellido sean string (no null/undefined)
+            const nombre = u.nombre ?? ""
+            const apellido = u.apellido ?? ""
+
+            // normalizamos foto_perfil a string URL si es posible; si viene como byte[] no lo convertimos aquí
+            // preferimos usar la propiedad tal cual si es string, sino placeholder
+            let foto_perfil = "/placeholder.svg"
+            try {
+              if (typeof u.foto_perfil === "string" && u.foto_perfil.length > 0) {
+                foto_perfil = u.foto_perfil
+              } else if (Array.isArray((u as any).foto_perfil) && (u as any).foto_perfil.length > 0) {
+                // si backend nos devuelve un array de bytes, intentamos convertirlo a base64 (defensivo)
+                try {
+                  const bytes: number[] = (u as any).foto_perfil
+                  const binary = bytes.map(b => String.fromCharCode(b)).join("")
+                  // btoa puede fallar si los bytes no son ascii — intentamos de todas formas
+                  const base64 = typeof window !== "undefined" ? window.btoa(binary) : ""
+                  if (base64) foto_perfil = `data:image/jpeg;base64,${base64}`
+                } catch (e) {
+                  // fallback: placeholder
+                }
+              }
+            } catch (err) {
+              // keep placeholder
+            }
+
+            const userMin: UsuarioMin = {
+              id: u.id,
+              nombre,
+              apellido,
+              foto_perfil,
+            }
+            return userMin
+          })
+
         setContacts(otherUsers)
       } catch (err) {
         console.error("Error fetching contacts:", err)
@@ -86,29 +117,32 @@ export function UserProfileScreen({ userId }: UserProfileScreenProps) {
         <div className="bg-card border border-border rounded-2xl p-6 mb-6">
           <div className="flex items-center space-x-4 mb-6">
             <Avatar className="w-20 h-20">
-              <AvatarImage src={user.foto_perfil ?? "/placeholder.svg"} />
-              <AvatarFallback className="bg-muted text-2xl">{user.nombre[0]}</AvatarFallback>
+              {typeof user.foto_perfil === "string" && user.foto_perfil ? (
+                <AvatarImage src={user.foto_perfil} />
+              ) : (
+                <AvatarFallback className="bg-muted text-2xl">{(user.nombre ?? "U")[0]}</AvatarFallback>
+              )}
             </Avatar>
             <div className="flex-1">
-              <h2 className="text-xl font-bold text-foreground">{user.nombre} {user.apellido}</h2>
-              <p className="text-muted-foreground">{user.posicion}</p>
-              <p className="text-sm text-muted-foreground">{user.ubicacion}</p>
-              <p className="text-sm text-muted-foreground">{user.celular}</p>
+              <h2 className="text-xl font-bold text-foreground">{user.nombre ?? ""} {user.apellido ?? ""}</h2>
+              <p className="text-muted-foreground">{user.posicion ?? ""}</p>
+              <p className="text-sm text-muted-foreground">{user.ubicacion ?? ""}</p>
+              <p className="text-sm text-muted-foreground">{user.celular ?? ""}</p>
             </div>
           </div>
 
           {/* Datos del usuario */}
           <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="text-center">
-              <div className="text-lg font-bold text-foreground">{user.edad} años</div>
+              <div className="text-lg font-bold text-foreground">{user.edad ?? "-"}</div>
               <div className="text-sm text-muted-foreground">Edad</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold text-foreground">{user.altura} m</div>
+              <div className="text-lg font-bold text-foreground">{user.altura ?? "-"}</div>
               <div className="text-sm text-muted-foreground">Altura</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold text-foreground">{user.peso} kg</div>
+              <div className="text-lg font-bold text-foreground">{user.peso ?? "-"}</div>
               <div className="text-sm text-muted-foreground">Peso</div>
             </div>
           </div>
@@ -140,8 +174,9 @@ export function UserProfileScreen({ userId }: UserProfileScreenProps) {
                 className="flex items-center space-x-3 p-3 hover:bg-muted rounded-xl cursor-pointer transition-colors"
               >
                 <Avatar className="w-12 h-12">
+                  {/* contact.foto_perfil ya es string por la normalización previa */}
                   <AvatarImage src={contact.foto_perfil} />
-                  <AvatarFallback className="bg-muted">{contact.nombre[0]}</AvatarFallback>
+                  <AvatarFallback className="bg-muted">{(contact.nombre || "U")[0]}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
                   <div className="font-medium text-foreground">{contact.nombre} {contact.apellido}</div>
@@ -194,30 +229,9 @@ export function UserProfileScreen({ userId }: UserProfileScreenProps) {
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-2 mb-2">
-                  <div className="text-center">
-                    <div className="text-xs text-muted-foreground mb-1">Nivel</div>
-                    <div className="flex justify-center space-x-0.5">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className={`w-2 h-2 ${i < review.nivel ? "fill-blue-400 text-blue-400" : "text-muted-foreground"}`} />
-                      ))}
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xs text-muted-foreground mb-1">Deportividad</div>
-                    <div className="flex justify-center space-x-0.5">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className={`w-2 h-2 ${i < review.deportividad ? "fill-green-400 text-green-400" : "text-muted-foreground"}`} />
-                      ))}
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xs text-muted-foreground mb-1">Compañerismo</div>
-                    <div className="flex justify-center space-x-0.5">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className={`w-2 h-2 ${i < review.companerismo ? "fill-purple-400 text-purple-400" : "text-muted-foreground"}`} />
-                      ))}
-                    </div>
-                  </div>
+                  <div className="text-center"><div className="text-xs text-muted-foreground mb-1">Nivel</div></div>
+                  <div className="text-center"><div className="text-xs text-muted-foreground mb-1">Deportividad</div></div>
+                  <div className="text-center"><div className="text-xs text-muted-foreground mb-1">Compañerismo</div></div>
                 </div>
                 <p className="text-sm text-muted-foreground mb-1">{review.comentario}</p>
               </div>
