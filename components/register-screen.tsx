@@ -21,40 +21,58 @@ export function RegisterScreen() {
     confirmPassword: "",
   })
 
-  const handleEmailRegistration = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (formData.password !== formData.confirmPassword) {
-      setError("Las contraseñas no coinciden")
-      return
-    }
-
-    setIsLoading(true)
-    setError("")
-
-    try {
-      const response = await UsuarioAPI.crear({
-        nombre: formData.firstName,
-        apellido: formData.lastName,
-        email: formData.email,
-        password: formData.password,
-      })
-
-      if (response.success) {
-        localStorage.setItem("user", JSON.stringify(response.data)) // solo data
-        // si quieres un token debes hacer login después
-        const loginRes = await UsuarioAPI.login(formData.email, formData.password)
-        if (loginRes.success) {
-          localStorage.setItem("authToken", loginRes.data.token)
-        }
-        router.push("/complete-profile")
+    const handleEmailRegistration = async (e: React.FormEvent) => {
+      e.preventDefault()
+      if (formData.password !== formData.confirmPassword) {
+        setError("Las contraseñas no coinciden")
+        return
       }
-    } catch (err) {
-      setError("Error al crear la cuenta. Intenta nuevamente.")
-      console.error("Registration error:", err)
-    } finally {
-      setIsLoading(false)
+
+      setIsLoading(true)
+      setError("")
+
+      try {
+        console.info('[Register] API_BASE before create:', (process.env.NEXT_PUBLIC_API_URL ?? '') || '(empty) - runtime fallback will be used')
+        console.info('[Register] Payload:', {
+          nombre: formData.firstName,
+          apellido: formData.lastName,
+          email: formData.email,
+        })
+
+        const response = await UsuarioAPI.crear({
+          nombre: formData.firstName,
+          apellido: formData.lastName,
+          email: formData.email,
+          password: formData.password,
+        })
+
+        console.info('[Register] crear response:', response)
+
+        if (response.success) {
+          localStorage.setItem("user", JSON.stringify(response.data))
+          // login automático (si backend soporta)
+          try {
+            const loginRes = await UsuarioAPI.login(formData.email, formData.password)
+            console.info('[Register] login response:', loginRes)
+            if (loginRes.success) {
+              localStorage.setItem("authToken", loginRes.data.token)
+            }
+          } catch (loginErr) {
+            console.warn('[Register] login failed after register:', loginErr)
+          }
+          router.push("/complete-profile")
+        } else {
+          console.warn('[Register] API responded success=false', response)
+          setError(response.message ?? "Error al crear la cuenta.")
+        }
+      } catch (err: any) {
+        console.error('Registration error full:', err)
+        setError(err?.message ?? "Error al crear la cuenta. Intenta nuevamente.")
+      } finally {
+        setIsLoading(false)
+      }
     }
-  }
+
 
   const handleSocialAuth = (provider: string) => {
     window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/oauth2/authorization/${provider}`
