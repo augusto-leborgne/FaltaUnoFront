@@ -1,13 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  images: {
-    unoptimized: true,
+  reactStrictMode: true,
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://backend_sd-backend-1:8080/api/:path*', // nombre del contenedor backend
+      },
+      {
+        source: '/auth/:path*',
+        destination: 'http://backend_sd-backend-1:8080/auth/:path*', // opcional, para auth
+      },
+    ]
   },
 }
 

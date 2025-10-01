@@ -4,4 +4,10 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://host.docker.internal:8080
+      - NEXT_PUBLIC_API_URL
+    networks:
+      - appnet
+
+networks:
+  appnet:
+    external: true
