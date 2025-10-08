@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useRouter } from "next/navigation";
 import { User, ChevronDown } from "lucide-react";
-import { AddressAutocomplete } from "./address-autocomplete";
+import { AddressAutocomplete } from "@/components/google-maps/address-autocomplete";
 import { UsuarioAPI } from "@/lib/api";
 import { AuthService } from "@/lib/auth";
 import type { google } from "google-maps";
@@ -73,7 +73,7 @@ export function ProfileSetupForm() {
         placeDetails: formData.placeDetails ? JSON.stringify(formData.placeDetails) : null,
       };
 
-      await UsuarioAPI.actualizarPerfil(perfilPayload, "me");
+      await UsuarioAPI.actualizarPerfil(perfilPayload);
       router.push("/verification");
     } catch (err) {
       console.error("Error al guardar perfil:", err);

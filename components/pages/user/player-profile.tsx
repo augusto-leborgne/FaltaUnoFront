@@ -2,7 +2,7 @@
 
 import React from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { BottomNavigation } from "@/components/bottom-navigation"
+import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { Button } from "@/components/ui/button"
 import { Star, ArrowLeft, MapPin } from "lucide-react"
 import { useRouter } from "next/navigation"

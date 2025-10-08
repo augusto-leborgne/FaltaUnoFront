@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Users, Clock, MapPin } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { BottomNavigation } from "@/components/bottom-navigation"
+import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { apiService, type Match } from "@/lib/api"
 
 export function MyMatchesScreen() {

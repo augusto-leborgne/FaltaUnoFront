@@ -1,4 +1,4 @@
-import { ProfileSetupForm } from "@/components/profile-setup-form"
+import { ProfileSetupForm } from "@/components/pages/login/profile-setup-form"
 
 export default function ProfileSetupPage() {
   return <ProfileSetupForm />

@@ -5,7 +5,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { BottomNavigation } from "@/components/bottom-navigation"
+import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { ArrowLeft, MapPin, Calendar, Users, DollarSign } from "lucide-react"
 import { useRouter } from "next/navigation"
 import {
@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { CompressedMap } from "./compressed-map"
 import { apiService } from "@/lib/api"
-import { AddressAutocomplete } from "./address-autocomplete"
+import { AddressAutocomplete } from "../../address-autocomplete"
 import type { google } from "google-maps"
 
 export function CreateMatch() {
