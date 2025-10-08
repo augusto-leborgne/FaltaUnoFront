@@ -95,8 +95,7 @@ export const UsuarioAPI = {
     return res.json()
   },
 
-  login: async (email: string, password: string) => {
-    // Intentamos endpoints de login (sesión/JWT)
+  login: async (email: string, password: string): Promise<ApiResponse<{ token?: string; user?: Usuario }>> => {
     const endpoints = ['/auth/login', '/login'];
     let lastErr: any = null;
 
@@ -104,19 +103,40 @@ export const UsuarioAPI = {
       const url = normalizeUrl(`${API_BASE}${ep}`);
       console.info('[UsuarioAPI.login] intentando', url);
       try {
+        // Enviar como form-urlencoded para que UsernamePasswordAuthenticationFilter lo lea
+        const body = new URLSearchParams();
+        body.append('username', email); // Spring usa "username" por defecto
+        body.append('password', password);
+
         const res = await fetch(url, {
           method: 'POST',
-          credentials: 'include', // importante: para que backend establezca cookie de sesión (JSESSIONID)
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
+          credentials: 'include', // importante para cookie de sesión
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString()
         });
+
+        const text = await res.text().catch(()=>'');
+
         if (!res.ok) {
-          const text = await res.text().catch(()=>'')
-          lastErr = new Error(`Error login (${res.status}): ${text}`);
-          continue;
+          // intentar parsear json si corresponde
+          try {
+            const json = JSON.parse(text || '{}');
+            return { success: false, data: (json.data ?? {}) as any, message: json.message ?? `Error login (${res.status})` };
+          } catch {
+            return { success: false, data: {} as any, message: `Error login (${res.status}) ${text}` };
+          }
         }
-        // si backend usa JWT en body, devuelvelo; si usa sesión, cookie vendrá en navegador
-        return (await res.json()) as { success: boolean; data: { token?: string; user?: Usuario } };
+
+        // OK
+        const json = text ? JSON.parse(text) : {};
+        // Acomodamos a ApiResponse si backend ya devuelve success/data/message OR si usa sesión devolveremos success:true sin token
+        const result: ApiResponse<{ token?: string; user?: Usuario }> = {
+          success: json.success ?? true,
+          data: json.data ?? ({} as any),
+          message: json.message
+        };
+        return result;
+
       } catch (err) {
         lastErr = err;
       }

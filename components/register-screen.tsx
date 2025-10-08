@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
-import { UsuarioAPI, ApiResponse } from "@/lib/api"
+import { UsuarioAPI, ApiResponse, Usuario } from "@/lib/api"
 import { AuthService } from "@/lib/auth"
 
 type FormData = {
@@ -25,6 +25,7 @@ export function RegisterScreen() {
 
   const handleEmailRegistration = async (e: React.FormEvent) => {
     e.preventDefault()
+
     if (formData.password !== formData.confirmPassword) {
       setError("Las contraseñas no coinciden")
       return
@@ -39,21 +40,30 @@ export function RegisterScreen() {
         password: formData.password,
       }
 
-      const response: ApiResponse<any> = await UsuarioAPI.crear(payload)
+      const response: ApiResponse<Usuario> = await UsuarioAPI.crear(payload)
 
       if (response.success) {
+        // Guardamos usuario recibido
         AuthService.setUser(response.data)
 
         try {
-          const loginRes: ApiResponse<{ token: string }> = await UsuarioAPI.login(formData.email, formData.password)
+          // Login automático
+          const loginRes = await UsuarioAPI.login(formData.email, formData.password)
+
           if (loginRes.success) {
-            AuthService.setToken(loginRes.data.token)
+            // Solo seteamos token si viene JWT; si no, sesión cookie ya está activa
+            if (loginRes.data.token) {
+              AuthService.setToken(loginRes.data.token)
+            }
+          } else {
+            console.warn("Login automático falló:", loginRes.message)
           }
         } catch (loginErr: any) {
           console.warn("Login automático falló después del registro:", loginErr)
         }
 
-        router.push("/complete-profile") // completar nombre/apellido
+        // Redirigir a completar perfil
+        router.push("/complete-profile")
       } else {
         setError(response.message ?? "Error al crear la cuenta.")
       }
