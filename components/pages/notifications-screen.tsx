@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowLeft, Check, X, Users, Calendar, MessageCircle, Star } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
-import { UsuarioAPI, InscripcionAPI } from "@/lib/api"
+import { UsuarioAPI} from "@/lib/api"
 
 type Notification = {
   id: string

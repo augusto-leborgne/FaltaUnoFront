@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { BottomNavigation } from "@/components/bottom-navigation"
+import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { ArrowLeft, MapPin, List } from "lucide-react"
 import { useRouter } from "next/navigation"
 

@@ -4,13 +4,13 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { UserRegistrationGuard } from "@/components/user-registration-guard"
+import { UserRegistrationGuard } from "@/components/auth/user-registration-guard"
 import { MapPin, Plus, Search, Filter, X } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { BottomNavigation } from "@/components/bottom-navigation"
+import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { Input } from "@/components/ui/input"
 import { apiService, type Match } from "@/lib/api"
-import { SecureMap } from "@/components/secure-map"
+import { SecureMap } from "@/components/google-maps/secure-map"
 
 export function MatchesListing() {
   const router = useRouter()

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { BottomNavigation } from "@/components/bottom-navigation"
+import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { Star, ArrowLeft, UserPlus } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { UsuarioAPI, ReviewAPI, UsuarioMin, Review, Usuario } from "@/lib/api"

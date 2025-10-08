@@ -4,11 +4,10 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { BottomNavigation } from "@/components/bottom-navigation"
-import { UserRegistrationGuard } from "@/components/user-registration-guard"
+import { BottomNavigation } from "@/components/ui/bottom-navigation"
+import { UserRegistrationGuard } from "@/components/auth/user-registration-guard"
 import { Clock, Calendar, Star, Bell, Newspaper, TrendingUp, Award } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { PartidoAPI, ReviewAPI, PendingReviewFromAPI, Partido } from "@/lib/api"
 import { AuthService } from "@/lib/auth"
 
 interface NewsUpdate {
