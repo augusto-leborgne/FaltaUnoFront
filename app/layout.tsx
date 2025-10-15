@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import "./globals.css"
-import ClientLayout from "./ClientLayout"
+import { AuthProvider } from "@/components/auth/auth-provider";
 
 export const metadata: Metadata = {
   title: "v0 App",
@@ -26,7 +26,9 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="Falta Uno" />
       </head>
       <body className="font-sans">
-        <ClientLayout>{children}</ClientLayout>
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   )

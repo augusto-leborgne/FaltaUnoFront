@@ -1,5 +1,11 @@
-import { RegisterScreen } from "@/components/pages/login/register-screen"
+// app/register/page.tsx
+import RedirectIfAuthenticated from "@/components/auth/redirect-if-authenticated";
+import { RegisterScreen } from "@/components/pages/login/register-screen";
 
 export default function RegisterPage() {
-  return <RegisterScreen />
+  return (
+    <RedirectIfAuthenticated redirectTo="/home">
+      <RegisterScreen />
+    </RedirectIfAuthenticated>
+  );
 }

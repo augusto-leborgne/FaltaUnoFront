@@ -1,5 +1,11 @@
-import { LoginScreen } from "@/components/pages/login/login-screen"
+// app/login/page.tsx
+import RedirectIfAuthenticated from "@/components/auth/redirect-if-authenticated";
+import { LoginScreen } from "@/components/pages/login/login-screen";
 
 export default function LoginPage() {
-  return <LoginScreen />
+  return (
+    <RedirectIfAuthenticated redirectTo="/home">
+      <LoginScreen />
+    </RedirectIfAuthenticated>
+  );
 }

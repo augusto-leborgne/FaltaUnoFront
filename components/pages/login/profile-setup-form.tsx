@@ -88,17 +88,48 @@ export function ProfileSetupForm() {
 
   async function handleUploadAndSaveProfile() {
     if (!formData.photo) return alert("Foto requerida");
+    
     setIsUploading(true);
+    
     try {
-      // subir foto
-      await UsuarioAPI.subirFoto(formData.photo, "me");
+      // DEBUG: Verificar que tengamos token
+      const token = AuthService.getToken();
+      console.log("[ProfileSetup] Token disponible:", token ? "SÍ" : "NO");
+      console.log("[ProfileSetup] Token length:", token?.length);
+      console.log("[ProfileSetup] Token preview:", token?.substring(0, 20) + "...");
+      
+      if (!token) {
+        alert("No estás autenticado. Por favor, inicia sesión nuevamente.");
+        router.push("/login");
+        return;
+      }
 
-      // payload: usamos fecha_nacimiento en lugar de edad (backend)
+      // Verificar que el token no esté expirado
+      if (AuthService.isTokenExpired(token)) {
+        alert("Tu sesión ha expirado. Por favor, inicia sesión nuevamente.");
+        AuthService.logout();
+        router.push("/login");
+        return;
+      }
+
+      console.log("[ProfileSetup] Subiendo foto...");
+      
+      // Subir foto primero
+      const fotoRes = await UsuarioAPI.subirFoto(formData.photo);
+      console.log("[ProfileSetup] Resultado subida foto:", fotoRes);
+
+      if (!fotoRes.success) {
+        throw new Error(fotoRes.message || "Error subiendo foto");
+      }
+
+      console.log("[ProfileSetup] Foto subida exitosamente, actualizando perfil...");
+
+      // Actualizar perfil
       const perfilPayload = {
         nombre: formData.name,
         apellido: formData.surname,
         celular: formData.phone,
-        fecha_nacimiento: formData.fechaNacimiento, // backend espera yyyy-MM-dd
+        fecha_nacimiento: formData.fechaNacimiento,
         posicion: formData.position,
         nivel: formData.level,
         altura: formData.height,
@@ -108,19 +139,22 @@ export function ProfileSetupForm() {
       };
 
       const res = await UsuarioAPI.actualizarPerfil(perfilPayload);
+      console.log("[ProfileSetup] Resultado actualizar perfil:", res);
 
-      // si backend devuelve user actualizado, guardarlo localmente
+      // Si backend devuelve user actualizado, guardarlo localmente
       try {
         if (res && (res as any).success && (res as any).data) {
           AuthService.setUser((res as any).data);
         }
-      } catch (e) { /* ignore */ }
+      } catch (e) { 
+        console.warn("[ProfileSetup] No se pudo actualizar user en localStorage:", e);
+      }
 
-      // luego de guardar perfil iremos a verificación
+      // Redirigir a verificación
       router.push("/verification");
-    } catch (err) {
-      console.error("Error al guardar perfil:", err);
-      alert("Error al guardar perfil. Intenta nuevamente.");
+    } catch (err: any) {
+      console.error("[ProfileSetup] Error al guardar perfil:", err);
+      alert(`Error al guardar perfil: ${err.message || "Intenta nuevamente"}`);
     } finally {
       setIsUploading(false);
     }
@@ -138,7 +172,6 @@ export function ProfileSetupForm() {
             <div className="flex items-center space-x-4">
               <Avatar className="w-16 h-16 bg-orange-100">
                 {formData.photoPreviewUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
                   <img src={formData.photoPreviewUrl} alt="preview" className="w-16 h-16 object-cover rounded-md" />
                 ) : (
                   <AvatarFallback className="bg-orange-100">

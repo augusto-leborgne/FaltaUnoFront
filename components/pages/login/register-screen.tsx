@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
-import { UsuarioAPI, ApiResponse, Usuario } from "@/lib/api"
+import { UsuarioAPI } from "@/lib/api"
 import { AuthService } from "@/lib/auth"
 import { usePostAuthRedirect } from "@/lib/navigation"
 
@@ -42,38 +42,80 @@ export function RegisterScreen() {
         password: formData.password,
       }
 
-      const response: ApiResponse<Usuario> = await UsuarioAPI.crear(payload)
+      console.log("[RegisterScreen] Creando usuario...")
+      const response = await UsuarioAPI.crear(payload) as any
+
+      console.log("[RegisterScreen] Respuesta crear usuario:", response)
 
       if (response && response.success) {
-        // Guardamos usuario recibido (creado)
-        if (response.data) AuthService.setUser(response.data)
+        // El backend ahora devuelve { user, token } en data
+        const user = response.data?.user
+        const token = response.data?.token
 
-        // Intentamos login automático
-        try {
-          const loginRes = await UsuarioAPI.login(formData.email, formData.password)
-          if (loginRes && loginRes.success && loginRes.data?.user) {
-            AuthService.setUser(loginRes.data.user)
-          }
-        } catch (loginErr: any) {
-          console.warn("Login automático falló después del registro:", loginErr)
+        console.log("[RegisterScreen] Usuario recibido:", user)
+        console.log("[RegisterScreen] Token recibido:", token ? "SÍ" : "NO")
+
+        // Guardar token si viene del registro
+        if (token) {
+          AuthService.setToken(token)
+          console.log("[RegisterScreen] Token guardado desde registro")
         }
 
-        // Obtener usuario actual
-        const currentUser = AuthService.getUser()
+        // Guardar usuario
+        if (user) {
+          AuthService.setUser(user)
+          console.log("[RegisterScreen] Usuario guardado")
+        }
+
+        // Si no hay token del registro, intentar login
+        if (!token) {
+          console.log("[RegisterScreen] No hay token, intentando login automático...")
+          try {
+            const loginRes = await UsuarioAPI.login(formData.email, formData.password)
+            console.log("[RegisterScreen] Resultado login:", loginRes)
+            
+            if (loginRes && loginRes.success) {
+              if (loginRes.data?.token) {
+                AuthService.setToken(loginRes.data.token)
+                console.log("[RegisterScreen] Token guardado desde login")
+              }
+              if (loginRes.data?.user) {
+                AuthService.setUser(loginRes.data.user)
+                console.log("[RegisterScreen] Usuario actualizado desde login")
+              }
+            }
+          } catch (loginErr: any) {
+            console.warn("[RegisterScreen] Login automático falló:", loginErr)
+          }
+        }
+
+        // Verificar que tengamos token antes de continuar
+        const finalToken = AuthService.getToken()
+        const finalUser = AuthService.getUser()
+        
+        console.log("[RegisterScreen] Estado final - Token:", finalToken ? "SÍ" : "NO")
+        console.log("[RegisterScreen] Estado final - User:", finalUser ? "SÍ" : "NO")
+
+        if (!finalToken) {
+          console.error("[RegisterScreen] No se pudo obtener token, redirigiendo a login")
+          setError("Error en autenticación. Por favor, inicia sesión.")
+          router.push("/login")
+          return
+        }
 
         // REDIRECCIÓN SEGÚN PERFIL
-        if (currentUser && !currentUser.perfilCompleto) {
-          // Usuario nuevo: va a completar perfil
+        if (finalUser && !finalUser.perfilCompleto) {
+          console.log("[RegisterScreen] Redirigiendo a profile-setup")
           router.push("/profile-setup")
         } else {
-          // Usuario existente o perfil completo: flujo normal
-          postAuthRedirect(currentUser ?? undefined)
+          console.log("[RegisterScreen] Perfil completo, usando postAuthRedirect")
+          postAuthRedirect(finalUser ?? undefined)
         }
       } else {
         setError(response.message ?? "Error al crear la cuenta.")
       }
     } catch (err: any) {
-      console.error("Error en registro:", err)
+      console.error("[RegisterScreen] Error en registro:", err)
       setError(err?.response?.data?.message ?? err?.message ?? "Error al crear la cuenta.")
     } finally {
       setIsLoading(false)

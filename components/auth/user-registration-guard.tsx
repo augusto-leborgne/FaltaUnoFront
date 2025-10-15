@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { AlertTriangle, Star } from "lucide-react"
-import { UsuarioAPI, PendingReviewFromAPI } from "@/lib/api"
+import { UsuarioAPI} from "@/lib/api"
 
 interface PendingReview {
   matchId: string

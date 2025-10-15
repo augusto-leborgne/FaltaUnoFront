@@ -31,6 +31,9 @@ export interface Usuario {
 }
 
 async function apiFetch<T>(url: string, options?: RequestInit): Promise<ApiResponse<T>> {
+  // Validar token antes de hacer request
+  AuthService.validateAndCleanup();
+  
   const token = AuthService.getToken();
   const fullUrl = normalizeUrl(`${API_BASE}${url}`);
 
@@ -38,12 +41,23 @@ async function apiFetch<T>(url: string, options?: RequestInit): Promise<ApiRespo
   if (!headers.has('Content-Type') && !(options?.body instanceof FormData)) {
     headers.set('Content-Type', 'application/json');
   }
-  if (token) headers.set('Authorization', `Bearer ${token}`);
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
 
   const res = await fetch(fullUrl, {
     headers,
     ...options,
   });
+
+  // Si responde 401, limpiar auth y redirigir
+  if (res.status === 401) {
+    AuthService.logout();
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
+    throw new Error('Sesión expirada');
+  }
 
   if (!res.ok) {
     const text = await res.text().catch(() => '');
@@ -59,10 +73,9 @@ export const UsuarioAPI = {
   getMe: () => apiFetch<Usuario>('/api/usuarios/me'),
 
   crear: async (usuario: Partial<Usuario>) => {
-    // hacemos una copia y eliminamos foto_perfil si existe
     const payload: any = { ...usuario };
+    // Eliminar foto_perfil si existe (se sube después)
     if ('foto_perfil' in payload) delete payload.foto_perfil;
-    // también elimina cualquier campo vacío que pueda confundir al backend
     if (payload.foto_perfil === '' || payload.foto_perfil === null) delete payload.foto_perfil;
 
     return apiFetch<Usuario>('/api/usuarios', {
@@ -103,8 +116,11 @@ export const UsuarioAPI = {
     formData.append("file", file);
 
     const token = AuthService.getToken();
-    const headers: Record<string,string> = {};
-    if (token) headers['Authorization'] = `Bearer ${token}`;
+    if (!token) throw new Error('No autenticado');
+
+    const headers: Record<string,string> = {
+      'Authorization': `Bearer ${token}`
+    };
 
     const res = await fetch(normalizeUrl(`${API_BASE}/api/usuarios/me/foto`), {
       method: 'POST',
@@ -125,8 +141,12 @@ export const UsuarioAPI = {
 
   actualizarPerfil: async (perfil: any) => {
     const token = AuthService.getToken();
-    const headers: Record<string,string> = { "Content-Type": "application/json" };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
+    if (!token) throw new Error('No autenticado');
+
+    const headers: Record<string,string> = { 
+      "Content-Type": "application/json",
+      'Authorization': `Bearer ${token}`
+    };
 
     const res = await fetch(normalizeUrl(`${API_BASE}/api/usuarios/me`), {
       method: "PUT",
@@ -153,15 +173,25 @@ export const UsuarioAPI = {
     try { json = text ? JSON.parse(text) : {}; } catch {}
 
     if (!res.ok) {
-      return { success: false, data: {} as any, message: json.message ?? `Error login (${res.status})` };
+      return { 
+        success: false, 
+        data: {} as any, 
+        message: json.message ?? `Error login (${res.status})` 
+      };
     }
 
+    // El backend ahora devuelve { token, user } en data
     const token = json.data?.token;
     const user = json.data?.user;
+    
     if (token) AuthService.setToken(token);
     if (user) AuthService.setUser(user);
 
-    return { success: true, data: { token, user }, message: json.message ?? 'Autenticado' };
+    return { 
+      success: true, 
+      data: { token, user }, 
+      message: json.message ?? 'Autenticado' 
+    };
   },
 
   getFriendRequests: (userId: string) => apiFetch<any[]>(`/api/usuarios/${userId}/friend-requests`),
