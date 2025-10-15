@@ -1,5 +1,5 @@
-import { VerificationScreen } from "@/components/verification-screen"
+import { VerificationScreen } from "@/components/pages/login/verification-screen";
 
-export default function VerificationPage() {
-  return <VerificationScreen />
+export default function Page() {
+  return <VerificationScreen />;
 }

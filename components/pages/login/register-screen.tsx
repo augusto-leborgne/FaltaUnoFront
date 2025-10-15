@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
 import { UsuarioAPI, ApiResponse, Usuario } from "@/lib/api"
 import { AuthService } from "@/lib/auth"
+import { usePostAuthRedirect } from "@/lib/navigation"
 
 type FormData = {
   email: string
@@ -22,6 +23,7 @@ export function RegisterScreen() {
     password: "",
     confirmPassword: "",
   })
+  const postAuthRedirect = usePostAuthRedirect()
 
   const handleEmailRegistration = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -42,34 +44,40 @@ export function RegisterScreen() {
 
       const response: ApiResponse<Usuario> = await UsuarioAPI.crear(payload)
 
-      if (response.success) {
-        // Guardamos usuario recibido
-        AuthService.setUser(response.data)
+      if (response && response.success) {
+        // Guardamos usuario recibido (creado)
+        if (response.data) AuthService.setUser(response.data)
 
+        // Intentamos login automático (puede devolver sesión cookie o JWT)
         try {
-          // Login automático
           const loginRes = await UsuarioAPI.login(formData.email, formData.password)
-
-          if (loginRes.success) {
-            // Solo seteamos token si viene JWT; si no, sesión cookie ya está activa
-            if (loginRes.data.token) {
-              AuthService.setToken(loginRes.data.token)
+          // loginRes puede venir como ApiResponse<{token?, user?}> o estructura propia del backend
+          if (loginRes && (loginRes as any).success) {
+            const data = (loginRes as any).data ?? {}
+            if (data.token) {
+              AuthService.setToken(data.token)
+            }
+            if (data.user) {
+              AuthService.setUser(data.user)
             }
           } else {
-            console.warn("Login automático falló:", loginRes.message)
+            // backend devolvió success=false (no fatal; el usuario fue creado)
+            console.warn("Login automático falló:", (loginRes as any).message ?? loginRes)
           }
         } catch (loginErr: any) {
           console.warn("Login automático falló después del registro:", loginErr)
         }
 
-        // Redirigir a completar perfil
-        router.push("/complete-profile")
+        // Obtener el usuario actual (puede haber sido actualizado por el login)
+        const currentUser = AuthService.getUser()
+        // Usa el hook de redirect para decidir a dónde llevar al usuario
+        postAuthRedirect(currentUser ?? undefined)
       } else {
         setError(response.message ?? "Error al crear la cuenta.")
       }
     } catch (err: any) {
       console.error("Error en registro:", err)
-      setError(err.response?.data?.message ?? err.message ?? "Error al crear la cuenta.")
+      setError(err?.response?.data?.message ?? err?.message ?? "Error al crear la cuenta.")
     } finally {
       setIsLoading(false)
     }
@@ -121,3 +129,5 @@ export function RegisterScreen() {
     </div>
   )
 }
+
+export default RegisterScreen

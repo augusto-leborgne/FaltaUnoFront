@@ -1,4 +1,4 @@
-import { NotificationsScreen } from "@/components/notifications-screen"
+import { NotificationsScreen } from "@/components/pages/notifications-screen"
 
 export default function NotificationsPage() {
   return <NotificationsScreen />

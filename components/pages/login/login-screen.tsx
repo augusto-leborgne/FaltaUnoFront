@@ -3,45 +3,62 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useRouter } from "next/navigation"
-import { UsuarioAPI } from "@/lib/api"
+import { useRouter, useSearchParams } from "next/navigation"
+import { UsuarioAPI, Usuario } from "@/lib/api"
 import { AuthService } from "@/lib/auth"
-import { useSearchParams } from "next/navigation"
 
 export function LoginScreen() {
   const router = useRouter()
+  const search = useSearchParams()
+  const returnTo = search.get("returnTo") ?? null
+
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const search = useSearchParams();
-  const returnTo = search.get("returnTo") ?? null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError("")
+
+    console.log("[LoginScreen] handleSubmit llamado", { email })
+
     try {
       const res = await UsuarioAPI.login(email, password)
-      if (res && (res as any).success) {
-        const token = (res as any).data?.token
-        const user = (res as any).data?.user
-        if (token) AuthService.setToken(token)
-        if (user) AuthService.setUser(user)
-        // redirigir
-        if (returnTo) return router.push(returnTo)
-        const u = user
-        if (!u) return router.push("/complete-profile")
-        if ((u as any).perfilCompleto) {
-          router.push((u as any).cedulaVerificada ? "/" : "/verification")
+      console.log("[LoginScreen] respuesta login:", res)
+
+      if (res && res.success) {
+        const token = res.data?.token
+        const user = res.data?.user as Usuario | undefined
+
+        if (token) {
+          AuthService.setToken(token)
+          console.log("[LoginScreen] token guardado")
+        }
+        if (user) {
+          AuthService.setUser(user)
+          console.log("[LoginScreen] usuario guardado:", user.email)
+        }
+
+        if (returnTo) {
+          console.log("[LoginScreen] redirigiendo a returnTo:", returnTo)
+          router.push(returnTo)
+          return
+        }
+
+        const currentUser = user ?? AuthService.getUser()
+        if (currentUser) {
+          console.log("[LoginScreen] redirigiendo a /home")
+          router.push("/home")
         } else {
-          router.push("/complete-profile")
+          setError("No se pudo iniciar sesión correctamente")
         }
       } else {
-        setError("Credenciales inválidas")
+        setError(res.message ?? "Credenciales inválidas")
       }
-    } catch (err) {
-      console.error("Login error:", err)
+    } catch (err: any) {
+      console.error("[LoginScreen] Error login:", err)
       setError("Error al iniciar sesión. Verifica tus credenciales.")
     } finally {
       setIsLoading(false)
@@ -68,7 +85,9 @@ export function LoginScreen() {
         <form onSubmit={handleSubmit} className="space-y-6 mb-8">
           <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={isLoading} />
           <Input type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} required disabled={isLoading} />
-          <Button type="submit" disabled={isLoading} className="w-full bg-green-600 text-white py-4 rounded-2xl">{isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}</Button>
+          <Button type="submit" disabled={isLoading} className="w-full bg-green-600 text-white py-4 rounded-2xl">
+            {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
+          </Button>
         </form>
 
         <div className="flex items-center my-8">
@@ -82,7 +101,10 @@ export function LoginScreen() {
         <Button onClick={() => handleSocialAuth("apple")} variant="outline" className="w-full py-4 rounded-2xl">Apple</Button>
 
         <div className="text-center mt-8 pb-8">
-          <p className="text-sm text-gray-500">¿No tienes cuenta? <button onClick={() => router.push("/register")} className="text-green-600 font-medium">Regístrate aquí</button></p>
+          <p className="text-sm text-gray-500">
+            ¿No tienes cuenta?{" "}
+            <button onClick={() => router.push("/register")} className="text-green-600 font-medium">Regístrate aquí</button>
+          </p>
         </div>
       </div>
     </div>

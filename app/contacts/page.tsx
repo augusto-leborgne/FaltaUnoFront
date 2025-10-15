@@ -1,4 +1,4 @@
-import { ContactsScreen } from "@/components/contacts-screen"
+import { ContactsScreen } from "@/components/pages/user/contacts-screen"
 
 export default function ContactsPage() {
   return <ContactsScreen />

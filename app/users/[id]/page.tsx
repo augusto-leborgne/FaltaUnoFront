@@ -1,4 +1,4 @@
-import { UserProfileScreen } from "@/components/user-profile-screen"
+import { UserProfileScreen } from "@/components/pages/user/user-profile-screen"
 
 interface UserProfilePageProps {
   params: {
