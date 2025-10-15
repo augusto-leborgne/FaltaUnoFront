@@ -48,30 +48,27 @@ export function RegisterScreen() {
         // Guardamos usuario recibido (creado)
         if (response.data) AuthService.setUser(response.data)
 
-        // Intentamos login automático (puede devolver sesión cookie o JWT)
+        // Intentamos login automático
         try {
           const loginRes = await UsuarioAPI.login(formData.email, formData.password)
-          // loginRes puede venir como ApiResponse<{token?, user?}> o estructura propia del backend
-          if (loginRes && (loginRes as any).success) {
-            const data = (loginRes as any).data ?? {}
-            if (data.token) {
-              AuthService.setToken(data.token)
-            }
-            if (data.user) {
-              AuthService.setUser(data.user)
-            }
-          } else {
-            // backend devolvió success=false (no fatal; el usuario fue creado)
-            console.warn("Login automático falló:", (loginRes as any).message ?? loginRes)
+          if (loginRes && loginRes.success && loginRes.data?.user) {
+            AuthService.setUser(loginRes.data.user)
           }
         } catch (loginErr: any) {
           console.warn("Login automático falló después del registro:", loginErr)
         }
 
-        // Obtener el usuario actual (puede haber sido actualizado por el login)
+        // Obtener usuario actual
         const currentUser = AuthService.getUser()
-        // Usa el hook de redirect para decidir a dónde llevar al usuario
-        postAuthRedirect(currentUser ?? undefined)
+
+        // REDIRECCIÓN SEGÚN PERFIL
+        if (currentUser && !currentUser.perfilCompleto) {
+          // Usuario nuevo: va a completar perfil
+          router.push("/profile-setup")
+        } else {
+          // Usuario existente o perfil completo: flujo normal
+          postAuthRedirect(currentUser ?? undefined)
+        }
       } else {
         setError(response.message ?? "Error al crear la cuenta.")
       }

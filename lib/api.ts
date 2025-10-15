@@ -1,13 +1,12 @@
 import { AuthService } from "./auth";
 
+// IMPORTANTE: En el navegador SIEMPRE usamos rutas relativas que Next.js proxea
+// En SSR (servidor), podemos usar la URL directa del backend
 const RAW_API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://backend:8080';
 
-// Si estamos en el server (SSR), usamos directamente el hostname del contenedor backend.
-// Si estamos en el navegador, usamos '/api' que se proxyea mediante next.config.js
-export const API_BASE =
-  typeof window === 'undefined'
-    ? RAW_API_BASE
-    : '/api';
+// En el navegador usamos rutas relativas que Next.js proxea
+// En SSR (servidor), usamos la URL del contenedor Docker
+export const API_BASE = typeof window === 'undefined' ? RAW_API_BASE : '';
 
 export const normalizeUrl = (u: string) => u.replace(/([^:]\/)\/+/g, '$1');
 
@@ -44,13 +43,13 @@ async function apiFetch<T>(url: string, options?: RequestInit): Promise<ApiRespo
   const fullUrl = normalizeUrl(`${API_BASE}${url}`);
   console.info('[apiFetch] Request =>', options?.method ?? 'GET', fullUrl, options);
 
-  const headers: Record<string,string> = {
-    ...(options && (options as any).headers ? (options as any).headers : { 'Content-Type': 'application/json' }),
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-  }
+  const headers = new Headers(options?.headers || {});
+  if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+  if (token) headers.set('Authorization', `Bearer ${token}`);
+
 
   const res = await fetch(fullUrl, {
-    credentials: 'include', // cookies de sesión para Spring Security
+    credentials: 'include',
     headers,
     ...options,
   });
@@ -65,17 +64,17 @@ async function apiFetch<T>(url: string, options?: RequestInit): Promise<ApiRespo
 }
 
 export const UsuarioAPI = {
-  listar: () => apiFetch<Usuario[]>('/usuarios'),
-  obtener: (id: string) => apiFetch<Usuario>(`/usuarios/${id}`),
-  getMe: () => apiFetch<Usuario>('/usuarios/me'),
+  listar: () => apiFetch<Usuario[]>('/api/usuarios'),
+  obtener: (id: string) => apiFetch<Usuario>(`/api/usuarios/${id}`),
+  getMe: () => apiFetch<Usuario>('/api/usuarios/me'),
 
   crear: async (usuario: Partial<Usuario>) => {
-    console.info('[UsuarioAPI.crear] POST /usuarios', usuario);
-    return apiFetch<Usuario>('/usuarios', { method: 'POST', body: JSON.stringify(usuario) });
+    console.info('[UsuarioAPI.crear] POST /api/usuarios', usuario);
+    return apiFetch<Usuario>('/api/usuarios', { method: 'POST', body: JSON.stringify(usuario) });
   },
 
   verificarCedula: async (cedula: string) => {
-    const url = normalizeUrl(`${API_BASE}/usuarios/me/verify-cedula`);
+    const url = normalizeUrl(`${API_BASE}/api/usuarios/me/verify-cedula`);
     const token = AuthService.getToken();
     const localUser = AuthService.getUser();
 
@@ -108,13 +107,14 @@ export const UsuarioAPI = {
     const formData = new FormData();
     formData.append("file", file);
 
-    const url = normalizeUrl(`${API_BASE}/usuarios/${userIdOrMe}/foto`);
+    const url = normalizeUrl(`${API_BASE}/api/usuarios/${userIdOrMe}/foto`);
     const token = AuthService.getToken();
     const localUser = AuthService.getUser();
 
+    // Headers: solo Authorization si hay token
     const headers: Record<string,string> = {};
     if (token) headers['Authorization'] = `Bearer ${token}`;
-    if (localUser && (localUser as any).id) headers['X-USER-ID'] = (localUser as any).id;
+    if (localUser?.id) headers['X-USER-ID'] = localUser.id;
 
     const res = await fetch(url, {
       method: "POST",
@@ -128,16 +128,26 @@ export const UsuarioAPI = {
       throw new Error(`Error al subir foto: ${res.status} ${txt}`);
     }
 
-    try { return await res.json(); } catch { return { success: true }; }
+    // Retornar JSON si hay, o fallback a success=true
+    try { 
+      return await res.json(); 
+    } catch { 
+      return { success: true }; 
+    }
   },
 
   actualizarPerfil: async (perfil: any) => {
-    const res = await fetch(normalizeUrl(`${API_BASE}/usuarios/me`), {
+    const token = AuthService.getToken();
+    const headers: Record<string,string> = { "Content-Type": "application/json" };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await fetch(normalizeUrl(`${API_BASE}/api/usuarios/me`), {
       method: "PUT",
       body: JSON.stringify(perfil),
-      headers: { "Content-Type": "application/json" },
+      headers,
       credentials: "include"
-    })
+    });
+
     if (!res.ok) {
       const t = await res.text().catch(()=> '')
       throw new Error(`Error al actualizar perfil: ${res.status} ${t}`)
@@ -146,34 +156,50 @@ export const UsuarioAPI = {
   },
 
   login: async (email: string, password: string) => {
-    const url = normalizeUrl(`${API_BASE}/auth/login-json`);
+    // CORREGIDO: usa /api/auth/login-json que será proxeado a /auth/login-json
+    const url = normalizeUrl(`${API_BASE}/api/auth/login-json`);
+    console.log('[UsuarioAPI.login] URL completa:', url);
+    
     const res = await fetch(url, {
       method: 'POST',
-      credentials: 'include', // IMPORTANTE para cookies de sesión
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
 
     const text = await res.text().catch(()=> '');
+    console.log('[UsuarioAPI.login] Response status:', res.status);
+    console.log('[UsuarioAPI.login] Response text:', text);
+    
     let json: any = {};
-    try { json = text ? JSON.parse(text) : {}; } catch(e){ json = {} }
+    try { json = text ? JSON.parse(text) : {}; } catch(e){ 
+      console.error('[UsuarioAPI.login] Error parseando JSON:', e);
+      json = {} 
+    }
 
     if (!res.ok) {
-      return { success: false, data: {} as any, message: json.message ?? `Error login (${res.status})` };
+      return { 
+        success: false, 
+        data: {} as any, 
+        message: json.message ?? `Error login (${res.status})` 
+      };
     }
 
     const token = json.data?.token;
     const user = json.data?.user;
 
-    // 🔹 guardar token y user local
     if (token) AuthService.setToken(token);
     if (user) AuthService.setUser(user);
 
-    return { success: true, data: { token, user }, message: json.message ?? 'Autenticado' };
+    return { 
+      success: true, 
+      data: { token, user }, 
+      message: json.message ?? 'Autenticado' 
+    };
   },
 
-  getFriendRequests: (userId: string) => apiFetch<any[]>(`/usuarios/${userId}/friend-requests`),
-  getUnreadMessages: (userId: string) => apiFetch<any[]>(`/usuarios/${userId}/messages`),
-  getMatchInvitations: (userId: string) => apiFetch<any[]>(`/usuarios/${userId}/match-invitations`),
-  getMatchUpdates: (userId: string) => apiFetch<any[]>(`/usuarios/${userId}/match-updates`),
+  getFriendRequests: (userId: string) => apiFetch<any[]>(`/api/usuarios/${userId}/friend-requests`),
+  getUnreadMessages: (userId: string) => apiFetch<any[]>(`/api/usuarios/${userId}/messages`),
+  getMatchInvitations: (userId: string) => apiFetch<any[]>(`/api/usuarios/${userId}/match-invitations`),
+  getMatchUpdates: (userId: string) => apiFetch<any[]>(`/api/usuarios/${userId}/match-updates`),
 }
