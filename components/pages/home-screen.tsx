@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
-import { UserRegistrationGuard } from "@/components/auth/user-registration-guard"
 import { Clock, Calendar, Star, Bell, Newspaper, TrendingUp, Award } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
@@ -103,7 +102,6 @@ const communityStats = {
   newMembers: 23,
 }
 
-// Mapeos internos para que el JSX quede limpio
 interface MatchView {
   id: string
   tipo_partido: string
@@ -129,109 +127,100 @@ export function HomeScreen() {
   const [pendingReviews, setPendingReviews] = useState<ReviewView[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
-    useEffect(() => {
-      // redirigir en cliente si no está logeado
-      if (!AuthService.isLoggedIn()) {
-        router.push("/login");
-        return;
+  useEffect(() => {
+    // ELIMINADO: Ya no verificamos autenticación aquí
+    // El guard RequireAuth en app/home/page.tsx ya lo hace
+
+    const user = AuthService.getUser();
+    const userId = user?.id ?? null;
+
+    const fetchWithTimeout = async (resource: RequestInfo, options: RequestInit = {}, timeout = 4000) => {
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), timeout);
+      try {
+        const res = await fetch(resource, { signal: controller.signal, ...options });
+        clearTimeout(id);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      } finally {
+        clearTimeout(id);
       }
+    };
 
-      // obtener userId del storage (solo en cliente)
-      const user = AuthService.getUser();
-      const userId = user?.id ?? null;
+    let mounted = true;
+    setIsLoading(true);
 
-      // helper: fetch con timeout/abort
-      const fetchWithTimeout = async (resource: RequestInfo, options: RequestInit = {}, timeout = 4000) => {
-        const controller = new AbortController();
-        const id = setTimeout(() => controller.abort(), timeout);
-        try {
-          const res = await fetch(resource, { signal: controller.signal, ...options });
-          clearTimeout(id);
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return res.json();
-        } finally {
-          clearTimeout(id);
+    (async () => {
+      try {
+        if (!userId) {
+          setUpcomingMatches([]);
+          setPendingReviews([]);
+          return;
         }
-      };
 
-      let mounted = true;
-      setIsLoading(true);
+        const matchesPromise = fetchWithTimeout(
+          `/api/partidos/mine?userId=${encodeURIComponent(userId)}&limit=10`,
+          { headers: { "Content-Type": "application/json" } },
+          4000
+        ).catch((err) => {
+          console.warn("matches fetch failed:", err);
+          return null;
+        });
 
-      (async () => {
-        try {
-          // Si no hay userId, evitamos llamadas que fallarán; dejamos arrays vacíos
-          if (!userId) {
-            setUpcomingMatches([]);
-            setPendingReviews([]);
-            return;
-          }
+        const reviewsPromise = fetchWithTimeout(
+          `/api/usuarios/${encodeURIComponent(userId)}/pending-reviews?limit=10`,
+          { headers: { "Content-Type": "application/json" } },
+          4000
+        ).catch((err) => {
+          console.warn("reviews fetch failed:", err);
+          return null;
+        });
 
-          // Llamadas en paralelo, no bloqueantes para el render
-          const matchesPromise = fetchWithTimeout(
-            `${process.env.NEXT_PUBLIC_API_URL ?? ""}/api/partidos/mine?userId=${encodeURIComponent(userId)}&limit=10`,
-            { headers: { "Content-Type": "application/json" } },
-            4000
-          ).catch((err) => {
-            console.warn("matches fetch failed:", err);
-            return null;
-          });
+        const [matchesData, reviewsData] = await Promise.all([matchesPromise, reviewsPromise]);
 
-          const reviewsPromise = fetchWithTimeout(
-            `${process.env.NEXT_PUBLIC_API_URL ?? ""}/api/usuarios/${encodeURIComponent(userId)}/pending-reviews?limit=10`,
-            { headers: { "Content-Type": "application/json" } },
-            4000
-          ).catch((err) => {
-            console.warn("reviews fetch failed:", err);
-            return null;
-          });
+        if (!mounted) return;
 
-          const [matchesData, reviewsData] = await Promise.all([matchesPromise, reviewsPromise]);
-
-          if (!mounted) return;
-
-          if (matchesData) {
-            // adaptar si backend devuelve {partidos: [...] } o array
-            const rawMatches = Array.isArray(matchesData) ? matchesData : (matchesData.partidos ?? matchesData.data ?? []);
-            const mappedMatches = rawMatches.map((m: any) => ({
-              id: m.id,
-              tipo_partido: m.tipoPartido ?? m.tipo_partido ?? m.tipo,
-              estado: m.estado,
-              fecha: m.fecha,
-              hora: m.hora,
-              nombre_ubicacion: m.nombreUbicacion ?? m.nombre_ubicacion ?? m.nombre,
-              jugadores_actuales: m.jugadoresActuales ?? m.jugadores_actuales ?? m.jugadores_actuales ?? 0,
-              cantidad_jugadores: m.maxJugadores ?? m.cantidad_jugadores ?? m.cantidad_jugadores ?? 0,
-            }));
-            setUpcomingMatches(mappedMatches);
-          } else {
-            setUpcomingMatches([]); // fallback
-          }
-
-          if (reviewsData) {
-            const rawReviews = Array.isArray(reviewsData) ? reviewsData : (reviewsData.data ?? reviewsData.pending ?? []);
-            const mappedReviews = rawReviews.map((r: any) => ({
-              id: r.partido_id ?? r.id ?? r.partidoId,
-              tipo_partido: r.tipo_partido ?? r.tipoPartido,
-              fecha: r.fecha,
-              nombre_ubicacion: r.nombre_ubicacion ?? r.nombreUbicacion,
-              jugadores_pendientes: Array.isArray(r.jugadores_pendientes) ? r.jugadores_pendientes.length : (r.jugadores_pendientes ?? 0),
-            }));
-            setPendingReviews(mappedReviews);
-          } else {
-            setPendingReviews([]);
-          }
-        } catch (err) {
-          console.error("Error fetching data:", err);
-        } finally {
-          if (mounted) setIsLoading(false);
+        if (matchesData) {
+          const rawMatches = Array.isArray(matchesData) ? matchesData : (matchesData.partidos ?? matchesData.data ?? []);
+          const mappedMatches = rawMatches.map((m: any) => ({
+            id: m.id,
+            tipo_partido: m.tipoPartido ?? m.tipo_partido ?? m.tipo,
+            estado: m.estado,
+            fecha: m.fecha,
+            hora: m.hora,
+            nombre_ubicacion: m.nombreUbicacion ?? m.nombre_ubicacion ?? m.nombre,
+            jugadores_actuales: m.jugadoresActuales ?? m.jugadores_actuales ?? 0,
+            cantidad_jugadores: m.maxJugadores ?? m.cantidad_jugadores ?? 0,
+          }));
+          setUpcomingMatches(mappedMatches);
+        } else {
+          setUpcomingMatches([]);
         }
+
+        if (reviewsData) {
+          const rawReviews = Array.isArray(reviewsData) ? reviewsData : (reviewsData.data ?? reviewsData.pending ?? []);
+          const mappedReviews = rawReviews.map((r: any) => ({
+            id: r.partido_id ?? r.id ?? r.partidoId,
+            tipo_partido: r.tipo_partido ?? r.tipoPartido,
+            fecha: r.fecha,
+            nombre_ubicacion: r.nombre_ubicacion ?? r.nombreUbicacion,
+            jugadores_pendientes: Array.isArray(r.jugadores_pendientes) ? r.jugadores_pendientes.length : (r.jugadores_pendientes ?? 0),
+          }));
+          setPendingReviews(mappedReviews);
+        } else {
+          setPendingReviews([]);
+        }
+      } catch (err) {
+        console.error("Error fetching data:", err);
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
     })();
 
     return () => {
       mounted = false;
     };
   }, [router]);
-
 
   const handleMatchClick = (matchId: string) => router.push(`/matches/${matchId}`)
   const handleReviewMatch = (matchId: string) => router.push(`/matches/${matchId}/review`)
@@ -261,217 +250,227 @@ export function HomeScreen() {
     )
 
   return (
-    <UserRegistrationGuard userId="current-user-id">
-      <div className="min-h-screen bg-background flex flex-col">
-        {/* HEADER + STATS */}
-        <div className="pt-16 pb-6 px-6 bg-gradient-to-r from-primary/5 to-secondary/5">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">¡Bienvenido a la comunidad!</h1>
-              <p className="text-muted-foreground">Descubre lo que está pasando</p>
-            </div>
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={handleNotifications}
-                className="relative p-2 rounded-full hover:bg-white/20 transition-colors"
-              >
-                <Bell className="w-6 h-6 text-foreground" />
-                {pendingReviews.length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                    {pendingReviews.length}
-                  </span>
-                )}
-              </button>
-              <Avatar className="w-12 h-12">
-                <AvatarImage src="/placeholder.svg?height=48&width=48" />
-                <AvatarFallback className="bg-primary/10 text-primary">U</AvatarFallback>
-              </Avatar>
-            </div>
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* DEBUG COMPONENT - Eliminar en producción */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="fixed bottom-20 right-4 bg-black/90 text-white p-4 rounded-lg text-xs max-w-xs z-50 font-mono">
+          <div className="font-bold mb-2 text-green-400">🔍 Home Debug</div>
+          <div className="space-y-1">
+            <div>Loading: <span className={isLoading ? "text-yellow-400" : "text-green-400"}>{isLoading ? "YES" : "NO"}</span></div>
+            <div>Matches: <span className="text-blue-400">{upcomingMatches.length}</span></div>
+            <div>Reviews: <span className="text-orange-400">{pendingReviews.length}</span></div>
           </div>
-
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-card rounded-xl p-3 text-center">
-              <div className="text-lg font-bold text-primary">{communityStats.activeUsers}</div>
-              <div className="text-xs text-muted-foreground">Usuarios activos</div>
-            </div>
-            <div className="bg-card rounded-xl p-3 text-center">
-              <div className="text-lg font-bold text-foreground">{communityStats.matchesThisWeek}</div>
-              <div className="text-xs text-muted-foreground">Partidos esta semana</div>
-            </div>
-            <div className="bg-card rounded-xl p-3 text-center">
-              <div className="text-lg font-bold text-foreground">{communityStats.newMembers}</div>
-              <div className="text-xs text-muted-foreground">Nuevos miembros</div>
-            </div>
+        </div>
+      )}
+      
+      {/* HEADER + STATS */}
+      <div className="pt-16 pb-6 px-6 bg-gradient-to-r from-primary/5 to-secondary/5">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">¡Bienvenido a la comunidad!</h1>
+            <p className="text-muted-foreground">Descubre lo que está pasando</p>
+          </div>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={handleNotifications}
+              className="relative p-2 rounded-full hover:bg-white/20 transition-colors"
+            >
+              <Bell className="w-6 h-6 text-foreground" />
+              {pendingReviews.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                  {pendingReviews.length}
+                </span>
+              )}
+            </button>
+            <Avatar className="w-12 h-12">
+              <AvatarImage src="/placeholder.svg?height=48&width=48" />
+              <AvatarFallback className="bg-primary/10 text-primary">U</AvatarFallback>
+            </Avatar>
           </div>
         </div>
 
-        {/* PENDING REVIEWS */}
-        {pendingReviews.length > 0 && (
-          <div className="px-6 py-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-foreground">Partidos por calificar</h2>
-              <Badge className="bg-orange-100 text-orange-800">{pendingReviews.length}</Badge>
-            </div>
-            <div className="space-y-3">
-              {pendingReviews.map((review) => (
-                <div
-                  key={review.id}
-                  onClick={() => handleReviewMatch(review.id)}
-                  className="bg-gradient-to-r from-orange-50 to-yellow-50 border border-orange-200 rounded-2xl p-4 cursor-pointer hover:shadow-md transition-all duration-200 touch-manipulation active:scale-[0.98]"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center space-x-2">
-                      <Badge className="bg-orange-100 text-orange-800">{review.tipo_partido}</Badge>
-                      <Badge className="bg-red-100 text-red-800">Reseña pendiente</Badge>
-                    </div>
-                    <Star className="w-5 h-5 text-orange-600" />
-                  </div>
-                  <h3 className="font-semibold text-foreground mb-1">{review.fecha}</h3>
-                  <p className="text-sm text-muted-foreground mb-2">{review.nombre_ubicacion}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      {review.jugadores_pendientes} jugadores por calificar
-                    </span>
-                    <div className="flex items-center text-orange-600">
-                      <Star className="w-4 h-4 mr-1" />
-                      <span className="text-sm font-medium">Toca para calificar</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="bg-card rounded-xl p-3 text-center">
+            <div className="text-lg font-bold text-primary">{communityStats.activeUsers}</div>
+            <div className="text-xs text-muted-foreground">Usuarios activos</div>
           </div>
-        )}
+          <div className="bg-card rounded-xl p-3 text-center">
+            <div className="text-lg font-bold text-foreground">{communityStats.matchesThisWeek}</div>
+            <div className="text-xs text-muted-foreground">Partidos esta semana</div>
+          </div>
+          <div className="bg-card rounded-xl p-3 text-center">
+            <div className="text-lg font-bold text-foreground">{communityStats.newMembers}</div>
+            <div className="text-xs text-muted-foreground">Nuevos miembros</div>
+          </div>
+        </div>
+      </div>
 
-        {/* NOTICIAS */}
+      {/* PENDING REVIEWS */}
+      {pendingReviews.length > 0 && (
         <div className="px-6 py-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-xl font-bold text-foreground">Novedades de la plataforma</h2>
-              <p className="text-sm text-muted-foreground">Mantente al día con las últimas actualizaciones</p>
-            </div>
-            <Button
-              onClick={handleViewAllNews}
-              variant="outline"
-              size="sm"
-              className="bg-transparent border-primary text-primary hover:bg-primary/10"
-            >
-              Ver todas
-            </Button>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-foreground">Partidos por calificar</h2>
+            <Badge className="bg-orange-100 text-orange-800">{pendingReviews.length}</Badge>
           </div>
-
-          <div className="space-y-6">
-            {newsUpdates.slice(0, 3).map((news) => (
+          <div className="space-y-3">
+            {pendingReviews.map((review) => (
               <div
-                key={news.id}
-                onClick={() => handleNewsClick(news.id)}
-                className="bg-card rounded-2xl overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-300 touch-manipulation active:scale-[0.98] border border-border/50"
+                key={review.id}
+                onClick={() => handleReviewMatch(review.id)}
+                className="bg-gradient-to-r from-orange-50 to-yellow-50 border border-orange-200 rounded-2xl p-4 cursor-pointer hover:shadow-md transition-all duration-200 touch-manipulation active:scale-[0.98]"
               >
-                <img src={news.image || "/placeholder.svg"} alt={news.title} className="w-full h-40 object-cover" />
-                <div className="p-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center space-x-2">
-                      {getNewsIcon(news.type)}
-                      <h3 className="font-bold text-foreground text-lg leading-tight">{news.title}</h3>
-                    </div>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-2">
+                    <Badge className="bg-orange-100 text-orange-800">{review.tipo_partido}</Badge>
+                    <Badge className="bg-red-100 text-red-800">Reseña pendiente</Badge>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-4 leading-relaxed">{news.description}</p>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {news.tags?.map((tag) => (
-                      <span key={tag} className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded-md">
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="flex items-center justify-between pt-3 border-t border-border/50">
-                    <div className="flex items-center space-x-3">
-                      <span className="text-xs text-muted-foreground">Por {news.author}</span>
-                      <span className="text-xs text-muted-foreground">•</span>
-                      <span className="text-xs text-muted-foreground">{news.date}</span>
-                      <span className="text-xs text-muted-foreground">•</span>
-                      <span className="text-xs text-muted-foreground">{news.readTime}</span>
-                    </div>
-                    <div className="flex items-center space-x-1 text-primary">
-                      <span className="text-sm font-medium">Leer más</span>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                      </svg>
-                    </div>
+                  <Star className="w-5 h-5 text-orange-600" />
+                </div>
+                <h3 className="font-semibold text-foreground mb-1">{review.fecha}</h3>
+                <p className="text-sm text-muted-foreground mb-2">{review.nombre_ubicacion}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    {review.jugadores_pendientes} jugadores por calificar
+                  </span>
+                  <div className="flex items-center text-orange-600">
+                    <Star className="w-4 h-4 mr-1" />
+                    <span className="text-sm font-medium">Toca para calificar</span>
                   </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
+      )}
 
-        {/* PRÓXIMOS PARTIDOS */}
-        <div className="px-6 py-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-foreground">Tus próximos partidos</h2>
-            <Button
-              onClick={handleViewAllMatches}
-              variant="outline"
-              size="sm"
-              className="bg-transparent border-primary text-primary hover:bg-primary/10"
-            >
-              Ver todos
-            </Button>
+      {/* NOTICIAS */}
+      <div className="px-6 py-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-xl font-bold text-foreground">Novedades de la plataforma</h2>
+            <p className="text-sm text-muted-foreground">Mantente al día con las últimas actualizaciones</p>
           </div>
-
-          {upcomingMatches.length > 0 ? (
-            <div className="space-y-4">
-              {upcomingMatches.map((match) => (
-                <div
-                  key={match.id}
-                  onClick={() => handleMatchClick(match.id)}
-                  className="bg-card rounded-2xl p-4 cursor-pointer hover:shadow-md transition-all duration-200 touch-manipulation active:scale-[0.98]"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center space-x-2">
-                      <Badge className="bg-muted text-muted-foreground hover:bg-muted">
-                        {match.tipo_partido}
-                      </Badge>
-                      <Badge
-                        className={`hover:bg-current ${
-                          match.estado === "CONFIRMADO"
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-secondary/20 text-secondary-foreground"
-                        }`}
-                      >
-                        {match.estado === "CONFIRMADO" ? "Confirmado" : "Pendiente"}
-                      </Badge>
-                    </div>
-                    <Clock className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                  <h3 className="font-semibold text-foreground mb-1">
-                    {match.fecha} {match.hora}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-2">{match.nombre_ubicacion}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">
-                      {match.jugadores_actuales}/{match.cantidad_jugadores} jugadores
-                    </span>
-                    <span className="text-sm text-primary font-medium">Ver detalles</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 bg-card rounded-2xl">
-              <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground mb-4">No tienes partidos próximos</p>
-              <Button
-                onClick={handleViewAllMatches}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground"
-              >
-                Buscar Partidos
-              </Button>
-            </div>
-          )}
+          <Button
+            onClick={handleViewAllNews}
+            variant="outline"
+            size="sm"
+            className="bg-transparent border-primary text-primary hover:bg-primary/10"
+          >
+            Ver todas
+          </Button>
         </div>
 
-        <BottomNavigation />
+        <div className="space-y-6">
+          {newsUpdates.slice(0, 3).map((news) => (
+            <div
+              key={news.id}
+              onClick={() => handleNewsClick(news.id)}
+              className="bg-card rounded-2xl overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-300 touch-manipulation active:scale-[0.98] border border-border/50"
+            >
+              <img src={news.image || "/placeholder.svg"} alt={news.title} className="w-full h-40 object-cover" />
+              <div className="p-5">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center space-x-2">
+                    {getNewsIcon(news.type)}
+                    <h3 className="font-bold text-foreground text-lg leading-tight">{news.title}</h3>
+                  </div>
+                </div>
+                <p className="text-sm text-muted-foreground mb-4 leading-relaxed">{news.description}</p>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {news.tags?.map((tag) => (
+                    <span key={tag} className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded-md">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+                <div className="flex items-center justify-between pt-3 border-t border-border/50">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-xs text-muted-foreground">Por {news.author}</span>
+                    <span className="text-xs text-muted-foreground">•</span>
+                    <span className="text-xs text-muted-foreground">{news.date}</span>
+                    <span className="text-xs text-muted-foreground">•</span>
+                    <span className="text-xs text-muted-foreground">{news.readTime}</span>
+                  </div>
+                  <div className="flex items-center space-x-1 text-primary">
+                    <span className="text-sm font-medium">Leer más</span>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-    </UserRegistrationGuard>
+
+      {/* PRÓXIMOS PARTIDOS */}
+      <div className="px-6 py-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold text-foreground">Tus próximos partidos</h2>
+          <Button
+            onClick={handleViewAllMatches}
+            variant="outline"
+            size="sm"
+            className="bg-transparent border-primary text-primary hover:bg-primary/10"
+          >
+            Ver todos
+          </Button>
+        </div>
+
+        {upcomingMatches.length > 0 ? (
+          <div className="space-y-4">
+            {upcomingMatches.map((match) => (
+              <div
+                key={match.id}
+                onClick={() => handleMatchClick(match.id)}
+                className="bg-card rounded-2xl p-4 cursor-pointer hover:shadow-md transition-all duration-200 touch-manipulation active:scale-[0.98]"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center space-x-2">
+                    <Badge className="bg-muted text-muted-foreground hover:bg-muted">
+                      {match.tipo_partido}
+                    </Badge>
+                    <Badge
+                      className={`hover:bg-current ${
+                        match.estado === "CONFIRMADO"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-secondary/20 text-secondary-foreground"
+                      }`}
+                    >
+                      {match.estado === "CONFIRMADO" ? "Confirmado" : "Pendiente"}
+                    </Badge>
+                  </div>
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                </div>
+                <h3 className="font-semibold text-foreground mb-1">
+                  {match.fecha} {match.hora}
+                </h3>
+                <p className="text-sm text-muted-foreground mb-2">{match.nombre_ubicacion}</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">
+                    {match.jugadores_actuales}/{match.cantidad_jugadores} jugadores
+                  </span>
+                  <span className="text-sm text-primary font-medium">Ver detalles</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 bg-card rounded-2xl">
+            <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <p className="text-muted-foreground mb-4">No tienes partidos próximos</p>
+            <Button
+              onClick={handleViewAllMatches}
+              className="bg-primary hover:bg-primary/90 text-primary-foreground"
+            >
+              Buscar Partidos
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <BottomNavigation />
+    </div>
   )
 }

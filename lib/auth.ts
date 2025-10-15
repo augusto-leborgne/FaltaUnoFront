@@ -11,6 +11,7 @@ function hasWindow(): boolean {
 export const AuthService = {
   logout: () => {
     if (!hasWindow()) return;
+    console.log("[AuthService] Ejecutando logout");
     try {
       localStorage.removeItem(STORAGE_TOKEN_KEY);
       localStorage.removeItem(STORAGE_USER_KEY);
@@ -22,7 +23,8 @@ export const AuthService = {
   getToken: (): string | null => {
     if (!hasWindow()) return null;
     try {
-      return localStorage.getItem(STORAGE_TOKEN_KEY);
+      const token = localStorage.getItem(STORAGE_TOKEN_KEY);
+      return token;
     } catch {
       return null;
     }
@@ -45,7 +47,16 @@ export const AuthService = {
     try {
       const token = localStorage.getItem(STORAGE_TOKEN_KEY);
       const user = localStorage.getItem(STORAGE_USER_KEY);
-      return token != null && user != null;
+      
+      if (!token || !user) return false;
+      
+      // Verificar que el token no esté expirado
+      if (AuthService.isTokenExpired(token)) {
+        console.log("[AuthService] Token expirado en isLoggedIn");
+        return false;
+      }
+      
+      return true;
     } catch {
       return false;
     }
@@ -53,6 +64,7 @@ export const AuthService = {
 
   setToken: (token: string) => {
     if (!hasWindow()) return;
+    console.log("[AuthService] Guardando token");
     try { 
       localStorage.setItem(STORAGE_TOKEN_KEY, token); 
     } catch (e) {
@@ -62,6 +74,7 @@ export const AuthService = {
 
   setUser: (u: Usuario) => {
     if (!hasWindow()) return;
+    console.log("[AuthService] Guardando usuario:", u.email);
     try { 
       localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(u)); 
     } catch (e) {
@@ -74,7 +87,13 @@ export const AuthService = {
    */
   decodeToken: (token: string): any => {
     try {
-      const payload = token.split('.')[1];
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        console.warn("[AuthService] Token JWT inválido (no tiene 3 partes)");
+        return null;
+      }
+      
+      const payload = parts[1];
       const decoded = atob(payload);
       return JSON.parse(decoded);
     } catch (e) {
@@ -89,10 +108,24 @@ export const AuthService = {
   isTokenExpired: (token: string): boolean => {
     try {
       const decoded = AuthService.decodeToken(token);
-      if (!decoded || !decoded.exp) return true;
+      if (!decoded || !decoded.exp) {
+        console.warn("[AuthService] Token sin claim 'exp'");
+        return true;
+      }
+      
       const now = Date.now() / 1000;
-      return decoded.exp < now;
-    } catch {
+      const isExpired = decoded.exp < now;
+      
+      if (isExpired) {
+        console.log("[AuthService] Token expirado:", {
+          exp: new Date(decoded.exp * 1000).toISOString(),
+          now: new Date(now * 1000).toISOString()
+        });
+      }
+      
+      return isExpired;
+    } catch (e) {
+      console.warn("[AuthService] Error verificando expiración:", e);
       return true;
     }
   },
@@ -102,9 +135,15 @@ export const AuthService = {
    */
   validateAndCleanup: () => {
     if (!hasWindow()) return;
+    
     const token = AuthService.getToken();
-    if (token && AuthService.isTokenExpired(token)) {
-      console.warn("Token expirado, limpiando localStorage");
+    if (!token) {
+      console.log("[AuthService] No hay token para validar");
+      return;
+    }
+    
+    if (AuthService.isTokenExpired(token)) {
+      console.warn("[AuthService] Token expirado detectado, limpiando localStorage");
       AuthService.logout();
     }
   }

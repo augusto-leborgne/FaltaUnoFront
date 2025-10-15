@@ -15,6 +15,13 @@ export default function RequireAuth({ children }: { children: React.ReactNode })
     const validateAuth = async () => {
       console.log("[RequireAuth] Validando autenticación...");
       console.log("[RequireAuth] Path:", pathname);
+      console.log("[RequireAuth] Loading:", loading);
+      
+      // Esperar a que termine la carga inicial del AuthProvider
+      if (loading) {
+        console.log("[RequireAuth] Esperando a que termine loading...");
+        return;
+      }
       
       // Validar y limpiar tokens expirados
       AuthService.validateAndCleanup();
@@ -24,7 +31,7 @@ export default function RequireAuth({ children }: { children: React.ReactNode })
       
       console.log("[RequireAuth] Token:", token ? "SÍ" : "NO");
       console.log("[RequireAuth] User:", localUser ? "SÍ" : "NO");
-      console.log("[RequireAuth] Loading:", loading);
+      console.log("[RequireAuth] User from context:", user ? "SÍ" : "NO");
 
       // Si no hay token o está expirado, redirigir a login
       if (!token) {
@@ -45,21 +52,22 @@ export default function RequireAuth({ children }: { children: React.ReactNode })
         return;
       }
 
-      // Si no hay user en contexto pero sí hay token, cargar user
+      // Si no hay user en contexto pero sí hay token y user local, cargar user
       if (!user && localUser) {
-        console.log("[RequireAuth] Cargando user desde localStorage");
+        console.log("[RequireAuth] Cargando user desde localStorage al contexto");
         setUser(localUser);
       }
 
+      // Todo OK - dejar pasar
+      console.log("[RequireAuth] Autenticación válida, permitiendo acceso");
+      console.log("[RequireAuth] User final:", user);
       setIsValidating(false);
     };
 
-    if (!loading) {
-      validateAuth();
-    }
+    validateAuth();
   }, [user, loading, router, pathname, search, setUser]);
 
-  // Mostrar loading mientras valida
+  // Mostrar loading mientras valida o mientras AuthProvider está cargando
   if (loading || isValidating) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -77,7 +85,7 @@ export default function RequireAuth({ children }: { children: React.ReactNode })
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <div className="animate-spin w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600">Redirigiendo...</p>
+          <p className="text-gray-600">Redirigiendo a login...</p>
         </div>
       </div>
     );

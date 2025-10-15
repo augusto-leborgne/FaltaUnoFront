@@ -6,10 +6,12 @@ import { Input } from "@/components/ui/input"
 import { useRouter, useSearchParams } from "next/navigation"
 import { UsuarioAPI, Usuario } from "@/lib/api"
 import { AuthService } from "@/lib/auth"
+import { useAuth } from "@/hooks/use-auth"
 
 export function LoginScreen() {
   const router = useRouter()
   const search = useSearchParams()
+  const { setUser } = useAuth()
   const returnTo = search.get("returnTo") ?? null
 
   const [email, setEmail] = useState("")
@@ -22,37 +24,41 @@ export function LoginScreen() {
     setIsLoading(true)
     setError("")
 
-    console.log("[LoginScreen] handleSubmit llamado", { email })
+    console.log("[LoginScreen] Iniciando login para:", email)
 
     try {
       const res = await UsuarioAPI.login(email, password)
-      console.log("[LoginScreen] respuesta login:", res)
+      console.log("[LoginScreen] Respuesta login:", res)
 
       if (res && res.success) {
         const token = res.data?.token
         const user = res.data?.user as Usuario | undefined
 
+        console.log("[LoginScreen] Login exitoso")
+        console.log("[LoginScreen] Token:", token ? "SÍ" : "NO")
+        console.log("[LoginScreen] User:", user ? user.email : "NO")
+
         if (token) {
           AuthService.setToken(token)
-          console.log("[LoginScreen] token guardado")
+          console.log("[LoginScreen] Token guardado en localStorage")
         }
+        
         if (user) {
           AuthService.setUser(user)
-          console.log("[LoginScreen] usuario guardado:", user.email)
+          console.log("[LoginScreen] Usuario guardado en localStorage")
+          
+          // IMPORTANTE: Actualizar el contexto
+          setUser(user)
+          console.log("[LoginScreen] Usuario actualizado en contexto")
         }
 
+        // Redirigir
         if (returnTo) {
-          console.log("[LoginScreen] redirigiendo a returnTo:", returnTo)
+          console.log("[LoginScreen] Redirigiendo a returnTo:", returnTo)
           router.push(returnTo)
-          return
-        }
-
-        const currentUser = user ?? AuthService.getUser()
-        if (currentUser) {
-          console.log("[LoginScreen] redirigiendo a /home")
-          router.push("/home")
         } else {
-          setError("No se pudo iniciar sesión correctamente")
+          console.log("[LoginScreen] Redirigiendo a /home")
+          router.push("/home")
         }
       } else {
         setError(res.message ?? "Credenciales inválidas")
@@ -80,7 +86,7 @@ export function LoginScreen() {
       </div>
 
       <div className="flex-1 px-6">
-        {error && <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl">{error}</div>}
+        {error && <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-600">{error}</div>}
 
         <form onSubmit={handleSubmit} className="space-y-6 mb-8">
           <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={isLoading} />
@@ -96,9 +102,11 @@ export function LoginScreen() {
           <div className="flex-1 border-t border-gray-300"></div>
         </div>
 
-        <Button onClick={() => handleSocialAuth("google")} variant="outline" className="w-full py-4 rounded-2xl">Google</Button>
-        <Button onClick={() => handleSocialAuth("facebook")} variant="outline" className="w-full py-4 rounded-2xl">Facebook</Button>
-        <Button onClick={() => handleSocialAuth("apple")} variant="outline" className="w-full py-4 rounded-2xl">Apple</Button>
+        <div className="space-y-3">
+          <Button onClick={() => handleSocialAuth("google")} variant="outline" className="w-full py-4 rounded-2xl">Google</Button>
+          <Button onClick={() => handleSocialAuth("facebook")} variant="outline" className="w-full py-4 rounded-2xl">Facebook</Button>
+          <Button onClick={() => handleSocialAuth("apple")} variant="outline" className="w-full py-4 rounded-2xl">Apple</Button>
+        </div>
 
         <div className="text-center mt-8 pb-8">
           <p className="text-sm text-gray-500">

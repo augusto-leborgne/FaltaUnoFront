@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuthContext } from "@/components/auth/auth-provider";
 import { AuthService } from "@/lib/auth";
 
 interface RedirectIfAuthenticatedProps {
@@ -14,39 +15,49 @@ interface RedirectIfAuthenticatedProps {
  */
 export default function RedirectIfAuthenticated({ 
   children, 
-  redirectTo = "/" 
+  redirectTo = "/home"  // Cambiado de "/" a "/home"
 }: RedirectIfAuthenticatedProps) {
   const router = useRouter();
+  const { user, loading } = useAuthContext();
   const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
     const checkAuth = () => {
       console.log("[RedirectIfAuthenticated] Verificando autenticación...");
+      console.log("[RedirectIfAuthenticated] Loading:", loading);
+      
+      // Esperar a que termine la carga del AuthProvider
+      if (loading) {
+        console.log("[RedirectIfAuthenticated] Esperando a que termine loading...");
+        return;
+      }
       
       // Limpiar tokens expirados
       AuthService.validateAndCleanup();
       
       const token = AuthService.getToken();
-      const user = AuthService.getUser();
+      const localUser = AuthService.getUser();
       
       console.log("[RedirectIfAuthenticated] Token:", token ? "SÍ" : "NO");
-      console.log("[RedirectIfAuthenticated] User:", user ? "SÍ" : "NO");
+      console.log("[RedirectIfAuthenticated] User:", localUser ? "SÍ" : "NO");
+      console.log("[RedirectIfAuthenticated] User from context:", user ? "SÍ" : "NO");
 
       // Si está autenticado y el token es válido, redirigir
-      if (token && !AuthService.isTokenExpired(token) && user) {
+      if (token && !AuthService.isTokenExpired(token) && (user || localUser)) {
         console.log("[RedirectIfAuthenticated] Usuario autenticado, redirigiendo a", redirectTo);
         router.push(redirectTo);
         return;
       }
 
+      console.log("[RedirectIfAuthenticated] Usuario NO autenticado, mostrando página pública");
       setIsChecking(false);
     };
 
     checkAuth();
-  }, [router, redirectTo]);
+  }, [router, redirectTo, user, loading]);
 
-  // Mostrar loading mientras verifica
-  if (isChecking) {
+  // Mostrar loading mientras verifica o mientras AuthProvider carga
+  if (loading || isChecking) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { UsuarioAPI } from "@/lib/api"
 import { AuthService } from "@/lib/auth"
 import { usePostAuthRedirect } from "@/lib/navigation"
+import { useAuth } from "@/hooks/use-auth"
 
 type FormData = {
   email: string
@@ -16,6 +17,7 @@ type FormData = {
 
 export function RegisterScreen() {
   const router = useRouter()
+  const { setUser } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [formData, setFormData] = useState<FormData>({
@@ -48,7 +50,6 @@ export function RegisterScreen() {
       console.log("[RegisterScreen] Respuesta crear usuario:", response)
 
       if (response && response.success) {
-        // El backend ahora devuelve { user, token } en data
         const user = response.data?.user
         const token = response.data?.token
 
@@ -64,7 +65,8 @@ export function RegisterScreen() {
         // Guardar usuario
         if (user) {
           AuthService.setUser(user)
-          console.log("[RegisterScreen] Usuario guardado")
+          setUser(user) // IMPORTANTE: Actualizar contexto
+          console.log("[RegisterScreen] Usuario guardado y contexto actualizado")
         }
 
         // Si no hay token del registro, intentar login
@@ -81,7 +83,8 @@ export function RegisterScreen() {
               }
               if (loginRes.data?.user) {
                 AuthService.setUser(loginRes.data.user)
-                console.log("[RegisterScreen] Usuario actualizado desde login")
+                setUser(loginRes.data.user) // Actualizar contexto
+                console.log("[RegisterScreen] Usuario actualizado desde login y contexto sincronizado")
               }
             }
           } catch (loginErr: any) {
@@ -133,7 +136,7 @@ export function RegisterScreen() {
       </div>
 
       <div className="flex-1 px-6">
-        {error && <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl">{error}</div>}
+        {error && <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-600">{error}</div>}
 
         <form onSubmit={handleEmailRegistration} className="space-y-6 mb-8">
           <Input

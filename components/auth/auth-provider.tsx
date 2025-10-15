@@ -22,7 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     console.log("[AuthProvider] Inicializando...");
     
-    // Limpiar tokens expirados
+    // Limpiar tokens expirados primero
     AuthService.validateAndCleanup();
     
     const token = AuthService.getToken();
@@ -35,14 +35,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log("[AuthProvider] Restaurando sesión desde localStorage");
       setUser(localUser);
     } else if (token && AuthService.isTokenExpired(token)) {
-      console.log("[AuthProvider] Token expirado, limpiando");
+      console.log("[AuthProvider] Token expirado detectado, limpiando");
       AuthService.logout();
+    } else {
+      console.log("[AuthProvider] No hay sesión válida");
     }
 
     setLoading(false);
+    console.log("[AuthProvider] Inicialización completa");
   }, []);
 
   const refreshUser = async () => {
+    console.log("[AuthProvider] refreshUser llamado");
     setLoading(true);
     try {
       // Validar token
@@ -54,9 +58,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Si necesitas revalidar contra backend, puedes llamar a un endpoint /auth/me aquí
+      // Recargar usuario desde localStorage
       const u = AuthService.getUser();
-      setUser(u);
+      if (u) {
+        console.log("[AuthProvider] Usuario recargado:", u.email);
+        setUser(u);
+      } else {
+        console.log("[AuthProvider] No se pudo recargar usuario");
+        setUser(null);
+      }
+    } catch (error) {
+      console.error("[AuthProvider] Error en refreshUser:", error);
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -73,7 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log("[AuthProvider] Token eliminado en otra pestaña");
           setUser(null);
         } else if (AuthService.isTokenExpired(newToken)) {
-          console.log("[AuthProvider] Token expirado detectado");
+          console.log("[AuthProvider] Token expirado detectado desde otra pestaña");
           AuthService.logout();
           setUser(null);
         }
@@ -94,7 +107,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log("[AuthProvider] Logout");
     AuthService.logout();
     setUser(null);
-    window.location.href = "/login";
+    // Redirigir a login
+    if (typeof window !== 'undefined') {
+      window.location.href = "/login";
+    }
   };
 
   return (

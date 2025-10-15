@@ -5,11 +5,9 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://backend:8080/api/:path*', // nombre del contenedor backend
-      },
-      {
-        source: '/auth/:path*',
-        destination: 'http://backend:8080/auth/:path*', // opcional, para auth
+        destination: process.env.NEXT_PUBLIC_API_URL 
+          ? `${process.env.NEXT_PUBLIC_API_URL}/api/:path*`
+          : 'http://backend:8080/api/:path*',
       },
     ]
   },
