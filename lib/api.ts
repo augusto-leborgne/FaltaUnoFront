@@ -1,10 +1,13 @@
 import { AuthService } from "./auth";
 
-const RAW_API_BASE = process.env.NEXT_PUBLIC_API_URL ?? '/api';
+const RAW_API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://backend:8080';
 
-export const API_BASE = (typeof window !== 'undefined' && RAW_API_BASE.startsWith('http'))
-  ? '/api'
-  : RAW_API_BASE;
+// Si estamos en el server (SSR), usamos directamente el hostname del contenedor backend.
+// Si estamos en el navegador, usamos '/api' que se proxyea mediante next.config.js
+export const API_BASE =
+  typeof window === 'undefined'
+    ? RAW_API_BASE
+    : '/api';
 
 export const normalizeUrl = (u: string) => u.replace(/([^:]\/)\/+/g, '$1');
 
@@ -47,7 +50,7 @@ async function apiFetch<T>(url: string, options?: RequestInit): Promise<ApiRespo
   }
 
   const res = await fetch(fullUrl, {
-    credentials: 'include',
+    credentials: 'include', // cookies de sesión para Spring Security
     headers,
     ...options,
   });
@@ -71,35 +74,34 @@ export const UsuarioAPI = {
     return apiFetch<Usuario>('/usuarios', { method: 'POST', body: JSON.stringify(usuario) });
   },
 
-  verificarCedula: async (cedula: string): Promise<ApiResponse<{ verified: boolean; user?: Usuario }>> => {
+  verificarCedula: async (cedula: string) => {
     const url = normalizeUrl(`${API_BASE}/usuarios/me/verify-cedula`);
-    console.info('[UsuarioAPI.verificarCedula] POST', url, { cedula });
+    const token = AuthService.getToken();
+    const localUser = AuthService.getUser();
+
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    if (localUser?.id) headers['X-USER-ID'] = localUser.id;
 
     const res = await fetch(url, {
       method: "POST",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ cedula }),
+      headers,
+      body: JSON.stringify({ cedula })
     });
 
-    const text = await res.text().catch(() => "");
+    const text = await res.text().catch(() => '');
     let json: any = {};
-    try {
-      json = text ? JSON.parse(text) : {};
-    } catch {
-      console.error("No se pudo parsear respuesta JSON:", text);
-    }
+    try { json = text ? JSON.parse(text) : {}; } catch { json = {}; }
 
-    const result: ApiResponse<{ verified: boolean; user?: Usuario }> = {
+    return {
       success: json.success ?? false,
-      message: json.message ?? "",
+      message: json.message ?? '',
       data: {
         verified: json.data?.verified ?? false,
-        user: json.data?.user ?? undefined,
-      },
-    };
-
-    return result;
+        user: json.data?.user ?? undefined
+      }
+    } as ApiResponse<{ verified: boolean; user?: Usuario }>;
   },
 
   subirFoto: async (file: File, userIdOrMe: string = "me") => {
@@ -143,17 +145,13 @@ export const UsuarioAPI = {
     return res.json()
   },
 
-  login: async (email: string, password: string): Promise<ApiResponse<{ token?: string; user?: Usuario }>> => {
+  login: async (email: string, password: string) => {
     const url = normalizeUrl(`${API_BASE}/auth/login-json`);
-    console.info('[UsuarioAPI.login] intentando', url);
-
-    const bodyObj = { email, password };
-
     const res = await fetch(url, {
       method: 'POST',
-      credentials: 'include',
+      credentials: 'include', // IMPORTANTE para cookies de sesión
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(bodyObj),
+      body: JSON.stringify({ email, password }),
     });
 
     const text = await res.text().catch(()=> '');
@@ -167,6 +165,7 @@ export const UsuarioAPI = {
     const token = json.data?.token;
     const user = json.data?.user;
 
+    // 🔹 guardar token y user local
     if (token) AuthService.setToken(token);
     if (user) AuthService.setUser(user);
 
