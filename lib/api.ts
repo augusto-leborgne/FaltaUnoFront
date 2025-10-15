@@ -1,22 +1,14 @@
 import { AuthService } from "./auth";
 
-// IMPORTANTE: En el navegador SIEMPRE usamos rutas relativas que Next.js proxea
-// En SSR (servidor), podemos usar la URL directa del backend
-const RAW_API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://backend:8080';
-
-// En el navegador usamos rutas relativas que Next.js proxea
-// En SSR (servidor), usamos la URL del contenedor Docker
+// API base URL
+const RAW_API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
 export const API_BASE = typeof window === 'undefined' ? RAW_API_BASE : '';
-
 export const normalizeUrl = (u: string) => u.replace(/([^:]\/)\/+/g, '$1');
 
-console.info('[lib/api] RAW_NEXT_PUBLIC_API_URL =', RAW_API_BASE);
-console.info('[lib/api] EFFECTIVE API_BASE =', API_BASE);
-
 export interface ApiResponse<T> {
-  data: T
-  message?: string
-  success: boolean
+  data: T;
+  message?: string;
+  success: boolean;
 }
 
 export interface Usuario { 
@@ -41,22 +33,20 @@ export interface Usuario {
 async function apiFetch<T>(url: string, options?: RequestInit): Promise<ApiResponse<T>> {
   const token = AuthService.getToken();
   const fullUrl = normalizeUrl(`${API_BASE}${url}`);
-  console.info('[apiFetch] Request =>', options?.method ?? 'GET', fullUrl, options);
 
   const headers = new Headers(options?.headers || {});
-  if (!headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+  if (!headers.has('Content-Type') && !(options?.body instanceof FormData)) {
+    headers.set('Content-Type', 'application/json');
+  }
   if (token) headers.set('Authorization', `Bearer ${token}`);
 
-
   const res = await fetch(fullUrl, {
-    credentials: 'include',
     headers,
     ...options,
   });
 
   if (!res.ok) {
-    const text = await res.text().catch(()=> '')
-    console.error('[apiFetch] HTTP error', res.status, fullUrl, text);
+    const text = await res.text().catch(() => '');
     throw new Error(`Error en API: ${res.status} ${text}`);
   }
 
@@ -69,29 +59,34 @@ export const UsuarioAPI = {
   getMe: () => apiFetch<Usuario>('/api/usuarios/me'),
 
   crear: async (usuario: Partial<Usuario>) => {
-    console.info('[UsuarioAPI.crear] POST /api/usuarios', usuario);
-    return apiFetch<Usuario>('/api/usuarios', { method: 'POST', body: JSON.stringify(usuario) });
+    // hacemos una copia y eliminamos foto_perfil si existe
+    const payload: any = { ...usuario };
+    if ('foto_perfil' in payload) delete payload.foto_perfil;
+    // también elimina cualquier campo vacío que pueda confundir al backend
+    if (payload.foto_perfil === '' || payload.foto_perfil === null) delete payload.foto_perfil;
+
+    return apiFetch<Usuario>('/api/usuarios', {
+      method: 'POST',
+      body: JSON.stringify(payload)
+    });
   },
 
   verificarCedula: async (cedula: string) => {
-    const url = normalizeUrl(`${API_BASE}/api/usuarios/me/verify-cedula`);
     const token = AuthService.getToken();
-    const localUser = AuthService.getUser();
+    if (!token) throw new Error('No autenticado');
 
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    if (token) headers['Authorization'] = `Bearer ${token}`;
-    if (localUser?.id) headers['X-USER-ID'] = localUser.id;
-
-    const res = await fetch(url, {
-      method: "POST",
-      credentials: "include",
-      headers,
-      body: JSON.stringify({ cedula })
+    const res = await fetch(normalizeUrl(`${API_BASE}/api/usuarios/me/verify-cedula`), {
+      method: 'POST',
+      body: JSON.stringify({ cedula }),
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
     });
 
     const text = await res.text().catch(() => '');
     let json: any = {};
-    try { json = text ? JSON.parse(text) : {}; } catch { json = {}; }
+    try { json = text ? JSON.parse(text) : {}; } catch {}
 
     return {
       success: json.success ?? false,
@@ -103,37 +98,29 @@ export const UsuarioAPI = {
     } as ApiResponse<{ verified: boolean; user?: Usuario }>;
   },
 
-  subirFoto: async (file: File, userIdOrMe: string = "me") => {
+  subirFoto: async (file: File): Promise<ApiResponse<{ success: boolean }>> => {
     const formData = new FormData();
     formData.append("file", file);
 
-    const url = normalizeUrl(`${API_BASE}/api/usuarios/${userIdOrMe}/foto`);
     const token = AuthService.getToken();
-    const localUser = AuthService.getUser();
-
-    // Headers: solo Authorization si hay token
     const headers: Record<string,string> = {};
     if (token) headers['Authorization'] = `Bearer ${token}`;
-    if (localUser?.id) headers['X-USER-ID'] = localUser.id;
 
-    const res = await fetch(url, {
-      method: "POST",
+    const res = await fetch(normalizeUrl(`${API_BASE}/api/usuarios/me/foto`), {
+      method: 'POST',
       body: formData,
-      credentials: "include",
-      headers
+      headers,
     });
 
-    if (!res.ok) {
-      const txt = await res.text().catch(()=>'');
-      throw new Error(`Error al subir foto: ${res.status} ${txt}`);
-    }
+    const text = await res.text().catch(() => '');
+    let json: any = {};
+    try { json = text ? JSON.parse(text) : {}; } catch {}
 
-    // Retornar JSON si hay, o fallback a success=true
-    try { 
-      return await res.json(); 
-    } catch { 
-      return { success: true }; 
-    }
+    return {
+      success: res.ok,
+      message: json.message ?? (res.ok ? 'Foto subida correctamente' : `Error: ${res.status}`),
+      data: { success: res.ok }
+    };
   },
 
   actualizarPerfil: async (perfil: any) => {
@@ -145,61 +132,40 @@ export const UsuarioAPI = {
       method: "PUT",
       body: JSON.stringify(perfil),
       headers,
-      credentials: "include"
     });
 
     if (!res.ok) {
-      const t = await res.text().catch(()=> '')
-      throw new Error(`Error al actualizar perfil: ${res.status} ${t}`)
+      const t = await res.text().catch(()=> '');
+      throw new Error(`Error al actualizar perfil: ${res.status} ${t}`);
     }
-    return res.json()
+    return res.json();
   },
 
   login: async (email: string, password: string) => {
-    // CORREGIDO: usa /api/auth/login-json que será proxeado a /auth/login-json
-    const url = normalizeUrl(`${API_BASE}/api/auth/login-json`);
-    console.log('[UsuarioAPI.login] URL completa:', url);
-    
-    const res = await fetch(url, {
+    const res = await fetch(normalizeUrl(`${API_BASE}/api/auth/login-json`), {
       method: 'POST',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password }),
     });
 
     const text = await res.text().catch(()=> '');
-    console.log('[UsuarioAPI.login] Response status:', res.status);
-    console.log('[UsuarioAPI.login] Response text:', text);
-    
     let json: any = {};
-    try { json = text ? JSON.parse(text) : {}; } catch(e){ 
-      console.error('[UsuarioAPI.login] Error parseando JSON:', e);
-      json = {} 
-    }
+    try { json = text ? JSON.parse(text) : {}; } catch {}
 
     if (!res.ok) {
-      return { 
-        success: false, 
-        data: {} as any, 
-        message: json.message ?? `Error login (${res.status})` 
-      };
+      return { success: false, data: {} as any, message: json.message ?? `Error login (${res.status})` };
     }
 
     const token = json.data?.token;
     const user = json.data?.user;
-
     if (token) AuthService.setToken(token);
     if (user) AuthService.setUser(user);
 
-    return { 
-      success: true, 
-      data: { token, user }, 
-      message: json.message ?? 'Autenticado' 
-    };
+    return { success: true, data: { token, user }, message: json.message ?? 'Autenticado' };
   },
 
   getFriendRequests: (userId: string) => apiFetch<any[]>(`/api/usuarios/${userId}/friend-requests`),
   getUnreadMessages: (userId: string) => apiFetch<any[]>(`/api/usuarios/${userId}/messages`),
   getMatchInvitations: (userId: string) => apiFetch<any[]>(`/api/usuarios/${userId}/match-invitations`),
   getMatchUpdates: (userId: string) => apiFetch<any[]>(`/api/usuarios/${userId}/match-updates`),
-}
+};
