@@ -1,4 +1,6 @@
-import { FriendRequestScreen } from "@/components/friend-request-screen"
+"use client"
+
+import { FriendRequestScreen } from "@/components/pages/user/friend-request-screen"
 
 interface FriendRequestPageProps {
   params: {

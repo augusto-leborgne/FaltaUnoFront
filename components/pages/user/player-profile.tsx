@@ -1,97 +1,362 @@
 "use client"
 
-import React from "react"
+import React, { useEffect, useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { Button } from "@/components/ui/button"
-import { Star, ArrowLeft, MapPin } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Star, ArrowLeft, MapPin, UserPlus } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { AuthService } from "@/lib/auth"
+import { calcularEdad } from "@/lib/utils"
 
-interface Review { id: number; author: string; rating: number; nivel: number; deportividad: number; companerismo: number; comment: string; date: string }
-interface Player {
-  id: number
-  name: string
-  position: string
-  rating: number
-  totalMatches: number
-  avatar?: string
-  age: number
-  location: string
-  bio: string
-  stats: { goals: number; assists: number; cleanSheets: number }
-  reviews: Review[]
+interface Review {
+  id: string
+  usuario_que_califica_id: string
+  usuario_calificado_id: string
+  partido_id: string
+  nivel: number
+  deportividad: number
+  companerismo: number
+  comentario?: string
+  createdAt: string
 }
 
-export const PlayerProfile: React.FC<{ player: Player }> = ({ player }) => {
+interface PlayerProfileProps {
+  playerId: string
+}
+
+export default function PlayerProfile({ playerId }: PlayerProfileProps) {
   const router = useRouter()
-  const handleBack = () => router.back()
+  const [player, setPlayer] = useState<any>(null)
+  const [reviews, setReviews] = useState<Review[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [sendingRequest, setSendingRequest] = useState(false)
+  const [requestSent, setRequestSent] = useState(false)
+
+  useEffect(() => {
+    loadPlayerData()
+  }, [playerId])
+
+  const loadPlayerData = async () => {
+    try {
+      setLoading(true)
+      const token = AuthService.getToken()
+      
+      if (!token) {
+        router.push("/login")
+        return
+      }
+
+      // Cargar datos del jugador
+      const playerResponse = await fetch(`/api/usuarios/${playerId}`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      })
+
+      if (!playerResponse.ok) {
+        throw new Error("No se pudo cargar el perfil del jugador")
+      }
+
+      const playerData = await playerResponse.json()
+      setPlayer(playerData.data)
+
+      // Cargar reviews del jugador
+      const reviewsResponse = await fetch(`/api/reviews?usuarioCalificadoId=${playerId}`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      })
+
+      if (reviewsResponse.ok) {
+        const reviewsData = await reviewsResponse.json()
+        setReviews(reviewsData.data || [])
+      }
+
+    } catch (err) {
+      console.error("Error cargando perfil del jugador:", err)
+      setError(err instanceof Error ? err.message : "Error al cargar el perfil")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleBack = () => {
+    router.back()
+  }
+
+  const handleSendFriendRequest = async () => {
+    setSendingRequest(true)
+    
+    try {
+      const token = AuthService.getToken()
+      
+      if (!token) {
+        router.push("/login")
+        return
+      }
+
+      const response = await fetch("/api/amistades", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          amigoId: playerId
+        })
+      })
+
+      if (response.ok) {
+        setRequestSent(true)
+      } else {
+        const errorData = await response.json()
+        alert(errorData.message || "Error al enviar solicitud")
+      }
+    } catch (err) {
+      console.error("Error enviando solicitud:", err)
+      alert("Error al enviar solicitud")
+    } finally {
+      setSendingRequest(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando perfil...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !player) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center px-6">
+          <p className="text-red-600 mb-4">{error || "Jugador no encontrado"}</p>
+          <Button onClick={handleBack} variant="outline">
+            Volver
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  const fullName = `${player.nombre || ""} ${player.apellido || ""}`.trim() || "Usuario"
+  const initials = fullName.split(" ").map(n => n[0]).join("").toUpperCase()
+  const edad = calcularEdad(player.fechaNacimiento)
+  
+  // Calcular rating promedio
+  const averageRating = reviews.length > 0
+    ? (reviews.reduce((sum, r) => sum + (r.nivel + r.deportividad + r.companerismo) / 3, 0) / reviews.length).toFixed(1)
+    : "0.0"
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
+      {/* Header */}
       <div className="pt-16 pb-6 px-6 border-b border-gray-100">
         <div className="flex items-center space-x-4">
-          <button onClick={handleBack} className="p-2 -ml-2"><ArrowLeft className="w-5 h-5 text-gray-600" /></button>
+          <button onClick={handleBack} className="p-2 -ml-2">
+            <ArrowLeft className="w-5 h-5 text-gray-600" />
+          </button>
           <h1 className="text-xl font-bold text-gray-900">Perfil del Jugador</h1>
         </div>
       </div>
 
       <div className="flex-1 px-6 py-6">
+        {/* Profile Header */}
         <div className="text-center mb-8">
           <Avatar className="w-24 h-24 mx-auto mb-4">
-            {player.avatar ? <AvatarImage src={player.avatar} /> : <AvatarFallback className="bg-green-100 text-green-700 text-2xl">{player.name.split(" ").map(n => n[0]).join("")}</AvatarFallback>}
+            {player.fotoPerfil ? (
+              <AvatarImage src={`data:image/jpeg;base64,${player.fotoPerfil}`} />
+            ) : (
+              <AvatarFallback className="bg-green-100 text-green-700 text-2xl">
+                {initials}
+              </AvatarFallback>
+            )}
           </Avatar>
 
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">{player.name}</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{fullName}</h2>
+          
           <div className="flex items-center justify-center space-x-4 mb-4">
-            <span className="px-2 py-1 rounded-full bg-orange-100 text-gray-800">{player.position}</span>
-            <div className="flex items-center space-x-1"><Star className="w-4 h-4 fill-yellow-400 text-yellow-400" /><span className="font-semibold">{player.rating}</span></div>
+            {player.posicion && (
+              <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
+                {player.posicion}
+              </Badge>
+            )}
+            <div className="flex items-center space-x-1">
+              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+              <span className="font-semibold">{averageRating}</span>
+            </div>
           </div>
+
           <div className="flex items-center justify-center space-x-4 text-sm text-gray-600">
-            <span>{player.age} años</span>
-            <span>•</span>
-            <div className="flex items-center space-x-1"><MapPin className="w-3 h-3" /><span>{player.location}</span></div>
+            {edad !== null && (
+              <>
+                <span>{edad} años</span>
+                <span>•</span>
+              </>
+            )}
+            {player.ubicacion && (
+              <div className="flex items-center space-x-1">
+                <MapPin className="w-3 h-3" />
+                <span>{player.ubicacion}</span>
+              </div>
+            )}
           </div>
         </div>
 
+        {/* Friend Request Button */}
         <div className="mb-8">
-          <h3 className="text-lg font-bold text-gray-900 mb-3">Sobre mí</h3>
-          <div className="bg-gray-50 rounded-xl p-4"><p className="text-gray-700">{player.bio}</p></div>
+          <Button
+            onClick={handleSendFriendRequest}
+            disabled={sendingRequest || requestSent}
+            className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl disabled:opacity-50"
+          >
+            <UserPlus className="w-4 h-4 mr-2" />
+            {requestSent ? "Solicitud enviada" : sendingRequest ? "Enviando..." : "Enviar solicitud de amistad"}
+          </Button>
+          {requestSent && (
+            <p className="text-sm text-green-600 text-center mt-2">
+              ✓ Solicitud enviada correctamente
+            </p>
+          )}
         </div>
 
+        {/* Stats */}
         <div className="mb-8">
           <h3 className="text-lg font-bold text-gray-900 mb-4">Estadísticas</h3>
           <div className="grid grid-cols-3 gap-4">
-            <div className="text-center bg-gray-50 rounded-xl p-4"><div className="text-2xl font-bold text-gray-900">{player.stats.goals}</div><div className="text-sm text-gray-600">Goles</div></div>
-            <div className="text-center bg-gray-50 rounded-xl p-4"><div className="text-2xl font-bold text-gray-900">{player.stats.assists}</div><div className="text-sm text-gray-600">Asistencias</div></div>
-            <div className="text-center bg-gray-50 rounded-xl p-4"><div className="text-2xl font-bold text-gray-900">{player.totalMatches}</div><div className="text-sm text-gray-600">Partidos</div></div>
+            {player.altura && (
+              <div className="text-center bg-gray-50 rounded-xl p-4">
+                <div className="text-2xl font-bold text-gray-900">{player.altura}</div>
+                <div className="text-sm text-gray-600">Altura (cm)</div>
+              </div>
+            )}
+            {player.peso && (
+              <div className="text-center bg-gray-50 rounded-xl p-4">
+                <div className="text-2xl font-bold text-gray-900">{player.peso}</div>
+                <div className="text-sm text-gray-600">Peso (kg)</div>
+              </div>
+            )}
+            <div className="text-center bg-gray-50 rounded-xl p-4">
+              <div className="text-2xl font-bold text-gray-900">{reviews.length}</div>
+              <div className="text-sm text-gray-600">Reseñas</div>
+            </div>
           </div>
         </div>
 
+        {/* Reviews */}
         <div className="mb-8">
           <h3 className="text-lg font-bold text-gray-900 mb-4">Reseñas</h3>
-          <div className="space-y-4">
-            {player.reviews.map(review => (
-              <div key={review.id} className="bg-gray-50 rounded-xl p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-semibold text-gray-900">{review.author}</span>
-                    <div className="flex items-center space-x-1">{[...Array(5)].map((_, i) => (<Star key={i} className={`w-3 h-3 ${i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} />))}</div>
+          
+          {reviews.length === 0 ? (
+            <div className="text-center py-8 bg-gray-50 rounded-xl">
+              <p className="text-gray-500">Este jugador aún no tiene reseñas</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {reviews.map((review) => {
+                const avgReviewRating = Math.round((review.nivel + review.deportividad + review.companerismo) / 3)
+                
+                return (
+                  <div key={review.id} className="bg-gray-50 rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-semibold text-gray-900">
+                          Usuario {review.usuario_que_califica_id.substring(0, 8)}
+                        </span>
+                        <div className="flex items-center space-x-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-3 h-3 ${
+                                i < avgReviewRating
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-gray-300"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <span className="text-xs text-gray-500">
+                        {new Date(review.createdAt).toLocaleDateString('es-ES')}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3 mb-3">
+                      <div className="text-center">
+                        <div className="text-xs text-gray-600 mb-1">Nivel</div>
+                        <div className="flex justify-center">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-3 h-3 ${
+                                i < review.nivel
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-gray-300"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-gray-600 mb-1">Deportividad</div>
+                        <div className="flex justify-center">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-3 h-3 ${
+                                i < review.deportividad
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-gray-300"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-gray-600 mb-1">Compañerismo</div>
+                        <div className="flex justify-center">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-3 h-3 ${
+                                i < review.companerismo
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-gray-300"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {review.comentario && (
+                      <p className="text-gray-700 text-sm">{review.comentario}</p>
+                    )}
                   </div>
-                  <span className="text-xs text-gray-500">{review.date}</span>
-                </div>
-                <div className="grid grid-cols-3 gap-3 mb-3">
-                  <div className="text-center"><div className="text-xs text-gray-600 mb-1">Nivel</div></div>
-                  <div className="text-center"><div className="text-xs text-gray-600 mb-1">Deportividad</div></div>
-                  <div className="text-center"><div className="text-xs text-gray-600 mb-1">Compañerismo</div></div>
-                </div>
-                <p className="text-gray-700 text-sm">{review.comment}</p>
-              </div>
-            ))}
-          </div>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         <div className="pb-24">
-          <Button onClick={handleBack} variant="outline" className="w-full py-4 text-lg font-semibold rounded-2xl border-gray-300 bg-transparent">Volver</Button>
+          <Button 
+            onClick={handleBack} 
+            variant="outline" 
+            className="w-full py-4 text-lg font-semibold rounded-2xl border-gray-300 bg-transparent"
+          >
+            Volver
+          </Button>
         </div>
       </div>
 

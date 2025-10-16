@@ -1,6 +1,5 @@
 "use client"
 
-import type React from "react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,45 +7,33 @@ import { Textarea } from "@/components/ui/textarea"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { ArrowLeft, MapPin, Calendar, Users, DollarSign } from "lucide-react"
 import { useRouter } from "next/navigation"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-import { CompressedMap } from "./compressed-map"
-import { apiService } from "@/lib/api"
-import { AddressAutocomplete } from "../../address-autocomplete"
+import { AddressAutocomplete } from "@/components/google-maps/address-autocomplete"
+import { AuthService } from "@/lib/auth"
 import type { google } from "google-maps"
 
-export function CreateMatch() {
+export function CreateMatchScreen() {
   const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
+
   const [formData, setFormData] = useState({
-    type: "F5",
+    type: "FUTBOL_5",
     gender: "Mixto",
     date: "",
     time: "",
     location: "",
     totalPlayers: 10,
-    totalPrice: 80,
+    totalPrice: 800,
     description: "",
+    duration: 90,
   })
-
-  const [showDialog, setShowDialog] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState("")
 
   const [locationCoordinates, setLocationCoordinates] = useState<{
     lat: number
     lng: number
   } | null>(null)
 
-  const handleBack = () => {
-    router.back()
-  }
+  const handleBack = () => router.back()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -54,37 +41,50 @@ export function CreateMatch() {
     setError("")
 
     try {
+      const token = AuthService.getToken()
+      const user = AuthService.getUser()
+      
+      if (!token || !user?.id) {
+        router.push("/login")
+        return
+      }
+
       const matchData = {
-        title: `${formData.type} ${formData.gender}`,
-        description: formData.description,
-        date: formData.date,
-        time: formData.time,
-        type: formData.type.replace("F", "FUTBOL_") as "FUTBOL_5" | "FUTBOL_7" | "FUTBOL_8" | "FUTBOL_9" | "FUTBOL_11",
-        level: "INTERMEDIATE" as const,
-        price: formData.totalPrice / formData.totalPlayers,
-        maxPlayers: formData.totalPlayers,
-        location: {
-          name: formData.location,
-          address: formData.location,
-          latitude: locationCoordinates?.lat || -34.6037,
-          longitude: locationCoordinates?.lng || -58.3816,
-        },
-        captain: {
-          id: "current-user-id", // Should come from auth context
-          name: "Current User",
-          rating: 4.0,
-        },
+        tipoPartido: formData.type,
+        genero: formData.gender,
+        fecha: formData.date,
+        hora: formData.time,
+        duracionMinutos: formData.duration,
+        nombreUbicacion: formData.location,
+        direccionUbicacion: formData.location,
+        latitud: locationCoordinates?.lat || null,
+        longitud: locationCoordinates?.lng || null,
+        cantidadJugadores: formData.totalPlayers,
+        precioTotal: formData.totalPrice,
+        descripcion: formData.description,
+        organizadorId: user.id,
       }
 
-      const response = await apiService.createMatch(matchData);
-      console.log('createMatch response', response);
+      const response = await fetch("/api/partidos", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(matchData)
+      })
 
-      if (response.success) {
-        setShowDialog(true)
+      if (!response.ok) {
+        throw new Error("Error al crear el partido")
       }
+
+      const result = await response.json()
+      
+      // Redirigir a pantalla de éxito
+      router.push(`/match-created?id=${result.id}`)
     } catch (error) {
+      console.error("Error creando partido:", error)
       setError("Error al crear el partido. Intenta nuevamente.")
-      console.error("Create match error:", error)
     } finally {
       setIsLoading(false)
     }
@@ -94,10 +94,7 @@ export function CreateMatch() {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
-  const handleLocationChange = (address: string, placeDetails?: google.maps.places.PlaceResult) => {
-    console.log("[v0] Location change - Address:", address)
-    console.log("[v0] Location change - Place details:", placeDetails)
-
+  const handleLocationChange = (address: string, placeDetails?: google.maps.places.PlaceResult | null) => {
     setFormData((prev) => ({ ...prev, location: address }))
 
     if (placeDetails?.geometry?.location) {
@@ -115,16 +112,7 @@ export function CreateMatch() {
         }
       }
 
-      console.log("[v0] Setting coordinates from place details:", coordinates)
       setLocationCoordinates(coordinates)
-    } else {
-      console.log("[v0] No place details or geometry available")
-      if (!locationCoordinates) {
-        console.log("[v0] No previous coordinates, setting to null")
-        setLocationCoordinates(null)
-      } else {
-        console.log("[v0] Keeping previous coordinates:", locationCoordinates)
-      }
     }
   }
 
@@ -132,7 +120,6 @@ export function CreateMatch() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Header */}
       <div className="pt-16 pb-6 px-6 border-b border-gray-100">
         <div className="flex items-center space-x-4">
           <button onClick={handleBack} className="p-2 -ml-2 touch-manipulation">
@@ -149,11 +136,11 @@ export function CreateMatch() {
           </div>
         )}
 
-        {/* Match Type */}
+        {/* Tipo de partido */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-900 mb-3">Tipo de partido</label>
           <div className="flex gap-3 flex-wrap">
-            {["F5", "F7", "F8", "F9", "F11"].map((type) => (
+            {["FUTBOL_5", "FUTBOL_7", "FUTBOL_8", "FUTBOL_9", "FUTBOL_11"].map((type) => (
               <button
                 key={type}
                 type="button"
@@ -165,13 +152,13 @@ export function CreateMatch() {
                     : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
                 }`}
               >
-                {type}
+                {type.replace("FUTBOL_", "F")}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Gender */}
+        {/* Género */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-900 mb-3">Género</label>
           <div className="flex gap-3">
@@ -193,7 +180,7 @@ export function CreateMatch() {
           </div>
         </div>
 
-        {/* Date and Time */}
+        {/* Fecha y Hora */}
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div>
             <label className="block text-sm font-medium text-gray-900 mb-2">Fecha</label>
@@ -222,34 +209,25 @@ export function CreateMatch() {
           </div>
         </div>
 
-        {/* Location */}
+        {/* Ubicación */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-900 mb-2">Ubicación</label>
           <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <AddressAutocomplete
-              value={formData.location}
-              onChange={handleLocationChange}
-              placeholder="Ej: Polideportivo Norte, Montevideo"
-              className="pl-10 py-3 rounded-xl border-gray-300"
-              required
-              disabled={isLoading}
-            />
-          </div>
-          {formData.location && (
-            <div className="mt-3">
-              <CompressedMap
-                location={formData.location}
-                lat={locationCoordinates?.lat}
-                lng={locationCoordinates?.lng}
+            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 z-10" />
+            <div className="pl-10">
+              <AddressAutocomplete
+                value={formData.location}
+                onChange={handleLocationChange}
+                placeholder="Ej: Polideportivo Norte, Montevideo"
+                required
               />
             </div>
-          )}
+          </div>
         </div>
 
-        {/* Players */}
+        {/* Jugadores */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-900 mb-2">Jugadores</label>
+          <label className="block text-sm font-medium text-gray-900 mb-2">Cantidad de jugadores</label>
           <div className="relative">
             <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
@@ -265,9 +243,9 @@ export function CreateMatch() {
           </div>
         </div>
 
-        {/* Price */}
+        {/* Precio */}
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-900 mb-2">Precio total</label>
+          <label className="block text-sm font-medium text-gray-900 mb-2">Precio total ($UYU)</label>
           <div className="relative">
             <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
@@ -284,7 +262,7 @@ export function CreateMatch() {
           <p className="text-sm text-gray-500 mt-2">${pricePerPlayer.toFixed(2)} por jugador</p>
         </div>
 
-        {/* Description */}
+        {/* Descripción */}
         <div className="mb-8">
           <label className="block text-sm font-medium text-gray-900 mb-2">Descripción (opcional)</label>
           <Textarea
@@ -306,30 +284,11 @@ export function CreateMatch() {
           >
             {isLoading ? "Creando partido..." : "Crear Partido"}
           </Button>
-          <p className="text-center text-sm text-gray-500 mt-3">Tu partido será visible para otros jugadores</p>
+          <p className="text-center text-sm text-gray-500 mt-3">
+            Tu partido será visible para otros jugadores
+          </p>
         </div>
       </form>
-
-      <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
-        <AlertDialogTrigger asChild>
-          <Button className="hidden">Trigger</Button>
-        </AlertDialogTrigger>
-        <AlertDialogContent>
-          <AlertDialogTitle>Confirmación</AlertDialogTitle>
-          <AlertDialogDescription>¿Estás seguro de que quieres crear este partido?</AlertDialogDescription>
-          <div className="flex justify-end space-x-2">
-            <AlertDialogCancel className="bg-white text-gray-900 border-gray-300 hover:bg-gray-100">
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded"
-              onClick={() => router.push("/match-created")}
-            >
-              Crear Partido
-            </AlertDialogAction>
-          </div>
-        </AlertDialogContent>
-      </AlertDialog>
 
       <BottomNavigation />
     </div>
