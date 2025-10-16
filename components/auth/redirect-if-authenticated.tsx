@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AuthService } from "@/lib/auth";
+import { useAuth } from "@/hooks/use-auth";
 
 interface RedirectIfAuthenticatedProps {
   children: React.ReactNode;
@@ -13,56 +13,45 @@ interface RedirectIfAuthenticatedProps {
  */
 export default function RedirectIfAuthenticated({ children }: RedirectIfAuthenticatedProps) {
   const router = useRouter();
-  const [shouldShow, setShouldShow] = useState<boolean | null>(null);
+  const { user, loading } = useAuth();
+  const [shouldRender, setShouldRender] = useState(false);
 
   useEffect(() => {
-    console.log("[RedirectIfAuthenticated] Verificando autenticación...");
+    console.log("[RedirectIfAuthenticated] Checking - Loading:", loading, "User:", user ? "YES" : "NO");
     
-    // Limpiar tokens expirados
-    AuthService.validateAndCleanup();
-    
-    const token = AuthService.getToken();
-    const user = AuthService.getUser();
-    
-    console.log("[RedirectIfAuthenticated] Token:", token ? "SÍ" : "NO");
-    console.log("[RedirectIfAuthenticated] User:", user ? "SÍ" : "NO");
+    // Esperar a que termine de cargar
+    if (loading) {
+      setShouldRender(false);
+      return;
+    }
 
-    // Si está autenticado con token válido, redirigir a /
-    if (token && !AuthService.isTokenExpired(token) && user) {
-      console.log("[RedirectIfAuthenticated] Usuario autenticado, redirigiendo a /");
-      setShouldShow(false);
+    // Si hay usuario autenticado → redirigir a home
+    if (user) {
+      console.log("[RedirectIfAuthenticated] User authenticated, redirecting to /");
+      setShouldRender(false);
       router.replace("/");
       return;
     }
 
-    // No está autenticado, mostrar la página
-    console.log("[RedirectIfAuthenticated] Usuario no autenticado, mostrando página");
-    setShouldShow(true);
-  }, [router]);
+    // No hay usuario → permitir acceso a página pública
+    console.log("[RedirectIfAuthenticated] No user, showing public page");
+    setShouldRender(true);
+  }, [user, loading, router]);
 
-  // Mientras verifica, mostrar loading
-  if (shouldShow === null) {
+  // Mientras carga o redirige, mostrar loading
+  if (!shouldRender) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <div className="animate-spin w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600">Verificando...</p>
+          <p className="text-gray-600">
+            {loading ? "Verificando..." : "Redirigiendo..."}
+          </p>
         </div>
       </div>
     );
   }
 
-  // Si no debe mostrar (está autenticado), loading mientras redirige
-  if (!shouldShow) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="animate-spin w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600">Redirigiendo...</p>
-        </div>
-      </div>
-    );
-  }
-
+  // Renderizar página pública
   return <>{children}</>;
 }

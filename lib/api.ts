@@ -18,7 +18,7 @@ export interface Usuario {
   email?: string | null; 
   password?: string | null; 
   celular?: string | null; 
-  edad?: number | null; 
+  fechaNacimiento?: string | null; // formato: yyyy-MM-dd
   altura?: number | null; 
   peso?: number | null; 
   posicion?: string | null; 
@@ -183,6 +183,15 @@ export const UsuarioAPI = {
     // El backend ahora devuelve { token, user } en data
     const token = json.data?.token;
     const user = json.data?.user;
+    
+    console.log("[UsuarioAPI.login] Respuesta del servidor:", {
+      success: json.success,
+      hasToken: !!token,
+      hasUser: !!user,
+      userEmail: user?.email,
+      perfilCompleto: user?.perfilCompleto,
+      cedulaVerificada: user?.cedulaVerificada,
+    });
     
     if (token) AuthService.setToken(token);
     if (user) AuthService.setUser(user);

@@ -28,15 +28,26 @@ export default function RootPage() {
 
     // Si hay token válido y user → decidir según estado del perfil
     if (user) {
+      console.log("[RootPage] Usuario completo:", {
+        email: user.email,
+        perfilCompleto: user.perfilCompleto,
+        cedulaVerificada: user.cedulaVerificada,
+        nombre: user.nombre,
+        apellido: user.apellido,
+        celular: user.celular,
+        fechaNacimiento: user.fechaNacimiento,
+        cedula: user.cedula
+      });
+      
       // Si el perfil no está completo → profile-setup
-      if (!user.perfilCompleto) {
+      if (user.perfilCompleto === false || !user.perfilCompleto) {
         console.log("[RootPage] Perfil incompleto, redirigiendo a /profile-setup");
         router.replace("/profile-setup");
         return;
       }
 
       // Si la cédula no está verificada → verification
-      if (!user.cedulaVerificada) {
+      if (user.cedulaVerificada === false || !user.cedulaVerificada) {
         console.log("[RootPage] Cédula no verificada, redirigiendo a /verification");
         router.replace("/verification");
         return;
