@@ -1,64 +1,64 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuthContext } from "./auth-provider";
 import { AuthService } from "@/lib/auth";
 
-interface Props {
+interface RedirectIfAuthenticatedProps {
   children: React.ReactNode;
-  redirectTo?: string;
 }
 
-export default function RedirectIfAuthenticated({ children, redirectTo = "/home" }: Props) {
+/**
+ * Guard para páginas públicas (login, register)
+ * Si el usuario ya está autenticado, lo redirige a /
+ */
+export default function RedirectIfAuthenticated({ children }: RedirectIfAuthenticatedProps) {
   const router = useRouter();
-  const { user, loading, setUser } = useAuthContext();
-  const [checking, setChecking] = useState(true);
+  const [shouldShow, setShouldShow] = useState<boolean | null>(null);
 
   useEffect(() => {
-    async function check() {
-      if (loading) return;
+    console.log("[RedirectIfAuthenticated] Verificando autenticación...");
+    
+    // Limpiar tokens expirados
+    AuthService.validateAndCleanup();
+    
+    const token = AuthService.getToken();
+    const user = AuthService.getUser();
+    
+    console.log("[RedirectIfAuthenticated] Token:", token ? "SÍ" : "NO");
+    console.log("[RedirectIfAuthenticated] User:", user ? "SÍ" : "NO");
 
-      AuthService.validateAndCleanup();
-
-      const token = AuthService.getToken();
-      const localUser = AuthService.getUser();
-
-      if (!token) {
-        setChecking(false);
-        return;
-      }
-
-      if (user || localUser) {
-        router.push(redirectTo);
-        return;
-      }
-
-      try {
-        const serverUser = await AuthService.fetchCurrentUser();
-        if (serverUser) {
-          AuthService.setUser(serverUser);
-          setUser(serverUser);
-          router.push(redirectTo);
-        } else {
-          AuthService.logout();
-          setChecking(false);
-        }
-      } catch (err) {
-        console.warn("[RedirectIfAuthenticated] validateWithServer failed", err);
-        AuthService.logout();
-        setChecking(false);
-      }
+    // Si está autenticado con token válido, redirigir a /
+    if (token && !AuthService.isTokenExpired(token) && user) {
+      console.log("[RedirectIfAuthenticated] Usuario autenticado, redirigiendo a /");
+      setShouldShow(false);
+      router.replace("/");
+      return;
     }
 
-    check();
-  }, [loading, user, router, setUser, redirectTo]);
+    // No está autenticado, mostrar la página
+    console.log("[RedirectIfAuthenticated] Usuario no autenticado, mostrando página");
+    setShouldShow(true);
+  }, [router]);
 
-  if (loading || checking) {
+  // Mientras verifica, mostrar loading
+  if (shouldShow === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <div className="animate-spin w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4"></div>
           <p className="text-gray-600">Verificando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Si no debe mostrar (está autenticado), loading mientras redirige
+  if (!shouldShow) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="animate-spin w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">Redirigiendo...</p>
         </div>
       </div>
     );

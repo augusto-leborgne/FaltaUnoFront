@@ -4,7 +4,7 @@ import { LoginScreen } from "@/components/pages/login/login-screen";
 
 export default function LoginPage() {
   return (
-    <RedirectIfAuthenticated redirectTo="/home">
+    <RedirectIfAuthenticated>
       <LoginScreen />
     </RedirectIfAuthenticated>
   );

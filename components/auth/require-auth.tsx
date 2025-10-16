@@ -1,53 +1,61 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { useAuthContext } from "./auth-provider";
+import { useRouter } from "next/navigation";
 import { AuthService } from "@/lib/auth";
 
 export default function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { user, loading, setUser } = useAuthContext();
   const router = useRouter();
-  const pathname = usePathname();
-  const search = useSearchParams();
-  const [isValidating, setIsValidating] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const validateAuth = async () => {
-      if (loading) return;
+    console.log("[RequireAuth] Verificando autenticación...");
+    
+    // Limpiar tokens expirados
+    AuthService.validateAndCleanup();
+    
+    const token = AuthService.getToken();
+    const user = AuthService.getUser();
+    
+    console.log("[RequireAuth] Token:", token ? "SÍ" : "NO");
+    console.log("[RequireAuth] User:", user ? "SÍ" : "NO");
 
-      AuthService.validateAndCleanup();
+    // Si no hay token o está expirado → no autenticado
+    if (!token || AuthService.isTokenExpired(token)) {
+      console.log("[RequireAuth] No autenticado, redirigiendo a /login");
+      setIsAuthenticated(false);
+      router.replace("/login");
+      return;
+    }
 
-      const token = AuthService.getToken();
-      const localUser = AuthService.getUser();
+    // Si hay token válido → autenticado
+    console.log("[RequireAuth] Autenticado ✓");
+    setIsAuthenticated(true);
+  }, [router]);
 
-      if (!token || AuthService.isTokenExpired(token)) {
-        AuthService.logout();
-        const returnTo = pathname + (search ? "?" + search.toString() : "");
-        router.push(`/login?returnTo=${encodeURIComponent(returnTo)}`);
-        setIsValidating(false);
-        return;
-      }
-
-      if (!user && localUser) {
-        setUser(localUser);
-      }
-
-      setIsValidating(false);
-    };
-
-    validateAuth();
-  }, [user, loading, router, pathname, search, setUser]);
-
-  if (loading || isValidating || !user) {
+  // Mientras verifica, mostrar loading
+  if (isAuthenticated === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <div className="animate-spin w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando...</p>
+          <p className="text-gray-600">Verificando acceso...</p>
         </div>
       </div>
     );
   }
 
+  // Si no está autenticado, mostrar loading (mientras redirige)
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="animate-spin w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">Redirigiendo a login...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Autenticado: mostrar contenido
   return <>{children}</>;
 }
