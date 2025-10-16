@@ -1,52 +1,121 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowLeft, UserPlus, Check } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
+import { AuthService } from "@/lib/auth"
 
 interface Contact {
-  id: number
-  name: string
-  phone: string
-  avatar?: string
+  id: string
+  nombre: string
+  apellido: string
+  celular: string
+  foto_perfil?: string
   isOnApp: boolean
-  userId?: number
 }
-
-const mockContacts: Contact[] = [
-  { id: 1, name: "Juan Carlos Pérez", phone: "+598 99 123 456", avatar: "/placeholder.svg?height=40&width=40", isOnApp: true, userId: 101 },
-  { id: 2, name: "María González", phone: "+598 99 654 321", avatar: "/placeholder.svg?height=40&width=40", isOnApp: false },
-  { id: 3, name: "Diego Rodríguez", phone: "+598 99 789 012", avatar: "/placeholder.svg?height=40&width=40", isOnApp: true, userId: 102 },
-  { id: 4, name: "Ana López", phone: "+598 99 345 678", avatar: "/placeholder.svg?height=40&width=40", isOnApp: false },
-]
 
 export function ContactsScreen() {
   const router = useRouter()
-  const [invitedContacts, setInvitedContacts] = useState<number[]>([])
+  const [contacts, setContacts] = useState<Contact[]>([])
+  const [invitedContacts, setInvitedContacts] = useState<string[]>([])
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
   const [isSendingRequest, setIsSendingRequest] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadContacts()
+  }, [])
+
+  const loadContacts = async () => {
+    try {
+      const token = AuthService.getToken()
+      if (!token) {
+        router.push("/login")
+        return
+      }
+
+      const response = await fetch("/api/usuarios", {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        const allUsers = result.data || []
+        
+        // Convertir usuarios a formato Contact
+        const contactsList: Contact[] = allUsers.map((u: any) => ({
+          id: u.id,
+          nombre: u.nombre || "",
+          apellido: u.apellido || "",
+          celular: u.celular || "",
+          foto_perfil: u.foto_perfil,
+          isOnApp: true // Todos los usuarios en la DB están en la app
+        }))
+        
+        setContacts(contactsList)
+      }
+    } catch (error) {
+      console.error("Error cargando contactos:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleBack = () => router.back()
+  
   const handlePhoneClick = (phone: string, e: React.MouseEvent) => {
     e.stopPropagation()
     window.location.href = `tel:${phone}`
   }
 
-  const handleInviteContact = (contactId: number) => {
+  const handleInviteContact = (contactId: string) => {
     if (!invitedContacts.includes(contactId)) {
       setInvitedContacts((prev) => [...prev, contactId])
+      // Aquí podrías enviar una invitación real por SMS/WhatsApp
     }
   }
 
   const handleSendFriendRequest = async () => {
     if (!selectedContact) return
+    
     setIsSendingRequest(true)
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsSendingRequest(false)
-    setSelectedContact(null)
+    try {
+      const token = AuthService.getToken()
+      const response = await fetch("/api/amistades", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          amigoId: selectedContact.id
+        })
+      })
+
+      if (response.ok) {
+        alert("Solicitud de amistad enviada")
+      }
+    } catch (error) {
+      console.error("Error enviando solicitud:", error)
+      alert("Error al enviar solicitud")
+    } finally {
+      setIsSendingRequest(false)
+      setSelectedContact(null)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full"></div>
+      </div>
+    )
   }
 
   return (
@@ -57,7 +126,7 @@ export function ContactsScreen() {
           <button onClick={handleBack} className="p-2 -ml-2">
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </button>
-          <h1 className="text-xl font-bold text-gray-900">Contactos del celular</h1>
+          <h1 className="text-xl font-bold text-gray-900">Contactos</h1>
         </div>
       </div>
 
@@ -67,8 +136,10 @@ export function ContactsScreen() {
         </div>
 
         <div className="space-y-3">
-          {mockContacts.map((contact) => {
+          {contacts.map((contact) => {
             const isInvited = invitedContacts.includes(contact.id)
+            const fullName = `${contact.nombre} ${contact.apellido}`.trim() || "Usuario"
+            
             return (
               <div
                 key={contact.id}
@@ -79,24 +150,29 @@ export function ContactsScreen() {
               >
                 <div className="flex items-center space-x-3">
                   <Avatar className="w-12 h-12">
-                    <AvatarImage src={contact.avatar || "/placeholder.svg"} />
-                    <AvatarFallback className="bg-gray-200">
-                      {contact.name.split(" ").map((n) => n[0]).join("")}
-                    </AvatarFallback>
+                    {contact.foto_perfil ? (
+                      <AvatarImage src={`data:image/jpeg;base64,${contact.foto_perfil}`} />
+                    ) : (
+                      <AvatarFallback className="bg-gray-200">
+                        {fullName.split(" ").map((n) => n[0]).join("").toUpperCase()}
+                      </AvatarFallback>
+                    )}
                   </Avatar>
                   <div>
                     <button
                       className="font-medium text-gray-900 hover:text-primary transition-colors"
                       onClick={() => contact.isOnApp && setSelectedContact(contact)}
                     >
-                      {contact.name}
+                      {fullName}
                     </button>
-                    <button
-                      className="text-sm text-gray-500 hover:text-primary transition-colors block text-left"
-                      onClick={(e) => handlePhoneClick(contact.phone, e)}
-                    >
-                      {contact.phone}
-                    </button>
+                    {contact.celular && (
+                      <button
+                        className="text-sm text-gray-500 hover:text-primary transition-colors block text-left"
+                        onClick={(e) => handlePhoneClick(contact.celular, e)}
+                      >
+                        {contact.celular}
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -122,6 +198,12 @@ export function ContactsScreen() {
           })}
         </div>
 
+        {contacts.length === 0 && (
+          <div className="text-center py-12 text-gray-500">
+            No se encontraron contactos
+          </div>
+        )}
+
         <div className="mt-8 text-center text-sm text-gray-500">
           Los contactos que están en la app aparecen marcados. Toca para ver su perfil o enviar solicitud.
           <br />
@@ -135,16 +217,21 @@ export function ContactsScreen() {
               className="absolute inset-0"
               onClick={() => setSelectedContact(null)}
             ></div>
-            <div className="bg-white rounded-t-2xl w-full max-w-md p-6 transform transition-transform duration-300 translate-y-0">
+            <div className="bg-white rounded-t-2xl w-full max-w-md p-6 transform transition-transform duration-300 translate-y-0 relative z-10">
               <div className="flex items-center justify-center mb-4">
                 <Avatar className="w-20 h-20">
-                  <AvatarImage src={selectedContact.avatar || "/placeholder.svg"} />
-                  <AvatarFallback className="bg-orange-100 text-2xl">
-                    {selectedContact.name.split(" ").map((n) => n[0]).join("")}
-                  </AvatarFallback>
+                  {selectedContact.foto_perfil ? (
+                    <AvatarImage src={`data:image/jpeg;base64,${selectedContact.foto_perfil}`} />
+                  ) : (
+                    <AvatarFallback className="bg-orange-100 text-2xl">
+                      {`${selectedContact.nombre} ${selectedContact.apellido}`.split(" ").map((n) => n[0]).join("").toUpperCase()}
+                    </AvatarFallback>
+                  )}
                 </Avatar>
               </div>
-              <h2 className="text-xl font-bold text-gray-900 text-center mb-2">{selectedContact.name}</h2>
+              <h2 className="text-xl font-bold text-gray-900 text-center mb-2">
+                {selectedContact.nombre} {selectedContact.apellido}
+              </h2>
               <p className="text-sm text-gray-600 text-center mb-6">
                 ¿Quieres enviar una solicitud de amistad?
               </p>
