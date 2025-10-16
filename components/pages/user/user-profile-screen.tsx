@@ -6,7 +6,36 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { Star, ArrowLeft, UserPlus } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { UsuarioAPI, ReviewAPI, UsuarioMin, Review, Usuario } from "@/lib/api"
+import { AuthService } from "@/lib/auth"
+import { calcularEdad } from "@/lib/utils"
+
+interface Review {
+  id: string
+  usuario_que_califica_id: string
+  usuario_calificado_id: string
+  partido_id: string
+  nivel: number
+  deportividad: number
+  companerismo: number
+  comentario: string
+  createdAt: string
+}
+
+interface Usuario {
+  id: string
+  nombre?: string
+  apellido?: string
+  email?: string
+  celular?: string
+  fechaNacimiento?: string
+  altura?: number
+  peso?: number
+  posicion?: string
+  foto_perfil?: string
+  ubicacion?: string
+  cedula?: string
+  created_at?: string
+}
 
 interface UserProfileScreenProps {
   userId: string
@@ -17,88 +46,104 @@ export function UserProfileScreen({ userId }: UserProfileScreenProps) {
 
   const [user, setUser] = useState<Usuario | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
-  const [contacts, setContacts] = useState<UsuarioMin[]>([])
   const [friendRequestSent, setFriendRequestSent] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await UsuarioAPI.obtener(userId)
-        setUser(res.data)
-      } catch (err) {
-        console.error("Error fetching user:", err)
-      }
-    }
-
-    const fetchReviews = async () => {
-      try {
-        const res = await ReviewAPI.listar()
-        const userReviews = (res.data || []).filter(r => r.usuario_calificado_id === userId)
-        setReviews(userReviews)
-      } catch (err) {
-        console.error("Error fetching reviews:", err)
-      }
-    }
-
-    const fetchContacts = async () => {
-      try {
-        // Traemos todos los usuarios y normalizamos los campos que pueden ser null/undefined
-        const res = await UsuarioAPI.listar()
-        const otherUsers = (res.data || [])
-          .filter(u => u.id !== userId)
-          .map(u => {
-            // aseguramos que nombre/apellido sean string (no null/undefined)
-            const nombre = u.nombre ?? ""
-            const apellido = u.apellido ?? ""
-
-            // normalizamos foto_perfil a string URL si es posible; si viene como byte[] no lo convertimos aquí
-            // preferimos usar la propiedad tal cual si es string, sino placeholder
-            let foto_perfil = "/placeholder.svg"
-            try {
-              if (typeof u.foto_perfil === "string" && u.foto_perfil.length > 0) {
-                foto_perfil = u.foto_perfil
-              } else if (Array.isArray((u as any).foto_perfil) && (u as any).foto_perfil.length > 0) {
-                // si backend nos devuelve un array de bytes, intentamos convertirlo a base64 (defensivo)
-                try {
-                  const bytes: number[] = (u as any).foto_perfil
-                  const binary = bytes.map(b => String.fromCharCode(b)).join("")
-                  // btoa puede fallar si los bytes no son ascii — intentamos de todas formas
-                  const base64 = typeof window !== "undefined" ? window.btoa(binary) : ""
-                  if (base64) foto_perfil = `data:image/jpeg;base64,${base64}`
-                } catch (e) {
-                  // fallback: placeholder
-                }
-              }
-            } catch (err) {
-              // keep placeholder
-            }
-
-            const userMin: UsuarioMin = {
-              id: u.id,
-              nombre,
-              apellido,
-              foto_perfil,
-            }
-            return userMin
-          })
-
-        setContacts(otherUsers)
-      } catch (err) {
-        console.error("Error fetching contacts:", err)
-      }
-    }
-
-    fetchUser()
-    fetchReviews()
-    fetchContacts()
+    loadUserProfile()
   }, [userId])
 
-  const handleBack = () => router.back()
-  const handleSendFriendRequest = () => setFriendRequestSent(true)
-  const handleUserClick = (id: string) => router.push(`/users/${id}`)
-  const handleContactClick = (id: string) => router.push(`/users/${id}`)
+  const loadUserProfile = async () => {
+    try {
+      const token = AuthService.getToken()
+      if (!token) {
+        router.push("/login")
+        return
+      }
 
-  if (!user) return <div className="min-h-screen flex items-center justify-center">Cargando...</div>
+      // Cargar usuario
+      const userResponse = await fetch(`/api/usuarios/${userId}`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      })
+
+      if (userResponse.ok) {
+        const userData = await userResponse.json()
+        setUser(userData.data)
+      }
+
+      // Cargar reviews
+      const reviewsResponse = await fetch(`/api/reviews?usuarioCalificadoId=${userId}`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      })
+
+      if (reviewsResponse.ok) {
+        const reviewsData = await reviewsResponse.json()
+        setReviews(reviewsData.data || [])
+      }
+
+    } catch (err) {
+      console.error("Error cargando perfil:", err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleBack = () => router.back()
+  
+  const handleSendFriendRequest = async () => {
+    try {
+      const token = AuthService.getToken()
+      const response = await fetch("/api/amistades", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          amigoId: userId
+        })
+      })
+
+      if (response.ok) {
+        setFriendRequestSent(true)
+      }
+    } catch (error) {
+      console.error("Error enviando solicitud:", error)
+    }
+  }
+
+  const handleUserClick = (id: string) => router.push(`/users/${id}`)
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full"></div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <p className="text-gray-600 mb-4">Usuario no encontrado</p>
+          <Button onClick={handleBack}>Volver</Button>
+        </div>
+      </div>
+    )
+  }
+
+  const fullName = `${user.nombre || ""} ${user.apellido || ""}`.trim() || "Usuario"
+  const edad = calcularEdad(user.fechaNacimiento)
+  const averageRating = reviews.length > 0
+    ? (reviews.reduce((sum, r) => sum + (r.nivel + r.deportividad + r.companerismo) / 3, 0) / reviews.length).toFixed(1)
+    : "0.0"
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -117,37 +162,49 @@ export function UserProfileScreen({ userId }: UserProfileScreenProps) {
         <div className="bg-card border border-border rounded-2xl p-6 mb-6">
           <div className="flex items-center space-x-4 mb-6">
             <Avatar className="w-20 h-20">
-              {typeof user.foto_perfil === "string" && user.foto_perfil ? (
-                <AvatarImage src={user.foto_perfil} />
+              {user.foto_perfil ? (
+                <AvatarImage src={`data:image/jpeg;base64,${user.foto_perfil}`} />
               ) : (
-                <AvatarFallback className="bg-muted text-2xl">{(user.nombre ?? "U")[0]}</AvatarFallback>
+                <AvatarFallback className="bg-muted text-2xl">
+                  {fullName.split(" ").map(n => n[0]).join("").toUpperCase()}
+                </AvatarFallback>
               )}
             </Avatar>
             <div className="flex-1">
-              <h2 className="text-xl font-bold text-foreground">{user.nombre ?? ""} {user.apellido ?? ""}</h2>
-              <p className="text-muted-foreground">{user.posicion ?? ""}</p>
-              <p className="text-sm text-muted-foreground">{user.ubicacion ?? ""}</p>
-              <p className="text-sm text-muted-foreground">{user.celular ?? ""}</p>
+              <h2 className="text-xl font-bold text-foreground">{fullName}</h2>
+              <p className="text-muted-foreground">{user.posicion || "Sin posición"}</p>
+              {user.ubicacion && (
+                <p className="text-sm text-muted-foreground">{user.ubicacion}</p>
+              )}
+              {user.celular && (
+                <p className="text-sm text-muted-foreground">{user.celular}</p>
+              )}
             </div>
           </div>
 
-          {/* Datos del usuario */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-4 mb-6">
             <div className="text-center">
-              <div className="text-lg font-bold text-foreground">{user.edad ?? "-"}</div>
+              <div className="text-lg font-bold text-foreground">
+                {edad !== null ? `${edad}` : "-"}
+              </div>
               <div className="text-sm text-muted-foreground">Edad</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold text-foreground">{user.altura ?? "-"}</div>
+              <div className="text-lg font-bold text-foreground">
+                {user.altura ? `${user.altura}` : "-"}
+              </div>
               <div className="text-sm text-muted-foreground">Altura</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold text-foreground">{user.peso ?? "-"}</div>
+              <div className="text-lg font-bold text-foreground">
+                {user.peso ? `${user.peso}` : "-"}
+              </div>
               <div className="text-sm text-muted-foreground">Peso</div>
             </div>
           </div>
 
-          {/* Friend Request Section */}
+          {/* Friend Request Button */}
           <div className="space-y-3">
             <Button
               onClick={handleSendFriendRequest}
@@ -158,85 +215,122 @@ export function UserProfileScreen({ userId }: UserProfileScreenProps) {
               {friendRequestSent ? "Solicitud enviada" : "Enviar solicitud de amistad"}
             </Button>
             {friendRequestSent && (
-              <p className="text-sm text-primary font-medium">✓ Solicitud enviada correctamente</p>
+              <p className="text-sm text-primary font-medium text-center">
+                ✓ Solicitud enviada correctamente
+              </p>
             )}
           </div>
         </div>
 
-        {/* Contacts Section */}
-        <div className="bg-card border border-border rounded-2xl p-6 mb-6">
-          <h3 className="text-lg font-bold text-foreground mb-4">Amigos en común</h3>
-          <div className="space-y-3">
-            {contacts.map((contact) => (
-              <div
-                key={contact.id}
-                onClick={() => handleContactClick(contact.id)}
-                className="flex items-center space-x-3 p-3 hover:bg-muted rounded-xl cursor-pointer transition-colors"
-              >
-                <Avatar className="w-12 h-12">
-                  {/* contact.foto_perfil ya es string por la normalización previa */}
-                  <AvatarImage src={contact.foto_perfil} />
-                  <AvatarFallback className="bg-muted">{(contact.nombre || "U")[0]}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <div className="font-medium text-foreground">{contact.nombre} {contact.apellido}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
         {/* Reviews Section */}
-        <div className="bg-card border border-border rounded-2xl p-6">
+        <div className="bg-card border border-border rounded-2xl p-6 mb-24">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-foreground">Reseñas</h3>
             <div className="flex items-center space-x-1">
               <Star className="w-4 h-4 fill-accent text-accent" />
-              <span className="text-sm font-medium">
-                {reviews.length
-                  ? (reviews.reduce((a,b)=>a+(b.nivel+b.deportividad+b.companerismo)/3,0)/reviews.length).toFixed(1)
-                  : 0
-                }
-              </span>
+              <span className="text-sm font-medium">{averageRating}</span>
               <span className="text-sm text-muted-foreground">({reviews.length})</span>
             </div>
           </div>
 
-          <div className="space-y-4">
-            {reviews.map((review) => (
-              <div
-                key={review.id}
-                className="border-b border-border last:border-b-0 pb-4 last:pb-0 cursor-pointer hover:bg-muted -mx-2 px-2 py-2 rounded-lg transition-colors"
-                onClick={() => handleUserClick(review.usuario_que_califica_id)}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <button
-                    className="font-medium text-foreground hover:text-primary transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleUserClick(review.usuario_que_califica_id)
-                    }}
+          {reviews.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              Este usuario aún no tiene reseñas
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {reviews.map((review) => {
+                const avgRating = Math.round((review.nivel + review.deportividad + review.companerismo) / 3)
+                
+                return (
+                  <div
+                    key={review.id}
+                    className="border-b border-border last:border-b-0 pb-4 last:pb-0 cursor-pointer hover:bg-muted -mx-2 px-2 py-2 rounded-lg transition-colors"
+                    onClick={() => handleUserClick(review.usuario_que_califica_id)}
                   >
-                    {review.usuario_que_califica_id}
-                  </button>
-                  <div className="flex items-center space-x-1">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-3 h-3 ${i < Math.round((review.nivel+review.deportividad+review.companerismo)/3) ? "fill-accent text-accent" : "text-muted-foreground"}`}
-                      />
-                    ))}
+                    <div className="flex items-center justify-between mb-2">
+                      <button
+                        className="font-medium text-foreground hover:text-primary transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleUserClick(review.usuario_que_califica_id)
+                        }}
+                      >
+                        Usuario {review.usuario_que_califica_id.substring(0, 8)}
+                      </button>
+                      <div className="flex items-center space-x-1">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-3 h-3 ${
+                              i < avgRating 
+                                ? "fill-accent text-accent" 
+                                : "text-muted-foreground"
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-2 mb-2">
+                      <div className="text-center">
+                        <div className="text-xs text-muted-foreground mb-1">Nivel</div>
+                        <div className="flex justify-center">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-3 h-3 ${
+                                i < review.nivel 
+                                  ? "fill-accent text-accent" 
+                                  : "text-muted-foreground"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-muted-foreground mb-1">Deportividad</div>
+                        <div className="flex justify-center">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-3 h-3 ${
+                                i < review.deportividad 
+                                  ? "fill-accent text-accent" 
+                                  : "text-muted-foreground"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-muted-foreground mb-1">Compañerismo</div>
+                        <div className="flex justify-center">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-3 h-3 ${
+                                i < review.companerismo 
+                                  ? "fill-accent text-accent" 
+                                  : "text-muted-foreground"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {review.comentario && (
+                      <p className="text-sm text-muted-foreground mb-1">{review.comentario}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(review.createdAt).toLocaleDateString('es-ES')}
+                    </p>
                   </div>
-                </div>
-                <div className="grid grid-cols-3 gap-2 mb-2">
-                  <div className="text-center"><div className="text-xs text-muted-foreground mb-1">Nivel</div></div>
-                  <div className="text-center"><div className="text-xs text-muted-foreground mb-1">Deportividad</div></div>
-                  <div className="text-center"><div className="text-xs text-muted-foreground mb-1">Compañerismo</div></div>
-                </div>
-                <p className="text-sm text-muted-foreground mb-1">{review.comentario}</p>
-              </div>
-            ))}
-          </div>
+                )
+              })}
+            </div>
+          )}
         </div>
       </div>
 

@@ -1,46 +1,28 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowLeft, Star } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
+import { AuthService } from "@/lib/auth"
 
 interface MatchReviewScreenProps {
   matchId: string
 }
 
-const mockMatchPlayers = [
-  {
-    id: 1,
-    name: "Juan Carlos",
-    position: "Delantero",
-    avatar: "/placeholder.svg?height=48&width=48",
-  },
-  {
-    id: 2,
-    name: "María González",
-    position: "Medio",
-    avatar: "/placeholder.svg?height=48&width=48",
-  },
-  {
-    id: 3,
-    name: "Diego Rodríguez",
-    position: "Defensa",
-    avatar: "/placeholder.svg?height=48&width=48",
-  },
-  {
-    id: 4,
-    name: "Ana López",
-    position: "Arquero",
-    avatar: "/placeholder.svg?height=48&width=48",
-  },
-]
+interface Jugador {
+  id: string
+  nombre: string
+  apellido: string
+  foto_perfil?: string
+  posicion?: string
+}
 
 interface PlayerReview {
-  playerId: number
+  playerId: string
   nivel: number
   deportividad: number
   companerismo: number
@@ -50,37 +32,94 @@ interface PlayerReview {
 export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
   const router = useRouter()
   const { toast } = useToast()
-  const [reviews, setReviews] = useState<PlayerReview[]>(
-    mockMatchPlayers.map((player) => ({
-      playerId: player.id,
-      nivel: 0,
-      deportividad: 0,
-      companerismo: 0,
-      comentario: "",
-    })),
-  )
+  
+  const [jugadores, setJugadores] = useState<Jugador[]>([])
+  const [reviews, setReviews] = useState<PlayerReview[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadMatchPlayers()
+  }, [matchId])
+
+  const loadMatchPlayers = async () => {
+    try {
+      const token = AuthService.getToken()
+      const user = AuthService.getUser()
+      
+      if (!token || !user?.id) {
+        router.push("/login")
+        return
+      }
+
+      // Cargar jugadores del partido (excepto yo)
+      const response = await fetch(`/api/partidos/${matchId}/jugadores`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        const allPlayers = result.data || []
+        
+        // Filtrar el usuario actual
+        const otherPlayers = allPlayers.filter((p: Jugador) => p.id !== user.id)
+        setJugadores(otherPlayers)
+        
+        // Inicializar reviews
+        setReviews(otherPlayers.map((player: Jugador) => ({
+          playerId: player.id,
+          nivel: 0,
+          deportividad: 0,
+          companerismo: 0,
+          comentario: "",
+        })))
+      }
+    } catch (error) {
+      console.error("Error cargando jugadores:", error)
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los jugadores",
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleBack = () => {
     router.back()
   }
 
-  const updateReview = (playerId: number, field: keyof PlayerReview, value: number | string) => {
-    setReviews((prev) => prev.map((review) => (review.playerId === playerId ? { ...review, [field]: value } : review)))
+  const updateReview = (playerId: string, field: keyof PlayerReview, value: number | string) => {
+    setReviews((prev) => 
+      prev.map((review) => 
+        review.playerId === playerId ? { ...review, [field]: value } : review
+      )
+    )
   }
 
   const renderStarRating = (
-    playerId: number,
+    playerId: string,
     category: "nivel" | "deportividad" | "companerismo",
     currentRating: number,
   ) => {
     return (
       <div className="flex space-x-1">
         {[1, 2, 3, 4, 5].map((star) => (
-          <button key={star} onClick={() => updateReview(playerId, category, star)} className="transition-colors">
+          <button 
+            key={star} 
+            type="button"
+            onClick={() => updateReview(playerId, category, star)} 
+            className="transition-colors"
+          >
             <Star
               className={`w-6 h-6 ${
-                star <= currentRating ? "fill-yellow-400 text-yellow-400" : "text-gray-300 hover:text-yellow-300"
+                star <= currentRating 
+                  ? "fill-yellow-400 text-yellow-400" 
+                  : "text-gray-300 hover:text-yellow-300"
               }`}
             />
           </button>
@@ -108,26 +147,40 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
     setIsSubmitting(true)
 
     try {
-      console.log("Submitting reviews:", reviews)
+      const token = AuthService.getToken()
+      
+      // Enviar cada review
+      const promises = reviews.map(review => 
+        fetch("/api/reviews", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            partidoId: matchId,
+            usuarioCalificadoId: review.playerId,
+            nivel: review.nivel,
+            deportividad: review.deportividad,
+            companerismo: review.companerismo,
+            comentario: review.comentario
+          })
+        })
+      )
 
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
-      // Here would be the actual API call to:
-      // 1. Submit the reviews to the database
-      // 2. Mark this match as reviewed for the current user
-      // 3. Update user's pending reviews status
+      await Promise.all(promises)
 
       toast({
         title: "¡Reseñas enviadas!",
-        description: "Gracias por tu feedback. Ya puedes inscribirte en nuevos partidos.",
+        description: "Gracias por tu feedback.",
       })
 
-      router.push("/")
+      router.push("/home")
     } catch (error) {
+      console.error("Error enviando reseñas:", error)
       toast({
         title: "Error al enviar reseñas",
-        description: "Hubo un problema al enviar tus reseñas. Inténtalo de nuevo.",
+        description: "Hubo un problema. Inténtalo de nuevo.",
         variant: "destructive",
       })
     } finally {
@@ -135,8 +188,16 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
     }
   }
 
-  const handlePlayerClick = (playerId: number) => {
+  const handlePlayerClick = (playerId: string) => {
     router.push(`/users/${playerId}`)
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full"></div>
+      </div>
+    )
   }
 
   return (
@@ -159,119 +220,122 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
               Tu opinión es importante. Califica a cada jugador en las siguientes categorías:
             </p>
             <div className="mt-3 space-y-1 text-sm text-blue-700">
-              <p>
-                <strong>Nivel:</strong> Habilidad técnica y táctica
-              </p>
-              <p>
-                <strong>Deportividad:</strong> Fair play y respeto por las reglas
-              </p>
-              <p>
-                <strong>Compañerismo:</strong> Actitud y trabajo en equipo
-              </p>
+              <p><strong>Nivel:</strong> Habilidad técnica y táctica</p>
+              <p><strong>Deportividad:</strong> Fair play y respeto por las reglas</p>
+              <p><strong>Compañerismo:</strong> Actitud y trabajo en equipo</p>
             </div>
           </div>
         </div>
 
-        <div className="space-y-6">
-          {mockMatchPlayers.map((player) => {
-            const playerReview = reviews.find((r) => r.playerId === player.id)!
-            const isComplete = isReviewComplete(playerReview)
+        {jugadores.length === 0 ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500">No hay jugadores para calificar</p>
+            <Button onClick={() => router.push("/home")} className="mt-4">
+              Volver al inicio
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {jugadores.map((player) => {
+              const playerReview = reviews.find((r) => r.playerId === player.id)!
+              const isComplete = isReviewComplete(playerReview)
+              const fullName = `${player.nombre} ${player.apellido}`.trim()
+              const initials = fullName.split(" ").map(n => n[0]).join("").toUpperCase()
 
-            return (
-              <div
-                key={player.id}
-                className={`bg-white border rounded-2xl p-6 ${
-                  isComplete ? "border-green-200 bg-green-50/30" : "border-gray-200"
-                }`}
-              >
-                <div className="flex items-center space-x-3 mb-4">
-                  <button
-                    onClick={() => handlePlayerClick(player.id)}
-                    className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
-                  >
-                    <Avatar className="w-12 h-12">
-                      <AvatarImage src={player.avatar || "/placeholder.svg"} />
-                      <AvatarFallback className="bg-gray-200">
-                        {player.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{player.name}</h3>
-                      <p className="text-sm text-gray-600">{player.position}</p>
-                    </div>
-                  </button>
-                  {isComplete && (
-                    <div className="ml-auto">
-                      <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                          <path
-                            fillRule="evenodd"
-                            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
+              return (
+                <div
+                  key={player.id}
+                  className={`bg-white border rounded-2xl p-6 ${
+                    isComplete ? "border-green-200 bg-green-50/30" : "border-gray-200"
+                  }`}
+                >
+                  <div className="flex items-center space-x-3 mb-4">
+                    <button
+                      onClick={() => handlePlayerClick(player.id)}
+                      className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
+                    >
+                      <Avatar className="w-12 h-12">
+                        {player.foto_perfil ? (
+                          <AvatarImage src={`data:image/jpeg;base64,${player.foto_perfil}`} />
+                        ) : (
+                          <AvatarFallback className="bg-gray-200">{initials}</AvatarFallback>
+                        )}
+                      </Avatar>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{fullName}</h3>
+                        <p className="text-sm text-gray-600">{player.posicion || "Jugador"}</p>
                       </div>
+                    </button>
+                    {isComplete && (
+                      <div className="ml-auto">
+                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-4">
+                    {/* Nivel */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-sm font-medium text-gray-700">Nivel</label>
+                        <span className="text-xs text-gray-500">
+                          {playerReview.nivel > 0 ? `${playerReview.nivel}/5` : "Obligatorio"}
+                        </span>
+                      </div>
+                      {renderStarRating(player.id, "nivel", playerReview.nivel)}
                     </div>
-                  )}
+
+                    {/* Deportividad */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-sm font-medium text-gray-700">Deportividad</label>
+                        <span className="text-xs text-gray-500">
+                          {playerReview.deportividad > 0 ? `${playerReview.deportividad}/5` : "Obligatorio"}
+                        </span>
+                      </div>
+                      {renderStarRating(player.id, "deportividad", playerReview.deportividad)}
+                    </div>
+
+                    {/* Compañerismo */}
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-sm font-medium text-gray-700">Compañerismo</label>
+                        <span className="text-xs text-gray-500">
+                          {playerReview.companerismo > 0 ? `${playerReview.companerismo}/5` : "Obligatorio"}
+                        </span>
+                      </div>
+                      {renderStarRating(player.id, "companerismo", playerReview.companerismo)}
+                    </div>
+
+                    {/* Comentario opcional */}
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 mb-2 block">
+                        Comentario <span className="text-gray-500 font-normal">(opcional)</span>
+                      </label>
+                      <Textarea
+                        placeholder="Comparte tu experiencia jugando con este jugador..."
+                        value={playerReview.comentario}
+                        onChange={(e) => updateReview(player.id, "comentario", e.target.value)}
+                        className="rounded-xl resize-none"
+                        rows={3}
+                      />
+                    </div>
+                  </div>
                 </div>
+              )
+            })}
+          </div>
+        )}
 
-                <div className="space-y-4">
-                  {/* Nivel */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="text-sm font-medium text-gray-700">Nivel</label>
-                      <span className="text-xs text-gray-500">
-                        {playerReview.nivel > 0 ? `${playerReview.nivel}/5` : "Obligatorio"}
-                      </span>
-                    </div>
-                    {renderStarRating(player.id, "nivel", playerReview.nivel)}
-                  </div>
-
-                  {/* Deportividad */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="text-sm font-medium text-gray-700">Deportividad</label>
-                      <span className="text-xs text-gray-500">
-                        {playerReview.deportividad > 0 ? `${playerReview.deportividad}/5` : "Obligatorio"}
-                      </span>
-                    </div>
-                    {renderStarRating(player.id, "deportividad", playerReview.deportividad)}
-                  </div>
-
-                  {/* Compañerismo */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="text-sm font-medium text-gray-700">Compañerismo</label>
-                      <span className="text-xs text-gray-500">
-                        {playerReview.companerismo > 0 ? `${playerReview.companerismo}/5` : "Obligatorio"}
-                      </span>
-                    </div>
-                    {renderStarRating(player.id, "companerismo", playerReview.companerismo)}
-                  </div>
-
-                  {/* Comentario opcional */}
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">
-                      Comentario <span className="text-gray-500 font-normal">(opcional)</span>
-                    </label>
-                    <Textarea
-                      placeholder="Comparte tu experiencia jugando con este jugador..."
-                      value={playerReview.comentario}
-                      onChange={(e) => updateReview(player.id, "comentario", e.target.value)}
-                      className="rounded-xl resize-none"
-                      rows={3}
-                    />
-                  </div>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-
-        <div className="mt-8 space-y-4">
+        <div className="mt-8 space-y-4 pb-24">
           <div className="bg-gray-50 rounded-xl p-4 text-center">
             <p className="text-sm text-gray-600">
               {allReviewsComplete

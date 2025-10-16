@@ -6,48 +6,83 @@ import { Badge } from "@/components/ui/badge"
 import { Plus, Users, Clock, MapPin } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
-import { apiService, type Match } from "@/lib/api"
+import { AuthService } from "@/lib/auth"
+
+interface Partido {
+  id: string
+  tipo_partido: string
+  nivel: string
+  fecha: string
+  hora: string
+  nombre_ubicacion: string
+  estado: string
+  precio_por_jugador: number
+  jugadores_actuales: number
+  max_jugadores: number
+  capitanId?: string
+}
 
 export function MyMatchesScreen() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState("Creados")
-  const [createdMatches, setCreatedMatches] = useState<Match[]>([])
-  const [joinedMatches, setJoinedMatches] = useState<Match[]>([])
+  const [createdMatches, setCreatedMatches] = useState<Partido[]>([])
+  const [joinedMatches, setJoinedMatches] = useState<Partido[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const loadMatches = async () => {
-      try {
-        setLoading(true)
-        const response = await apiService.getUserMatches()
-        if (response.success) {
-          // Separate created matches from joined matches based on captain
-          const created = response.data.filter((match) => match.captain.id === "current-user-id")
-          const joined = response.data.filter((match) => match.captain.id !== "current-user-id")
-          setCreatedMatches(created)
-          setJoinedMatches(joined)
-        }
-      } catch (error) {
-        console.error("Error loading user matches:", error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
     loadMatches()
   }, [])
+
+  const loadMatches = async () => {
+    try {
+      setLoading(true)
+      const token = AuthService.getToken()
+      const user = AuthService.getUser()
+      
+      if (!token || !user?.id) {
+        router.push("/login")
+        return
+      }
+
+      // Cargar partidos del usuario
+      const response = await fetch(`/api/partidos/usuario/${user.id}`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        const partidos = result.data || []
+        
+        // Separar en creados vs inscritos
+        const created = partidos.filter((p: Partido) => p.capitanId === user.id)
+        const joined = partidos.filter((p: Partido) => p.capitanId !== user.id)
+        
+        setCreatedMatches(created)
+        setJoinedMatches(joined)
+      }
+    } catch (error) {
+      console.error("Error cargando partidos:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleCreateMatch = () => {
     router.push("/create-match")
   }
 
-  const handleMatchClick = (matchId: string) => {
-    if (activeTab === "Creados") {
-      // For created matches, go to management screen since user is captain
-      router.push(`/my-matches/${matchId}`)
+  const handleMatchClick = (match: Partido) => {
+    const user = AuthService.getUser()
+    
+    if (activeTab === "Creados" && match.capitanId === user?.id) {
+      // Si es creador, ir a gestión
+      router.push(`/my-matches/${match.id}`)
     } else {
-      // For inscriptos matches, always go to match detail page
-      router.push(`/matches/${matchId}`)
+      // Si es participante, ir a detalle
+      router.push(`/matches/${match.id}`)
     }
   }
 
@@ -57,9 +92,10 @@ export function MyMatchesScreen() {
 
   const formatLevel = (level: string) => {
     const levelMap: { [key: string]: string } = {
-      BEGINNER: "Principiante",
-      INTERMEDIATE: "Intermedio",
-      ADVANCED: "Avanzado",
+      PRINCIPIANTE: "Principiante",
+      INTERMEDIO: "Intermedio",
+      AVANZADO: "Avanzado",
+      PROFESIONAL: "Profesional"
     }
     return levelMap[level] || level
   }
@@ -80,6 +116,19 @@ export function MyMatchesScreen() {
         day: "numeric",
         month: "short",
       })} ${timeString}`
+    }
+  }
+
+  const getStatusBadge = (estado: string) => {
+    switch (estado) {
+      case "CONFIRMADO":
+        return <Badge className="bg-green-100 text-green-800">Confirmado</Badge>
+      case "CANCELADO":
+        return <Badge className="bg-red-100 text-red-800">Cancelado</Badge>
+      case "COMPLETADO":
+        return <Badge className="bg-blue-100 text-blue-800">Completado</Badge>
+      default:
+        return <Badge className="bg-yellow-100 text-yellow-800">Pendiente</Badge>
     }
   }
 
@@ -116,7 +165,7 @@ export function MyMatchesScreen() {
         <div className="space-y-4 pb-24">
           {loading ? (
             <div className="text-center py-8">
-              <p className="text-gray-500 text-sm">Cargando partidos...</p>
+              <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full mx-auto"></div>
             </div>
           ) : (
             <>
@@ -124,35 +173,46 @@ export function MyMatchesScreen() {
                 (createdMatches.length === 0 ? (
                   <div className="text-center py-12">
                     <p className="text-gray-500">No has creado partidos aún</p>
+                    <Button
+                      onClick={handleCreateMatch}
+                      className="mt-4 bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      Crear Partido
+                    </Button>
                   </div>
                 ) : (
                   createdMatches.map((match) => {
-                    const spotsLeft = match.maxPlayers - match.currentPlayers
+                    const spotsLeft = match.max_jugadores - match.jugadores_actuales
                     return (
                       <div
                         key={match.id}
-                        onClick={() => handleMatchClick(match.id)}
+                        onClick={() => handleMatchClick(match)}
                         className="bg-white border border-gray-200 rounded-2xl p-6 cursor-pointer hover:shadow-md transition-all touch-manipulation active:scale-[0.98]"
                       >
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex gap-2">
                             <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
-                              {formatMatchType(match.type)}
+                              {formatMatchType(match.tipo_partido)}
                             </Badge>
                             <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
-                              {formatLevel(match.level)}
+                              {formatLevel(match.nivel)}
                             </Badge>
                           </div>
                           <div className="flex gap-2">
-                            <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Quedan {spotsLeft}</Badge>
+                            {getStatusBadge(match.estado)}
+                            <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                              Quedan {spotsLeft}
+                            </Badge>
                           </div>
                         </div>
 
                         <div className="mb-4">
-                          <h3 className="text-xl font-bold text-gray-900 mb-2">{formatDate(match.date, match.time)}</h3>
+                          <h3 className="text-xl font-bold text-gray-900 mb-2">
+                            {formatDate(match.fecha, match.hora)}
+                          </h3>
                           <div className="flex items-center text-gray-600 text-sm space-x-4 mb-2">
                             <div className="flex items-center space-x-1">
-                              <span>${match.price} / jugador</span>
+                              <span>${match.precio_por_jugador} / jugador</span>
                             </div>
                             <div className="flex items-center space-x-1">
                               <Clock className="w-4 h-4" />
@@ -161,7 +221,7 @@ export function MyMatchesScreen() {
                           </div>
                           <div className="flex items-center text-gray-600 text-sm">
                             <MapPin className="w-4 h-4 mr-1" />
-                            <span>{match.location.name}</span>
+                            <span>{match.nombre_ubicacion}</span>
                           </div>
                         </div>
 
@@ -169,9 +229,10 @@ export function MyMatchesScreen() {
                           <div className="flex items-center space-x-2">
                             <Users className="w-4 h-4 text-gray-600" />
                             <span className="text-sm text-gray-600">
-                              {match.currentPlayers}/{match.maxPlayers} jugadores
+                              {match.jugadores_actuales}/{match.max_jugadores} jugadores
                             </span>
                           </div>
+                          <span className="text-sm text-primary font-medium">Gestionar</span>
                         </div>
                       </div>
                     )
@@ -182,54 +243,57 @@ export function MyMatchesScreen() {
                 (joinedMatches.length === 0 ? (
                   <div className="text-center py-12">
                     <p className="text-gray-500">No tienes partidos inscriptos</p>
+                    <Button
+                      onClick={() => router.push("/matches")}
+                      className="mt-4 bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      Buscar Partidos
+                    </Button>
                   </div>
                 ) : (
                   joinedMatches.map((match) => {
-                    const spotsLeft = match.maxPlayers - match.currentPlayers
-                    const userStatus = Math.random() > 0.5 ? "confirmado" : "pendiente" // Mock status
+                    const spotsLeft = match.max_jugadores - match.jugadores_actuales
+                    
                     return (
                       <div
                         key={match.id}
-                        onClick={() => handleMatchClick(match.id)}
+                        onClick={() => handleMatchClick(match)}
                         className="bg-white border border-gray-200 rounded-2xl p-6 cursor-pointer hover:shadow-md transition-all touch-manipulation active:scale-[0.98]"
                       >
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex gap-2">
                             <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
-                              {formatMatchType(match.type)}
+                              {formatMatchType(match.tipo_partido)}
                             </Badge>
                             <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
-                              {formatLevel(match.level)}
+                              {formatLevel(match.nivel)}
                             </Badge>
-                            <Badge
-                              className={
-                                userStatus === "confirmado"
-                                  ? "bg-green-100 text-green-800 hover:bg-green-100"
-                                  : "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
-                              }
-                            >
-                              {userStatus === "confirmado" ? "Confirmado" : "Pendiente"}
-                            </Badge>
+                            {getStatusBadge(match.estado)}
                           </div>
-                          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Quedan {spotsLeft}</Badge>
+                          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                            Quedan {spotsLeft}
+                          </Badge>
                         </div>
 
                         <div className="mb-4">
-                          <h3 className="text-xl font-bold text-gray-900 mb-2">{formatDate(match.date, match.time)}</h3>
+                          <h3 className="text-xl font-bold text-gray-900 mb-2">
+                            {formatDate(match.fecha, match.hora)}
+                          </h3>
                           <div className="flex items-center text-gray-600 text-sm space-x-4 mb-2">
-                            <span>${match.price} / jugador</span>
+                            <span>${match.precio_por_jugador} / jugador</span>
                             <span>90 min</span>
                           </div>
-                          <p className="text-gray-600">{match.location.name}</p>
+                          <p className="text-gray-600">{match.nombre_ubicacion}</p>
                         </div>
 
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2">
                             <Users className="w-4 h-4 text-gray-600" />
                             <span className="text-sm text-gray-600">
-                              {match.currentPlayers}/{match.maxPlayers} jugadores
+                              {match.jugadores_actuales}/{match.max_jugadores} jugadores
                             </span>
                           </div>
+                          <span className="text-sm text-primary font-medium">Ver detalles</span>
                         </div>
                       </div>
                     )

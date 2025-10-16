@@ -20,7 +20,6 @@ interface NewsUpdate {
   author?: string
   readTime?: string
   tags?: string[]
-  summary?: string
 }
 
 const newsUpdates: NewsUpdate[] = [
@@ -28,81 +27,38 @@ const newsUpdates: NewsUpdate[] = [
     id: 1,
     type: "update",
     title: "Nueva funcionalidad: Sistema de reseñas mejorado",
-    description:
-      "Ahora puedes calificar a tus compañeros en 3 categorías: nivel técnico, deportividad y compañerismo. Las reseñas son obligatorias para mantener la calidad de la comunidad.",
+    description: "Ahora puedes calificar a tus compañeros en 3 categorías: nivel técnico, deportividad y compañerismo.",
     date: "Hace 2 horas",
-    image: "/football-rating-system-with-stars.jpg",
     category: "Funcionalidad",
     author: "Equipo Falta Uno",
     readTime: "2 min",
     tags: ["Reseñas", "Calificaciones", "Comunidad"],
-    summary: "Sistema completo de evaluación entre jugadores para mejorar la experiencia de juego",
   },
   {
     id: 2,
     type: "announcement",
     title: "Mantenimiento programado del servidor",
-    description:
-      "Realizaremos mejoras en la infraestructura para optimizar el rendimiento. Durante este tiempo, algunas funciones podrían no estar disponibles temporalmente.",
+    description: "Realizaremos mejoras en la infraestructura para optimizar el rendimiento.",
     date: "Hace 1 día",
-    image: "/server-maintenance-technology.jpg",
     category: "Anuncio",
     author: "Equipo Técnico",
     readTime: "1 min",
-    tags: ["Mantenimiento", "Servidor", "Mejoras"],
-    summary: "Mejoras técnicas programadas para el domingo de 2:00 a 4:00 AM",
+    tags: ["Mantenimiento", "Servidor"],
   },
   {
     id: 3,
     type: "feature",
     title: "Nuevas canchas premium en Carrasco",
-    description:
-      "Agregamos 3 canchas de última generación con césped sintético, iluminación LED y vestuarios renovados. Disponibles para reservar desde hoy con descuentos especiales.",
+    description: "Agregamos 3 canchas de última generación con césped sintético e iluminación LED.",
     date: "Hace 3 días",
-    image: "/modern-football-field-with-led-lights.jpg",
     category: "Novedad",
     author: "Equipo de Expansión",
     readTime: "3 min",
     tags: ["Canchas", "Carrasco", "Premium"],
-    summary: "Nuevas instalaciones deportivas de alta calidad en zona este",
-  },
-  {
-    id: 4,
-    type: "community",
-    title: "¡Alcanzamos los 1,500 usuarios activos!",
-    description:
-      "Gracias a toda la comunidad por hacer crecer esta plataforma. Como celebración, todos los partidos de esta semana tendrán un 20% de descuento en el alquiler de canchas.",
-    date: "Hace 5 días",
-    image: "/football-community-celebration.jpg",
-    category: "Comunidad",
-    author: "Fundadores",
-    readTime: "2 min",
-    tags: ["Milestone", "Descuentos", "Celebración"],
-    summary: "Celebramos el crecimiento de nuestra comunidad futbolística",
-  },
-  {
-    id: 5,
-    type: "update",
-    title: "Notificaciones inteligentes disponibles",
-    description:
-      "Configurá qué notificaciones querés recibir: invitaciones, recordatorios de partidos, solicitudes de amistad y más. Personalizá tu experiencia desde Configuración.",
-    date: "Hace 1 semana",
-    image: "/mobile-notifications-settings.jpg",
-    category: "Funcionalidad",
-    author: "Equipo de Producto",
-    readTime: "2 min",
-    tags: ["Notificaciones", "Personalización", "UX"],
-    summary: "Control total sobre las notificaciones que recibís en tu dispositivo",
   },
 ]
 
-const communityStats = {
-  activeUsers: 1247,
-  matchesThisWeek: 89,
-  newMembers: 23,
-}
-
-interface MatchView {
+interface Partido {
   id: string
   tipo_partido: string
   estado: string
@@ -113,121 +69,106 @@ interface MatchView {
   cantidad_jugadores: number
 }
 
-interface ReviewView {
-  id: string
+interface PendingReview {
+  partido_id: string
   tipo_partido: string
   fecha: string
   nombre_ubicacion: string
-  jugadores_pendientes: number
+  jugadores_pendientes: any[]
 }
 
 export function HomeScreen() {
   const router = useRouter()
-  const [upcomingMatches, setUpcomingMatches] = useState<MatchView[]>([])
-  const [pendingReviews, setPendingReviews] = useState<ReviewView[]>([])
+  const [upcomingMatches, setUpcomingMatches] = useState<Partido[]>([])
+  const [pendingReviews, setPendingReviews] = useState<PendingReview[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [communityStats, setCommunityStats] = useState({
+    activeUsers: 0,
+    matchesThisWeek: 0,
+    newMembers: 0,
+  })
 
   useEffect(() => {
-    // ELIMINADO: Ya no verificamos autenticación aquí
-    // El guard RequireAuth en app/home/page.tsx ya lo hace
+    loadData()
+  }, [])
 
-    const user = AuthService.getUser();
-    const userId = user?.id ?? null;
-
-    const fetchWithTimeout = async (resource: RequestInfo, options: RequestInit = {}, timeout = 4000) => {
-      const controller = new AbortController();
-      const id = setTimeout(() => controller.abort(), timeout);
-      try {
-        const res = await fetch(resource, { signal: controller.signal, ...options });
-        clearTimeout(id);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      } finally {
-        clearTimeout(id);
+  const loadData = async () => {
+    try {
+      const token = AuthService.getToken()
+      if (!token) {
+        router.push("/login")
+        return
       }
-    };
 
-    let mounted = true;
-    setIsLoading(true);
-
-    (async () => {
-      try {
-        if (!userId) {
-          setUpcomingMatches([]);
-          setPendingReviews([]);
-          return;
-        }
-
-        const matchesPromise = fetchWithTimeout(
-          `/api/partidos/mine?userId=${encodeURIComponent(userId)}&limit=10`,
-          { headers: { "Content-Type": "application/json" } },
-          4000
-        ).catch((err) => {
-          console.warn("matches fetch failed:", err);
-          return null;
-        });
-
-        const reviewsPromise = fetchWithTimeout(
-          `/api/usuarios/${encodeURIComponent(userId)}/pending-reviews?limit=10`,
-          { headers: { "Content-Type": "application/json" } },
-          4000
-        ).catch((err) => {
-          console.warn("reviews fetch failed:", err);
-          return null;
-        });
-
-        const [matchesData, reviewsData] = await Promise.all([matchesPromise, reviewsPromise]);
-
-        if (!mounted) return;
-
-        if (matchesData) {
-          const rawMatches = Array.isArray(matchesData) ? matchesData : (matchesData.partidos ?? matchesData.data ?? []);
-          const mappedMatches = rawMatches.map((m: any) => ({
-            id: m.id,
-            tipo_partido: m.tipoPartido ?? m.tipo_partido ?? m.tipo,
-            estado: m.estado,
-            fecha: m.fecha,
-            hora: m.hora,
-            nombre_ubicacion: m.nombreUbicacion ?? m.nombre_ubicacion ?? m.nombre,
-            jugadores_actuales: m.jugadoresActuales ?? m.jugadores_actuales ?? 0,
-            cantidad_jugadores: m.maxJugadores ?? m.cantidad_jugadores ?? 0,
-          }));
-          setUpcomingMatches(mappedMatches);
-        } else {
-          setUpcomingMatches([]);
-        }
-
-        if (reviewsData) {
-          const rawReviews = Array.isArray(reviewsData) ? reviewsData : (reviewsData.data ?? reviewsData.pending ?? []);
-          const mappedReviews = rawReviews.map((r: any) => ({
-            id: r.partido_id ?? r.id ?? r.partidoId,
-            tipo_partido: r.tipo_partido ?? r.tipoPartido,
-            fecha: r.fecha,
-            nombre_ubicacion: r.nombre_ubicacion ?? r.nombreUbicacion,
-            jugadores_pendientes: Array.isArray(r.jugadores_pendientes) ? r.jugadores_pendientes.length : (r.jugadores_pendientes ?? 0),
-          }));
-          setPendingReviews(mappedReviews);
-        } else {
-          setPendingReviews([]);
-        }
-      } catch (err) {
-        console.error("Error fetching data:", err);
-      } finally {
-        if (mounted) setIsLoading(false);
+      const user = AuthService.getUser()
+      if (!user?.id) {
+        router.push("/login")
+        return
       }
-    })();
 
-    return () => {
-      mounted = false;
-    };
-  }, [router]);
+      // Cargar partidos del usuario
+      const matchesResponse = await fetch(`/api/partidos/usuario/${user.id}`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      })
+
+      if (matchesResponse.ok) {
+        const matchesData = await matchesResponse.json()
+        const partidos = matchesData.data || []
+        
+        // Filtrar solo próximos partidos
+        const now = new Date()
+        const proximos = partidos.filter((p: any) => {
+          const fechaPartido = new Date(`${p.fecha}T${p.hora}`)
+          return fechaPartido > now
+        }).slice(0, 5)
+        
+        setUpcomingMatches(proximos)
+      }
+
+      // Cargar reseñas pendientes
+      const reviewsResponse = await fetch(`/api/usuarios/${user.id}/pending-reviews`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      })
+
+      if (reviewsResponse.ok) {
+        const reviewsData = await reviewsResponse.json()
+        setPendingReviews(reviewsData.data || [])
+      }
+
+      // Cargar estadísticas de la comunidad
+      const statsResponse = await fetch("/api/stats/community", {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      })
+
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json()
+        setCommunityStats(statsData.data || {
+          activeUsers: 0,
+          matchesThisWeek: 0,
+          newMembers: 0,
+        })
+      }
+
+    } catch (error) {
+      console.error("Error cargando datos:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleMatchClick = (matchId: string) => router.push(`/matches/${matchId}`)
   const handleReviewMatch = (matchId: string) => router.push(`/matches/${matchId}/review`)
   const handleViewAllMatches = () => router.push("/matches")
-  const handleViewAllNews = () => router.push("/news")
   const handleNotifications = () => router.push("/notifications")
-  const handleNewsClick = (newsId: number) => router.push(`/news/${newsId}`)
 
   const getNewsIcon = (type: string) => {
     switch (type) {
@@ -242,32 +183,23 @@ export function HomeScreen() {
     }
   }
 
-  if (isLoading)
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full"></div>
       </div>
     )
+  }
+
+  const user = AuthService.getUser()
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* DEBUG COMPONENT - Eliminar en producción */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="fixed bottom-20 right-4 bg-black/90 text-white p-4 rounded-lg text-xs max-w-xs z-50 font-mono">
-          <div className="font-bold mb-2 text-green-400">🔍 Home Debug</div>
-          <div className="space-y-1">
-            <div>Loading: <span className={isLoading ? "text-yellow-400" : "text-green-400"}>{isLoading ? "YES" : "NO"}</span></div>
-            <div>Matches: <span className="text-blue-400">{upcomingMatches.length}</span></div>
-            <div>Reviews: <span className="text-orange-400">{pendingReviews.length}</span></div>
-          </div>
-        </div>
-      )}
-      
       {/* HEADER + STATS */}
       <div className="pt-16 pb-6 px-6 bg-gradient-to-r from-primary/5 to-secondary/5">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">¡Bienvenido a la comunidad!</h1>
+            <h1 className="text-2xl font-bold text-foreground">¡Bienvenido!</h1>
             <p className="text-muted-foreground">Descubre lo que está pasando</p>
           </div>
           <div className="flex items-center space-x-3">
@@ -282,9 +214,14 @@ export function HomeScreen() {
                 </span>
               )}
             </button>
-            <Avatar className="w-12 h-12">
-              <AvatarImage src="/placeholder.svg?height=48&width=48" />
-              <AvatarFallback className="bg-primary/10 text-primary">U</AvatarFallback>
+            <Avatar className="w-12 h-12 cursor-pointer" onClick={() => router.push("/profile")}>
+              {user?.foto_perfil ? (
+                <AvatarImage src={`data:image/jpeg;base64,${user.foto_perfil}`} />
+              ) : (
+                <AvatarFallback className="bg-primary/10 text-primary">
+                  {user?.nombre?.[0] || "U"}
+                </AvatarFallback>
+              )}
             </Avatar>
           </div>
         </div>
@@ -315,8 +252,8 @@ export function HomeScreen() {
           <div className="space-y-3">
             {pendingReviews.map((review) => (
               <div
-                key={review.id}
-                onClick={() => handleReviewMatch(review.id)}
+                key={review.partido_id}
+                onClick={() => handleReviewMatch(review.partido_id)}
                 className="bg-gradient-to-r from-orange-50 to-yellow-50 border border-orange-200 rounded-2xl p-4 cursor-pointer hover:shadow-md transition-all duration-200 touch-manipulation active:scale-[0.98]"
               >
                 <div className="flex items-center justify-between mb-3">
@@ -330,7 +267,7 @@ export function HomeScreen() {
                 <p className="text-sm text-muted-foreground mb-2">{review.nombre_ubicacion}</p>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">
-                    {review.jugadores_pendientes} jugadores por calificar
+                    {review.jugadores_pendientes?.length || 0} jugadores por calificar
                   </span>
                   <div className="flex items-center text-orange-600">
                     <Star className="w-4 h-4 mr-1" />
@@ -347,27 +284,17 @@ export function HomeScreen() {
       <div className="px-6 py-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-xl font-bold text-foreground">Novedades de la plataforma</h2>
-            <p className="text-sm text-muted-foreground">Mantente al día con las últimas actualizaciones</p>
+            <h2 className="text-xl font-bold text-foreground">Novedades</h2>
+            <p className="text-sm text-muted-foreground">Últimas actualizaciones</p>
           </div>
-          <Button
-            onClick={handleViewAllNews}
-            variant="outline"
-            size="sm"
-            className="bg-transparent border-primary text-primary hover:bg-primary/10"
-          >
-            Ver todas
-          </Button>
         </div>
 
         <div className="space-y-6">
-          {newsUpdates.slice(0, 3).map((news) => (
+          {newsUpdates.map((news) => (
             <div
               key={news.id}
-              onClick={() => handleNewsClick(news.id)}
               className="bg-card rounded-2xl overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-300 touch-manipulation active:scale-[0.98] border border-border/50"
             >
-              <img src={news.image || "/placeholder.svg"} alt={news.title} className="w-full h-40 object-cover" />
               <div className="p-5">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center space-x-2">
@@ -376,26 +303,20 @@ export function HomeScreen() {
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground mb-4 leading-relaxed">{news.description}</p>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {news.tags?.map((tag) => (
-                    <span key={tag} className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded-md">
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
+                {news.tags && (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {news.tags.map((tag) => (
+                      <span key={tag} className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded-md">
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 <div className="flex items-center justify-between pt-3 border-t border-border/50">
                   <div className="flex items-center space-x-3">
-                    <span className="text-xs text-muted-foreground">Por {news.author}</span>
+                    <span className="text-xs text-muted-foreground">{news.author}</span>
                     <span className="text-xs text-muted-foreground">•</span>
                     <span className="text-xs text-muted-foreground">{news.date}</span>
-                    <span className="text-xs text-muted-foreground">•</span>
-                    <span className="text-xs text-muted-foreground">{news.readTime}</span>
-                  </div>
-                  <div className="flex items-center space-x-1 text-primary">
-                    <span className="text-sm font-medium">Leer más</span>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
                   </div>
                 </div>
               </div>
@@ -405,7 +326,7 @@ export function HomeScreen() {
       </div>
 
       {/* PRÓXIMOS PARTIDOS */}
-      <div className="px-6 py-6">
+      <div className="px-6 py-6 pb-24">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-foreground">Tus próximos partidos</h2>
           <Button

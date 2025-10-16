@@ -1,30 +1,36 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowLeft, Camera, Save, Bell } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { AuthService } from "@/lib/auth"
+import { useAuth } from "@/hooks/use-auth"
 
 const positions = ["Arquero", "Zaguero", "Lateral", "Mediocampista", "Volante", "Delantero"]
 
 export function SettingsScreen() {
   const router = useRouter()
-  const [authMethod] = useState<"email" | "google" | "apple" | "facebook">("google") // viene del usuario
+  const { user: contextUser, refreshUser } = useAuth()
+  const [authMethod, setAuthMethod] = useState<"email" | "google" | "apple" | "facebook">("email")
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSaving, setIsSaving] = useState(false)
 
   const [formData, setFormData] = useState({
-    name: "Tu",
-    surname: "Usuario",
-    email: "usuario@gmail.com",
-    phone: "+598 99 123 456",
-    position: "Mediocampista",
-    height: "175",
-    weight: "70",
+    name: "",
+    surname: "",
+    email: "",
+    phone: "",
+    position: "",
+    height: "",
+    weight: "",
   })
 
-  const [avatar, setAvatar] = useState<string>("/placeholder.svg?height=96&width=96")
+  const [avatar, setAvatar] = useState<string>("")
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
 
   const [notificationPreferences, setNotificationPreferences] = useState({
     matchInvitations: true,
@@ -34,6 +40,58 @@ export function SettingsScreen() {
     newMessages: true,
     generalUpdates: false,
   })
+
+  useEffect(() => {
+    loadUserData()
+  }, [])
+
+  const loadUserData = async () => {
+    try {
+      const token = AuthService.getToken()
+      if (!token) {
+        router.push("/login")
+        return
+      }
+
+      const response = await fetch("/api/usuarios/me", {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        const userData = result.data
+
+        setFormData({
+          name: userData.nombre || "",
+          surname: userData.apellido || "",
+          email: userData.email || "",
+          phone: userData.celular || "",
+          position: userData.posicion || "",
+          height: userData.altura?.toString() || "",
+          weight: userData.peso?.toString() || "",
+        })
+
+        if (userData.foto_perfil) {
+          setAvatar(`data:image/jpeg;base64,${userData.foto_perfil}`)
+        }
+
+        // Determinar método de autenticación
+        if (userData.provider) {
+          const provider = userData.provider.toLowerCase()
+          if (provider === "google" || provider === "facebook" || provider === "apple") {
+            setAuthMethod(provider as "google" | "facebook" | "apple")
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error cargando datos:", error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   const handleInputChange = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -45,16 +103,69 @@ export function SettingsScreen() {
 
   const handleBack = () => router.back()
 
-  const handleSave = () => {
-    console.log("Guardando perfil:", formData)
-    console.log("Guardando preferencias de notificación:", notificationPreferences)
-    console.log("Foto subida:", avatar)
-    router.back()
+  const handleSave = async () => {
+    setIsSaving(true)
+    try {
+      const token = AuthService.getToken()
+      if (!token) {
+        router.push("/login")
+        return
+      }
+
+      // 1. Subir foto si hay una nueva
+      if (photoFile) {
+        const formData = new FormData()
+        formData.append("file", photoFile)
+
+        await fetch("/api/usuarios/me/foto", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`
+          },
+          body: formData
+        })
+      }
+
+      // 2. Actualizar perfil
+      const perfilData = {
+        nombre: formData.name,
+        apellido: formData.surname,
+        celular: formData.phone,
+        posicion: formData.position,
+        altura: formData.height,
+        peso: formData.weight,
+      }
+
+      const response = await fetch("/api/usuarios/me", {
+        method: "PUT",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(perfilData)
+      })
+
+      if (response.ok) {
+        // Actualizar contexto de autenticación
+        await refreshUser()
+        alert("Cambios guardados exitosamente")
+        router.back()
+      } else {
+        const errorData = await response.json()
+        alert(errorData.message || "Error al guardar cambios")
+      }
+    } catch (error) {
+      console.error("Error guardando cambios:", error)
+      alert("Error al guardar cambios")
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const handleUploadPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      setPhotoFile(file)
       const reader = new FileReader()
       reader.onload = () => {
         if (reader.result) setAvatar(reader.result as string)
@@ -62,6 +173,20 @@ export function SettingsScreen() {
       reader.readAsDataURL(file)
     }
   }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full"></div>
+      </div>
+    )
+  }
+
+  const initials = `${formData.name} ${formData.surname}`.trim()
+    .split(" ")
+    .map(n => n[0])
+    .join("")
+    .toUpperCase()
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -80,8 +205,11 @@ export function SettingsScreen() {
         <div className="text-center mb-8">
           <div className="relative inline-block">
             <Avatar className="w-24 h-24">
-              <AvatarImage src={avatar} />
-              <AvatarFallback className="bg-orange-100 text-2xl">TU</AvatarFallback>
+              {avatar ? (
+                <AvatarImage src={avatar} />
+              ) : (
+                <AvatarFallback className="bg-orange-100 text-2xl">{initials}</AvatarFallback>
+              )}
             </Avatar>
             <label className="absolute -bottom-2 -right-2 bg-green-600 text-white rounded-full p-2 shadow-lg cursor-pointer">
               <Camera className="w-4 h-4" />
@@ -101,10 +229,9 @@ export function SettingsScreen() {
               <Input
                 id="name"
                 value={formData.name}
-                disabled
-                className="mt-1 bg-gray-100 text-gray-500 cursor-not-allowed"
+                onChange={(e) => handleInputChange("name", e.target.value)}
+                className="mt-1"
               />
-              <p className="text-xs text-gray-500 mt-1">No se puede editar</p>
             </div>
             <div>
               <Label htmlFor="surname" className="text-sm font-medium text-gray-700">
@@ -113,10 +240,9 @@ export function SettingsScreen() {
               <Input
                 id="surname"
                 value={formData.surname}
-                disabled
-                className="mt-1 bg-gray-100 text-gray-500 cursor-not-allowed"
+                onChange={(e) => handleInputChange("surname", e.target.value)}
+                className="mt-1"
               />
-              <p className="text-xs text-gray-500 mt-1">No se puede editar</p>
             </div>
           </div>
 
@@ -177,6 +303,7 @@ export function SettingsScreen() {
               </Label>
               <Input
                 id="height"
+                type="number"
                 value={formData.height}
                 onChange={(e) => handleInputChange("height", e.target.value)}
                 className="mt-1"
@@ -188,6 +315,7 @@ export function SettingsScreen() {
               </Label>
               <Input
                 id="weight"
+                type="number"
                 value={formData.weight}
                 onChange={(e) => handleInputChange("weight", e.target.value)}
                 className="mt-1"
@@ -203,25 +331,36 @@ export function SettingsScreen() {
             </h3>
 
             <div className="space-y-4">
-              {(Object.keys(notificationPreferences) as (keyof typeof notificationPreferences)[]).map((key) => (
-                <div key={key} className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-gray-900">{key}</p>
-                  </div>
-                  <button
-                    onClick={() => handleNotificationToggle(key)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      notificationPreferences[key] ? "bg-green-600" : "bg-gray-300"
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        notificationPreferences[key] ? "translate-x-6" : "translate-x-1"
+              {(Object.keys(notificationPreferences) as (keyof typeof notificationPreferences)[]).map((key) => {
+                const labels = {
+                  matchInvitations: "Invitaciones a partidos",
+                  friendRequests: "Solicitudes de amistad",
+                  matchUpdates: "Actualizaciones de partidos",
+                  reviewRequests: "Solicitudes de reseñas",
+                  newMessages: "Nuevos mensajes",
+                  generalUpdates: "Actualizaciones generales",
+                }
+                
+                return (
+                  <div key={key} className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-gray-900">{labels[key]}</p>
+                    </div>
+                    <button
+                      onClick={() => handleNotificationToggle(key)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        notificationPreferences[key] ? "bg-green-600" : "bg-gray-300"
                       }`}
-                    />
-                  </button>
-                </div>
-              ))}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          notificationPreferences[key] ? "translate-x-6" : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                )
+              })}
             </div>
           </div>
 
@@ -229,10 +368,11 @@ export function SettingsScreen() {
           <div className="mt-8 pb-8">
             <Button
               onClick={handleSave}
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-4 text-lg font-semibold rounded-2xl"
+              disabled={isSaving}
+              className="w-full bg-green-600 hover:bg-green-700 text-white py-4 text-lg font-semibold rounded-2xl disabled:opacity-50"
             >
               <Save className="w-5 h-5 mr-2" />
-              Guardar cambios
+              {isSaving ? "Guardando..." : "Guardar cambios"}
             </Button>
           </div>
         </div>
