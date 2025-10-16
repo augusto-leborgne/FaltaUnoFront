@@ -1,4 +1,4 @@
-import { MatchConfirmed } from "@/components/match-confirmed"
+import { MatchConfirmed } from "@/components/pages/match/match-confirmed"
 
 interface MatchConfirmedPageProps {
   params: {

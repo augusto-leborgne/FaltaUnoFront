@@ -1,4 +1,4 @@
-import { MatchManagementScreen } from "@/components/match-management-screen"
+import { MatchManagementScreen } from "@/components/pages/match/match-management-screen"
 
 interface PageProps {
   params: {

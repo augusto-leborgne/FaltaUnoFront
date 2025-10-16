@@ -1,4 +1,4 @@
-import { MatchChatScreen } from "@/components/match-chat-screen"
+import { MatchChatScreen } from "@/components/pages/match/match-chat-screen"
 
 interface MatchChatPageProps {
   params: {

@@ -1,4 +1,4 @@
-import { MatchReviewScreen } from "@/components/match-review-screen"
+import { MatchReviewScreen } from "@/components/pages/match/match-review-screen"
 
 interface PageProps {
   params: {
