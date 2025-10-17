@@ -528,3 +528,25 @@ export function mapFormDataToPartidoDTO(formData: {
     organizadorId: formData.organizadorId
   };
 }
+
+  /**
+ * Obtener solicitudes con información de usuario
+ */
+export async function obtenerSolicitudesConUsuario(partidoId: string) {
+  const token = AuthService.getToken();
+  if (!token) throw new Error('No autenticado');
+
+  const response = await fetch(`/api/partidos/${partidoId}/solicitudes`, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error('Error al obtener solicitudes');
+  }
+
+  const result = await response.json();
+  return result.data || [];
+}

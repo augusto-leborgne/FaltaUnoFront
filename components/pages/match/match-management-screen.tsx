@@ -25,6 +25,7 @@ import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { AuthService } from "@/lib/auth"
 import { CompressedMap } from "@/components/google-maps/compressed-map"
+import { obtenerSolicitudesConUsuario } from '@/lib/api'
 
 interface MatchManagementScreenProps {
   matchId: string
@@ -142,12 +143,15 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
       }
 
       // Cargar solicitudes pendientes
-      const solicitudesResponse = await fetch(`/api/partidos/${matchId}/solicitudes`, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      })
+      try {
+        const solicitudes = await obtenerSolicitudesConUsuario(matchId);
+        setMatch(prev => prev ? {
+          ...prev,
+          solicitudes_pendientes: solicitudes
+        } : null);
+      } catch (e) {
+        console.error("Error cargando solicitudes:", e);
+      }
 
       if (solicitudesResponse.ok) {
         const solicitudesResult = await solicitudesResponse.json()

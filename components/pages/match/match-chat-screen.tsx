@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowLeft, Send } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
+import { MensajeAPI } from '@/lib/api'
 
 interface MatchChatScreenProps {
   matchId: string
