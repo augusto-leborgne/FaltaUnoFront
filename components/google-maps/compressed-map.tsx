@@ -11,18 +11,20 @@ interface CompressedMapProps {
   className?: string
 }
 
-export function CompressedMap({ location, lat = -34.9011, lng = -56.1645, className = "" }: CompressedMapProps) {
+export function CompressedMap({ 
+  location, 
+  lat = -34.9011, 
+  lng = -56.1645, 
+  className = "" 
+}: CompressedMapProps) {
   const [showFullMap, setShowFullMap] = useState(false)
 
+  // Verificar si tenemos coordenadas específicas (diferentes de las predeterminadas de Montevideo)
   const hasSpecificLocation = lat !== -34.9011 || lng !== -56.1645
 
   const handleMapClick = () => {
     setShowFullMap(true)
   }
-
-  console.log("[v0] CompressedMap - Location:", location)
-  console.log("[v0] CompressedMap - Coordinates:", { lat, lng })
-  console.log("[v0] CompressedMap - Has specific location:", hasSpecificLocation)
 
   return (
     <>
@@ -31,7 +33,7 @@ export function CompressedMap({ location, lat = -34.9011, lng = -56.1645, classN
         className={`relative bg-gradient-to-br from-green-50 to-blue-50 rounded-xl overflow-hidden cursor-pointer transition-all hover:shadow-md ${className}`}
         style={{ height: "120px" }}
       >
-        {/* Fictional map grid pattern */}
+        {/* Grid pattern background */}
         <div className="absolute inset-0 opacity-20">
           <svg width="100%" height="100%" className="text-gray-300">
             <defs>
@@ -67,19 +69,23 @@ export function CompressedMap({ location, lat = -34.9011, lng = -56.1645, classN
         <div className="absolute bottom-2 left-2 right-2">
           <div className="bg-white/90 backdrop-blur-sm rounded-lg px-2 py-1">
             <p className="text-xs font-medium text-gray-800 truncate">{location}</p>
-            {!hasSpecificLocation && <p className="text-xs text-orange-600 font-medium">Ubicación aproximada</p>}
+            {!hasSpecificLocation && (
+              <p className="text-xs text-orange-600 font-medium">Ubicación aproximada</p>
+            )}
           </div>
         </div>
       </div>
 
       {/* Full-screen Google Maps modal */}
-      <GoogleMapsModal
-        isOpen={showFullMap}
-        onClose={() => setShowFullMap(false)}
-        location={location}
-        lat={lat}
-        lng={lng}
-      />
+      {showFullMap && (
+        <GoogleMapsModal
+          isOpen={showFullMap}
+          onClose={() => setShowFullMap(false)}
+          location={location}
+          lat={lat}
+          lng={lng}
+        />
+      )}
     </>
   )
 }

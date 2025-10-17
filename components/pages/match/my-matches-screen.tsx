@@ -18,8 +18,9 @@ interface Partido {
   estado: string
   precio_por_jugador: number
   jugadores_actuales: number
-  max_jugadores: number
-  capitanId?: string
+  cantidad_jugadores: number
+  organizador_id?: string
+  duracion_minutos?: number
 }
 
 export function MyMatchesScreen() {
@@ -57,11 +58,22 @@ export function MyMatchesScreen() {
         const partidos = result.data || []
         
         // Separar en creados vs inscritos
-        const created = partidos.filter((p: Partido) => p.capitanId === user.id)
-        const joined = partidos.filter((p: Partido) => p.capitanId !== user.id)
+        const created = partidos.filter((p: Partido) => p.organizador_id === user.id)
+        const joined = partidos.filter((p: Partido) => p.organizador_id !== user.id)
         
-        setCreatedMatches(created)
-        setJoinedMatches(joined)
+        // Ordenar por fecha
+        const sortByDate = (a: Partido, b: Partido) => {
+          try {
+            const dateA = new Date(`${a.fecha}T${a.hora}`)
+            const dateB = new Date(`${b.fecha}T${b.hora}`)
+            return dateB.getTime() - dateA.getTime()
+          } catch {
+            return 0
+          }
+        }
+        
+        setCreatedMatches(created.sort(sortByDate))
+        setJoinedMatches(joined.sort(sortByDate))
       }
     } catch (error) {
       console.error("Error cargando partidos:", error)
@@ -77,7 +89,7 @@ export function MyMatchesScreen() {
   const handleMatchClick = (match: Partido) => {
     const user = AuthService.getUser()
     
-    if (activeTab === "Creados" && match.capitanId === user?.id) {
+    if (activeTab === "Creados" && match.organizador_id === user?.id) {
       // Si es creador, ir a gestión
       router.push(`/my-matches/${match.id}`)
     } else {
@@ -87,7 +99,7 @@ export function MyMatchesScreen() {
   }
 
   const formatMatchType = (type: string) => {
-    return type.replace("FUTBOL_", "Fútbol ").replace("_", " ")
+    return type.replace("FUTBOL_", "F")
   }
 
   const formatLevel = (level: string) => {
@@ -101,36 +113,51 @@ export function MyMatchesScreen() {
   }
 
   const formatDate = (dateString: string, timeString: string) => {
-    const date = new Date(dateString)
-    const today = new Date()
-    const tomorrow = new Date(today)
-    tomorrow.setDate(tomorrow.getDate() + 1)
+    try {
+      const date = new Date(dateString)
+      const today = new Date()
+      const tomorrow = new Date(today)
+      tomorrow.setDate(tomorrow.getDate() + 1)
 
-    if (date.toDateString() === today.toDateString()) {
-      return `Hoy ${timeString}`
-    } else if (date.toDateString() === tomorrow.toDateString()) {
-      return `Mañana ${timeString}`
-    } else {
-      return `${date.toLocaleDateString("es-ES", {
-        weekday: "long",
-        day: "numeric",
-        month: "short",
-      })} ${timeString}`
+      today.setHours(0, 0, 0, 0)
+      tomorrow.setHours(0, 0, 0, 0)
+      const compareDate = new Date(date)
+      compareDate.setHours(0, 0, 0, 0)
+
+      if (compareDate.getTime() === today.getTime()) {
+        return `Hoy ${timeString}`
+      } else if (compareDate.getTime() === tomorrow.getTime()) {
+        return `Mañana ${timeString}`
+      } else {
+        return `${date.toLocaleDateString("es-ES", {
+          weekday: "long",
+          day: "numeric",
+          month: "short",
+        })} ${timeString}`
+      }
+    } catch {
+      return `${dateString} ${timeString}`
     }
   }
 
   const getStatusBadge = (estado: string) => {
-    switch (estado) {
-      case "CONFIRMADO":
-        return <Badge className="bg-green-100 text-green-800">Confirmado</Badge>
-      case "CANCELADO":
-        return <Badge className="bg-red-100 text-red-800">Cancelado</Badge>
-      case "COMPLETADO":
-        return <Badge className="bg-blue-100 text-blue-800">Completado</Badge>
-      default:
-        return <Badge className="bg-yellow-100 text-yellow-800">Pendiente</Badge>
+    const statusMap: { [key: string]: { label: string; className: string } } = {
+      CONFIRMADO: { label: "Confirmado", className: "bg-green-100 text-green-800" },
+      CANCELADO: { label: "Cancelado", className: "bg-red-100 text-red-800" },
+      COMPLETADO: { label: "Completado", className: "bg-blue-100 text-blue-800" },
+      PENDIENTE: { label: "Pendiente", className: "bg-yellow-100 text-yellow-800" },
     }
+    
+    const status = statusMap[estado] || statusMap.PENDIENTE
+    
+    return (
+      <Badge className={`${status.className} hover:${status.className}`}>
+        {status.label}
+      </Badge>
+    )
   }
+
+  const displayMatches = activeTab === "Creados" ? createdMatches : joinedMatches
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -165,141 +192,89 @@ export function MyMatchesScreen() {
         <div className="space-y-4 pb-24">
           {loading ? (
             <div className="text-center py-8">
-              <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full mx-auto"></div>
+              <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p className="text-gray-600">Cargando partidos...</p>
+            </div>
+          ) : displayMatches.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Users className="w-8 h-8 text-gray-400" />
+              </div>
+              <p className="text-gray-500 mb-2">
+                {activeTab === "Creados" ? "No has creado partidos aún" : "No tienes partidos inscriptos"}
+              </p>
+              <p className="text-sm text-gray-400 mb-4">
+                {activeTab === "Creados" 
+                  ? "Crea tu primer partido y empieza a organizar" 
+                  : "Busca partidos y únete a la comunidad"}
+              </p>
+              <Button
+                onClick={() => activeTab === "Creados" ? handleCreateMatch() : router.push("/matches")}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                {activeTab === "Creados" ? "Crear Partido" : "Buscar Partidos"}
+              </Button>
             </div>
           ) : (
-            <>
-              {activeTab === "Creados" &&
-                (createdMatches.length === 0 ? (
-                  <div className="text-center py-12">
-                    <p className="text-gray-500">No has creado partidos aún</p>
-                    <Button
-                      onClick={handleCreateMatch}
-                      className="mt-4 bg-green-600 hover:bg-green-700 text-white"
-                    >
-                      Crear Partido
-                    </Button>
+            displayMatches.map((match) => {
+              const spotsLeft = match.cantidad_jugadores - match.jugadores_actuales
+              
+              return (
+                <div
+                  key={match.id}
+                  onClick={() => handleMatchClick(match)}
+                  className="bg-white border border-gray-200 rounded-2xl p-6 cursor-pointer hover:shadow-md transition-all touch-manipulation active:scale-[0.98]"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex gap-2 flex-wrap">
+                      <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
+                        {formatMatchType(match.tipo_partido)}
+                      </Badge>
+                      <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
+                        {formatLevel(match.nivel)}
+                      </Badge>
+                      {getStatusBadge(match.estado)}
+                    </div>
+                    {match.estado !== "CANCELADO" && match.estado !== "COMPLETADO" && (
+                      <Badge className={`${spotsLeft > 3 ? 'bg-green-100 text-green-800' : spotsLeft > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'} hover:bg-current`}>
+                        Quedan {spotsLeft}
+                      </Badge>
+                    )}
                   </div>
-                ) : (
-                  createdMatches.map((match) => {
-                    const spotsLeft = match.max_jugadores - match.jugadores_actuales
-                    return (
-                      <div
-                        key={match.id}
-                        onClick={() => handleMatchClick(match)}
-                        className="bg-white border border-gray-200 rounded-2xl p-6 cursor-pointer hover:shadow-md transition-all touch-manipulation active:scale-[0.98]"
-                      >
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex gap-2">
-                            <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
-                              {formatMatchType(match.tipo_partido)}
-                            </Badge>
-                            <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
-                              {formatLevel(match.nivel)}
-                            </Badge>
-                          </div>
-                          <div className="flex gap-2">
-                            {getStatusBadge(match.estado)}
-                            <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-                              Quedan {spotsLeft}
-                            </Badge>
-                          </div>
-                        </div>
 
-                        <div className="mb-4">
-                          <h3 className="text-xl font-bold text-gray-900 mb-2">
-                            {formatDate(match.fecha, match.hora)}
-                          </h3>
-                          <div className="flex items-center text-gray-600 text-sm space-x-4 mb-2">
-                            <div className="flex items-center space-x-1">
-                              <span>${match.precio_por_jugador} / jugador</span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              <Clock className="w-4 h-4" />
-                              <span>90 min</span>
-                            </div>
-                          </div>
-                          <div className="flex items-center text-gray-600 text-sm">
-                            <MapPin className="w-4 h-4 mr-1" />
-                            <span>{match.nombre_ubicacion}</span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
-                            <Users className="w-4 h-4 text-gray-600" />
-                            <span className="text-sm text-gray-600">
-                              {match.jugadores_actuales}/{match.max_jugadores} jugadores
-                            </span>
-                          </div>
-                          <span className="text-sm text-primary font-medium">Gestionar</span>
-                        </div>
+                  <div className="mb-4">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                      {formatDate(match.fecha, match.hora)}
+                    </h3>
+                    <div className="flex items-center text-gray-600 text-sm space-x-4 mb-2">
+                      <div className="flex items-center space-x-1">
+                        <span>${match.precio_por_jugador} / jugador</span>
                       </div>
-                    )
-                  })
-                ))}
-
-              {activeTab === "Inscriptos" &&
-                (joinedMatches.length === 0 ? (
-                  <div className="text-center py-12">
-                    <p className="text-gray-500">No tienes partidos inscriptos</p>
-                    <Button
-                      onClick={() => router.push("/matches")}
-                      className="mt-4 bg-green-600 hover:bg-green-700 text-white"
-                    >
-                      Buscar Partidos
-                    </Button>
+                      <div className="flex items-center space-x-1">
+                        <Clock className="w-4 h-4" />
+                        <span>{match.duracion_minutos || 90} min</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center text-gray-600 text-sm">
+                      <MapPin className="w-4 h-4 mr-1" />
+                      <span>{match.nombre_ubicacion}</span>
+                    </div>
                   </div>
-                ) : (
-                  joinedMatches.map((match) => {
-                    const spotsLeft = match.max_jugadores - match.jugadores_actuales
-                    
-                    return (
-                      <div
-                        key={match.id}
-                        onClick={() => handleMatchClick(match)}
-                        className="bg-white border border-gray-200 rounded-2xl p-6 cursor-pointer hover:shadow-md transition-all touch-manipulation active:scale-[0.98]"
-                      >
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex gap-2">
-                            <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
-                              {formatMatchType(match.tipo_partido)}
-                            </Badge>
-                            <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
-                              {formatLevel(match.nivel)}
-                            </Badge>
-                            {getStatusBadge(match.estado)}
-                          </div>
-                          <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-                            Quedan {spotsLeft}
-                          </Badge>
-                        </div>
 
-                        <div className="mb-4">
-                          <h3 className="text-xl font-bold text-gray-900 mb-2">
-                            {formatDate(match.fecha, match.hora)}
-                          </h3>
-                          <div className="flex items-center text-gray-600 text-sm space-x-4 mb-2">
-                            <span>${match.precio_por_jugador} / jugador</span>
-                            <span>90 min</span>
-                          </div>
-                          <p className="text-gray-600">{match.nombre_ubicacion}</p>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2">
-                            <Users className="w-4 h-4 text-gray-600" />
-                            <span className="text-sm text-gray-600">
-                              {match.jugadores_actuales}/{match.max_jugadores} jugadores
-                            </span>
-                          </div>
-                          <span className="text-sm text-primary font-medium">Ver detalles</span>
-                        </div>
-                      </div>
-                    )
-                  })
-                ))}
-            </>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Users className="w-4 h-4 text-gray-600" />
+                      <span className="text-sm text-gray-600">
+                        {match.jugadores_actuales}/{match.cantidad_jugadores} jugadores
+                      </span>
+                    </div>
+                    <span className="text-sm text-primary font-medium">
+                      {activeTab === "Creados" ? "Gestionar" : "Ver detalles"}
+                    </span>
+                  </div>
+                </div>
+              )
+            })
           )}
         </div>
       </div>

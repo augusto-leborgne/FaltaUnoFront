@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { MapPin, Plus, Search, Filter, X } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
@@ -17,11 +16,12 @@ interface Partido {
   fecha: string
   hora: string
   precio_por_jugador: number
-  max_jugadores: number
+  cantidad_jugadores: number
   jugadores_actuales: number
   nombre_ubicacion: string
   latitud?: number
   longitud?: number
+  estado: string
 }
 
 export function MatchesListing() {
@@ -29,7 +29,6 @@ export function MatchesListing() {
   const [matches, setMatches] = useState<Partido[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedFilters, setSelectedFilters] = useState<string[]>([])
-  const [showFullMap, setShowFullMap] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
 
@@ -41,7 +40,7 @@ export function MatchesListing() {
 
   useEffect(() => {
     loadMatches()
-  }, [selectedFilters])
+  }, [selectedFilters, searchQuery])
 
   const loadMatches = async () => {
     try {
@@ -62,6 +61,10 @@ export function MatchesListing() {
         }
         if (filter === "Fútbol 5") params.append("tipoPartido", "FUTBOL_5")
         if (filter === "Fútbol 7") params.append("tipoPartido", "FUTBOL_7")
+        if (filter === "Fútbol 8") params.append("tipoPartido", "FUTBOL_8")
+        if (filter === "Fútbol 9") params.append("tipoPartido", "FUTBOL_9")
+        if (filter === "Fútbol 11") params.append("tipoPartido", "FUTBOL_11")
+        if (filter === "Principiante") params.append("nivel", "PRINCIPIANTE")
         if (filter === "Intermedio") params.append("nivel", "INTERMEDIO")
         if (filter === "Avanzado") params.append("nivel", "AVANZADO")
       })
@@ -81,11 +84,27 @@ export function MatchesListing() {
         const result = await response.json()
         const partidos = result.data || []
         
+        // Filtrar solo partidos activos y futuros
+        const now = new Date()
+        const partidosActivos = partidos.filter((p: Partido) => {
+          if (p.estado === "CANCELADO" || p.estado === "COMPLETADO") return false
+          try {
+            const fechaPartido = new Date(`${p.fecha}T${p.hora}`)
+            return fechaPartido > now
+          } catch {
+            return true
+          }
+        })
+        
         // Ordenar por fecha
-        const sorted = partidos.sort((a: any, b: any) => {
-          const dateA = new Date(`${a.fecha}T${a.hora}`)
-          const dateB = new Date(`${b.fecha}T${b.hora}`)
-          return dateA.getTime() - dateB.getTime()
+        const sorted = partidosActivos.sort((a: Partido, b: Partido) => {
+          try {
+            const dateA = new Date(`${a.fecha}T${a.hora}`)
+            const dateB = new Date(`${b.fecha}T${b.hora}`)
+            return dateA.getTime() - dateB.getTime()
+          } catch {
+            return 0
+          }
         })
         
         setMatches(sorted)
@@ -105,6 +124,11 @@ export function MatchesListing() {
     )
   }
 
+  const clearFilters = () => {
+    setSelectedFilters([])
+    setSearchQuery("")
+  }
+
   const handleMatchClick = (matchId: string) => {
     router.push(`/matches/${matchId}`)
   }
@@ -114,7 +138,7 @@ export function MatchesListing() {
   }
 
   const formatMatchType = (type: string) => {
-    return type.replace("FUTBOL_", "Fútbol ").replace("_", " ")
+    return type.replace("FUTBOL_", "F")
   }
 
   const formatLevel = (level: string) => {
@@ -125,6 +149,29 @@ export function MatchesListing() {
       PROFESIONAL: "Profesional"
     }
     return levelMap[level] || level
+  }
+
+  const formatDate = (dateString: string, timeString: string) => {
+    try {
+      const date = new Date(dateString)
+      const today = new Date()
+      const tomorrow = new Date(today)
+      tomorrow.setDate(tomorrow.getDate() + 1)
+
+      if (date.toDateString() === today.toDateString()) {
+        return `Hoy ${timeString}`
+      } else if (date.toDateString() === tomorrow.toDateString()) {
+        return `Mañana ${timeString}`
+      } else {
+        return `${date.toLocaleDateString("es-ES", {
+          weekday: "long",
+          day: "numeric",
+          month: "short",
+        })} ${timeString}`
+      }
+    } catch {
+      return `${dateString} ${timeString}`
+    }
   }
 
   return (
@@ -147,21 +194,28 @@ export function MatchesListing() {
           <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
-              placeholder="Buscar partidos por ubicación, tipo..."
+              placeholder="Buscar partidos por ubicación..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && loadMatches()}
               className="pl-10 bg-gray-50 border-gray-200 rounded-xl"
             />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2"
+              >
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+            )}
           </div>
 
           <div className="flex items-center justify-between mb-4">
-            <div className="flex gap-2 flex-1">
+            <div className="flex gap-2 flex-1 overflow-x-auto">
               {quickFilters.map((filter) => (
                 <button
                   key={filter.label}
                   onClick={() => toggleFilter(filter.label)}
-                  className={`px-3 py-2 rounded-full text-sm font-medium transition-colors touch-manipulation min-h-[36px] ${
+                  className={`px-3 py-2 rounded-full text-sm font-medium transition-colors touch-manipulation min-h-[36px] whitespace-nowrap ${
                     selectedFilters.includes(filter.label)
                       ? "bg-orange-200 text-gray-900"
                       : "bg-orange-50 text-gray-700 hover:bg-orange-100 active:bg-orange-200"
@@ -180,6 +234,22 @@ export function MatchesListing() {
               <Filter className="w-4 h-4" />
             </Button>
           </div>
+
+          {selectedFilters.length > 0 && (
+            <div className="mb-4 flex items-center justify-between">
+              <p className="text-sm text-gray-600">
+                {selectedFilters.length} filtro{selectedFilters.length !== 1 ? "s" : ""} aplicado{selectedFilters.length !== 1 ? "s" : ""}
+              </p>
+              <Button
+                onClick={clearFilters}
+                variant="ghost"
+                size="sm"
+                className="text-gray-600"
+              >
+                Limpiar
+              </Button>
+            </div>
+          )}
 
           {showAdvancedFilters && (
             <div className="bg-gray-50 rounded-xl p-4 mb-4">
@@ -213,6 +283,24 @@ export function MatchesListing() {
                     ))}
                   </div>
                 </div>
+                <div>
+                  <h4 className="text-xs font-medium text-gray-600 mb-2">Nivel</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {["Principiante", "Intermedio", "Avanzado"].map((level) => (
+                      <button
+                        key={level}
+                        onClick={() => toggleFilter(level)}
+                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                          selectedFilters.includes(level)
+                            ? "bg-orange-200 text-gray-900"
+                            : "bg-white text-gray-700 hover:bg-orange-50"
+                        }`}
+                      >
+                        {level}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -221,15 +309,29 @@ export function MatchesListing() {
         <div className="space-y-4 pb-24">
           {loading ? (
             <div className="text-center py-8">
-              <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full mx-auto"></div>
+              <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+              <p className="text-gray-600">Cargando partidos...</p>
             </div>
           ) : matches.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500 text-sm">No se encontraron partidos</p>
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MapPin className="w-8 h-8 text-gray-400" />
+              </div>
+              <p className="text-gray-500 mb-2">No se encontraron partidos</p>
+              <p className="text-sm text-gray-400 mb-4">
+                Intenta ajustar los filtros o crea un nuevo partido
+              </p>
+              <Button
+                onClick={handleCreateMatch}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Crear Partido
+              </Button>
             </div>
           ) : (
             matches.map((match) => {
-              const spotsLeft = match.max_jugadores - match.jugadores_actuales
+              const spotsLeft = match.cantidad_jugadores - match.jugadores_actuales
               
               return (
                 <div
@@ -246,19 +348,14 @@ export function MatchesListing() {
                         {formatLevel(match.nivel)}
                       </Badge>
                     </div>
-                    <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                    <Badge className={`${spotsLeft > 3 ? 'bg-green-100 text-green-800' : spotsLeft > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'} hover:bg-current`}>
                       Quedan {spotsLeft}
                     </Badge>
                   </div>
 
                   <div className="mb-4">
                     <h3 className="text-xl font-bold text-gray-900 mb-2">
-                      {new Date(match.fecha).toLocaleDateString("es-ES", {
-                        weekday: "long",
-                        day: "numeric",
-                        month: "short",
-                      })}{" "}
-                      {match.hora}
+                      {formatDate(match.fecha, match.hora)}
                     </h3>
                     <div className="flex items-center text-gray-600 text-sm space-x-4">
                       <span>${match.precio_por_jugador} / jugador</span>
@@ -273,7 +370,7 @@ export function MatchesListing() {
 
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">
-                      {match.jugadores_actuales}/{match.max_jugadores} jugadores
+                      {match.jugadores_actuales}/{match.cantidad_jugadores} jugadores
                     </span>
                     <span className="text-sm text-primary font-medium">Ver detalles</span>
                   </div>
