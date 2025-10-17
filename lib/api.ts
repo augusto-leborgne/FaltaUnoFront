@@ -11,6 +11,10 @@ export interface ApiResponse<T> {
   success: boolean;
 }
 
+// ========================================
+// INTERFACES DE USUARIO
+// ========================================
+
 export interface Usuario { 
   id: string; 
   nombre?: string | null; 
@@ -22,13 +26,100 @@ export interface Usuario {
   altura?: number | null; 
   peso?: number | null; 
   posicion?: string | null; 
-  foto_perfil?: string | null; 
+  foto_perfil?: string | null; // Base64
   ubicacion?: string | null; 
   cedula?: string | null; 
   created_at?: string; 
   perfilCompleto?: boolean; 
   cedulaVerificada?: boolean; 
+  provider?: string | null;
 }
+
+export interface UsuarioMinDTO {
+  id: string;
+  nombre: string;
+  apellido: string;
+  foto_perfil?: string;
+  posicion?: string;
+  rating?: number;
+}
+
+// ========================================
+// INTERFACES DE PARTIDOS
+// ========================================
+
+export interface PartidoDTO {
+  id?: string;
+  tipoPartido: string; // "FUTBOL_5", "FUTBOL_7", etc.
+  genero?: string; // "Mixto", "Hombres", "Mujeres"
+  fecha: string; // yyyy-MM-dd
+  hora: string; // HH:mm:ss
+  duracionMinutos?: number;
+  nombreUbicacion: string;
+  direccionUbicacion?: string;
+  latitud?: number | null;
+  longitud?: number | null;
+  cantidadJugadores: number;
+  jugadoresActuales?: number;
+  precioTotal: number;
+  precioPorJugador?: number;
+  descripcion?: string;
+  organizadorId?: string;
+  organizadorNombre?: string;
+  organizador?: UsuarioMinDTO;
+  estado?: string; // "PENDIENTE", "CONFIRMADO", "CANCELADO", "COMPLETADO"
+  createdAt?: string;
+  jugadores?: UsuarioMinDTO[];
+  solicitudes_pendientes?: InscripcionDTO[];
+  // Aliases para compatibilidad con frontend
+  tipo_partido?: string;
+  nivel?: string;
+  nombre_ubicacion?: string;
+  direccion_ubicacion?: string;
+  cantidad_jugadores?: number;
+  jugadores_actuales?: number;
+  precio_total?: number;
+  precio_por_jugador?: number;
+  nombre?: string;
+  apellido?: string;
+}
+
+export interface InscripcionDTO {
+  id: string;
+  partidoId: string;
+  usuarioId: string;
+  estado: string; // "PENDIENTE", "ACEPTADO", "RECHAZADO"
+  createdAt?: string;
+  fecha_solicitud?: string;
+  usuario?: UsuarioMinDTO;
+  usuario_id?: string;
+}
+
+export interface MensajeDTO {
+  id?: string;
+  contenido: string;
+  usuarioId?: string;
+  partidoId?: string;
+  createdAt?: string;
+  usuario?: UsuarioMinDTO;
+  usuario_id?: string;
+}
+
+export interface ReviewDTO {
+  id?: string;
+  partidoId: string;
+  usuarioQueCalificaId: string;
+  usuarioCalificadoId: string;
+  nivel: number; // 1-5
+  deportividad: number; // 1-5
+  companerismo: number; // 1-5
+  comentario?: string;
+  createdAt?: string;
+}
+
+// ========================================
+// FUNCIÓN HELPER PARA API FETCH
+// ========================================
 
 async function apiFetch<T>(url: string, options?: RequestInit): Promise<ApiResponse<T>> {
   // Validar token antes de hacer request
@@ -61,11 +152,20 @@ async function apiFetch<T>(url: string, options?: RequestInit): Promise<ApiRespo
 
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new Error(`Error en API: ${res.status} ${text}`);
+    let errorMessage = `Error en API: ${res.status}`;
+    try {
+      const errorJson = JSON.parse(text);
+      errorMessage = errorJson.message || errorMessage;
+    } catch {}
+    throw new Error(errorMessage);
   }
 
   return res.json() as Promise<ApiResponse<T>>;
 }
+
+// ========================================
+// API DE USUARIOS
+// ========================================
 
 export const UsuarioAPI = {
   listar: () => apiFetch<Usuario[]>('/api/usuarios'),
@@ -180,18 +280,8 @@ export const UsuarioAPI = {
       };
     }
 
-    // El backend ahora devuelve { token, user } en data
     const token = json.data?.token;
     const user = json.data?.user;
-    
-    console.log("[UsuarioAPI.login] Respuesta del servidor:", {
-      success: json.success,
-      hasToken: !!token,
-      hasUser: !!user,
-      userEmail: user?.email,
-      perfilCompleto: user?.perfilCompleto,
-      cedulaVerificada: user?.cedulaVerificada,
-    });
     
     if (token) AuthService.setToken(token);
     if (user) AuthService.setUser(user);
@@ -208,61 +298,6 @@ export const UsuarioAPI = {
   getMatchInvitations: (userId: string) => apiFetch<any[]>(`/api/usuarios/${userId}/match-invitations`),
   getMatchUpdates: (userId: string) => apiFetch<any[]>(`/api/usuarios/${userId}/match-updates`),
 };
-
-
-// ========================================
-// INTERFACES PARA PARTIDOS
-// ========================================
-
-export interface PartidoDTO {
-  id?: string;
-  tipoPartido: string;
-  genero?: string;
-  fecha: string; // yyyy-MM-dd
-  hora: string; // HH:mm:ss
-  duracionMinutos?: number;
-  nombreUbicacion: string;
-  direccionUbicacion?: string;
-  latitud?: number;
-  longitud?: number;
-  cantidadJugadores: number;
-  jugadoresActuales?: number;
-  precioTotal: number;
-  precioPorJugador?: number;
-  descripcion?: string;
-  organizadorId?: string;
-  organizadorNombre?: string;
-  estado?: string;
-  createdAt?: string;
-  jugadores?: UsuarioMinDTO[];
-}
-
-export interface UsuarioMinDTO {
-  id: string;
-  nombre: string;
-  apellido: string;
-  foto_perfil?: string;
-  posicion?: string;
-  rating?: number;
-}
-
-export interface InscripcionDTO {
-  id: string;
-  partidoId: string;
-  usuarioId: string;
-  estado: string;
-  createdAt?: string;
-  usuario?: UsuarioMinDTO;
-}
-
-export interface MensajeDTO {
-  id?: string;
-  contenido: string;
-  usuarioId: string;
-  partidoId?: string;
-  createdAt?: string;
-  usuario?: UsuarioMinDTO;
-}
 
 // ========================================
 // API DE PARTIDOS
@@ -400,8 +435,65 @@ export const MensajeAPI = {
 };
 
 // ========================================
+// API DE REVIEWS
+// ========================================
+
+export const ReviewAPI = {
+  crear: (review: Omit<ReviewDTO, 'id' | 'createdAt'>) =>
+    apiFetch<ReviewDTO>('/api/reviews', {
+      method: 'POST',
+      body: JSON.stringify(review)
+    }),
+
+  listarPorUsuario: (usuarioCalificadoId: string) =>
+    apiFetch<ReviewDTO[]>(`/api/reviews?usuarioCalificadoId=${usuarioCalificadoId}`),
+
+  listarPorPartido: (partidoId: string) =>
+    apiFetch<ReviewDTO[]>(`/api/reviews?partidoId=${partidoId}`)
+};
+
+// ========================================
 // HELPERS PARA MAPEAR DATOS
 // ========================================
+
+/**
+ * Normaliza un PartidoDTO del backend al formato esperado por el frontend
+ */
+export function normalizePartidoDTO(partido: any): PartidoDTO {
+  return {
+    id: partido.id,
+    tipoPartido: partido.tipoPartido || partido.tipo_partido,
+    genero: partido.genero,
+    fecha: partido.fecha,
+    hora: partido.hora,
+    duracionMinutos: partido.duracionMinutos || partido.duracion_minutos || 90,
+    nombreUbicacion: partido.nombreUbicacion || partido.nombre_ubicacion,
+    direccionUbicacion: partido.direccionUbicacion || partido.direccion_ubicacion,
+    latitud: partido.latitud,
+    longitud: partido.longitud,
+    cantidadJugadores: partido.cantidadJugadores || partido.cantidad_jugadores,
+    jugadoresActuales: partido.jugadoresActuales || partido.jugadores_actuales || 0,
+    precioTotal: partido.precioTotal || partido.precio_total || 0,
+    precioPorJugador: partido.precioPorJugador || partido.precio_por_jugador || 
+      (partido.cantidadJugadores > 0 ? partido.precioTotal / partido.cantidadJugadores : 0),
+    descripcion: partido.descripcion,
+    organizadorId: partido.organizadorId || partido.organizador_id,
+    organizadorNombre: partido.organizadorNombre || partido.organizador_nombre,
+    organizador: partido.organizador,
+    estado: partido.estado || 'PENDIENTE',
+    createdAt: partido.createdAt || partido.created_at,
+    jugadores: partido.jugadores,
+    solicitudes_pendientes: partido.solicitudes_pendientes,
+    // Aliases para compatibilidad
+    tipo_partido: partido.tipoPartido || partido.tipo_partido,
+    nombre_ubicacion: partido.nombreUbicacion || partido.nombre_ubicacion,
+    direccion_ubicacion: partido.direccionUbicacion || partido.direccion_ubicacion,
+    cantidad_jugadores: partido.cantidadJugadores || partido.cantidad_jugadores,
+    jugadores_actuales: partido.jugadoresActuales || partido.jugadores_actuales || 0,
+    precio_total: partido.precioTotal || partido.precio_total || 0,
+    precio_por_jugador: partido.precioPorJugador || partido.precio_por_jugador
+  };
+}
 
 /**
  * Mapea datos del formulario al formato del backend
@@ -423,7 +515,7 @@ export function mapFormDataToPartidoDTO(formData: {
     tipoPartido: formData.type,
     genero: formData.gender,
     fecha: formData.date,
-    hora: formData.time.includes(':') ? formData.time + ':00' : formData.time,
+    hora: formData.time.includes(':') ? formData.time : `${formData.time}:00`,
     duracionMinutos: formData.duration,
     nombreUbicacion: formData.location,
     direccionUbicacion: formData.location,
@@ -432,7 +524,7 @@ export function mapFormDataToPartidoDTO(formData: {
     cantidadJugadores: formData.totalPlayers,
     precioTotal: formData.totalPrice,
     precioPorJugador: formData.totalPlayers > 0 ? formData.totalPrice / formData.totalPlayers : 0,
-    descripcion: formData.description || null,
+    descripcion: formData.description || undefined,
     organizadorId: formData.organizadorId
   };
 }
