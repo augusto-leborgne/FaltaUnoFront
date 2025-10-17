@@ -208,3 +208,231 @@ export const UsuarioAPI = {
   getMatchInvitations: (userId: string) => apiFetch<any[]>(`/api/usuarios/${userId}/match-invitations`),
   getMatchUpdates: (userId: string) => apiFetch<any[]>(`/api/usuarios/${userId}/match-updates`),
 };
+
+
+// ========================================
+// INTERFACES PARA PARTIDOS
+// ========================================
+
+export interface PartidoDTO {
+  id?: string;
+  tipoPartido: string;
+  genero?: string;
+  fecha: string; // yyyy-MM-dd
+  hora: string; // HH:mm:ss
+  duracionMinutos?: number;
+  nombreUbicacion: string;
+  direccionUbicacion?: string;
+  latitud?: number;
+  longitud?: number;
+  cantidadJugadores: number;
+  jugadoresActuales?: number;
+  precioTotal: number;
+  precioPorJugador?: number;
+  descripcion?: string;
+  organizadorId?: string;
+  organizadorNombre?: string;
+  estado?: string;
+  createdAt?: string;
+  jugadores?: UsuarioMinDTO[];
+}
+
+export interface UsuarioMinDTO {
+  id: string;
+  nombre: string;
+  apellido: string;
+  foto_perfil?: string;
+  posicion?: string;
+  rating?: number;
+}
+
+export interface InscripcionDTO {
+  id: string;
+  partidoId: string;
+  usuarioId: string;
+  estado: string;
+  createdAt?: string;
+  usuario?: UsuarioMinDTO;
+}
+
+export interface MensajeDTO {
+  id?: string;
+  contenido: string;
+  usuarioId: string;
+  partidoId?: string;
+  createdAt?: string;
+  usuario?: UsuarioMinDTO;
+}
+
+// ========================================
+// API DE PARTIDOS
+// ========================================
+
+export const PartidoAPI = {
+  crear: (partido: PartidoDTO) => 
+    apiFetch<PartidoDTO>('/api/partidos', {
+      method: 'POST',
+      body: JSON.stringify(partido)
+    }),
+
+  obtener: (id: string) => 
+    apiFetch<PartidoDTO>(`/api/partidos/${id}`),
+
+  listar: (params?: {
+    tipoPartido?: string;
+    nivel?: string;
+    genero?: string;
+    fecha?: string;
+    estado?: string;
+    search?: string;
+    latitud?: number;
+    longitud?: number;
+    radioKm?: number;
+  }) => {
+    const searchParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          searchParams.append(key, String(value));
+        }
+      });
+    }
+    const query = searchParams.toString();
+    const url = query ? `/api/partidos?${query}` : '/api/partidos';
+    return apiFetch<PartidoDTO[]>(url);
+  },
+
+  listarPorUsuario: (usuarioId: string) => 
+    apiFetch<PartidoDTO[]>(`/api/partidos/usuario/${usuarioId}`),
+
+  actualizar: (id: string, partido: Partial<PartidoDTO>) => 
+    apiFetch<PartidoDTO>(`/api/partidos/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(partido)
+    }),
+
+  cancelar: (id: string, motivo?: string) => 
+    apiFetch<void>(`/api/partidos/${id}/cancelar`, {
+      method: 'POST',
+      body: motivo ? JSON.stringify({ motivo }) : undefined
+    }),
+
+  completar: (id: string) => 
+    apiFetch<void>(`/api/partidos/${id}/completar`, {
+      method: 'POST'
+    }),
+
+  obtenerJugadores: (id: string) => 
+    apiFetch<UsuarioMinDTO[]>(`/api/partidos/${id}/jugadores`),
+
+  removerJugador: (partidoId: string, jugadorId: string) => 
+    apiFetch<void>(`/api/partidos/${partidoId}/jugadores/${jugadorId}`, {
+      method: 'DELETE'
+    }),
+
+  eliminar: (id: string) => 
+    apiFetch<void>(`/api/partidos/${id}`, {
+      method: 'DELETE'
+    })
+};
+
+// ========================================
+// API DE INSCRIPCIONES
+// ========================================
+
+export const InscripcionAPI = {
+  crear: (partidoId: string, usuarioId: string) => 
+    apiFetch<InscripcionDTO>('/api/inscripciones', {
+      method: 'POST',
+      body: JSON.stringify({ partidoId, usuarioId })
+    }),
+
+  listarPorUsuario: (usuarioId: string, estado?: string) => {
+    const query = estado ? `?estado=${estado}` : '';
+    return apiFetch<InscripcionDTO[]>(`/api/inscripciones/usuario/${usuarioId}${query}`);
+  },
+
+  listarPorPartido: (partidoId: string, estado?: string) => {
+    const query = estado ? `?estado=${estado}` : '';
+    return apiFetch<InscripcionDTO[]>(`/api/inscripciones/partido/${partidoId}${query}`);
+  },
+
+  obtenerSolicitudesPendientes: (partidoId: string) => 
+    apiFetch<InscripcionDTO[]>(`/api/inscripciones/partido/${partidoId}/pendientes`),
+
+  aceptar: (inscripcionId: string) => 
+    apiFetch<InscripcionDTO>(`/api/inscripciones/${inscripcionId}/aceptar`, {
+      method: 'POST'
+    }),
+
+  rechazar: (inscripcionId: string, motivo?: string) => 
+    apiFetch<void>(`/api/inscripciones/${inscripcionId}/rechazar`, {
+      method: 'POST',
+      body: motivo ? JSON.stringify({ motivo }) : undefined
+    }),
+
+  cancelar: (inscripcionId: string) => 
+    apiFetch<void>(`/api/inscripciones/${inscripcionId}`, {
+      method: 'DELETE'
+    }),
+
+  obtenerEstado: (partidoId: string, usuarioId: string) => 
+    apiFetch<{
+      inscrito: boolean;
+      estado: string | null;
+      inscripcionId?: string;
+    }>(`/api/inscripciones/estado?partidoId=${partidoId}&usuarioId=${usuarioId}`)
+};
+
+// ========================================
+// API DE MENSAJES (CHAT)
+// ========================================
+
+export const MensajeAPI = {
+  listarPorPartido: (partidoId: string) => 
+    apiFetch<MensajeDTO[]>(`/api/partidos/${partidoId}/mensajes`),
+
+  enviar: (partidoId: string, contenido: string, usuarioId: string) => 
+    apiFetch<MensajeDTO>(`/api/partidos/${partidoId}/mensajes`, {
+      method: 'POST',
+      body: JSON.stringify({ contenido, usuarioId })
+    })
+};
+
+// ========================================
+// HELPERS PARA MAPEAR DATOS
+// ========================================
+
+/**
+ * Mapea datos del formulario al formato del backend
+ */
+export function mapFormDataToPartidoDTO(formData: {
+  type: string;
+  gender: string;
+  date: string;
+  time: string;
+  location: string;
+  totalPlayers: number;
+  totalPrice: number;
+  description: string;
+  duration: number;
+  locationCoordinates?: { lat: number; lng: number } | null;
+  organizadorId: string;
+}): PartidoDTO {
+  return {
+    tipoPartido: formData.type,
+    genero: formData.gender,
+    fecha: formData.date,
+    hora: formData.time.includes(':') ? formData.time + ':00' : formData.time,
+    duracionMinutos: formData.duration,
+    nombreUbicacion: formData.location,
+    direccionUbicacion: formData.location,
+    latitud: formData.locationCoordinates?.lat ?? null,
+    longitud: formData.locationCoordinates?.lng ?? null,
+    cantidadJugadores: formData.totalPlayers,
+    precioTotal: formData.totalPrice,
+    precioPorJugador: formData.totalPlayers > 0 ? formData.totalPrice / formData.totalPlayers : 0,
+    descripcion: formData.description || null,
+    organizadorId: formData.organizadorId
+  };
+}
