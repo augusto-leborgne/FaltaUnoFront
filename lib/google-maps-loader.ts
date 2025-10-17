@@ -1,5 +1,4 @@
-// lib/google-maps-loader.ts
-
+/// <reference types="google.maps" />
 import * as React from 'react';
 
 /**
@@ -21,7 +20,7 @@ class GoogleMapsLoader {
    */
   async load(): Promise<void> {
     // Si ya está cargado, resolver inmediatamente
-    if (this.loaded && window.google?.maps) {
+    if (this.loaded && typeof window !== 'undefined' && window.google?.maps) {
       return Promise.resolve();
     }
 
@@ -46,10 +45,41 @@ class GoogleMapsLoader {
         return;
       }
 
-      // Verificar si ya existe el script
-      const existingScript = document.getElementById(this.scriptId);
+      // Si ya existe y google.maps ya está disponible, marcamos como cargado
+      if (typeof window !== 'undefined' && window.google?.maps) {
+        this.loaded = true;
+        this.loading = false;
+        this.callbacks.forEach((cb) => cb());
+        this.callbacks = [];
+        resolve();
+        return;
+      }
+
+      // Verificar si ya existe el script (evitar duplicados)
+      const existingScript = document.getElementById(this.scriptId) as HTMLScriptElement | null;
       if (existingScript) {
-        existingScript.remove();
+        // Si el script existe pero google aún no está listo, nos suscribimos al evento load/error
+        const onLoadHandler = () => {
+          existingScript.removeEventListener('load', onLoadHandler);
+          existingScript.removeEventListener('error', onErrorHandler);
+          this.loaded = true;
+          this.loading = false;
+          this.callbacks.forEach((cb) => cb());
+          this.callbacks = [];
+          resolve();
+        };
+        const onErrorHandler = (ev: Event | string | null) => {
+          existingScript.removeEventListener('load', onLoadHandler);
+          existingScript.removeEventListener('error', onErrorHandler);
+          this.loading = false;
+          const err = new Error('Error cargando Google Maps API (script existente).');
+          console.error(err, ev);
+          reject(err);
+        };
+
+        existingScript.addEventListener('load', onLoadHandler);
+        existingScript.addEventListener('error', onErrorHandler);
+        return;
       }
 
       // Crear script
@@ -62,11 +92,11 @@ class GoogleMapsLoader {
       script.onload = () => {
         this.loaded = true;
         this.loading = false;
-        
+
         // Resolver callbacks pendientes
-        this.callbacks.forEach(cb => cb());
+        this.callbacks.forEach((cb) => cb());
         this.callbacks = [];
-        
+
         resolve();
       };
 
@@ -85,33 +115,48 @@ class GoogleMapsLoader {
    * Verifica si Google Maps está cargado
    */
   isLoaded(): boolean {
-    return this.loaded && !!window.google?.maps;
+    return this.loaded && typeof window !== 'undefined' && !!window.google?.maps;
   }
 
   /**
    * Obtiene la instancia de Google Maps (si está cargada)
    */
   getGoogle(): typeof google | null {
-    return this.isLoaded() ? window.google : null;
+    return this.isLoaded() ? (window.google as typeof google) : null;
   }
 }
 
 // Exportar instancia singleton
 export const googleMapsLoader = new GoogleMapsLoader();
 
-// Hook para usar en componentes React
+/**
+ * Hook para usar en componentes React
+ *
+ * Devuelve:
+ *  - isLoaded: boolean
+ *  - error: Error | null
+ *  - google: typeof google | null
+ */
 export function useGoogleMaps() {
   const [isLoaded, setIsLoaded] = React.useState(false);
   const [error, setError] = React.useState<Error | null>(null);
 
   React.useEffect(() => {
+    let mounted = true;
+
     googleMapsLoader
       .load()
-      .then(() => setIsLoaded(true))
-      .catch(err => setError(err));
+      .then(() => {
+        if (mounted) setIsLoaded(true);
+      })
+      .catch((err) => {
+        if (mounted) setError(err);
+      });
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return { isLoaded, error, google: googleMapsLoader.getGoogle() };
-
-
-import * as React from 'react';
+}
