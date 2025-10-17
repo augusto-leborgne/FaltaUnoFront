@@ -21,7 +21,14 @@
     "paths": {
       "@/*": ["./*"]
     }
+    /* optionally you can add: "types": ["google.maps"] here, but it is not required if you use global.d.ts + @types/google.maps */
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.d.ts",        // <- ADDED: ensure global.d.ts is included
+    ".next/types/**/*.ts"
+  ],
   "exclude": ["node_modules"]
 }
