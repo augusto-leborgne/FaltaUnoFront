@@ -1,20 +1,31 @@
-# Usar Node.js como base
-FROM node:20-alpine
+# Use Debian-based Node (better compatibility with native modules)
+FROM node:20-slim
 
-# Crear directorio de trabajo
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
-# Copiar package.json y lock
+# Copy package files
 COPY package*.json ./
 
-# Instalar dependencias
-RUN npm install
+# Clean install with proper binary builds
+RUN npm cache clean --force && \
+    npm ci --prefer-offline --no-audit
 
-# Copiar el resto del código
+# Copy source code
 COPY . .
 
-# Exponer puerto donde correrá el frontend
+# Expose port
 EXPOSE 3000
 
-# Comando para levantar el frontend
+# Environment variables
+ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Start command
 CMD ["npm", "run", "dev"]
