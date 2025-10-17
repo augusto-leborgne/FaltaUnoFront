@@ -1,17 +1,20 @@
 /// <reference types="google.maps" />
-import * as React from 'react';
+import { useEffect, useState } from 'react';
 
 /**
  * Utilidad centralizada para cargar Google Maps API
- * Garantiza que el script se cargue una sola vez y gestiona el estado de carga
+ * Garantiza carga única y gestión de estado
  */
 
 type GoogleMapsCallback = () => void;
+type GoogleMapsErrorCallback = (error: Error) => void;
 
 class GoogleMapsLoader {
   private loading = false;
   private loaded = false;
+  private error: Error | null = null;
   private callbacks: GoogleMapsCallback[] = [];
+  private errorCallbacks: GoogleMapsErrorCallback[] = [];
   private scriptId = 'google-maps-script';
 
   /**
@@ -20,14 +23,20 @@ class GoogleMapsLoader {
    */
   async load(): Promise<void> {
     // Si ya está cargado, resolver inmediatamente
-    if (this.loaded && typeof window !== 'undefined' && window.google?.maps) {
+    if (this.loaded && this.isGoogleAvailable()) {
       return Promise.resolve();
+    }
+
+    // Si hubo error previo, rechazar
+    if (this.error) {
+      return Promise.reject(this.error);
     }
 
     // Si está cargando, esperar a que termine
     if (this.loading) {
-      return new Promise<void>((resolve) => {
+      return new Promise<void>((resolve, reject) => {
         this.callbacks.push(resolve);
+        this.errorCallbacks.push(reject);
       });
     }
 
@@ -35,54 +44,60 @@ class GoogleMapsLoader {
     this.loading = true;
 
     return new Promise<void>((resolve, reject) => {
-      // Verificar API key
-      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-      if (!apiKey) {
-        const error = new Error('NEXT_PUBLIC_GOOGLE_MAPS_API_KEY no está configurada');
-        console.error(error);
-        this.loading = false;
+      // Verificar entorno
+      if (typeof window === 'undefined') {
+        const error = new Error('Google Maps solo puede cargarse en el navegador');
+        this.handleError(error);
         reject(error);
         return;
       }
 
-      // Si ya existe y google.maps ya está disponible, marcamos como cargado
-      if (typeof window !== 'undefined' && window.google?.maps) {
-        this.loaded = true;
-        this.loading = false;
-        this.callbacks.forEach((cb) => cb());
-        this.callbacks = [];
+      // Verificar API key
+      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+      if (!apiKey) {
+        const error = new Error('NEXT_PUBLIC_GOOGLE_MAPS_API_KEY no está configurada');
+        console.error('❌ [GoogleMapsLoader]', error.message);
+        this.handleError(error);
+        reject(error);
+        return;
+      }
+
+      // Si ya está disponible, marcar como cargado
+      if (this.isGoogleAvailable()) {
+        console.log('✅ [GoogleMapsLoader] Google Maps ya estaba disponible');
+        this.handleSuccess();
         resolve();
         return;
       }
 
-      // Verificar si ya existe el script (evitar duplicados)
+      // Verificar si ya existe el script
       const existingScript = document.getElementById(this.scriptId) as HTMLScriptElement | null;
       if (existingScript) {
-        // Si el script existe pero google aún no está listo, nos suscribimos al evento load/error
-        const onLoadHandler = () => {
-          existingScript.removeEventListener('load', onLoadHandler);
-          existingScript.removeEventListener('error', onErrorHandler);
-          this.loaded = true;
-          this.loading = false;
-          this.callbacks.forEach((cb) => cb());
-          this.callbacks = [];
-          resolve();
-        };
-        const onErrorHandler = (ev: Event | string | null) => {
-          existingScript.removeEventListener('load', onLoadHandler);
-          existingScript.removeEventListener('error', onErrorHandler);
-          this.loading = false;
-          const err = new Error('Error cargando Google Maps API (script existente).');
-          console.error(err, ev);
-          reject(err);
-        };
+        console.log('⏳ [GoogleMapsLoader] Script ya existe, esperando carga...');
+        
+        const checkGoogleAvailable = setInterval(() => {
+          if (this.isGoogleAvailable()) {
+            clearInterval(checkGoogleAvailable);
+            this.handleSuccess();
+            resolve();
+          }
+        }, 100);
 
-        existingScript.addEventListener('load', onLoadHandler);
-        existingScript.addEventListener('error', onErrorHandler);
+        // Timeout después de 10 segundos
+        setTimeout(() => {
+          clearInterval(checkGoogleAvailable);
+          if (!this.loaded) {
+            const error = new Error('Timeout esperando Google Maps');
+            this.handleError(error);
+            reject(error);
+          }
+        }, 10000);
+        
         return;
       }
 
       // Crear script
+      console.log('📦 [GoogleMapsLoader] Creando script de Google Maps...');
       const script = document.createElement('script');
       script.id = this.scriptId;
       script.async = true;
@@ -90,21 +105,33 @@ class GoogleMapsLoader {
       script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
 
       script.onload = () => {
-        this.loaded = true;
-        this.loading = false;
+        console.log('✅ [GoogleMapsLoader] Script cargado exitosamente');
+        
+        // Esperar a que google.maps esté disponible
+        const checkGoogleAvailable = setInterval(() => {
+          if (this.isGoogleAvailable()) {
+            clearInterval(checkGoogleAvailable);
+            this.handleSuccess();
+            resolve();
+          }
+        }, 50);
 
-        // Resolver callbacks pendientes
-        this.callbacks.forEach((cb) => cb());
-        this.callbacks = [];
-
-        resolve();
+        // Timeout después de 5 segundos
+        setTimeout(() => {
+          clearInterval(checkGoogleAvailable);
+          if (!this.loaded) {
+            const error = new Error('Google Maps no se inicializó correctamente');
+            this.handleError(error);
+            reject(error);
+          }
+        }, 5000);
       };
 
-      script.onerror = (error) => {
-        this.loading = false;
-        const err = new Error('Error cargando Google Maps API');
-        console.error(err, error);
-        reject(err);
+      script.onerror = (event) => {
+        console.error('❌ [GoogleMapsLoader] Error cargando script:', event);
+        const error = new Error('Error al cargar el script de Google Maps');
+        this.handleError(error);
+        reject(error);
       };
 
       document.head.appendChild(script);
@@ -112,17 +139,72 @@ class GoogleMapsLoader {
   }
 
   /**
+   * Maneja el éxito de la carga
+   */
+  private handleSuccess(): void {
+    this.loaded = true;
+    this.loading = false;
+    this.error = null;
+
+    // Resolver callbacks pendientes
+    this.callbacks.forEach((cb) => cb());
+    this.callbacks = [];
+    this.errorCallbacks = [];
+  }
+
+  /**
+   * Maneja errores de carga
+   */
+  private handleError(error: Error): void {
+    this.error = error;
+    this.loading = false;
+    this.loaded = false;
+
+    // Rechazar callbacks pendientes
+    this.errorCallbacks.forEach((cb) => cb(error));
+    this.callbacks = [];
+    this.errorCallbacks = [];
+  }
+
+  /**
+   * Verifica si Google Maps está disponible
+   */
+  private isGoogleAvailable(): boolean {
+    return typeof window !== 'undefined' && 
+           typeof window.google !== 'undefined' && 
+           typeof window.google.maps !== 'undefined';
+  }
+
+  /**
    * Verifica si Google Maps está cargado
    */
   isLoaded(): boolean {
-    return this.loaded && typeof window !== 'undefined' && !!window.google?.maps;
+    return this.loaded && this.isGoogleAvailable();
   }
 
   /**
    * Obtiene la instancia de Google Maps (si está cargada)
    */
   getGoogle(): typeof google | null {
-    return this.isLoaded() ? (window.google as typeof google) : null;
+    return this.isGoogleAvailable() ? window.google : null;
+  }
+
+  /**
+   * Obtiene el error (si lo hay)
+   */
+  getError(): Error | null {
+    return this.error;
+  }
+
+  /**
+   * Resetea el estado (útil para testing)
+   */
+  reset(): void {
+    this.loading = false;
+    this.loaded = false;
+    this.error = null;
+    this.callbacks = [];
+    this.errorCallbacks = [];
   }
 }
 
@@ -131,26 +213,41 @@ export const googleMapsLoader = new GoogleMapsLoader();
 
 /**
  * Hook para usar en componentes React
- *
- * Devuelve:
- *  - isLoaded: boolean
- *  - error: Error | null
- *  - google: typeof google | null
  */
 export function useGoogleMaps() {
-  const [isLoaded, setIsLoaded] = React.useState(false);
-  const [error, setError] = React.useState<Error | null>(null);
+  const [isLoaded, setIsLoaded] = useState(googleMapsLoader.isLoaded());
+  const [error, setError] = useState<Error | null>(googleMapsLoader.getError());
+  const [isLoading, setIsLoading] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     let mounted = true;
+
+    // Si ya está cargado, no hacer nada
+    if (googleMapsLoader.isLoaded()) {
+      setIsLoaded(true);
+      return;
+    }
+
+    setIsLoading(true);
 
     googleMapsLoader
       .load()
       .then(() => {
-        if (mounted) setIsLoaded(true);
+        if (mounted) {
+          setIsLoaded(true);
+          setError(null);
+        }
       })
       .catch((err) => {
-        if (mounted) setError(err);
+        if (mounted) {
+          setError(err);
+          setIsLoaded(false);
+        }
+      })
+      .finally(() => {
+        if (mounted) {
+          setIsLoading(false);
+        }
       });
 
     return () => {
@@ -158,5 +255,17 @@ export function useGoogleMaps() {
     };
   }, []);
 
-  return { isLoaded, error, google: googleMapsLoader.getGoogle() };
+  return { 
+    isLoaded, 
+    error, 
+    isLoading,
+    google: googleMapsLoader.getGoogle() 
+  };
+}
+
+// Declaración global de tipos
+declare global {
+  interface Window {
+    google: typeof google;
+  }
 }
