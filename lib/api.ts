@@ -1,38 +1,55 @@
 import { AuthService } from "./auth";
 
-// API base URL
+// ============================================
+// CONFIGURACIÓN
+// ============================================
+
 const RAW_API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
 export const API_BASE = typeof window === 'undefined' ? RAW_API_BASE : '';
-export const normalizeUrl = (u: string) => u.replace(/([^:]\/)\/+/g, '$1');
+
+// Normalizar URLs (eliminar barras duplicadas)
+export const normalizeUrl = (url: string) => url.replace(/([^:]\/)\/+/g, '$1');
+
+// ============================================
+// TIPOS BASE
+// ============================================
 
 export interface ApiResponse<T> {
+  success: boolean;
   data: T;
   message?: string;
-  success: boolean;
+  error?: string;
 }
 
-// ========================================
-// INTERFACES DE USUARIO
-// ========================================
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
 
-export interface Usuario { 
-  id: string; 
-  nombre?: string | null; 
-  apellido?: string | null; 
-  email?: string | null; 
-  password?: string | null; 
-  celular?: string | null; 
-  fechaNacimiento?: string | null; // formato: yyyy-MM-dd
-  altura?: number | null; 
-  peso?: number | null; 
-  posicion?: string | null; 
-  foto_perfil?: string | null; // Base64
-  ubicacion?: string | null; 
-  cedula?: string | null; 
-  created_at?: string; 
-  perfilCompleto?: boolean; 
-  cedulaVerificada?: boolean; 
-  provider?: string | null;
+// ============================================
+// INTERFACES DE USUARIO
+// ============================================
+
+export interface Usuario {
+  id: string;
+  nombre: string;
+  apellido: string;
+  email: string;
+  celular?: string;
+  fechaNacimiento?: string; // yyyy-MM-dd
+  altura?: number;
+  peso?: number;
+  posicion?: string;
+  foto_perfil?: string; // Base64 string
+  ubicacion?: string;
+  cedula?: string;
+  perfilCompleto?: boolean;
+  cedulaVerificada?: boolean;
+  provider?: string;
+  created_at?: string;
 }
 
 export interface UsuarioMinDTO {
@@ -44,66 +61,95 @@ export interface UsuarioMinDTO {
   rating?: number;
 }
 
-// ========================================
+// ============================================
 // INTERFACES DE PARTIDOS
-// ========================================
+// ============================================
 
 export interface PartidoDTO {
+  // Campos principales (backend usa camelCase)
   id?: string;
-  tipoPartido: string; // "FUTBOL_5", "FUTBOL_7", etc.
-  genero?: string; // "Mixto", "Hombres", "Mujeres"
+  tipoPartido: string; // FUTBOL_5, FUTBOL_7, etc.
+  genero: string; // Mixto, Hombres, Mujeres
+  nivel?: string; // PRINCIPIANTE, INTERMEDIO, AVANZADO
   fecha: string; // yyyy-MM-dd
   hora: string; // HH:mm:ss
-  duracionMinutos?: number;
+  duracionMinutos: number;
   nombreUbicacion: string;
   direccionUbicacion?: string;
-  latitud?: number | null;
-  longitud?: number | null;
+  latitud?: number;
+  longitud?: number;
   cantidadJugadores: number;
-  jugadoresActuales?: number;
+  jugadoresActuales: number;
   precioTotal: number;
-  precioPorJugador?: number;
+  precioPorJugador: number;
   descripcion?: string;
-  organizadorId?: string;
-  organizadorNombre?: string;
-  organizador?: UsuarioMinDTO;
-  estado?: string; // "PENDIENTE", "CONFIRMADO", "CANCELADO", "COMPLETADO"
+  estado: PartidoEstado;
+  organizadorId: string;
   createdAt?: string;
+  
+  // Relaciones
+  organizador?: UsuarioMinDTO;
   jugadores?: UsuarioMinDTO[];
-  solicitudes_pendientes?: InscripcionDTO[];
-  // Aliases para compatibilidad con frontend
-  tipo_partido?: string;
-  nivel?: string;
-  nombre_ubicacion?: string;
-  direccion_ubicacion?: string;
-  cantidad_jugadores?: number;
-  jugadores_actuales?: number;
-  precio_total?: number;
-  precio_por_jugador?: number;
-  nombre?: string;
-  apellido?: string;
+  solicitudesPendientes?: InscripcionDTO[];
 }
+
+export enum PartidoEstado {
+  PENDIENTE = "PENDIENTE",
+  CONFIRMADO = "CONFIRMADO",
+  CANCELADO = "CANCELADO",
+  COMPLETADO = "COMPLETADO"
+}
+
+export enum TipoPartido {
+  FUTBOL_5 = "FUTBOL_5",
+  FUTBOL_7 = "FUTBOL_7",
+  FUTBOL_8 = "FUTBOL_8",
+  FUTBOL_9 = "FUTBOL_9",
+  FUTBOL_11 = "FUTBOL_11"
+}
+
+export enum NivelPartido {
+  PRINCIPIANTE = "PRINCIPIANTE",
+  INTERMEDIO = "INTERMEDIO",
+  AVANZADO = "AVANZADO",
+  PROFESIONAL = "PROFESIONAL"
+}
+
+// ============================================
+// INTERFACES DE INSCRIPCIONES
+// ============================================
 
 export interface InscripcionDTO {
   id: string;
   partidoId: string;
   usuarioId: string;
-  estado: string; // "PENDIENTE", "ACEPTADO", "RECHAZADO"
-  createdAt?: string;
-  fecha_solicitud?: string;
+  estado: InscripcionEstado;
+  createdAt: string;
   usuario?: UsuarioMinDTO;
-  usuario_id?: string;
 }
 
-export interface MensajeDTO {
-  id?: string;
-  contenido: string;
-  usuarioId?: string;
-  partidoId?: string;
-  createdAt?: string;
-  usuario?: UsuarioMinDTO;
-  usuario_id?: string;
+export enum InscripcionEstado {
+  PENDIENTE = "PENDIENTE",
+  ACEPTADO = "ACEPTADO",
+  RECHAZADO = "RECHAZADO"
 }
+
+// ============================================
+// INTERFACES DE MENSAJES
+// ============================================
+
+export interface MensajeDTO {
+  id: string;
+  contenido: string;
+  usuarioId: string;
+  partidoId: string;
+  createdAt: string;
+  usuario?: UsuarioMinDTO;
+}
+
+// ============================================
+// INTERFACES DE REVIEWS
+// ============================================
 
 export interface ReviewDTO {
   id?: string;
@@ -117,228 +163,323 @@ export interface ReviewDTO {
   createdAt?: string;
 }
 
-// ========================================
-// FUNCIÓN HELPER PARA API FETCH
-// ========================================
+// ============================================
+// FUNCIÓN CENTRAL DE API FETCH
+// ============================================
 
-async function apiFetch<T>(url: string, options?: RequestInit): Promise<ApiResponse<T>> {
-  // Validar token antes de hacer request
-  AuthService.validateAndCleanup();
+interface ApiFetchOptions extends RequestInit {
+  skipAuth?: boolean;
+  customToken?: string;
+}
+
+async function apiFetch<T>(
+  endpoint: string,
+  options: ApiFetchOptions = {}
+): Promise<ApiResponse<T>> {
+  const { skipAuth = false, customToken, ...fetchOptions } = options;
+
+  // Validar y limpiar tokens expirados
+  if (!skipAuth) {
+    AuthService.validateAndCleanup();
+  }
+
+  // Obtener token
+  const token = customToken || (!skipAuth ? AuthService.getToken() : null);
   
-  const token = AuthService.getToken();
-  const fullUrl = normalizeUrl(`${API_BASE}${url}`);
+  // Construir URL completa
+  const fullUrl = normalizeUrl(`${API_BASE}${endpoint}`);
 
-  const headers = new Headers(options?.headers || {});
-  if (!headers.has('Content-Type') && !(options?.body instanceof FormData)) {
+  // Preparar headers
+  const headers = new Headers(fetchOptions.headers);
+  
+  // Content-Type solo si no es FormData
+  if (!headers.has('Content-Type') && !(fetchOptions.body instanceof FormData)) {
     headers.set('Content-Type', 'application/json');
   }
-  if (token) {
+  
+  // Authorization header
+  if (token && !skipAuth) {
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const res = await fetch(fullUrl, {
-    headers,
-    ...options,
-  });
+  console.log(`[API] ${fetchOptions.method || 'GET'} ${endpoint}`);
 
-  // Si responde 401, limpiar auth y redirigir
-  if (res.status === 401) {
-    AuthService.logout();
-    if (typeof window !== 'undefined') {
-      window.location.href = '/login';
+  try {
+    const response = await fetch(fullUrl, {
+      ...fetchOptions,
+      headers,
+    });
+
+    // Manejo de 401 - Sesión expirada
+    if (response.status === 401) {
+      console.warn('[API] 401 Unauthorized - Limpiando sesión');
+      AuthService.logout();
+      
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+      
+      throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.');
     }
-    throw new Error('Sesión expirada');
-  }
 
-  if (!res.ok) {
-    const text = await res.text().catch(() => '');
-    let errorMessage = `Error en API: ${res.status}`;
+    // Manejo de 403 - Sin permisos
+    if (response.status === 403) {
+      throw new Error('No tienes permisos para realizar esta acción');
+    }
+
+    // Obtener texto de respuesta
+    const responseText = await response.text();
+    
+    // Intentar parsear JSON
+    let responseData: any;
     try {
-      const errorJson = JSON.parse(text);
-      errorMessage = errorJson.message || errorMessage;
-    } catch {}
-    throw new Error(errorMessage);
-  }
+      responseData = responseText ? JSON.parse(responseText) : {};
+    } catch (parseError) {
+      console.error('[API] Error parseando respuesta:', responseText);
+      throw new Error('Respuesta inválida del servidor');
+    }
 
-  return res.json() as Promise<ApiResponse<T>>;
+    // Si la respuesta no es OK
+    if (!response.ok) {
+      const errorMessage = responseData.message 
+        || responseData.error 
+        || `Error ${response.status}: ${response.statusText}`;
+      
+      console.error(`[API] Error ${response.status}:`, errorMessage);
+      
+      throw new Error(errorMessage);
+    }
+
+    // Normalizar respuesta
+    const normalizedResponse: ApiResponse<T> = {
+      success: responseData.success ?? true,
+      data: responseData.data ?? responseData,
+      message: responseData.message,
+      error: responseData.error
+    };
+
+    console.log(`[API] ✓ ${endpoint} completado`);
+    
+    return normalizedResponse;
+
+  } catch (error) {
+    console.error(`[API] Error en ${endpoint}:`, error);
+    
+    if (error instanceof Error) {
+      throw error;
+    }
+    
+    throw new Error('Error de red. Verifica tu conexión.');
+  }
 }
 
-// ========================================
+// ============================================
+// HELPERS DE NORMALIZACIÓN
+// ============================================
+
+/**
+ * Normaliza datos del backend al formato esperado por el frontend
+ */
+function normalizePartido(raw: any): PartidoDTO {
+  // Calcular precio por jugador si no viene
+  const precioTotal = raw.precioTotal ?? raw.precio_total ?? 0;
+  const cantidadJugadores = raw.cantidadJugadores ?? raw.cantidad_jugadores ?? 1;
+  const precioPorJugador = raw.precioPorJugador 
+    ?? raw.precio_por_jugador 
+    ?? (cantidadJugadores > 0 ? precioTotal / cantidadJugadores : 0);
+
+  return {
+    id: raw.id,
+    tipoPartido: raw.tipoPartido ?? raw.tipo_partido ?? TipoPartido.FUTBOL_5,
+    genero: raw.genero ?? 'Mixto',
+    nivel: raw.nivel ?? NivelPartido.INTERMEDIO,
+    fecha: raw.fecha,
+    hora: raw.hora,
+    duracionMinutos: raw.duracionMinutos ?? raw.duracion_minutos ?? 90,
+    nombreUbicacion: raw.nombreUbicacion ?? raw.nombre_ubicacion ?? '',
+    direccionUbicacion: raw.direccionUbicacion ?? raw.direccion_ubicacion,
+    latitud: raw.latitud ?? null,
+    longitud: raw.longitud ?? null,
+    cantidadJugadores,
+    jugadoresActuales: raw.jugadoresActuales ?? raw.jugadores_actuales ?? 0,
+    precioTotal,
+    precioPorJugador: Math.round(precioPorJugador * 100) / 100,
+    descripcion: raw.descripcion,
+    estado: raw.estado ?? PartidoEstado.PENDIENTE,
+    organizadorId: raw.organizadorId ?? raw.organizador_id,
+    createdAt: raw.createdAt ?? raw.created_at,
+    organizador: raw.organizador,
+    jugadores: raw.jugadores ?? [],
+    solicitudesPendientes: raw.solicitudesPendientes ?? raw.solicitudes_pendientes ?? []
+  };
+}
+
+function normalizeInscripcion(raw: any): InscripcionDTO {
+  return {
+    id: raw.id,
+    partidoId: raw.partidoId ?? raw.partido_id,
+    usuarioId: raw.usuarioId ?? raw.usuario_id,
+    estado: raw.estado ?? InscripcionEstado.PENDIENTE,
+    createdAt: raw.createdAt ?? raw.created_at ?? new Date().toISOString(),
+    usuario: raw.usuario
+  };
+}
+
+function normalizeMensaje(raw: any): MensajeDTO {
+  return {
+    id: raw.id,
+    contenido: raw.contenido,
+    usuarioId: raw.usuarioId ?? raw.usuario_id,
+    partidoId: raw.partidoId ?? raw.partido_id,
+    createdAt: raw.createdAt ?? raw.created_at ?? new Date().toISOString(),
+    usuario: raw.usuario
+  };
+}
+
+// ============================================
 // API DE USUARIOS
-// ========================================
+// ============================================
 
 export const UsuarioAPI = {
-  listar: () => apiFetch<Usuario[]>('/api/usuarios'),
-  obtener: (id: string) => apiFetch<Usuario>(`/api/usuarios/${id}`),
+  /**
+   * Login con email y password
+   */
+  login: async (email: string, password: string) => {
+    const response = await apiFetch<{ token: string; user: Usuario }>(
+      '/api/auth/login-json',
+      {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+        skipAuth: true
+      }
+    );
+
+    // Guardar token y usuario en localStorage
+    if (response.success && response.data.token) {
+      AuthService.setToken(response.data.token);
+      AuthService.setUser(response.data.user);
+    }
+
+    return response;
+  },
+
+  /**
+   * Obtener usuario actual (me)
+   */
   getMe: () => apiFetch<Usuario>('/api/usuarios/me'),
 
-  crear: async (usuario: Partial<Usuario>) => {
-    const payload: any = { ...usuario };
-    // Eliminar foto_perfil si existe (se sube después)
-    if ('foto_perfil' in payload) delete payload.foto_perfil;
-    if (payload.foto_perfil === '' || payload.foto_perfil === null) delete payload.foto_perfil;
+  /**
+   * Obtener usuario por ID
+   */
+  get: (id: string) => apiFetch<Usuario>(`/api/usuarios/${id}`),
 
+  /**
+   * Listar usuarios
+   */
+  list: () => apiFetch<Usuario[]>('/api/usuarios'),
+
+  /**
+   * Crear usuario
+   */
+  crear: (usuario: Partial<Usuario>) => {
+    const payload = { ...usuario };
+    // No enviar foto_perfil en creación (se sube después)
+    delete payload.foto_perfil;
+    
     return apiFetch<Usuario>('/api/usuarios', {
       method: 'POST',
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
+      skipAuth: true
     });
   },
 
-  verificarCedula: async (cedula: string) => {
-    const token = AuthService.getToken();
-    if (!token) throw new Error('No autenticado');
-
-    const res = await fetch(normalizeUrl(`${API_BASE}/api/usuarios/me/verify-cedula`), {
-      method: 'POST',
-      body: JSON.stringify({ cedula }),
-      headers: { 
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      }
+  /**
+   * Actualizar perfil del usuario actual
+   */
+  actualizarPerfil: (perfil: Partial<Usuario>) => {
+    return apiFetch<Usuario>('/api/usuarios/me', {
+      method: 'PUT',
+      body: JSON.stringify(perfil)
     });
-
-    const text = await res.text().catch(() => '');
-    let json: any = {};
-    try { json = text ? JSON.parse(text) : {}; } catch {}
-
-    return {
-      success: json.success ?? false,
-      message: json.message ?? '',
-      data: {
-        verified: json.data?.verified ?? false,
-        user: json.data?.user ?? undefined
-      }
-    } as ApiResponse<{ verified: boolean; user?: Usuario }>;
   },
 
-  subirFoto: async (file: File): Promise<ApiResponse<{ success: boolean }>> => {
+  /**
+   * Subir foto de perfil
+   */
+  subirFoto: async (file: File) => {
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append('file', file);
 
-    const token = AuthService.getToken();
-    if (!token) throw new Error('No autenticado');
-
-    const headers: Record<string,string> = {
-      'Authorization': `Bearer ${token}`
-    };
-
-    const res = await fetch(normalizeUrl(`${API_BASE}/api/usuarios/me/foto`), {
+    return apiFetch<{ success: boolean }>('/api/usuarios/me/foto', {
       method: 'POST',
-      body: formData,
-      headers,
+      body: formData
     });
-
-    const text = await res.text().catch(() => '');
-    let json: any = {};
-    try { json = text ? JSON.parse(text) : {}; } catch {}
-
-    return {
-      success: res.ok,
-      message: json.message ?? (res.ok ? 'Foto subida correctamente' : `Error: ${res.status}`),
-      data: { success: res.ok }
-    };
   },
 
-  actualizarPerfil: async (perfil: any) => {
-    const token = AuthService.getToken();
-    if (!token) throw new Error('No autenticado');
-
-    const headers: Record<string,string> = { 
-      "Content-Type": "application/json",
-      'Authorization': `Bearer ${token}`
-    };
-
-    const res = await fetch(normalizeUrl(`${API_BASE}/api/usuarios/me`), {
-      method: "PUT",
-      body: JSON.stringify(perfil),
-      headers,
-    });
-
-    if (!res.ok) {
-      const t = await res.text().catch(()=> '');
-      throw new Error(`Error al actualizar perfil: ${res.status} ${t}`);
-    }
-    return res.json();
-  },
-
-  login: async (email: string, password: string) => {
-    const res = await fetch(normalizeUrl(`${API_BASE}/api/auth/login-json`), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const text = await res.text().catch(()=> '');
-    let json: any = {};
-    try { json = text ? JSON.parse(text) : {}; } catch {}
-
-    if (!res.ok) {
-      return { 
-        success: false, 
-        data: {} as any, 
-        message: json.message ?? `Error login (${res.status})` 
-      };
-    }
-
-    const token = json.data?.token;
-    const user = json.data?.user;
-    
-    if (token) AuthService.setToken(token);
-    if (user) AuthService.setUser(user);
-
-    return { 
-      success: true, 
-      data: { token, user }, 
-      message: json.message ?? 'Autenticado' 
-    };
-  },
-
-  getFriendRequests: (userId: string) => apiFetch<any[]>(`/api/usuarios/${userId}/friend-requests`),
-  getUnreadMessages: (userId: string) => apiFetch<any[]>(`/api/usuarios/${userId}/messages`),
-  getMatchInvitations: (userId: string) => apiFetch<any[]>(`/api/usuarios/${userId}/match-invitations`),
-  getMatchUpdates: (userId: string) => apiFetch<any[]>(`/api/usuarios/${userId}/match-updates`),
+  /**
+   * Verificar cédula
+   */
+  verificarCedula: (cedula: string) => {
+    return apiFetch<{ verified: boolean; user?: Usuario }>(
+      '/api/usuarios/me/verify-cedula',
+      {
+        method: 'POST',
+        body: JSON.stringify({ cedula })
+      }
+    );
+  }
 };
 
-// ========================================
+// ============================================
 // API DE PARTIDOS
-// ========================================
+// ============================================
 
 export const PartidoAPI = {
-  crear: (partido: PartidoDTO) => {
-    // Mapear campos del frontend al formato del backend
-    const backendPartido = {
-      tipoPartido: partido.tipoPartido || partido.tipo_partido,
-      genero: partido.genero,
-      fecha: partido.fecha,
-      hora: partido.hora,
-      duracionMinutos: partido.duracionMinutos || partido.duracionMinutos || 90,
-      nombreUbicacion: partido.nombreUbicacion || partido.nombre_ubicacion,
-      direccionUbicacion: partido.direccionUbicacion || partido.direccion_ubicacion,
-      latitud: partido.latitud,
-      longitud: partido.longitud,
-      cantidadJugadores: partido.cantidadJugadores || partido.cantidad_jugadores,
-      precioTotal: partido.precioTotal || partido.precio_total || 0,
-      descripcion: partido.descripcion,
-      organizadorId: partido.organizadorId
-    };
-    
-    return apiFetch<PartidoDTO>('/api/partidos', {
+  /**
+   * Crear partido
+   */
+  crear: async (partido: Omit<PartidoDTO, 'id' | 'createdAt' | 'jugadoresActuales' | 'precioPorJugador'>) => {
+    const response = await apiFetch<PartidoDTO>('/api/partidos', {
       method: 'POST',
-      body: JSON.stringify(backendPartido)
-    }).then(response => ({
+      body: JSON.stringify({
+        tipoPartido: partido.tipoPartido,
+        genero: partido.genero,
+        nivel: partido.nivel ?? NivelPartido.INTERMEDIO,
+        fecha: partido.fecha,
+        hora: partido.hora,
+        duracionMinutos: partido.duracionMinutos,
+        nombreUbicacion: partido.nombreUbicacion,
+        direccionUbicacion: partido.direccionUbicacion,
+        latitud: partido.latitud,
+        longitud: partido.longitud,
+        cantidadJugadores: partido.cantidadJugadores,
+        precioTotal: partido.precioTotal,
+        descripcion: partido.descripcion,
+        organizadorId: partido.organizadorId
+      })
+    });
+
+    return {
       ...response,
-      data: response.data ? normalizePartidoDTO(response.data) : response.data
-    }));
+      data: normalizePartido(response.data)
+    };
   },
 
-  obtener: (id: string) => 
-    apiFetch<PartidoDTO>(`/api/partidos/${id}`)
-      .then(response => ({
-        ...response,
-        data: response.data ? normalizePartidoDTO(response.data) : response.data
-      })),
+  /**
+   * Obtener partido por ID
+   */
+  get: async (id: string) => {
+    const response = await apiFetch<PartidoDTO>(`/api/partidos/${id}`);
+    return {
+      ...response,
+      data: normalizePartido(response.data)
+    };
+  },
 
-  listar: (params?: {
+  /**
+   * Listar partidos con filtros
+   */
+  list: async (filtros?: {
     tipoPartido?: string;
     nivel?: string;
     genero?: string;
@@ -349,215 +490,282 @@ export const PartidoAPI = {
     longitud?: number;
     radioKm?: number;
   }) => {
-    const searchParams = new URLSearchParams();
-    if (params) {
-      Object.entries(params).forEach(([key, value]) => {
+    const params = new URLSearchParams();
+    
+    if (filtros) {
+      Object.entries(filtros).forEach(([key, value]) => {
         if (value !== undefined && value !== null) {
-          searchParams.append(key, String(value));
+          params.append(key, String(value));
         }
       });
     }
-    const query = searchParams.toString();
-    const url = query ? `/api/partidos?${query}` : '/api/partidos';
-    return apiFetch<PartidoDTO[]>(url)
-      .then(response => ({
-        ...response,
-        data: response.data ? response.data.map(normalizePartidoDTO) : response.data
-      }));
-  },
 
-  listarPorUsuario: (usuarioId: string) => 
-    apiFetch<PartidoDTO[]>(`/api/partidos/usuario/${usuarioId}`)
-      .then(response => ({
-        ...response,
-        data: response.data ? response.data.map(normalizePartidoDTO) : response.data
-      })),
-
-  actualizar: (id: string, partido: Partial<PartidoDTO>) => {
-    // Mapear campos al formato del backend
-    const backendPartido: any = {};
-    if (partido.fecha) backendPartido.fecha = partido.fecha;
-    if (partido.hora) backendPartido.hora = partido.hora;
-    if (partido.nombreUbicacion || partido.nombre_ubicacion) {
-      backendPartido.nombreUbicacion = partido.nombreUbicacion || partido.nombre_ubicacion;
-    }
-    if (partido.direccionUbicacion || partido.direccion_ubicacion) {
-      backendPartido.direccionUbicacion = partido.direccionUbicacion || partido.direccion_ubicacion;
-    }
-    if (partido.latitud !== undefined) backendPartido.latitud = partido.latitud;
-    if (partido.longitud !== undefined) backendPartido.longitud = partido.longitud;
-    if (partido.cantidadJugadores || partido.cantidad_jugadores) {
-      backendPartido.cantidadJugadores = partido.cantidadJugadores || partido.cantidad_jugadores;
-    }
-    if (partido.precioTotal || partido.precio_total) {
-      backendPartido.precioTotal = partido.precioTotal || partido.precio_total;
-    }
-    if (partido.descripcion !== undefined) backendPartido.descripcion = partido.descripcion;
-    if (partido.duracionMinutos || partido.duracionMinutos) {
-      backendPartido.duracionMinutos = partido.duracionMinutos || partido.duracionMinutos;
-    }
+    const query = params.toString();
+    const endpoint = query ? `/api/partidos?${query}` : '/api/partidos';
     
-    return apiFetch<PartidoDTO>(`/api/partidos/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(backendPartido)
-    }).then(response => ({
+    const response = await apiFetch<PartidoDTO[]>(endpoint);
+    
+    return {
       ...response,
-      data: response.data ? normalizePartidoDTO(response.data) : response.data
-    }));
+      data: response.data.map(normalizePartido)
+    };
   },
 
-  cancelar: (id: string, motivo?: string) => 
-    apiFetch<void>(`/api/partidos/${id}/cancelar`, {
+  /**
+   * Listar partidos de un usuario
+   */
+  listByUser: async (usuarioId: string) => {
+    const response = await apiFetch<PartidoDTO[]>(`/api/partidos/usuario/${usuarioId}`);
+    return {
+      ...response,
+      data: response.data.map(normalizePartido)
+    };
+  },
+
+  /**
+   * Actualizar partido
+   */
+  actualizar: async (id: string, cambios: Partial<PartidoDTO>) => {
+    const response = await apiFetch<PartidoDTO>(`/api/partidos/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(cambios)
+    });
+
+    return {
+      ...response,
+      data: normalizePartido(response.data)
+    };
+  },
+
+  /**
+   * Cancelar partido
+   */
+  cancelar: (id: string, motivo?: string) => {
+    return apiFetch<void>(`/api/partidos/${id}/cancelar`, {
       method: 'POST',
       body: motivo ? JSON.stringify({ motivo }) : undefined
-    }),
+    });
+  },
 
-  completar: (id: string) => 
-    apiFetch<void>(`/api/partidos/${id}/completar`, {
+  /**
+   * Completar partido
+   */
+  completar: (id: string) => {
+    return apiFetch<void>(`/api/partidos/${id}/completar`, {
       method: 'POST'
-    }),
+    });
+  },
 
-  obtenerJugadores: (id: string) => 
-    apiFetch<UsuarioMinDTO[]>(`/api/partidos/${id}/jugadores`),
+  /**
+   * Obtener jugadores de un partido
+   */
+  getJugadores: (id: string) => {
+    return apiFetch<UsuarioMinDTO[]>(`/api/partidos/${id}/jugadores`);
+  },
 
-  removerJugador: (partidoId: string, jugadorId: string) => 
-    apiFetch<void>(`/api/partidos/${partidoId}/jugadores/${jugadorId}`, {
+  /**
+   * Remover jugador de un partido
+   */
+  removerJugador: (partidoId: string, jugadorId: string) => {
+    return apiFetch<void>(`/api/partidos/${partidoId}/jugadores/${jugadorId}`, {
       method: 'DELETE'
-    }),
+    });
+  },
 
-  eliminar: (id: string) => 
-    apiFetch<void>(`/api/partidos/${id}`, {
+  /**
+   * Eliminar partido
+   */
+  eliminar: (id: string) => {
+    return apiFetch<void>(`/api/partidos/${id}`, {
       method: 'DELETE'
-    })
+    });
+  }
 };
 
-// ========================================
+// ============================================
 // API DE INSCRIPCIONES
-// ========================================
+// ============================================
 
 export const InscripcionAPI = {
-  crear: (partidoId: string, usuarioId: string) => 
-    apiFetch<InscripcionDTO>('/api/inscripciones', {
+  /**
+   * Crear inscripción (solicitar unirse a partido)
+   */
+  crear: async (partidoId: string, usuarioId: string) => {
+    const response = await apiFetch<InscripcionDTO>('/api/inscripciones', {
       method: 'POST',
       body: JSON.stringify({ partidoId, usuarioId })
-    }),
+    });
 
-  listarPorUsuario: (usuarioId: string, estado?: string) => {
-    const query = estado ? `?estado=${estado}` : '';
-    return apiFetch<InscripcionDTO[]>(`/api/inscripciones/usuario/${usuarioId}${query}`);
+    return {
+      ...response,
+      data: normalizeInscripcion(response.data)
+    };
   },
 
-  listarPorPartido: (partidoId: string, estado?: string) => {
+  /**
+   * Listar inscripciones de un usuario
+   */
+  listByUser: async (usuarioId: string, estado?: InscripcionEstado) => {
     const query = estado ? `?estado=${estado}` : '';
-    return apiFetch<InscripcionDTO[]>(`/api/inscripciones/partido/${partidoId}${query}`);
+    const response = await apiFetch<InscripcionDTO[]>(
+      `/api/inscripciones/usuario/${usuarioId}${query}`
+    );
+
+    return {
+      ...response,
+      data: response.data.map(normalizeInscripcion)
+    };
   },
 
-  obtenerSolicitudesPendientes: (partidoId: string) => 
-    apiFetch<InscripcionDTO[]>(`/api/inscripciones/partido/${partidoId}/pendientes`),
+  /**
+   * Listar inscripciones de un partido
+   */
+  listByPartido: async (partidoId: string, estado?: InscripcionEstado) => {
+    const query = estado ? `?estado=${estado}` : '';
+    const response = await apiFetch<InscripcionDTO[]>(
+      `/api/inscripciones/partido/${partidoId}${query}`
+    );
 
-  aceptar: (inscripcionId: string) => 
-    apiFetch<InscripcionDTO>(`/api/inscripciones/${inscripcionId}/aceptar`, {
-      method: 'POST'
-    }),
+    return {
+      ...response,
+      data: response.data.map(normalizeInscripcion)
+    };
+  },
 
-  rechazar: (inscripcionId: string, motivo?: string) => 
-    apiFetch<void>(`/api/inscripciones/${inscripcionId}/rechazar`, {
+  /**
+   * Obtener solicitudes pendientes de un partido
+   */
+  getPendientes: async (partidoId: string) => {
+    const response = await apiFetch<InscripcionDTO[]>(
+      `/api/partidos/${partidoId}/solicitudes`
+    );
+
+    return {
+      ...response,
+      data: response.data.map(normalizeInscripcion)
+    };
+  },
+
+  /**
+   * Aceptar inscripción
+   */
+  aceptar: async (inscripcionId: string) => {
+    const response = await apiFetch<InscripcionDTO>(
+      `/api/inscripciones/${inscripcionId}/aceptar`,
+      { method: 'POST' }
+    );
+
+    return {
+      ...response,
+      data: normalizeInscripcion(response.data)
+    };
+  },
+
+  /**
+   * Rechazar inscripción
+   */
+  rechazar: (inscripcionId: string, motivo?: string) => {
+    return apiFetch<void>(`/api/inscripciones/${inscripcionId}/rechazar`, {
       method: 'POST',
       body: motivo ? JSON.stringify({ motivo }) : undefined
-    }),
+    });
+  },
 
-  cancelar: (inscripcionId: string) => 
-    apiFetch<void>(`/api/inscripciones/${inscripcionId}`, {
+  /**
+   * Cancelar inscripción
+   */
+  cancelar: (inscripcionId: string) => {
+    return apiFetch<void>(`/api/inscripciones/${inscripcionId}`, {
       method: 'DELETE'
-    }),
+    });
+  },
 
-  obtenerEstado: (partidoId: string, usuarioId: string) => 
-    apiFetch<{
+  /**
+   * Obtener estado de inscripción
+   */
+  getEstado: (partidoId: string, usuarioId: string) => {
+    return apiFetch<{
       inscrito: boolean;
-      estado: string | null;
+      estado: InscripcionEstado | null;
       inscripcionId?: string;
-    }>(`/api/inscripciones/estado?partidoId=${partidoId}&usuarioId=${usuarioId}`)
+    }>(`/api/inscripciones/estado?partidoId=${partidoId}&usuarioId=${usuarioId}`);
+  }
 };
 
-// ========================================
-// API DE MENSAJES (CHAT)
-// ========================================
+// ============================================
+// API DE MENSAJES
+// ============================================
 
 export const MensajeAPI = {
-  listarPorPartido: (partidoId: string) => 
-    apiFetch<MensajeDTO[]>(`/api/partidos/${partidoId}/mensajes`),
+  /**
+   * Listar mensajes de un partido
+   */
+  list: async (partidoId: string) => {
+    const response = await apiFetch<MensajeDTO[]>(
+      `/api/partidos/${partidoId}/mensajes`
+    );
 
-  enviar: (partidoId: string, contenido: string, usuarioId: string) => 
-    apiFetch<MensajeDTO>(`/api/partidos/${partidoId}/mensajes`, {
-      method: 'POST',
-      body: JSON.stringify({ contenido, usuarioId })
-    })
+    return {
+      ...response,
+      data: response.data.map(normalizeMensaje)
+    };
+  },
+
+  /**
+   * Crear mensaje
+   */
+  crear: async (partidoId: string, data: { contenido: string; usuarioId: string }) => {
+    const response = await apiFetch<MensajeDTO>(
+      `/api/partidos/${partidoId}/mensajes`,
+      {
+        method: 'POST',
+        body: JSON.stringify(data)
+      }
+    );
+
+    return {
+      ...response,
+      data: normalizeMensaje(response.data)
+    };
+  }
 };
 
-// ========================================
+// ============================================
 // API DE REVIEWS
-// ========================================
+// ============================================
 
 export const ReviewAPI = {
-  crear: (review: Omit<ReviewDTO, 'id' | 'createdAt'>) =>
-    apiFetch<ReviewDTO>('/api/reviews', {
+  /**
+   * Crear review
+   */
+  crear: (review: Omit<ReviewDTO, 'id' | 'createdAt'>) => {
+    return apiFetch<ReviewDTO>('/api/reviews', {
       method: 'POST',
       body: JSON.stringify(review)
-    }),
+    });
+  },
 
-  listarPorUsuario: (usuarioCalificadoId: string) =>
-    apiFetch<ReviewDTO[]>(`/api/reviews?usuarioCalificadoId=${usuarioCalificadoId}`),
+  /**
+   * Listar reviews de un usuario
+   */
+  listByUser: (usuarioCalificadoId: string) => {
+    return apiFetch<ReviewDTO[]>(
+      `/api/reviews?usuarioCalificadoId=${usuarioCalificadoId}`
+    );
+  },
 
-  listarPorPartido: (partidoId: string) =>
-    apiFetch<ReviewDTO[]>(`/api/reviews?partidoId=${partidoId}`)
+  /**
+   * Listar reviews de un partido
+   */
+  listByPartido: (partidoId: string) => {
+    return apiFetch<ReviewDTO[]>(`/api/reviews?partidoId=${partidoId}`);
+  }
 };
 
-// ========================================
-// HELPERS PARA MAPEAR DATOS
-// ========================================
+// ============================================
+// HELPER: Mapear form data a PartidoDTO
+// ============================================
 
-/**
- * Normaliza un PartidoDTO del backend al formato esperado por el frontend
- */
-export function normalizePartidoDTO(partido: any): PartidoDTO {
-  return {
-    id: partido.id,
-    tipoPartido: partido.tipoPartido || partido.tipo_partido,
-    genero: partido.genero,
-    fecha: partido.fecha,
-    hora: partido.hora,
-    duracionMinutos: partido.duracionMinutos || partido.duracion_minutos || 90,
-    nombreUbicacion: partido.nombreUbicacion || partido.nombre_ubicacion,
-    direccionUbicacion: partido.direccionUbicacion || partido.direccion_ubicacion,
-    latitud: partido.latitud,
-    longitud: partido.longitud,
-    cantidadJugadores: partido.cantidadJugadores || partido.cantidad_jugadores,
-    jugadoresActuales: partido.jugadoresActuales || partido.jugadores_actuales || 0,
-    precioTotal: partido.precioTotal || partido.precio_total || 0,
-    precioPorJugador: partido.precioPorJugador || partido.precio_por_jugador || 
-      (partido.cantidadJugadores > 0 ? partido.precioTotal / partido.cantidadJugadores : 0),
-    descripcion: partido.descripcion,
-    organizadorId: partido.organizadorId || partido.organizador_id,
-    organizadorNombre: partido.organizadorNombre || partido.organizador_nombre,
-    organizador: partido.organizador,
-    estado: partido.estado || 'PENDIENTE',
-    createdAt: partido.createdAt || partido.created_at,
-    jugadores: partido.jugadores,
-    solicitudes_pendientes: partido.solicitudes_pendientes,
-    // Aliases para compatibilidad
-    tipo_partido: partido.tipoPartido || partido.tipo_partido,
-    nombre_ubicacion: partido.nombreUbicacion || partido.nombre_ubicacion,
-    direccion_ubicacion: partido.direccionUbicacion || partido.direccion_ubicacion,
-    cantidad_jugadores: partido.cantidadJugadores || partido.cantidad_jugadores,
-    jugadores_actuales: partido.jugadoresActuales || partido.jugadores_actuales || 0,
-    precio_total: partido.precioTotal || partido.precio_total || 0,
-    precio_por_jugador: partido.precioPorJugador || partido.precio_por_jugador
-  };
-}
-
-/**
- * Mapea datos del formulario al formato del backend
- */
 export function mapFormDataToPartidoDTO(formData: {
   type: string;
   gender: string;
@@ -570,43 +778,30 @@ export function mapFormDataToPartidoDTO(formData: {
   duration: number;
   locationCoordinates?: { lat: number; lng: number } | null;
   organizadorId: string;
-}): PartidoDTO {
+}): Omit<PartidoDTO, 'id' | 'createdAt' | 'jugadoresActuales' | 'precioPorJugador'> {
+  // Asegurar formato de hora correcto (HH:mm:ss)
+  let horaFormateada = formData.time;
+  if (!horaFormateada.includes(':')) {
+    horaFormateada = `${horaFormateada}:00:00`;
+  } else if (horaFormateada.split(':').length === 2) {
+    horaFormateada = `${horaFormateada}:00`;
+  }
+
   return {
-    tipoPartido: formData.type,
+    tipoPartido: formData.type as TipoPartido,
     genero: formData.gender,
+    nivel: NivelPartido.INTERMEDIO,
     fecha: formData.date,
-    hora: formData.time.includes(':') ? formData.time : `${formData.time}:00`,
+    hora: horaFormateada,
     duracionMinutos: formData.duration,
     nombreUbicacion: formData.location,
     direccionUbicacion: formData.location,
-    latitud: formData.locationCoordinates?.lat ?? null,
-    longitud: formData.locationCoordinates?.lng ?? null,
+    latitud: formData.locationCoordinates?.lat,
+    longitud: formData.locationCoordinates?.lng,
     cantidadJugadores: formData.totalPlayers,
     precioTotal: formData.totalPrice,
-    precioPorJugador: formData.totalPlayers > 0 ? formData.totalPrice / formData.totalPlayers : 0,
     descripcion: formData.description || undefined,
+    estado: PartidoEstado.PENDIENTE,
     organizadorId: formData.organizadorId
   };
-}
-
-  /**
- * Obtener solicitudes con información de usuario
- */
-export async function obtenerSolicitudesConUsuario(partidoId: string) {
-  const token = AuthService.getToken();
-  if (!token) throw new Error('No autenticado');
-
-  const response = await fetch(`/api/partidos/${partidoId}/solicitudes`, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
-  });
-
-  if (!response.ok) {
-    throw new Error('Error al obtener solicitudes');
-  }
-
-  const result = await response.json();
-  return result.data || [];
 }

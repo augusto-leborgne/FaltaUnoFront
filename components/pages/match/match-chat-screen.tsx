@@ -4,26 +4,13 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ArrowLeft, Send } from "lucide-react"
+import { ArrowLeft, Send, AlertCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
-import { MensajeAPI, PartidoAPI } from '@/lib/api'
+import { MensajeAPI, PartidoAPI, MensajeDTO } from '@/lib/api'
 
 interface MatchChatScreenProps {
   matchId: string
-}
-
-interface Message {
-  id: string
-  usuario_id: string
-  contenido: string
-  created_at: string
-  usuario?: {
-    id: string
-    nombre: string
-    apellido: string
-    foto_perfil?: string
-  }
 }
 
 interface MatchInfo {
@@ -36,43 +23,32 @@ interface MatchInfo {
 export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   const router = useRouter()
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const pollingIntervalRef = useRef<number | null>(null)
+  
+  // Estados
   const [message, setMessage] = useState("")
-  const [messages, setMessages] = useState<Message[]>([])
+  const [messages, setMessages] = useState<MensajeDTO[]>([])
   const [matchInfo, setMatchInfo] = useState<MatchInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
+  const [error, setError] = useState("")
+  
   const currentUser = AuthService.getUser()
 
-  // Polling safe: setTimeout recursivo para evitar solapamiento de requests
+  // ============================================
+  // EFECTOS
+  // ============================================
+
   useEffect(() => {
-    let mounted = true
-    let timer: number | null = null
+    // Cargar datos iniciales
+    loadChatData()
 
-    const poll = async () => {
-      try {
-        if (!mounted) return
-        await loadMessages()
-      } catch (e) {
-        console.error("Polling error", e)
-      } finally {
-        if (mounted) {
-          timer = window.setTimeout(poll, 5000)
-        }
-      }
-    }
+    // Configurar polling para nuevos mensajes
+    startPolling()
 
-    // Carga inicial de datos (match + mensajes) y arranca polling
-    loadChatData().then(() => {
-      if (mounted) {
-        timer = window.setTimeout(poll, 5000)
-      }
-    }).catch((e) => {
-      console.error("Error iniciando chat:", e)
-    })
-
+    // Cleanup
     return () => {
-      mounted = false
-      if (timer) clearTimeout(timer)
+      stopPolling()
     }
   }, [matchId])
 
@@ -80,64 +56,102 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
     scrollToBottom()
   }, [messages])
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  // ============================================
+  // POLLING
+  // ============================================
+
+  const startPolling = () => {
+    // Polling cada 5 segundos
+    pollingIntervalRef.current = window.setInterval(() => {
+      loadMessages(true) // true = silent (sin mostrar loading)
+    }, 5000)
   }
+
+  const stopPolling = () => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current)
+      pollingIntervalRef.current = null
+    }
+  }
+
+  // ============================================
+  // FUNCIONES DE CARGA
+  // ============================================
 
   const loadChatData = async () => {
     try {
       setLoading(true)
-      const token = AuthService.getToken()
-      
-      if (!token) {
+      setError("")
+
+      // Validar autenticación
+      if (!AuthService.isLoggedIn()) {
         router.push("/login")
         return
       }
 
-      // Usar PartidoAPI para obtener info del partido
+      // Cargar info del partido
       try {
-        const matchResult = await PartidoAPI.get(matchId)
-        if (matchResult) {
-          const data = matchResult.data ?? matchResult
-          if (data) {
-            setMatchInfo({
-              tipo_partido: data.tipo_partido,
-              fecha: data.fecha,
-              hora: data.hora,
-              nombre_ubicacion: data.nombre_ubicacion
-            })
-          }
+        const matchResponse = await PartidoAPI.get(matchId)
+        if (matchResponse.success && matchResponse.data) {
+          setMatchInfo({
+            tipo_partido: matchResponse.data.tipoPartido,
+            fecha: matchResponse.data.fecha,
+            hora: matchResponse.data.hora,
+            nombre_ubicacion: matchResponse.data.nombreUbicacion
+          })
         }
       } catch (err) {
-        console.warn("No se pudo cargar info del partido:", err)
+        console.warn("[MatchChat] Error cargando info del partido:", err)
+        // No es crítico, continuar
       }
 
       // Cargar mensajes
       await loadMessages()
-    } catch (error) {
-      console.error("Error cargando chat:", error)
+
+    } catch (err) {
+      console.error("[MatchChat] Error cargando chat:", err)
+      const errorMessage = err instanceof Error ? err.message : "Error al cargar el chat"
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
   }
 
-  const loadMessages = async () => {
+  const loadMessages = async (silent = false) => {
     try {
-      const token = AuthService.getToken()
-      if (!token) return
-
-      // Usar MensajeAPI para obtener mensajes
-      const resp = await MensajeAPI.list(matchId)
-      if (!resp) return
-
-      const data = resp.data ?? resp
-      if (Array.isArray(data)) {
-        setMessages(data)
+      if (!silent && !messages.length) {
+        // Mostrar loading solo en carga inicial
+        setLoading(true)
       }
-    } catch (error) {
-      console.error("Error cargando mensajes:", error)
+
+      // Validar autenticación
+      if (!AuthService.isLoggedIn()) {
+        return
+      }
+
+      // Cargar mensajes
+      const response = await MensajeAPI.list(matchId)
+
+      if (response.success && response.data) {
+        setMessages(response.data)
+      }
+
+    } catch (err) {
+      console.error("[MatchChat] Error cargando mensajes:", err)
+      if (!silent) {
+        const errorMessage = err instanceof Error ? err.message : "Error al cargar mensajes"
+        setError(errorMessage)
+      }
+    } finally {
+      if (!silent) {
+        setLoading(false)
+      }
     }
   }
+
+  // ============================================
+  // HANDLERS
+  // ============================================
 
   const handleBack = () => {
     router.back()
@@ -146,30 +160,36 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   const handleSendMessage = async () => {
     if (!message.trim() || sending) return
 
-    setSending(true)
-    try {
-      const token = AuthService.getToken()
-      if (!token || !currentUser?.id) {
-        router.push("/login")
-        return
-      }
+    // Validar usuario
+    if (!currentUser?.id) {
+      setError("Usuario no encontrado")
+      return
+    }
 
-      // Usar MensajeAPI para crear mensaje
-      const resp = await MensajeAPI.crear(matchId, {
+    setSending(true)
+    setError("")
+
+    try {
+      // Enviar mensaje
+      const response = await MensajeAPI.crear(matchId, {
         contenido: message.trim(),
         usuarioId: currentUser.id
       })
 
-      if (!resp) {
-        throw new Error("Respuesta inválida al enviar mensaje")
+      if (!response.success) {
+        throw new Error(response.message || "Error al enviar mensaje")
       }
 
-      // Limpiar input y recargar mensajes
+      // Limpiar input
       setMessage("")
-      await loadMessages()
-    } catch (error) {
-      console.error("Error enviando mensaje:", error)
-      alert("No se pudo enviar el mensaje. Intenta nuevamente.")
+
+      // Recargar mensajes inmediatamente
+      await loadMessages(true)
+
+    } catch (err) {
+      console.error("[MatchChat] Error enviando mensaje:", err)
+      const errorMessage = err instanceof Error ? err.message : "Error al enviar mensaje"
+      setError(errorMessage)
     } finally {
       setSending(false)
     }
@@ -180,6 +200,18 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
       e.preventDefault()
       handleSendMessage()
     }
+  }
+
+  const handleUserClick = (userId: string) => {
+    router.push(`/users/${userId}`)
+  }
+
+  // ============================================
+  // HELPERS
+  // ============================================
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
   const formatTime = (dateString: string) => {
@@ -206,35 +238,61 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
       const compareDate = new Date(date)
       compareDate.setHours(0, 0, 0, 0)
 
+      const time = timeString.substring(0, 5) // HH:mm
+
       if (compareDate.getTime() === today.getTime()) {
-        return `Hoy ${timeString}`
+        return `Hoy ${time}`
       } else if (compareDate.getTime() === tomorrow.getTime()) {
-        return `Mañana ${timeString}`
+        return `Mañana ${time}`
       } else {
         return `${date.toLocaleDateString("es-ES", {
           day: "numeric",
           month: "short",
-        })} ${timeString}`
+        })} ${time}`
       }
     } catch {
       return `${dateString} ${timeString}`
     }
   }
 
-  if (loading) {
+  const getUserInitials = (nombre?: string, apellido?: string): string => {
+    const n = nombre?.[0] || ""
+    const a = apellido?.[0] || ""
+    return (n + a).toUpperCase() || "U"
+  }
+
+  const getUserName = (nombre?: string, apellido?: string): string => {
+    return `${nombre || ""} ${apellido || ""}`.trim() || "Usuario"
+  }
+
+  // ============================================
+  // RENDER - LOADING
+  // ============================================
+
+  if (loading && !messages.length) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full"></div>
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando chat...</p>
+        </div>
       </div>
     )
   }
+
+  // ============================================
+  // RENDER - MAIN
+  // ============================================
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
       <div className="pt-16 pb-4 px-6 border-b border-gray-100 bg-white">
         <div className="flex items-center space-x-4">
-          <button onClick={handleBack} className="p-2 -ml-2">
+          <button 
+            onClick={handleBack} 
+            className="p-2 -ml-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </button>
           <div className="flex-1">
@@ -248,27 +306,47 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         </div>
       </div>
 
+      {/* Error Message */}
+      {error && (
+        <div className="px-6 pt-4">
+          <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-start space-x-2">
+            <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
+            <button 
+              onClick={() => setError("")}
+              className="text-red-600 hover:text-red-700"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Messages */}
       <div className="flex-1 px-6 py-4 space-y-4 overflow-y-auto">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Send className="w-8 h-8 text-gray-400" />
+              </div>
               <p className="text-gray-500 mb-2">No hay mensajes aún</p>
               <p className="text-sm text-gray-400">Sé el primero en escribir</p>
             </div>
           </div>
         ) : (
           messages.map((msg) => {
-            const isOwn = msg.usuario_id === currentUser?.id
-            const userName = msg.usuario 
-              ? `${msg.usuario.nombre} ${msg.usuario.apellido}`
-              : "Usuario"
-            const initials = msg.usuario
-              ? `${msg.usuario.nombre?.[0] || ""}${msg.usuario.apellido?.[0] || ""}`
-              : "U"
+            const isOwn = msg.usuarioId === currentUser?.id
+            const userName = getUserName(msg.usuario?.nombre, msg.usuario?.apellido)
+            const initials = getUserInitials(msg.usuario?.nombre, msg.usuario?.apellido)
 
             return (
-              <div key={msg.id} className={`flex ${isOwn ? "justify-end" : "justify-start"}`}>
+              <div 
+                key={msg.id} 
+                className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
+              >
                 <div
                   className={`flex items-end space-x-2 max-w-[80%] ${
                     isOwn ? "flex-row-reverse space-x-reverse" : ""
@@ -277,7 +355,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                   {!isOwn && (
                     <Avatar
                       className="w-8 h-8 cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
-                      onClick={() => router.push(`/users/${msg.usuario_id}`)}
+                      onClick={() => handleUserClick(msg.usuarioId)}
                     >
                       {msg.usuario?.foto_perfil ? (
                         <AvatarImage src={`data:image/jpeg;base64,${msg.usuario.foto_perfil}`} />
@@ -290,20 +368,26 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                   )}
                   <div
                     className={`rounded-2xl px-4 py-2 ${
-                      isOwn ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900"
+                      isOwn 
+                        ? "bg-blue-600 text-white" 
+                        : "bg-gray-100 text-gray-900"
                     }`}
                   >
                     {!isOwn && (
                       <button
                         className="text-xs font-medium mb-1 opacity-70 hover:opacity-100 transition-opacity block"
-                        onClick={() => router.push(`/users/${msg.usuario_id}`)}
+                        onClick={() => handleUserClick(msg.usuarioId)}
                       >
                         {userName}
                       </button>
                     )}
-                    <p className="text-sm whitespace-pre-wrap break-words">{msg.contenido}</p>
-                    <p className={`text-xs mt-1 ${isOwn ? "text-blue-100" : "text-gray-500"}`}>
-                      {formatTime(msg.created_at)}
+                    <p className="text-sm whitespace-pre-wrap break-words">
+                      {msg.contenido}
+                    </p>
+                    <p className={`text-xs mt-1 ${
+                      isOwn ? "text-blue-100" : "text-gray-500"
+                    }`}>
+                      {formatTime(msg.createdAt)}
                     </p>
                   </div>
                 </div>
@@ -332,7 +416,11 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
             size="sm"
             className="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-3 min-h-[44px] min-w-[44px] disabled:opacity-50"
           >
-            <Send className="w-4 h-4" />
+            {sending ? (
+              <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
           </Button>
         </div>
         {message.length > 450 && (

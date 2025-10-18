@@ -5,185 +5,126 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
-import { Star, ArrowLeft, Share2, MapPin, Users, DollarSign, Clock } from "lucide-react"
+import { Star, ArrowLeft, Share2, MapPin, Users, DollarSign, Clock, AlertCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { CompressedMap } from "@/components/google-maps/compressed-map"
 import { AuthService } from "@/lib/auth"
+import { PartidoAPI, InscripcionAPI, PartidoDTO, PartidoEstado, TipoPartido, NivelPartido } from "@/lib/api"
 
 interface MatchDetailProps {
   matchId: string
 }
 
-interface Jugador {
-  id: string
-  nombre: string
-  apellido: string
-  foto_perfil?: string
-  posicion?: string
-  rating?: number
-}
-
-interface Partido {
-  id: string
-  tipo_partido: string
-  nivel: string
-  fecha: string
-  hora: string
-  duracion_minutos: number
-  nombre_ubicacion: string
-  direccion_ubicacion?: string
-  latitud?: number
-  longitud?: number
-  cantidad_jugadores: number
-  jugadores_actuales: number
-  precio_total: number
-  precio_por_jugador: number
-  descripcion?: string
-  estado: string
-  organizador_id: string
-  organizador?: {
-    id: string
-    nombre: string
-    apellido: string
-    foto_perfil?: string
-  }
-  jugadores?: Jugador[]
-}
-
 export function MatchDetail({ matchId }: MatchDetailProps) {
   const router = useRouter()
-  const [match, setMatch] = useState<Partido | null>(null)
+  
+  // Estados
+  const [match, setMatch] = useState<PartidoDTO | null>(null)
   const [isJoining, setIsJoining] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState("")
+  const [error, setError] = useState<string>("")
+
+  // Usuario actual
+  const currentUser = AuthService.getUser()
+  const isOrganizer = currentUser?.id === match?.organizadorId
+
+  // ============================================
+  // EFECTOS
+  // ============================================
 
   useEffect(() => {
-    fetchMatch()
+    loadMatch()
   }, [matchId])
 
-  const fetchMatch = async () => {
+  // ============================================
+  // FUNCIONES DE CARGA
+  // ============================================
+
+  const loadMatch = async () => {
     try {
       setIsLoading(true)
-      const token = AuthService.getToken()
-      
-      if (!token) {
+      setError("")
+
+      // Validar autenticación
+      if (!AuthService.isLoggedIn()) {
         router.push("/login")
         return
       }
 
-      const response = await fetch(`/api/partidos/${matchId}`, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      })
+      // Cargar partido usando la API refactorizada
+      const response = await PartidoAPI.get(matchId)
 
-      if (!response.ok) {
-        throw new Error("Error al cargar el partido")
-      }
-
-      const result = await response.json()
-      if (result.success && result.data) {
-        setMatch(result.data)
+      if (response.success && response.data) {
+        setMatch(response.data)
       } else {
-        throw new Error(result.message || "Error al cargar el partido")
+        throw new Error(response.message || "Error al cargar el partido")
       }
-    } catch (error) {
-      console.error("Error cargando partido:", error)
-      setError(error instanceof Error ? error.message : "Error al cargar el partido")
+    } catch (err) {
+      console.error("[MatchDetail] Error cargando partido:", err)
+      const errorMessage = err instanceof Error ? err.message : "Error al cargar el partido"
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }
   }
 
+  // ============================================
+  // HANDLERS
+  // ============================================
+
   const handleJoinMatch = async () => {
-    if (!match) return
+    if (!match || !currentUser) return
+
+    // Validar que no esté lleno
+    if (match.jugadoresActuales >= match.cantidadJugadores) {
+      setError("El partido está completo")
+      return
+    }
 
     setIsJoining(true)
+    setError("")
+
     try {
-      const token = AuthService.getToken()
-      const user = AuthService.getUser()
-      
-      if (!token || !user?.id) {
-        router.push("/login")
-        return
+      // Crear inscripción
+      const response = await InscripcionAPI.crear(match.id!, currentUser.id)
+
+      if (response.success) {
+        // Redirigir a confirmación
+        router.push(`/matches/${matchId}/confirmed`)
+      } else {
+        throw new Error(response.message || "Error al inscribirse")
       }
-
-      const response = await fetch("/api/inscripciones", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          partidoId: match.id,
-          usuarioId: user.id
-        })
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.message || "Error al inscribirse")
-      }
-
-      router.push(`/matches/${matchId}/confirmed`)
-    } catch (error) {
-      console.error("Error al inscribirse:", error)
-      setError(error instanceof Error ? error.message : "Error al inscribirse al partido")
+    } catch (err) {
+      console.error("[MatchDetail] Error inscribiéndose:", err)
+      const errorMessage = err instanceof Error ? err.message : "Error al inscribirse al partido"
+      setError(errorMessage)
     } finally {
       setIsJoining(false)
     }
   }
 
-  const loadMatchData = async () => {
-    try {
-      setIsLoading(true)
-      const token = AuthService.getToken()
-      
-      if (!token) {
-        router.push("/login")
-        return
-      }
+  const handleShareMatch = async () => {
+    if (!match) return
 
-      const response = await fetch(`/api/partidos/${matchId}`, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      })
+    const shareData = {
+      title: `Partido de ${formatMatchType(match.tipoPartido)}`,
+      text: `¡Únete a este partido! ${formatDate(match.fecha)} ${match.hora} en ${match.nombreUbicacion}`,
+      url: `${window.location.origin}/matches/${matchId}`,
+    }
 
-      if (!response.ok) {
-        throw new Error("Error al cargar el partido")
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData)
+      } catch (err) {
+        console.log("[MatchDetail] Error compartiendo:", err)
       }
-
-      const result = await response.json()
-      console.log("[MatchDetail] Datos recibidos:", result)
-      
-      if (result.success && result.data) {
-        // Normalizar datos del backend
-        const normalizedMatch = {
-          ...result.data,
-          tipo_partido: result.data.tipoPartido || result.data.tipo_partido,
-          nivel: result.data.nivel || "INTERMEDIO",
-          nombre_ubicacion: result.data.nombreUbicacion || result.data.nombre_ubicacion,
-          direccion_ubicacion: result.data.direccionUbicacion || result.data.direccion_ubicacion,
-          cantidad_jugadores: result.data.cantidadJugadores || result.data.cantidad_jugadores,
-          jugadores_actuales: result.data.jugadoresActuales || result.data.jugadores_actuales || 0,
-          precio_total: result.data.precioTotal || result.data.precio_total || 0,
-          precio_por_jugador: result.data.precioPorJugador || result.data.precio_por_jugador || 
-            (result.data.cantidadJugadores > 0 ? (result.data.precioTotal || 0) / result.data.cantidadJugadores : 0),
-          duracion_minutos: result.data.duracionMinutos || result.data.duracion_minutos || 90
-        }
-        
-        setMatch(normalizedMatch)
-      } else {
-        throw new Error(result.message || "Error al cargar el partido")
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareData.url)
+        alert("Link copiado al portapapeles")
+      } catch (err) {
+        console.error("[MatchDetail] Error copiando:", err)
       }
-    } catch (error) {
-      console.error("Error cargando partido:", error)
-      setError(error instanceof Error ? error.message : "Error al cargar el partido")
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -195,41 +136,29 @@ export function MatchDetail({ matchId }: MatchDetailProps) {
     router.back()
   }
 
-  const handleShareMatch = async () => {
-    if (!match) return
-
-    const shareData = {
-      title: `Partido de ${formatMatchType(match.tipo_partido)}`,
-      text: `¡Únete a este partido! ${formatDate(match.fecha)} ${match.hora} en ${match.nombre_ubicacion}`,
-      url: `${window.location.origin}/matches/${matchId}`,
-    }
-
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData)
-      } catch (err) {
-        console.log("Error sharing:", err)
-      }
-    } else {
-      try {
-        await navigator.clipboard.writeText(shareData.url)
-        alert("Link copiado al portapapeles")
-      } catch (err) {
-        console.error("Error copying to clipboard:", err)
-      }
-    }
-  }
+  // ============================================
+  // HELPERS DE FORMATO
+  // ============================================
 
   const formatMatchType = (type: string) => {
-    return type.replace("FUTBOL_", "Fútbol ").replace("_", " ")
+    const typeMap: Record<string, string> = {
+      [TipoPartido.FUTBOL_5]: "Fútbol 5",
+      [TipoPartido.FUTBOL_7]: "Fútbol 7",
+      [TipoPartido.FUTBOL_8]: "Fútbol 8",
+      [TipoPartido.FUTBOL_9]: "Fútbol 9",
+      [TipoPartido.FUTBOL_11]: "Fútbol 11",
+    }
+    return typeMap[type] || type
   }
 
-  const formatLevel = (level: string) => {
-    const levelMap: { [key: string]: string } = {
-      PRINCIPIANTE: "Principiante",
-      INTERMEDIO: "Intermedio",
-      AVANZADO: "Avanzado",
-      PROFESIONAL: "Profesional"
+  const formatLevel = (level?: string) => {
+    if (!level) return "Intermedio"
+    
+    const levelMap: Record<string, string> = {
+      [NivelPartido.PRINCIPIANTE]: "Principiante",
+      [NivelPartido.INTERMEDIO]: "Intermedio",
+      [NivelPartido.AVANZADO]: "Avanzado",
+      [NivelPartido.PROFESIONAL]: "Profesional"
     }
     return levelMap[level] || level
   }
@@ -247,6 +176,16 @@ export function MatchDetail({ matchId }: MatchDetailProps) {
     }
   }
 
+  const getSpotsLeftColor = (spotsLeft: number) => {
+    if (spotsLeft === 0) return "bg-red-100 text-red-800"
+    if (spotsLeft <= 3) return "bg-yellow-100 text-yellow-800"
+    return "bg-green-100 text-green-800"
+  }
+
+  // ============================================
+  // ESTADOS DE CARGA Y ERROR
+  // ============================================
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -261,17 +200,40 @@ export function MatchDetail({ matchId }: MatchDetailProps) {
   if (error || !match) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6">
-        <p className="text-red-600 mb-4">{error || "Partido no encontrado"}</p>
-        <Button onClick={() => router.back()} variant="outline">
-          Volver
-        </Button>
+        <div className="text-center mb-6">
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-gray-900 mb-2">
+            {error || "Partido no encontrado"}
+          </h2>
+          <p className="text-gray-600">
+            {error ? "Por favor intenta nuevamente" : "El partido que buscas no existe"}
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <Button onClick={() => router.back()} variant="outline">
+            Volver
+          </Button>
+          <Button onClick={loadMatch} className="bg-green-600 hover:bg-green-700">
+            Reintentar
+          </Button>
+        </div>
       </div>
     )
   }
 
-  const spotsLeft = match.cantidad_jugadores - match.jugadores_actuales
-  const currentUser = AuthService.getUser()
-  const isOrganizer = currentUser?.id === match.organizador_id
+  // ============================================
+  // CÁLCULOS
+  // ============================================
+
+  const spotsLeft = match.cantidadJugadores - match.jugadoresActuales
+  const isMatchFull = spotsLeft === 0
+  const isMatchCancelled = match.estado === PartidoEstado.CANCELADO
+  const isMatchCompleted = match.estado === PartidoEstado.COMPLETADO
+  const canJoin = !isOrganizer && !isMatchFull && !isMatchCancelled && !isMatchCompleted
+
+  // ============================================
+  // RENDER
+  // ============================================
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -279,67 +241,114 @@ export function MatchDetail({ matchId }: MatchDetailProps) {
       <div className="pt-16 pb-6 px-6 border-b border-gray-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <button onClick={handleBack} className="p-2 -ml-2">
+            <button 
+              onClick={handleBack} 
+              className="p-2 -ml-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
             <h1 className="text-xl font-bold text-gray-900">Detalle del partido</h1>
           </div>
-          <button onClick={handleShareMatch} className="p-2">
+          <button 
+            onClick={handleShareMatch} 
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
             <Share2 className="w-5 h-5 text-gray-600" />
           </button>
         </div>
       </div>
 
-      <div className="flex-1 px-6 py-6">
+      <div className="flex-1 px-6 py-6 overflow-y-auto">
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start space-x-3">
+            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-red-600 text-sm font-medium">Error</p>
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
+            <button 
+              onClick={() => setError("")}
+              className="text-red-600 hover:text-red-700"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* Estado cancelado/completado */}
+        {isMatchCancelled && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl">
+            <p className="text-red-800 font-medium">⚠️ Partido cancelado</p>
+            <p className="text-red-600 text-sm mt-1">
+              Este partido ha sido cancelado por el organizador
+            </p>
+          </div>
+        )}
+
+        {isMatchCompleted && (
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-2xl">
+            <p className="text-blue-800 font-medium">✓ Partido completado</p>
+            <p className="text-blue-600 text-sm mt-1">
+              Este partido ya se ha jugado
+            </p>
+          </div>
+        )}
+
         {/* Match Info Card */}
         <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
           {/* Match Header */}
           <div className="flex items-center justify-between mb-4">
-            <div className="flex gap-2">
+            <div className="flex gap-2 flex-wrap">
               <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
-                {formatMatchType(match.tipo_partido)}
+                {formatMatchType(match.tipoPartido)}
               </Badge>
               <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
                 {formatLevel(match.nivel)}
               </Badge>
+              <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
+                {match.genero}
+              </Badge>
             </div>
-            <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-              Queda{spotsLeft !== 1 ? "n" : ""} {spotsLeft}
+            <Badge className={`${getSpotsLeftColor(spotsLeft)} hover:bg-current`}>
+              {spotsLeft === 0 ? "Completo" : `Quedan ${spotsLeft}`}
             </Badge>
           </div>
 
           {/* Match Time */}
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            {formatDate(match.fecha)} {match.hora}
+            {formatDate(match.fecha)} {match.hora.substring(0, 5)}
           </h2>
 
           {/* Match Details */}
           <div className="grid grid-cols-2 gap-4 text-sm mb-4">
             <div className="flex items-center space-x-2 text-gray-600">
-              <MapPin className="w-4 h-4" />
-              <span>{match.nombre_ubicacion}</span>
+              <MapPin className="w-4 h-4 flex-shrink-0" />
+              <span className="truncate">{match.nombreUbicacion}</span>
             </div>
             <div className="flex items-center space-x-2 text-gray-600">
-              <DollarSign className="w-4 h-4" />
-              <span>${match.precio_por_jugador} / jugador</span>
+              <DollarSign className="w-4 h-4 flex-shrink-0" />
+              <span>${match.precioPorJugador} / jugador</span>
             </div>
             <div className="flex items-center space-x-2 text-gray-600">
-              <Clock className="w-4 h-4" />
-              <span>{match.duracion_minutos || 90} min</span>
+              <Clock className="w-4 h-4 flex-shrink-0" />
+              <span>{match.duracionMinutos} min</span>
             </div>
             <div className="flex items-center space-x-2 text-gray-600">
-              <Users className="w-4 h-4" />
-              <span>{match.jugadores_actuales}/{match.cantidad_jugadores}</span>
+              <Users className="w-4 h-4 flex-shrink-0" />
+              <span>{match.jugadoresActuales}/{match.cantidadJugadores}</span>
             </div>
           </div>
 
-          {/* Compressed Map Component */}
-          <CompressedMap
-            location={match.nombre_ubicacion}
-            lat={match.latitud || -34.9011}
-            lng={match.longitud || -56.1645}
-            className="mb-4"
-          />
+          {/* Map */}
+          {(match.latitud && match.longitud) && (
+            <CompressedMap
+              location={match.nombreUbicacion}
+              lat={match.latitud}
+              lng={match.longitud}
+              className="mb-4"
+            />
+          )}
         </div>
 
         {/* Organizer Section */}
@@ -360,7 +369,7 @@ export function MatchDetail({ matchId }: MatchDetailProps) {
                 )}
               </Avatar>
               <div>
-                <span className="font-semibold text-gray-900">
+                <span className="font-semibold text-gray-900 block">
                   {match.organizador.nombre} {match.organizador.apellido}
                 </span>
                 <div className="text-sm text-gray-600">Capitán</div>
@@ -373,7 +382,7 @@ export function MatchDetail({ matchId }: MatchDetailProps) {
         {match.jugadores && match.jugadores.length > 0 && (
           <div className="mb-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4">
-              Jugadores ({match.jugadores_actuales}/{match.cantidad_jugadores})
+              Jugadores ({match.jugadoresActuales}/{match.cantidadJugadores})
             </h3>
 
             <div className="space-y-3">
@@ -422,7 +431,7 @@ export function MatchDetail({ matchId }: MatchDetailProps) {
           <div className="mb-8">
             <h3 className="text-lg font-bold text-gray-900 mb-3">Descripción</h3>
             <div className="bg-gray-50 rounded-xl p-4">
-              <p className="text-gray-700">{match.descripcion}</p>
+              <p className="text-gray-700 whitespace-pre-wrap">{match.descripcion}</p>
             </div>
           </div>
         )}
@@ -440,14 +449,29 @@ export function MatchDetail({ matchId }: MatchDetailProps) {
             <>
               <Button
                 onClick={handleJoinMatch}
-                disabled={isJoining || spotsLeft === 0}
-                className="w-full bg-green-600 hover:bg-green-700 text-white py-4 text-lg font-semibold rounded-2xl disabled:opacity-50"
+                disabled={isJoining || !canJoin}
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-4 text-lg font-semibold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isJoining ? "Procesando..." : spotsLeft === 0 ? "Partido completo" : "Inscribirme"}
+                {isJoining ? (
+                  <span className="flex items-center justify-center">
+                    <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                    Procesando...
+                  </span>
+                ) : isMatchFull ? (
+                  "Partido completo"
+                ) : isMatchCancelled ? (
+                  "Partido cancelado"
+                ) : isMatchCompleted ? (
+                  "Partido finalizado"
+                ) : (
+                  "Solicitar unirme"
+                )}
               </Button>
-              <p className="text-center text-sm text-gray-500 mt-3">
-                Tu solicitud quedará pendiente de aprobación
-              </p>
+              {canJoin && (
+                <p className="text-center text-sm text-gray-500 mt-3">
+                  Tu solicitud quedará pendiente de aprobación del organizador
+                </p>
+              )}
             </>
           )}
         </div>

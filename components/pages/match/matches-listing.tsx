@@ -3,118 +3,143 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { MapPin, Plus, Search, Filter, X } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { MapPin, Plus, Search, Filter, X, AlertCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
-import { Input } from "@/components/ui/input"
 import { AuthService } from "@/lib/auth"
-
-interface Partido {
-  id: string
-  tipo_partido: string
-  nivel: string
-  fecha: string
-  hora: string
-  precio_por_jugador: number
-  cantidad_jugadores: number
-  jugadores_actuales: number
-  nombre_ubicacion: string
-  latitud?: number
-  longitud?: number
-  estado: string
-}
+import { 
+  PartidoAPI, 
+  PartidoDTO, 
+  PartidoEstado,
+  TipoPartido, 
+  NivelPartido 
+} from "@/lib/api"
 
 export function MatchesListing() {
   const router = useRouter()
-  const [matches, setMatches] = useState<Partido[]>([])
+  
+  // Estados
+  const [matches, setMatches] = useState<PartidoDTO[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
   const [selectedFilters, setSelectedFilters] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
 
+  // Filtros rápidos
   const quickFilters = [
     { label: "Hoy", type: "date" },
     { label: "Fútbol 5", type: "match-type" },
     { label: "Cerca", type: "location" },
   ]
 
+  // ============================================
+  // EFECTOS
+  // ============================================
+
   useEffect(() => {
     loadMatches()
   }, [selectedFilters, searchQuery])
 
+  // ============================================
+  // FUNCIONES DE CARGA
+  // ============================================
+
   const loadMatches = async () => {
     try {
       setLoading(true)
-      const token = AuthService.getToken()
-      if (!token) {
+      setError("")
+
+      // Validar autenticación
+      if (!AuthService.isLoggedIn()) {
         router.push("/login")
         return
       }
 
-      // Construir query params basado en filtros
-      const params = new URLSearchParams()
-      
+      // Construir filtros para la API
+      const filtros: any = {}
+
+      // Filtros de fecha
+      if (selectedFilters.includes("Hoy")) {
+        const today = new Date().toISOString().split('T')[0]
+        filtros.fecha = today
+      }
+
+      // Filtros de tipo de partido
       selectedFilters.forEach((filter) => {
-        if (filter === "Hoy") {
-          const today = new Date().toISOString().split('T')[0]
-          params.append("fecha", today)
-        }
-        if (filter === "Fútbol 5") params.append("tipoPartido", "FUTBOL_5")
-        if (filter === "Fútbol 7") params.append("tipoPartido", "FUTBOL_7")
-        if (filter === "Fútbol 8") params.append("tipoPartido", "FUTBOL_8")
-        if (filter === "Fútbol 9") params.append("tipoPartido", "FUTBOL_9")
-        if (filter === "Fútbol 11") params.append("tipoPartido", "FUTBOL_11")
-        if (filter === "Principiante") params.append("nivel", "PRINCIPIANTE")
-        if (filter === "Intermedio") params.append("nivel", "INTERMEDIO")
-        if (filter === "Avanzado") params.append("nivel", "AVANZADO")
-      })
-
-      if (searchQuery) {
-        params.append("search", searchQuery)
-      }
-
-      const response = await fetch(`/api/partidos?${params.toString()}`, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
+        if (filter.includes("Fútbol")) {
+          const numero = filter.replace("Fútbol ", "")
+          filtros.tipoPartido = `FUTBOL_${numero}`
         }
       })
 
-      if (response.ok) {
-        const result = await response.json()
-        const partidos = result.data || []
-        
-        // Filtrar solo partidos activos y futuros
-        const now = new Date()
-        const partidosActivos = partidos.filter((p: Partido) => {
-          if (p.estado === "CANCELADO" || p.estado === "COMPLETADO") return false
-          try {
-            const fechaPartido = new Date(`${p.fecha}T${p.hora}`)
-            return fechaPartido > now
-          } catch {
-            return true
-          }
-        })
-        
-        // Ordenar por fecha
-        const sorted = partidosActivos.sort((a: Partido, b: Partido) => {
-          try {
-            const dateA = new Date(`${a.fecha}T${a.hora}`)
-            const dateB = new Date(`${b.fecha}T${b.hora}`)
-            return dateA.getTime() - dateB.getTime()
-          } catch {
-            return 0
-          }
-        })
-        
-        setMatches(sorted)
+      // Filtros de nivel
+      if (selectedFilters.includes("Principiante")) {
+        filtros.nivel = NivelPartido.PRINCIPIANTE
       }
-    } catch (error) {
-      console.error("Error cargando partidos:", error)
+      if (selectedFilters.includes("Intermedio")) {
+        filtros.nivel = NivelPartido.INTERMEDIO
+      }
+      if (selectedFilters.includes("Avanzado")) {
+        filtros.nivel = NivelPartido.AVANZADO
+      }
+
+      // Búsqueda por texto
+      if (searchQuery.trim()) {
+        filtros.search = searchQuery.trim()
+      }
+
+      // Solo partidos activos y futuros
+      filtros.estado = PartidoEstado.PENDIENTE
+
+      console.log("[MatchesListing] Cargando con filtros:", filtros)
+
+      // Llamar a la API
+      const response = await PartidoAPI.list(filtros)
+
+      if (!response.success) {
+        throw new Error(response.message || "Error al cargar partidos")
+      }
+
+      let partidos = response.data || []
+
+      // Filtrar partidos futuros (cliente)
+      const now = new Date()
+      partidos = partidos.filter((p) => {
+        try {
+          const fechaPartido = new Date(`${p.fecha}T${p.hora}`)
+          return fechaPartido > now
+        } catch {
+          return true
+        }
+      })
+
+      // Ordenar por fecha (más cercanos primero)
+      partidos.sort((a, b) => {
+        try {
+          const dateA = new Date(`${a.fecha}T${a.hora}`)
+          const dateB = new Date(`${b.fecha}T${b.hora}`)
+          return dateA.getTime() - dateB.getTime()
+        } catch {
+          return 0
+        }
+      })
+
+      setMatches(partidos)
+
+    } catch (err) {
+      console.error("[MatchesListing] Error cargando partidos:", err)
+      const errorMessage = err instanceof Error ? err.message : "Error al cargar partidos"
+      setError(errorMessage)
     } finally {
       setLoading(false)
     }
   }
+
+  // ============================================
+  // HANDLERS
+  // ============================================
 
   const toggleFilter = (filter: string) => {
     setSelectedFilters((prev) => 
@@ -137,18 +162,24 @@ export function MatchesListing() {
     router.push("/create-match")
   }
 
+  // ============================================
+  // HELPERS DE FORMATO
+  // ============================================
+
   const formatMatchType = (type: string) => {
     return type.replace("FUTBOL_", "F")
   }
 
-    const formatLevel = (level: string) => {
-    const levelMap: { [key: string]: string } = {
-      PRINCIPIANTE: "Principiante",
-      INTERMEDIO: "Intermedio",
-      AVANZADO: "Avanzado",
-      PROFESIONAL: "Profesional"
+  const formatLevel = (level?: string) => {
+    if (!level) return "Intermedio"
+    
+    const levelMap: Record<string, string> = {
+      [NivelPartido.PRINCIPIANTE]: "Principiante",
+      [NivelPartido.INTERMEDIO]: "Intermedio",
+      [NivelPartido.AVANZADO]: "Avanzado",
+      [NivelPartido.PROFESIONAL]: "Profesional"
     }
-    return levelMap[level] || level || "Intermedio"
+    return levelMap[level] || level
   }
 
   const formatDate = (dateString: string, timeString: string) => {
@@ -158,24 +189,42 @@ export function MatchesListing() {
       const tomorrow = new Date(today)
       tomorrow.setDate(tomorrow.getDate() + 1)
 
-      if (date.toDateString() === today.toDateString()) {
-        return `Hoy ${timeString}`
-      } else if (date.toDateString() === tomorrow.toDateString()) {
-        return `Mañana ${timeString}`
+      today.setHours(0, 0, 0, 0)
+      tomorrow.setHours(0, 0, 0, 0)
+      const compareDate = new Date(date)
+      compareDate.setHours(0, 0, 0, 0)
+
+      const time = timeString.substring(0, 5)
+
+      if (compareDate.getTime() === today.getTime()) {
+        return `Hoy ${time}`
+      } else if (compareDate.getTime() === tomorrow.getTime()) {
+        return `Mañana ${time}`
       } else {
         return `${date.toLocaleDateString("es-ES", {
           weekday: "long",
           day: "numeric",
           month: "short",
-        })} ${timeString}`
+        })} ${time}`
       }
     } catch {
       return `${dateString} ${timeString}`
     }
   }
 
+  const getSpotsLeftColor = (spotsLeft: number) => {
+    if (spotsLeft === 0) return "bg-red-100 text-red-800"
+    if (spotsLeft <= 3) return "bg-yellow-100 text-yellow-800"
+    return "bg-green-100 text-green-800"
+  }
+
+  // ============================================
+  // RENDER
+  // ============================================
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
+      {/* Header */}
       <div className="pt-12 pb-4 px-6 border-b border-gray-100">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold text-gray-900">Partidos</h1>
@@ -189,8 +238,27 @@ export function MatchesListing() {
         </div>
       </div>
 
-      <div className="flex-1 px-6">
+      <div className="flex-1 px-6 overflow-y-auto">
+        {/* Error Message */}
+        {error && (
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start space-x-3">
+            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-red-600 text-sm font-medium">Error</p>
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
+            <button 
+              onClick={() => setError("")}
+              className="text-red-600 hover:text-red-700"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
+        {/* Search and Filters */}
         <div className="mt-4 mb-4">
+          {/* Search Bar */}
           <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
@@ -209,6 +277,7 @@ export function MatchesListing() {
             )}
           </div>
 
+          {/* Quick Filters */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex gap-2 flex-1 overflow-x-auto">
               {quickFilters.map((filter) => (
@@ -235,6 +304,7 @@ export function MatchesListing() {
             </Button>
           </div>
 
+          {/* Active Filters Count */}
           {selectedFilters.length > 0 && (
             <div className="mb-4 flex items-center justify-between">
               <p className="text-sm text-gray-600">
@@ -251,6 +321,7 @@ export function MatchesListing() {
             </div>
           )}
 
+          {/* Advanced Filters */}
           {showAdvancedFilters && (
             <div className="bg-gray-50 rounded-xl p-4 mb-4">
               <div className="flex items-center justify-between mb-3">
@@ -265,6 +336,7 @@ export function MatchesListing() {
                 </Button>
               </div>
               <div className="space-y-3">
+                {/* Tipo de partido */}
                 <div>
                   <h4 className="text-xs font-medium text-gray-600 mb-2">Tipo de partido</h4>
                   <div className="flex flex-wrap gap-2">
@@ -283,6 +355,7 @@ export function MatchesListing() {
                     ))}
                   </div>
                 </div>
+                {/* Nivel */}
                 <div>
                   <h4 className="text-xs font-medium text-gray-600 mb-2">Nivel</h4>
                   <div className="flex flex-wrap gap-2">
@@ -306,6 +379,7 @@ export function MatchesListing() {
           )}
         </div>
 
+        {/* Matches List */}
         <div className="space-y-4 pb-24">
           {loading ? (
             <div className="text-center py-8">
@@ -319,60 +393,73 @@ export function MatchesListing() {
               </div>
               <p className="text-gray-500 mb-2">No se encontraron partidos</p>
               <p className="text-sm text-gray-400 mb-4">
-                Intenta ajustar los filtros o crea un nuevo partido
+                {selectedFilters.length > 0 || searchQuery 
+                  ? "Intenta ajustar los filtros" 
+                  : "Crea un nuevo partido"}
               </p>
               <Button
-                onClick={handleCreateMatch}
+                onClick={selectedFilters.length > 0 || searchQuery ? clearFilters : handleCreateMatch}
                 className="bg-green-600 hover:bg-green-700 text-white"
               >
-                <Plus className="w-4 h-4 mr-2" />
-                Crear Partido
+                {selectedFilters.length > 0 || searchQuery ? (
+                  "Limpiar filtros"
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Crear Partido
+                  </>
+                )}
               </Button>
             </div>
           ) : (
             matches.map((match) => {
-              const spotsLeft = match.cantidad_jugadores - match.jugadores_actuales
+              const spotsLeft = match.cantidadJugadores - match.jugadoresActuales
               
               return (
                 <div
                   key={match.id}
-                  onClick={() => handleMatchClick(match.id)}
+                  onClick={() => handleMatchClick(match.id!)}
                   className="bg-white border border-gray-200 rounded-2xl p-6 cursor-pointer hover:shadow-md transition-all touch-manipulation active:scale-[0.98]"
                 >
+                  {/* Header */}
                   <div className="flex items-center justify-between mb-4">
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
-                        {formatMatchType(match.tipo_partido)}
+                        {formatMatchType(match.tipoPartido)}
                       </Badge>
                       <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
                         {formatLevel(match.nivel)}
                       </Badge>
                     </div>
-                    <Badge className={`${spotsLeft > 3 ? 'bg-green-100 text-green-800' : spotsLeft > 0 ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'} hover:bg-current`}>
-                      Quedan {spotsLeft}
+                    <Badge className={`${getSpotsLeftColor(spotsLeft)} hover:bg-current`}>
+                      {spotsLeft === 0 ? "Completo" : `Quedan ${spotsLeft}`}
                     </Badge>
                   </div>
 
+                  {/* Match Info */}
                   <div className="mb-4">
                     <h3 className="text-xl font-bold text-gray-900 mb-2">
                       {formatDate(match.fecha, match.hora)}
                     </h3>
-                    <div className="flex items-center text-gray-600 text-sm space-x-4">
-                      <span>${match.precio_por_jugador} / jugador</span>
+                    <div className="flex items-center text-gray-600 text-sm space-x-4 mb-1">
+                      <span>${match.precioPorJugador} / jugador</span>
                       <span>•</span>
-                      <span>90 min</span>
+                      <span>{match.duracionMinutos} min</span>
                     </div>
-                    <div className="flex items-center text-gray-600 mt-1">
-                      <MapPin className="w-4 h-4 mr-1" />
-                      <span className="text-sm">{match.nombre_ubicacion}</span>
+                    <div className="flex items-center text-gray-600">
+                      <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
+                      <span className="text-sm truncate">{match.nombreUbicacion}</span>
                     </div>
                   </div>
 
+                  {/* Footer */}
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">
-                      {match.jugadores_actuales}/{match.cantidad_jugadores} jugadores
+                      {match.jugadoresActuales}/{match.cantidadJugadores} jugadores
                     </span>
-                    <span className="text-sm text-primary font-medium">Ver detalles</span>
+                    <span className="text-sm text-green-600 font-medium">
+                      Ver detalles
+                    </span>
                   </div>
                 </div>
               )

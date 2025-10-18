@@ -9,9 +9,8 @@ import { ArrowLeft, MapPin, Calendar, Users, DollarSign, Clock, AlertCircle } fr
 import { useRouter } from "next/navigation"
 import { AddressAutocomplete } from "@/components/google-maps/address-autocomplete"
 import { AuthService } from "@/lib/auth"
-import { PartidoAPI, mapFormDataToPartidoDTO } from "@/lib/api"
+import { PartidoAPI, mapFormDataToPartidoDTO, TipoPartido, NivelPartido } from "@/lib/api"
 
-// Tipo para google maps places
 type PlaceResult = google.maps.places.PlaceResult
 
 interface FormData {
@@ -30,9 +29,10 @@ export function CreateMatchScreen() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [success, setSuccess] = useState(false)
 
   const [formData, setFormData] = useState<FormData>({
-    type: "FUTBOL_5",
+    type: TipoPartido.FUTBOL_5,
     gender: "Mixto",
     date: "",
     time: "",
@@ -48,90 +48,101 @@ export function CreateMatchScreen() {
     lng: number
   } | null>(null)
 
-  const handleBack = () => router.back()
-
-  // --- Helper: parse date/time safely (creates local Date)
-  const parseDateTime = (dateStr: string, timeStr: string): Date | null => {
-    // dateStr: "YYYY-MM-DD", timeStr: "HH:mm" or "HH:mm:ss"
-    if (!dateStr || !timeStr) return null
-    const dateParts = dateStr.split("-").map((s) => parseInt(s, 10))
-    if (dateParts.length !== 3) return null
-    const [year, month, day] = dateParts
-    const timeParts = timeStr.split(":").map((s) => parseInt(s, 10))
-    if (timeParts.some(isNaN)) return null
-    const hour = timeParts[0] ?? 0
-    const minute = timeParts[1] ?? 0
-    const second = timeParts[2] ?? 0
-    return new Date(year, month - 1, day, hour, minute, second)
-  }
+  // ============================================
+  // VALIDACIÓN
+  // ============================================
 
   const validateForm = (): string | null => {
-    if (!formData.date) return "Debes seleccionar una fecha"
-    if (!formData.time) return "Debes seleccionar una hora"
+    // Fecha
+    if (!formData.date) {
+      return "Debes seleccionar una fecha"
+    }
+
+    // Hora
+    if (!formData.time) {
+      return "Debes seleccionar una hora"
+    }
+
+    // Validar que sea fecha futura
+    try {
+      const [year, month, day] = formData.date.split("-").map(Number)
+      const [hour, minute] = formData.time.split(":").map(Number)
+      const matchDate = new Date(year, month - 1, day, hour, minute)
+      const now = new Date()
+
+      if (matchDate <= now) {
+        return "La fecha y hora deben ser futuras"
+      }
+    } catch {
+      return "Fecha u hora inválidas"
+    }
+
+    // Ubicación
     if (!formData.location || formData.location.trim().length < 3) {
       return "Debes ingresar una ubicación válida"
     }
+
+    // Jugadores
     if (formData.totalPlayers < 6 || formData.totalPlayers > 22) {
       return "La cantidad de jugadores debe estar entre 6 y 22"
     }
+
+    // Precio
     if (formData.totalPrice < 0) {
       return "El precio no puede ser negativo"
     }
-    
-    // Validar que la fecha/hora sea futura usando parseDateTime
-    const matchDateTime = parseDateTime(formData.date, formData.time)
-    if (!matchDateTime) return "Formato de fecha u hora inválido"
-    const now = new Date()
-    if (matchDateTime <= now) {
-      return "La fecha y hora del partido deben ser futuras"
+
+    // Duración
+    if (formData.duration < 30 || formData.duration > 180) {
+      return "La duración debe estar entre 30 y 180 minutos"
     }
 
     return null
   }
 
-   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // ============================================
+  // HANDLERS
+  // ============================================
 
-    const validationError = validateForm();
+  const handleBack = () => {
+    if (isLoading) return
+    router.back()
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    // Validar formulario
+    const validationError = validateForm()
     if (validationError) {
-      setError(validationError);
-      return;
+      setError(validationError)
+      return
     }
 
-    setIsLoading(true);
-    setError("");
+    // Validar autenticación
+    if (!AuthService.isLoggedIn()) {
+      router.push("/login")
+      return
+    }
 
-    // Crear AbortController por si luego querés cancelar
-    const controller = new AbortController();
-    const signal = controller.signal;
+    const user = AuthService.getUser()
+    if (!user?.id) {
+      setError("Usuario no encontrado. Por favor inicia sesión nuevamente.")
+      return
+    }
+
+    setIsLoading(true)
+    setError("")
 
     try {
-      const token = AuthService.getToken();
-      const user = AuthService.getUser();
+      console.log("[CreateMatch] Iniciando creación de partido...")
 
-      if (!token || !user?.id) {
-        router.push("/login");
-        return;
-      }
-
-      // Asegurarse formato hora (HH:mm[:ss])
-      const horaFormateada = formData.time.includes(':')
-        ? (formData.time.split(':').length === 2 ? `${formData.time}:00` : formData.time)
-        : `${formData.time}:00:00`;
-
-      // Si tu backend REQUIERE lat/lng, descomenta este bloque para bloquear envío sin coordenadas:
-      // if (!locationCoordinates) {
-      //   setError("Debes seleccionar una ubicación con coordenadas exactas.");
-      //   setIsLoading(false);
-      //   return;
-      // }
-
-      // Mapear form al DTO que espera el backend usando el helper central
-      const partidoDto = mapFormDataToPartidoDTO({
+      // Mapear datos del formulario al DTO
+      const partidoDTO = mapFormDataToPartidoDTO({
         type: formData.type,
         gender: formData.gender,
         date: formData.date,
-        time: horaFormateada,
+        time: formData.time,
         location: formData.location,
         totalPlayers: formData.totalPlayers,
         totalPrice: formData.totalPrice,
@@ -139,103 +150,122 @@ export function CreateMatchScreen() {
         duration: formData.duration,
         locationCoordinates,
         organizadorId: user.id
-      });
+      })
 
-      console.log("[CreateMatch] Enviando partido via PartidoAPI.crear:", partidoDto);
+      console.log("[CreateMatch] DTO preparado:", partidoDTO)
 
-      // Llamada centralizada al API.
-      // Si tu PartidoAPI.crear acepta opciones como signal/token, pásalas aquí.
-      const resp = await PartidoAPI.crear(partidoDto);
+      // Llamar a la API
+      const response = await PartidoAPI.crear(partidoDTO)
 
-      // Manejar ambos estilos: respuesta encapsulada o excepción lanzada por apiFetch
-      if (!resp) {
-        throw new Error("Respuesta inválida del servidor");
+      if (!response.success) {
+        throw new Error(response.message || "Error al crear el partido")
       }
 
-      // Caso API que devuelve { success: boolean, message?, data? }
-      if (typeof resp.success !== "undefined") {
-        if (!resp.success) {
-          throw new Error(resp.message || "Error al crear el partido");
-        }
-      }
+      console.log("[CreateMatch] Partido creado exitosamente:", response.data)
 
-      // Intentar extraer created
-      const created = (resp.data ?? resp) as any;
+      setSuccess(true)
 
-      console.log("[CreateMatch] Partido creado:", created);
-
-      if (created?.id) {
-        router.push(`/matches/${created.id}`);
+      // Redirigir al detalle del partido o a mis partidos
+      const partidoId = response.data.id
+      if (partidoId) {
+        setTimeout(() => router.push(`/matches/${partidoId}`), 1000)
       } else {
-        router.push("/my-matches");
+        setTimeout(() => router.push("/my-matches"), 1000)
       }
+
     } catch (err) {
-      console.error("Error creando partido:", err);
-      setError(err instanceof Error ? err.message : "Error al crear el partido. Intenta nuevamente.");
+      console.error("[CreateMatch] Error:", err)
+      const errorMessage = err instanceof Error ? err.message : "Error al crear el partido"
+      setError(errorMessage)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
   }
 
   const handleInputChange = (field: keyof FormData, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
-    // Limpiar error cuando el usuario hace cambios
     if (error) setError("")
   }
 
   const handleLocationChange = (address: string, placeDetails?: PlaceResult | null) => {
-    console.log("[CreateMatch] Location changed:", { address, placeDetails })
+    console.log("[CreateMatch] Ubicación cambiada:", { address, placeDetails })
     
     setFormData((prev) => ({ ...prev, location: address }))
 
     if (placeDetails?.geometry?.location) {
-      let coordinates: { lat: number; lng: number }
-
-      // Manejar tanto funciones como propiedades
-      // Usamos una referencia 'any' para permitir llamar a lat()/lng() si son funciones
       const loc: any = placeDetails.geometry.location
       const lat = typeof loc.lat === "function" ? loc.lat() : Number(loc.lat)
       const lng = typeof loc.lng === "function" ? loc.lng() : Number(loc.lng)
 
-      coordinates = { lat, lng }
-
-      console.log("[CreateMatch] Coordinates set:", coordinates)
-      setLocationCoordinates(coordinates)
+      setLocationCoordinates({ lat, lng })
+      console.log("[CreateMatch] Coordenadas establecidas:", { lat, lng })
     } else {
-      // Si no hay coordenadas, usar null (ubicación aproximada)
-      console.log("[CreateMatch] No coordinates available")
       setLocationCoordinates(null)
+      console.log("[CreateMatch] Sin coordenadas disponibles")
     }
   }
+
+  // ============================================
+  // CÁLCULOS
+  // ============================================
 
   const pricePerPlayer = formData.totalPlayers > 0 
     ? (formData.totalPrice / formData.totalPlayers).toFixed(0)
     : "0"
 
-  // Obtener fecha mínima (hoy)
   const today = new Date().toISOString().split('T')[0]
+
+  // ============================================
+  // RENDER
+  // ============================================
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
       <div className="pt-16 pb-6 px-6 border-b border-gray-100">
         <div className="flex items-center space-x-4">
-          <button onClick={handleBack} className="p-2 -ml-2 touch-manipulation">
+          <button 
+            onClick={handleBack} 
+            className="p-2 -ml-2 touch-manipulation hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+            disabled={isLoading}
+          >
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </button>
           <h1 className="text-xl font-bold text-gray-900">Crear Partido</h1>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex-1 px-6 py-6 pb-32">
+      <form onSubmit={handleSubmit} className="flex-1 px-6 py-6 pb-32 overflow-y-auto">
+        {/* Success Message */}
+        {success && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-2xl flex items-start space-x-3">
+            <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-green-600 text-sm font-medium">¡Partido creado!</p>
+              <p className="text-green-600 text-sm">Redirigiendo...</p>
+            </div>
+          </div>
+        )}
+
         {/* Error Message */}
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start space-x-3">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-            <div>
+            <div className="flex-1">
               <p className="text-red-600 text-sm font-medium">Error</p>
               <p className="text-red-600 text-sm">{error}</p>
             </div>
+            <button 
+              type="button"
+              onClick={() => setError("")}
+              className="text-red-600 hover:text-red-700"
+            >
+              ✕
+            </button>
           </div>
         )}
 
@@ -245,7 +275,7 @@ export function CreateMatchScreen() {
             Tipo de partido <span className="text-red-500">*</span>
           </label>
           <div className="flex gap-3 flex-wrap">
-            {["FUTBOL_5", "FUTBOL_7", "FUTBOL_8", "FUTBOL_9", "FUTBOL_11"].map((type) => (
+            {Object.values(TipoPartido).map((type) => (
               <button
                 key={type}
                 type="button"
@@ -337,6 +367,7 @@ export function CreateMatchScreen() {
                 onChange={handleLocationChange}
                 placeholder="Ej: Polideportivo Norte, Montevideo"
                 required
+                disabled={isLoading}
               />
             </div>
           </div>
@@ -344,6 +375,11 @@ export function CreateMatchScreen() {
             <p className="text-xs text-orange-600 mt-2 flex items-center">
               <AlertCircle className="w-3 h-3 mr-1" />
               Ubicación aproximada (sin coordenadas exactas)
+            </p>
+          )}
+          {formData.location && locationCoordinates && (
+            <p className="text-xs text-green-600 mt-2 flex items-center">
+              ✓ Ubicación con coordenadas precisas
             </p>
           )}
         </div>
@@ -360,7 +396,7 @@ export function CreateMatchScreen() {
               min="6"
               max="22"
               value={formData.totalPlayers}
-              onChange={(e) => handleInputChange("totalPlayers", parseInt(e.target.value) || 0)}
+              onChange={(e) => handleInputChange("totalPlayers", parseInt(e.target.value) || 6)}
               className="pl-10 py-3 rounded-xl border-gray-300"
               required
               disabled={isLoading}
@@ -387,7 +423,7 @@ export function CreateMatchScreen() {
               disabled={isLoading}
             />
           </div>
-          <p className="text-sm text-gray-600 mt-2">
+          <p className="text-sm text-gray-600 mt-2 font-medium">
             ${pricePerPlayer} por jugador
           </p>
         </div>
@@ -410,6 +446,7 @@ export function CreateMatchScreen() {
               disabled={isLoading}
             />
           </div>
+          <p className="text-xs text-gray-500 mt-1">Entre 30 y 180 minutos</p>
         </div>
 
         {/* Descripción */}
@@ -435,13 +472,17 @@ export function CreateMatchScreen() {
         <div className="pb-8">
           <Button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || success}
             className="w-full bg-green-600 hover:bg-green-700 text-white py-4 text-lg font-semibold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isLoading ? (
               <span className="flex items-center justify-center">
                 <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-2"></div>
                 Creando partido...
+              </span>
+            ) : success ? (
+              <span className="flex items-center justify-center">
+                ✓ Partido creado
               </span>
             ) : (
               "Crear Partido"
