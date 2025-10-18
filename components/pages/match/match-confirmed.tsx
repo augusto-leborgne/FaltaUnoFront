@@ -8,65 +8,22 @@ import { Clock, MapPin, Info, MessageCircle, ExternalLink, CheckCircle } from "l
 import { useRouter } from "next/navigation"
 import { CompressedMap } from "@/components/google-maps/compressed-map"
 import { AuthService } from "@/lib/auth"
+import { usePartido } from "@/lib/api-hooks"
 
 interface MatchConfirmedProps {
   matchId: string
 }
 
-interface Partido {
-  id: string
-  tipo_partido: string
-  fecha: string
-  hora: string
-  nombre_ubicacion: string
-  latitud?: number
-  longitud?: number
-  organizador?: {
-    id: string
-    nombre: string
-    apellido: string
-    foto_perfil?: string
-  }
-}
-
 export function MatchConfirmed({ matchId }: MatchConfirmedProps) {
   const router = useRouter()
-  const [match, setMatch] = useState<Partido | null>(null)
-  const [loading, setLoading] = useState(true)
+  const { partido: match, loading } = usePartido(matchId)
 
   useEffect(() => {
-    loadMatch()
-  }, [matchId])
-
-  const loadMatch = async () => {
-    try {
-      setLoading(true)
-      const token = AuthService.getToken()
-      
-      if (!token) {
-        router.push("/login")
-        return
-      }
-
-      const response = await fetch(`/api/partidos/${matchId}`, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      })
-
-      if (response.ok) {
-        const result = await response.json()
-        if (result.success && result.data) {
-          setMatch(result.data)
-        }
-      }
-    } catch (error) {
-      console.error("Error cargando partido:", error)
-    } finally {
-      setLoading(false)
+    const user = AuthService.getUser()
+    if (!user?.id) {
+      router.push("/login")
     }
-  }
+  }, [])
 
   const handleOpenChat = () => {
     router.push(`/matches/${matchId}/chat`)
@@ -76,7 +33,7 @@ export function MatchConfirmed({ matchId }: MatchConfirmedProps) {
     if (match?.latitud && match?.longitud) {
       window.open(`https://maps.google.com/?q=${match.latitud},${match.longitud}`, "_blank")
     } else {
-      window.open(`https://maps.google.com/?q=${encodeURIComponent(match?.nombre_ubicacion || "")}`, "_blank")
+      window.open(`https://maps.google.com/?q=${encodeURIComponent(match?.nombreUbicacion || "")}`, "_blank")
     }
   }
 
@@ -93,13 +50,13 @@ export function MatchConfirmed({ matchId }: MatchConfirmedProps) {
       compareDate.setHours(0, 0, 0, 0)
 
       if (compareDate.getTime() === today.getTime()) {
-        return `Hoy ${timeString}`
+        return `Hoy ${timeString.substring(0, 5)}`
       } else if (compareDate.getTime() === tomorrow.getTime()) {
-        return `Mañana ${timeString}`
+        return `Mañana ${timeString.substring(0, 5)}`
       } else {
         const weekday = date.toLocaleDateString("es-ES", { weekday: "long" })
         const formattedWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1)
-        return `${formattedWeekday} ${timeString}`
+        return `${formattedWeekday} ${timeString.substring(0, 5)}`
       }
     } catch {
       return `${dateString} ${timeString}`
@@ -152,7 +109,7 @@ export function MatchConfirmed({ matchId }: MatchConfirmedProps) {
               <p className="text-sm text-gray-600">
                 {formatDate(match.fecha, match.hora)}
               </p>
-              <p className="text-sm text-gray-500">{match.nombre_ubicacion}</p>
+              <p className="text-sm text-gray-500">{match.nombreUbicacion}</p>
             </div>
           </div>
 
@@ -224,7 +181,7 @@ export function MatchConfirmed({ matchId }: MatchConfirmedProps) {
           </div>
 
           <CompressedMap
-            location={match.nombre_ubicacion}
+            location={match.nombreUbicacion}
             lat={match.latitud}
             lng={match.longitud}
           />
@@ -271,7 +228,6 @@ export function MatchConfirmed({ matchId }: MatchConfirmedProps) {
         </div>
       </div>
 
-      {/* Bottom Navigation */}
       <BottomNavigation />
     </div>
   )

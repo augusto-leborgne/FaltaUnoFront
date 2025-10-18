@@ -8,17 +8,11 @@ import { ArrowLeft, Star } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { AuthService } from "@/lib/auth"
+import { ReviewAPI } from "@/lib/api"
+import { useJugadores } from "@/lib/api-hooks"
 
 interface MatchReviewScreenProps {
   matchId: string
-}
-
-interface Jugador {
-  id: string
-  nombre: string
-  apellido: string
-  foto_perfil?: string
-  posicion?: string
 }
 
 interface PlayerReview {
@@ -32,62 +26,31 @@ interface PlayerReview {
 export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
   const router = useRouter()
   const { toast } = useToast()
+  const user = AuthService.getUser()
   
-  const [jugadores, setJugadores] = useState<Jugador[]>([])
+  const { jugadores, loading } = useJugadores(matchId)
   const [reviews, setReviews] = useState<PlayerReview[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    loadMatchPlayers()
-  }, [matchId])
-
-  const loadMatchPlayers = async () => {
-    try {
-      const token = AuthService.getToken()
-      const user = AuthService.getUser()
-      
-      if (!token || !user?.id) {
-        router.push("/login")
-        return
-      }
-
-      // Cargar jugadores del partido (excepto yo)
-      const response = await fetch(`/api/partidos/${matchId}/jugadores`, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      })
-
-      if (response.ok) {
-        const result = await response.json()
-        const allPlayers = result.data || []
-        
-        // Filtrar el usuario actual
-        const otherPlayers = allPlayers.filter((p: Jugador) => p.id !== user.id)
-        setJugadores(otherPlayers)
-        
-        // Inicializar reviews
-        setReviews(otherPlayers.map((player: Jugador) => ({
-          playerId: player.id,
-          nivel: 0,
-          deportividad: 0,
-          companerismo: 0,
-          comentario: "",
-        })))
-      }
-    } catch (error) {
-      console.error("Error cargando jugadores:", error)
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar los jugadores",
-        variant: "destructive"
-      })
-    } finally {
-      setLoading(false)
+    if (!user?.id) {
+      router.push("/login")
+      return
     }
-  }
+
+    // Filtrar el usuario actual y inicializar reviews
+    const otherPlayers = jugadores.filter(p => p.id !== user.id)
+    
+    if (otherPlayers.length > 0) {
+      setReviews(otherPlayers.map(player => ({
+        playerId: player.id,
+        nivel: 0,
+        deportividad: 0,
+        companerismo: 0,
+        comentario: "",
+      })))
+    }
+  }, [jugadores, user?.id])
 
   const handleBack = () => {
     router.back()
@@ -144,27 +107,24 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
       return
     }
 
+    if (!user?.id) {
+      router.push("/login")
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
-      const token = AuthService.getToken()
-      
-      // Enviar cada review
+      // Enviar cada review usando ReviewAPI
       const promises = reviews.map(review => 
-        fetch("/api/reviews", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            partidoId: matchId,
-            usuarioCalificadoId: review.playerId,
-            nivel: review.nivel,
-            deportividad: review.deportividad,
-            companerismo: review.companerismo,
-            comentario: review.comentario
-          })
+        ReviewAPI.crear({
+          partidoId: matchId,
+          usuarioQueCalificaId: user.id,
+          usuarioCalificadoId: review.playerId,
+          nivel: review.nivel,
+          deportividad: review.deportividad,
+          companerismo: review.companerismo,
+          comentario: review.comentario || undefined
         })
       )
 
@@ -180,7 +140,7 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
       console.error("Error enviando reseñas:", error)
       toast({
         title: "Error al enviar reseñas",
-        description: "Hubo un problema. Inténtalo de nuevo.",
+        description: error instanceof Error ? error.message : "Hubo un problema. Inténtalo de nuevo.",
         variant: "destructive",
       })
     } finally {
@@ -199,6 +159,8 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
       </div>
     )
   }
+
+  const otherPlayers = jugadores.filter(p => p.id !== user?.id)
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -227,7 +189,7 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
           </div>
         </div>
 
-        {jugadores.length === 0 ? (
+        {otherPlayers.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500">No hay jugadores para calificar</p>
             <Button onClick={() => router.push("/home")} className="mt-4">
@@ -236,8 +198,10 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
           </div>
         ) : (
           <div className="space-y-6">
-            {jugadores.map((player) => {
-              const playerReview = reviews.find((r) => r.playerId === player.id)!
+            {otherPlayers.map((player) => {
+              const playerReview = reviews.find((r) => r.playerId === player.id)
+              if (!playerReview) return null
+              
               const isComplete = isReviewComplete(playerReview)
               const fullName = `${player.nombre} ${player.apellido}`.trim()
               const initials = fullName.split(" ").map(n => n[0]).join("").toUpperCase()
