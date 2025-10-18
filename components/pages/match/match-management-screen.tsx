@@ -128,30 +128,43 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
         const matchResult = await matchResponse.json()
         if (matchResult.success && matchResult.data) {
           const matchData = matchResult.data
-          setMatch(matchData)
+          
+          // Normalizar datos del backend
+          const normalizedMatch = {
+            ...matchData,
+            tipo_partido: matchData.tipoPartido || matchData.tipo_partido,
+            nivel: matchData.nivel || "INTERMEDIO",
+            genero: matchData.genero || "Mixto",
+            nombre_ubicacion: matchData.nombreUbicacion || matchData.nombre_ubicacion,
+            direccion_ubicacion: matchData.direccionUbicacion || matchData.direccion_ubicacion,
+            cantidad_jugadores: matchData.cantidadJugadores || matchData.cantidad_jugadores,
+            jugadores_actuales: matchData.jugadoresActuales || matchData.jugadores_actuales || 0,
+            precio_total: matchData.precioTotal || matchData.precio_total || 0,
+            precio_por_jugador: matchData.precioPorJugador || matchData.precio_por_jugador || 0,
+            duracion_minutos: matchData.duracionMinutos || matchData.duracion_minutos || 90
+          }
+          
+          setMatch(normalizedMatch)
           
           // Inicializar datos de edición
           setEditData({
-            fecha: matchData.fecha,
-            hora: matchData.hora,
-            nombre_ubicacion: matchData.nombre_ubicacion,
-            cantidad_jugadores: matchData.cantidad_jugadores,
-            precio_total: matchData.precio_total,
-            descripcion: matchData.descripcion || "",
+            fecha: normalizedMatch.fecha,
+            hora: normalizedMatch.hora,
+            nombre_ubicacion: normalizedMatch.nombre_ubicacion,
+            cantidad_jugadores: normalizedMatch.cantidad_jugadores,
+            precio_total: normalizedMatch.precio_total,
+            descripcion: normalizedMatch.descripcion || "",
           })
         }
       }
 
       // Cargar solicitudes pendientes
-      try {
-        const solicitudes = await obtenerSolicitudesConUsuario(matchId);
-        setMatch(prev => prev ? {
-          ...prev,
-          solicitudes_pendientes: solicitudes
-        } : null);
-      } catch (e) {
-        console.error("Error cargando solicitudes:", e);
-      }
+      const solicitudesResponse = await fetch(`/api/partidos/${matchId}/solicitudes`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      })
 
       if (solicitudesResponse.ok) {
         const solicitudesResult = await solicitudesResponse.json()

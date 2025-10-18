@@ -141,14 +141,14 @@ export function MatchesListing() {
     return type.replace("FUTBOL_", "F")
   }
 
-  const formatLevel = (level: string) => {
+    const formatLevel = (level: string) => {
     const levelMap: { [key: string]: string } = {
       PRINCIPIANTE: "Principiante",
       INTERMEDIO: "Intermedio",
       AVANZADO: "Avanzado",
       PROFESIONAL: "Profesional"
     }
-    return levelMap[level] || level
+    return levelMap[level] || level || "Intermedio"
   }
 
   const formatDate = (dateString: string, timeString: string) => {

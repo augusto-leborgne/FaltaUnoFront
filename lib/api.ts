@@ -304,14 +304,39 @@ export const UsuarioAPI = {
 // ========================================
 
 export const PartidoAPI = {
-  crear: (partido: PartidoDTO) => 
-    apiFetch<PartidoDTO>('/api/partidos', {
+  crear: (partido: PartidoDTO) => {
+    // Mapear campos del frontend al formato del backend
+    const backendPartido = {
+      tipoPartido: partido.tipoPartido || partido.tipo_partido,
+      genero: partido.genero,
+      fecha: partido.fecha,
+      hora: partido.hora,
+      duracionMinutos: partido.duracionMinutos || partido.duracionMinutos || 90,
+      nombreUbicacion: partido.nombreUbicacion || partido.nombre_ubicacion,
+      direccionUbicacion: partido.direccionUbicacion || partido.direccion_ubicacion,
+      latitud: partido.latitud,
+      longitud: partido.longitud,
+      cantidadJugadores: partido.cantidadJugadores || partido.cantidad_jugadores,
+      precioTotal: partido.precioTotal || partido.precio_total || 0,
+      descripcion: partido.descripcion,
+      organizadorId: partido.organizadorId
+    };
+    
+    return apiFetch<PartidoDTO>('/api/partidos', {
       method: 'POST',
-      body: JSON.stringify(partido)
-    }),
+      body: JSON.stringify(backendPartido)
+    }).then(response => ({
+      ...response,
+      data: response.data ? normalizePartidoDTO(response.data) : response.data
+    }));
+  },
 
   obtener: (id: string) => 
-    apiFetch<PartidoDTO>(`/api/partidos/${id}`),
+    apiFetch<PartidoDTO>(`/api/partidos/${id}`)
+      .then(response => ({
+        ...response,
+        data: response.data ? normalizePartidoDTO(response.data) : response.data
+      })),
 
   listar: (params?: {
     tipoPartido?: string;
@@ -334,17 +359,52 @@ export const PartidoAPI = {
     }
     const query = searchParams.toString();
     const url = query ? `/api/partidos?${query}` : '/api/partidos';
-    return apiFetch<PartidoDTO[]>(url);
+    return apiFetch<PartidoDTO[]>(url)
+      .then(response => ({
+        ...response,
+        data: response.data ? response.data.map(normalizePartidoDTO) : response.data
+      }));
   },
 
   listarPorUsuario: (usuarioId: string) => 
-    apiFetch<PartidoDTO[]>(`/api/partidos/usuario/${usuarioId}`),
+    apiFetch<PartidoDTO[]>(`/api/partidos/usuario/${usuarioId}`)
+      .then(response => ({
+        ...response,
+        data: response.data ? response.data.map(normalizePartidoDTO) : response.data
+      })),
 
-  actualizar: (id: string, partido: Partial<PartidoDTO>) => 
-    apiFetch<PartidoDTO>(`/api/partidos/${id}`, {
+  actualizar: (id: string, partido: Partial<PartidoDTO>) => {
+    // Mapear campos al formato del backend
+    const backendPartido: any = {};
+    if (partido.fecha) backendPartido.fecha = partido.fecha;
+    if (partido.hora) backendPartido.hora = partido.hora;
+    if (partido.nombreUbicacion || partido.nombre_ubicacion) {
+      backendPartido.nombreUbicacion = partido.nombreUbicacion || partido.nombre_ubicacion;
+    }
+    if (partido.direccionUbicacion || partido.direccion_ubicacion) {
+      backendPartido.direccionUbicacion = partido.direccionUbicacion || partido.direccion_ubicacion;
+    }
+    if (partido.latitud !== undefined) backendPartido.latitud = partido.latitud;
+    if (partido.longitud !== undefined) backendPartido.longitud = partido.longitud;
+    if (partido.cantidadJugadores || partido.cantidad_jugadores) {
+      backendPartido.cantidadJugadores = partido.cantidadJugadores || partido.cantidad_jugadores;
+    }
+    if (partido.precioTotal || partido.precio_total) {
+      backendPartido.precioTotal = partido.precioTotal || partido.precio_total;
+    }
+    if (partido.descripcion !== undefined) backendPartido.descripcion = partido.descripcion;
+    if (partido.duracionMinutos || partido.duracionMinutos) {
+      backendPartido.duracionMinutos = partido.duracionMinutos || partido.duracionMinutos;
+    }
+    
+    return apiFetch<PartidoDTO>(`/api/partidos/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(partido)
-    }),
+      body: JSON.stringify(backendPartido)
+    }).then(response => ({
+      ...response,
+      data: response.data ? normalizePartidoDTO(response.data) : response.data
+    }));
+  },
 
   cancelar: (id: string, motivo?: string) => 
     apiFetch<void>(`/api/partidos/${id}/cancelar`, {

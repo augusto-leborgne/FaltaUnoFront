@@ -72,7 +72,7 @@ export function CreateMatchScreen() {
     return null
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     // Validar formulario
@@ -94,11 +94,16 @@ export function CreateMatchScreen() {
         return
       }
 
+      // Asegurar formato de hora correcto (HH:mm:ss)
+      const horaFormateada = formData.time.includes(':') 
+        ? (formData.time.split(':').length === 2 ? `${formData.time}:00` : formData.time)
+        : `${formData.time}:00:00`;
+
       const matchData = {
         tipoPartido: formData.type,
         genero: formData.gender,
         fecha: formData.date,
-        hora: formData.time,
+        hora: horaFormateada,
         duracionMinutos: formData.duration,
         nombreUbicacion: formData.location,
         direccionUbicacion: formData.location,

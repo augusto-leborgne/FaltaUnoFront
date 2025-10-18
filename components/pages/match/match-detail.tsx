@@ -135,6 +135,58 @@ export function MatchDetail({ matchId }: MatchDetailProps) {
     }
   }
 
+  const loadMatchData = async () => {
+    try {
+      setIsLoading(true)
+      const token = AuthService.getToken()
+      
+      if (!token) {
+        router.push("/login")
+        return
+      }
+
+      const response = await fetch(`/api/partidos/${matchId}`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error("Error al cargar el partido")
+      }
+
+      const result = await response.json()
+      console.log("[MatchDetail] Datos recibidos:", result)
+      
+      if (result.success && result.data) {
+        // Normalizar datos del backend
+        const normalizedMatch = {
+          ...result.data,
+          tipo_partido: result.data.tipoPartido || result.data.tipo_partido,
+          nivel: result.data.nivel || "INTERMEDIO",
+          nombre_ubicacion: result.data.nombreUbicacion || result.data.nombre_ubicacion,
+          direccion_ubicacion: result.data.direccionUbicacion || result.data.direccion_ubicacion,
+          cantidad_jugadores: result.data.cantidadJugadores || result.data.cantidad_jugadores,
+          jugadores_actuales: result.data.jugadoresActuales || result.data.jugadores_actuales || 0,
+          precio_total: result.data.precioTotal || result.data.precio_total || 0,
+          precio_por_jugador: result.data.precioPorJugador || result.data.precio_por_jugador || 
+            (result.data.cantidadJugadores > 0 ? (result.data.precioTotal || 0) / result.data.cantidadJugadores : 0),
+          duracion_minutos: result.data.duracionMinutos || result.data.duracion_minutos || 90
+        }
+        
+        setMatch(normalizedMatch)
+      } else {
+        throw new Error(result.message || "Error al cargar el partido")
+      }
+    } catch (error) {
+      console.error("Error cargando partido:", error)
+      setError(error instanceof Error ? error.message : "Error al cargar el partido")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handlePlayerClick = (playerId: string) => {
     router.push(`/users/${playerId}`)
   }
