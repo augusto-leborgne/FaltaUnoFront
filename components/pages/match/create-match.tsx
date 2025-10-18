@@ -9,6 +9,7 @@ import { ArrowLeft, MapPin, Calendar, Users, DollarSign, Clock, AlertCircle } fr
 import { useRouter } from "next/navigation"
 import { AddressAutocomplete } from "@/components/google-maps/address-autocomplete"
 import { AuthService } from "@/lib/auth"
+import { PartidoAPI, mapFormDataToPartidoDTO } from "@/lib/api"
 
 // Tipo para google maps places
 type PlaceResult = google.maps.places.PlaceResult
@@ -49,6 +50,21 @@ export function CreateMatchScreen() {
 
   const handleBack = () => router.back()
 
+  // --- Helper: parse date/time safely (creates local Date)
+  const parseDateTime = (dateStr: string, timeStr: string): Date | null => {
+    // dateStr: "YYYY-MM-DD", timeStr: "HH:mm" or "HH:mm:ss"
+    if (!dateStr || !timeStr) return null
+    const dateParts = dateStr.split("-").map((s) => parseInt(s, 10))
+    if (dateParts.length !== 3) return null
+    const [year, month, day] = dateParts
+    const timeParts = timeStr.split(":").map((s) => parseInt(s, 10))
+    if (timeParts.some(isNaN)) return null
+    const hour = timeParts[0] ?? 0
+    const minute = timeParts[1] ?? 0
+    const second = timeParts[2] ?? 0
+    return new Date(year, month - 1, day, hour, minute, second)
+  }
+
   const validateForm = (): string | null => {
     if (!formData.date) return "Debes seleccionar una fecha"
     if (!formData.time) return "Debes seleccionar una hora"
@@ -62,9 +78,10 @@ export function CreateMatchScreen() {
       return "El precio no puede ser negativo"
     }
     
-    // Validar que la fecha/hora sea futura
+    // Validar que la fecha/hora sea futura usando parseDateTime
+    const matchDateTime = parseDateTime(formData.date, formData.time)
+    if (!matchDateTime) return "Formato de fecha u hora inválido"
     const now = new Date()
-    const matchDateTime = new Date(`${formData.date}T${formData.time}`)
     if (matchDateTime <= now) {
       return "La fecha y hora del partido deben ser futuras"
     }
@@ -73,78 +90,90 @@ export function CreateMatchScreen() {
   }
 
    const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    // Validar formulario
-    const validationError = validateForm()
+    e.preventDefault();
+
+    const validationError = validateForm();
     if (validationError) {
-      setError(validationError)
-      return
+      setError(validationError);
+      return;
     }
 
-    setIsLoading(true)
-    setError("")
+    setIsLoading(true);
+    setError("");
+
+    // Crear AbortController por si luego querés cancelar
+    const controller = new AbortController();
+    const signal = controller.signal;
 
     try {
-      const token = AuthService.getToken()
-      const user = AuthService.getUser()
-      
+      const token = AuthService.getToken();
+      const user = AuthService.getUser();
+
       if (!token || !user?.id) {
-        router.push("/login")
-        return
+        router.push("/login");
+        return;
       }
 
-      // Asegurar formato de hora correcto (HH:mm:ss)
-      const horaFormateada = formData.time.includes(':') 
+      // Asegurarse formato hora (HH:mm[:ss])
+      const horaFormateada = formData.time.includes(':')
         ? (formData.time.split(':').length === 2 ? `${formData.time}:00` : formData.time)
         : `${formData.time}:00:00`;
 
-      const matchData = {
-        tipoPartido: formData.type,
-        genero: formData.gender,
-        fecha: formData.date,
-        hora: horaFormateada,
-        duracionMinutos: formData.duration,
-        nombreUbicacion: formData.location,
-        direccionUbicacion: formData.location,
-        latitud: locationCoordinates?.lat || null,
-        longitud: locationCoordinates?.lng || null,
-        cantidadJugadores: formData.totalPlayers,
-        precioTotal: formData.totalPrice,
-        descripcion: formData.description || null,
-        organizadorId: user.id,
+      // Si tu backend REQUIERE lat/lng, descomenta este bloque para bloquear envío sin coordenadas:
+      // if (!locationCoordinates) {
+      //   setError("Debes seleccionar una ubicación con coordenadas exactas.");
+      //   setIsLoading(false);
+      //   return;
+      // }
+
+      // Mapear form al DTO que espera el backend usando el helper central
+      const partidoDto = mapFormDataToPartidoDTO({
+        type: formData.type,
+        gender: formData.gender,
+        date: formData.date,
+        time: horaFormateada,
+        location: formData.location,
+        totalPlayers: formData.totalPlayers,
+        totalPrice: formData.totalPrice,
+        description: formData.description,
+        duration: formData.duration,
+        locationCoordinates,
+        organizadorId: user.id
+      });
+
+      console.log("[CreateMatch] Enviando partido via PartidoAPI.crear:", partidoDto);
+
+      // Llamada centralizada al API.
+      // Si tu PartidoAPI.crear acepta opciones como signal/token, pásalas aquí.
+      const resp = await PartidoAPI.crear(partidoDto);
+
+      // Manejar ambos estilos: respuesta encapsulada o excepción lanzada por apiFetch
+      if (!resp) {
+        throw new Error("Respuesta inválida del servidor");
       }
 
-      console.log("[CreateMatch] Enviando datos:", matchData)
-
-      const response = await fetch("/api/partidos", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(matchData)
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.message || "Error al crear el partido")
+      // Caso API que devuelve { success: boolean, message?, data? }
+      if (typeof resp.success !== "undefined") {
+        if (!resp.success) {
+          throw new Error(resp.message || "Error al crear el partido");
+        }
       }
 
-      const result = await response.json()
-      console.log("[CreateMatch] Partido creado exitosamente:", result)
-      
-      // Redirigir a pantalla de éxito o al detalle del partido
-      if (result.data?.id) {
-        router.push(`/matches/${result.data.id}`)
+      // Intentar extraer created
+      const created = (resp.data ?? resp) as any;
+
+      console.log("[CreateMatch] Partido creado:", created);
+
+      if (created?.id) {
+        router.push(`/matches/${created.id}`);
       } else {
-        router.push("/my-matches")
+        router.push("/my-matches");
       }
-    } catch (error) {
-      console.error("Error creando partido:", error)
-      setError(error instanceof Error ? error.message : "Error al crear el partido. Intenta nuevamente.")
+    } catch (err) {
+      console.error("Error creando partido:", err);
+      setError(err instanceof Error ? err.message : "Error al crear el partido. Intenta nuevamente.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 

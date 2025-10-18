@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowLeft, Send } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
-import { MensajeAPI } from '@/lib/api'
+import { MensajeAPI, PartidoAPI } from '@/lib/api'
 
 interface MatchChatScreenProps {
   matchId: string
@@ -43,11 +43,37 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   const [sending, setSending] = useState(false)
   const currentUser = AuthService.getUser()
 
+  // Polling safe: setTimeout recursivo para evitar solapamiento de requests
   useEffect(() => {
-    loadChatData()
-    // Cargar mensajes cada 5 segundos
-    const interval = setInterval(loadMessages, 5000)
-    return () => clearInterval(interval)
+    let mounted = true
+    let timer: number | null = null
+
+    const poll = async () => {
+      try {
+        if (!mounted) return
+        await loadMessages()
+      } catch (e) {
+        console.error("Polling error", e)
+      } finally {
+        if (mounted) {
+          timer = window.setTimeout(poll, 5000)
+        }
+      }
+    }
+
+    // Carga inicial de datos (match + mensajes) y arranca polling
+    loadChatData().then(() => {
+      if (mounted) {
+        timer = window.setTimeout(poll, 5000)
+      }
+    }).catch((e) => {
+      console.error("Error iniciando chat:", e)
+    })
+
+    return () => {
+      mounted = false
+      if (timer) clearTimeout(timer)
+    }
   }, [matchId])
 
   useEffect(() => {
@@ -68,24 +94,22 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         return
       }
 
-      // Cargar info del partido
-      const matchResponse = await fetch(`/api/partidos/${matchId}`, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
+      // Usar PartidoAPI para obtener info del partido
+      try {
+        const matchResult = await PartidoAPI.get(matchId)
+        if (matchResult) {
+          const data = matchResult.data ?? matchResult
+          if (data) {
+            setMatchInfo({
+              tipo_partido: data.tipo_partido,
+              fecha: data.fecha,
+              hora: data.hora,
+              nombre_ubicacion: data.nombre_ubicacion
+            })
+          }
         }
-      })
-
-      if (matchResponse.ok) {
-        const matchResult = await matchResponse.json()
-        if (matchResult.success && matchResult.data) {
-          setMatchInfo({
-            tipo_partido: matchResult.data.tipo_partido,
-            fecha: matchResult.data.fecha,
-            hora: matchResult.data.hora,
-            nombre_ubicacion: matchResult.data.nombre_ubicacion
-          })
-        }
+      } catch (err) {
+        console.warn("No se pudo cargar info del partido:", err)
       }
 
       // Cargar mensajes
@@ -102,18 +126,13 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
       const token = AuthService.getToken()
       if (!token) return
 
-      const response = await fetch(`/api/partidos/${matchId}/mensajes`, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      })
+      // Usar MensajeAPI para obtener mensajes
+      const resp = await MensajeAPI.list(matchId)
+      if (!resp) return
 
-      if (response.ok) {
-        const result = await response.json()
-        if (result.success && result.data) {
-          setMessages(result.data)
-        }
+      const data = resp.data ?? resp
+      if (Array.isArray(data)) {
+        setMessages(data)
       }
     } catch (error) {
       console.error("Error cargando mensajes:", error)
@@ -135,24 +154,19 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         return
       }
 
-      const response = await fetch(`/api/partidos/${matchId}/mensajes`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          contenido: message.trim(),
-          usuarioId: currentUser.id
-        })
+      // Usar MensajeAPI para crear mensaje
+      const resp = await MensajeAPI.crear(matchId, {
+        contenido: message.trim(),
+        usuarioId: currentUser.id
       })
 
-      if (response.ok) {
-        setMessage("")
-        await loadMessages()
-      } else {
-        throw new Error("Error al enviar mensaje")
+      if (!resp) {
+        throw new Error("Respuesta inválida al enviar mensaje")
       }
+
+      // Limpiar input y recargar mensajes
+      setMessage("")
+      await loadMessages()
     } catch (error) {
       console.error("Error enviando mensaje:", error)
       alert("No se pudo enviar el mensaje. Intenta nuevamente.")
