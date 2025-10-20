@@ -66,31 +66,42 @@ export interface UsuarioMinDTO {
 // ============================================
 
 export interface PartidoDTO {
-  // Campos principales (backend usa camelCase)
+  // Campos principales (el backend devuelve snake_case en algunos casos)
   id?: string;
-  tipoPartido: string; // FUTBOL_5, FUTBOL_7, etc.
-  genero: string; // Mixto, Hombres, Mujeres
-  nivel?: string; // PRINCIPIANTE, INTERMEDIO, AVANZADO
-  fecha: string; // yyyy-MM-dd
-  hora: string; // HH:mm:ss
-  duracionMinutos: number;
-  nombreUbicacion: string;
-  direccionUbicacion?: string;
+  tipo_partido?: string; // Backend usa snake_case
+  tipoPartido?: string;  // Frontend usa camelCase - mantener ambos
+  genero: string;
+  nivel?: string;
+  fecha: string;
+  hora: string;
+  duracion_minutos?: number; // Backend
+  duracionMinutos?: number;  // Frontend
+  nombre_ubicacion?: string; // Backend
+  nombreUbicacion?: string;  // Frontend
+  direccion_ubicacion?: string; // Backend
+  direccionUbicacion?: string;  // Frontend
   latitud?: number;
   longitud?: number;
-  cantidadJugadores: number;
-  jugadoresActuales: number;
-  precioTotal: number;
-  precioPorJugador: number;
+  cantidad_jugadores?: number; // Backend
+  cantidadJugadores?: number;  // Frontend
+  jugadores_actuales?: number; // Backend
+  jugadoresActuales?: number;  // Frontend
+  precio_total?: number; // Backend
+  precioTotal?: number;  // Frontend
+  precio_por_jugador?: number; // Backend
+  precioPorJugador?: number;   // Frontend
   descripcion?: string;
-  estado: PartidoEstado;
-  organizadorId: string;
-  createdAt?: string;
+  estado: string;
+  organizador_id?: string; // Backend
+  organizadorId?: string;  // Frontend
+  created_at?: string; // Backend
+  createdAt?: string;  // Frontend
   
   // Relaciones
   organizador?: UsuarioMinDTO;
   jugadores?: UsuarioMinDTO[];
-  solicitudesPendientes?: InscripcionDTO[];
+  solicitudes_pendientes?: InscripcionDTO[]; // Backend
+  solicitudesPendientes?: InscripcionDTO[];  // Frontend
 }
 
 export enum PartidoEstado {
@@ -281,6 +292,10 @@ async function apiFetch<T>(
  * Normaliza datos del backend al formato esperado por el frontend
  */
 function normalizePartido(raw: any): PartidoDTO {
+  if (!raw) {
+    throw new Error('Datos de partido inválidos');
+  }
+
   // Calcular precio por jugador si no viene
   const precioTotal = raw.precioTotal ?? raw.precio_total ?? 0;
   const cantidadJugadores = raw.cantidadJugadores ?? raw.cantidad_jugadores ?? 1;
@@ -288,28 +303,59 @@ function normalizePartido(raw: any): PartidoDTO {
     ?? raw.precio_por_jugador 
     ?? (cantidadJugadores > 0 ? precioTotal / cantidadJugadores : 0);
 
+  // Normalizar organizador
+  const organizador = raw.organizador ? {
+    id: raw.organizador.id,
+    nombre: raw.organizador.nombre,
+    apellido: raw.organizador.apellido,
+    foto_perfil: raw.organizador.fotoPerfil ?? raw.organizador.foto_perfil,
+    posicion: raw.organizador.posicion,
+    rating: raw.organizador.rating
+  } : undefined;
+
+  // Normalizar jugadores
+  const jugadores = (raw.jugadores ?? []).map((j: any) => ({
+    id: j.id,
+    nombre: j.nombre,
+    apellido: j.apellido,
+    foto_perfil: j.fotoPerfil ?? j.foto_perfil,
+    posicion: j.posicion,
+    rating: j.rating
+  }));
+
   return {
     id: raw.id,
-    tipoPartido: raw.tipoPartido ?? raw.tipo_partido ?? TipoPartido.FUTBOL_5,
+    tipo_partido: raw.tipo_partido ?? raw.tipoPartido ?? 'FUTBOL_5',
+    tipoPartido: raw.tipoPartido ?? raw.tipo_partido ?? 'FUTBOL_5',
     genero: raw.genero ?? 'Mixto',
-    nivel: raw.nivel ?? NivelPartido.INTERMEDIO,
+    nivel: raw.nivel ?? 'INTERMEDIO',
     fecha: raw.fecha,
     hora: raw.hora,
+    duracion_minutos: raw.duracion_minutos ?? raw.duracionMinutos ?? 90,
     duracionMinutos: raw.duracionMinutos ?? raw.duracion_minutos ?? 90,
+    nombre_ubicacion: raw.nombre_ubicacion ?? raw.nombreUbicacion ?? '',
     nombreUbicacion: raw.nombreUbicacion ?? raw.nombre_ubicacion ?? '',
+    direccion_ubicacion: raw.direccion_ubicacion ?? raw.direccionUbicacion,
     direccionUbicacion: raw.direccionUbicacion ?? raw.direccion_ubicacion,
     latitud: raw.latitud ?? null,
     longitud: raw.longitud ?? null,
-    cantidadJugadores,
+    cantidad_jugadores: cantidadJugadores,
+    cantidadJugadores: cantidadJugadores,
+    jugadores_actuales: raw.jugadores_actuales ?? raw.jugadoresActuales ?? 0,
     jugadoresActuales: raw.jugadoresActuales ?? raw.jugadores_actuales ?? 0,
-    precioTotal,
+    precio_total: precioTotal,
+    precioTotal: precioTotal,
+    precio_por_jugador: Math.round(precioPorJugador * 100) / 100,
     precioPorJugador: Math.round(precioPorJugador * 100) / 100,
     descripcion: raw.descripcion,
-    estado: raw.estado ?? PartidoEstado.PENDIENTE,
+    estado: raw.estado ?? 'PENDIENTE',
+    organizador_id: raw.organizador_id ?? raw.organizadorId,
     organizadorId: raw.organizadorId ?? raw.organizador_id,
+    created_at: raw.created_at ?? raw.createdAt,
     createdAt: raw.createdAt ?? raw.created_at,
-    organizador: raw.organizador,
-    jugadores: raw.jugadores ?? [],
+    organizador: organizador,
+    jugadores: jugadores,
+    solicitudes_pendientes: raw.solicitudes_pendientes ?? raw.solicitudesPendientes ?? [],
     solicitudesPendientes: raw.solicitudesPendientes ?? raw.solicitudes_pendientes ?? []
   };
 }
@@ -436,29 +482,34 @@ export const UsuarioAPI = {
 
 export const PartidoAPI = {
   /**
-   * Crear partido
+   * Crear partido - CORREGIDO para coincidir con el backend
    */
-  crear: async (partido: Omit<PartidoDTO, 'id' | 'createdAt' | 'jugadoresActuales' | 'precioPorJugador'>) => {
+  crear: async (partido: Partial<PartidoDTO>) => {
     console.log("[PartidoAPI.crear] Enviando:", partido);
     
-    const response = await apiFetch<PartidoDTO>('/api/partidos', {
+    // El backend espera snake_case
+    const payload = {
+      tipo_partido: partido.tipoPartido ?? partido.tipo_partido,
+      genero: partido.genero,
+      nivel: partido.nivel ?? 'INTERMEDIO',
+      fecha: partido.fecha,
+      hora: partido.hora,
+      duracion_minutos: partido.duracionMinutos ?? partido.duracion_minutos ?? 90,
+      nombre_ubicacion: partido.nombreUbicacion ?? partido.nombre_ubicacion,
+      direccion_ubicacion: partido.direccionUbicacion ?? partido.direccion_ubicacion,
+      latitud: partido.latitud,
+      longitud: partido.longitud,
+      cantidad_jugadores: partido.cantidadJugadores ?? partido.cantidad_jugadores,
+      precio_total: partido.precioTotal ?? partido.precio_total ?? 0,
+      descripcion: partido.descripcion,
+      organizador_id: partido.organizadorId ?? partido.organizador_id
+    };
+
+    console.log("[PartidoAPI.crear] Payload normalizado:", payload);
+
+    const response = await apiFetch<any>('/api/partidos', {
       method: 'POST',
-      body: JSON.stringify({
-        tipoPartido: partido.tipoPartido,
-        genero: partido.genero,
-        nivel: partido.nivel ?? NivelPartido.INTERMEDIO,
-        fecha: partido.fecha,
-        hora: partido.hora,
-        duracionMinutos: partido.duracionMinutos,
-        nombreUbicacion: partido.nombreUbicacion,
-        direccionUbicacion: partido.direccionUbicacion,
-        latitud: partido.latitud,
-        longitud: partido.longitud,
-        cantidadJugadores: partido.cantidadJugadores,
-        precioTotal: partido.precioTotal,
-        descripcion: partido.descripcion,
-        organizadorId: partido.organizadorId
-      })
+      body: JSON.stringify(payload)
     });
 
     console.log("[PartidoAPI.crear] Respuesta:", response);
@@ -486,10 +537,11 @@ export const PartidoAPI = {
   },
 
   /**
-   * Listar partidos con filtros
+   * Listar partidos con filtros - CORREGIDO
    */
   list: async (filtros?: {
     tipoPartido?: string;
+    tipo_partido?: string;
     nivel?: string;
     genero?: string;
     fecha?: string;
@@ -504,7 +556,20 @@ export const PartidoAPI = {
     const params = new URLSearchParams();
     
     if (filtros) {
-      Object.entries(filtros).forEach(([key, value]) => {
+      // Convertir camelCase a snake_case para el backend
+      const backendFiltros: any = {
+        tipo_partido: filtros.tipoPartido ?? filtros.tipo_partido,
+        nivel: filtros.nivel,
+        genero: filtros.genero,
+        fecha: filtros.fecha,
+        estado: filtros.estado,
+        search: filtros.search,
+        latitud: filtros.latitud,
+        longitud: filtros.longitud,
+        radioKm: filtros.radioKm
+      };
+
+      Object.entries(backendFiltros).forEach(([key, value]) => {
         if (value !== undefined && value !== null && value !== '') {
           params.append(key, String(value));
         }
@@ -529,7 +594,6 @@ export const PartidoAPI = {
       } else if (Array.isArray(response.data)) {
         partidos = response.data;
       } else if (response.data && typeof response.data === 'object') {
-        // Si data es un objeto con items o similar
         partidos = response.data.items || response.data.content || [];
       } else {
         console.warn("[PartidoAPI.list] Formato de respuesta inesperado:", response);
@@ -561,74 +625,30 @@ export const PartidoAPI = {
   },
 
   /**
-   * Listar partidos de un usuario
-   */
-  listByUser: async (usuarioId: string) => {
-    console.log("[PartidoAPI.listByUser] Usuario ID:", usuarioId);
-    
-    try {
-      const response = await apiFetch<any>(`/api/partidos/usuario/${usuarioId}`);
-      
-      console.log("[PartidoAPI.listByUser] Respuesta raw:", response);
-      
-      // Manejar diferentes formatos de respuesta
-      let partidos: any[] = [];
-      
-      if (Array.isArray(response)) {
-        partidos = response;
-      } else if (Array.isArray(response.data)) {
-        partidos = response.data;
-      } else if (response.data && typeof response.data === 'object') {
-        partidos = response.data.items || response.data.content || [];
-      } else {
-        console.warn("[PartidoAPI.listByUser] Formato inesperado:", response);
-        partidos = [];
-      }
-      
-      console.log("[PartidoAPI.listByUser] Partidos a normalizar:", partidos.length);
-      
-      const normalized = partidos.map((p: any) => {
-        try {
-          return normalizePartido(p);
-        } catch (err) {
-          console.error("[PartidoAPI.listByUser] Error normalizando:", p, err);
-          return null;
-        }
-      }).filter(Boolean) as PartidoDTO[];
-      
-      console.log("[PartidoAPI.listByUser] Partidos normalizados:", normalized.length);
-      
-      return {
-        success: true,
-        data: normalized
-      };
-      
-    } catch (error) {
-      console.error("[PartidoAPI.listByUser] Error:", error);
-      
-      // Si es 500, devolver array vacío en lugar de fallar
-      if (error instanceof Error && error.message.includes('500')) {
-        console.warn("[PartidoAPI.listByUser] Error 500, devolviendo array vacío");
-        return {
-          success: false,
-          data: [],
-          message: "Error del servidor al cargar partidos"
-        };
-      }
-      
-      throw error;
-    }
-  },
-
-  /**
-   * Actualizar partido
+   * Actualizar partido - CORREGIDO
    */
   actualizar: async (id: string, cambios: Partial<PartidoDTO>) => {
     console.log("[PartidoAPI.actualizar] ID:", id, "Cambios:", cambios);
     
+    // Convertir a snake_case para el backend
+    const payload: any = {};
+    
+    if (cambios.fecha !== undefined) payload.fecha = cambios.fecha;
+    if (cambios.hora !== undefined) payload.hora = cambios.hora;
+    if (cambios.nombreUbicacion !== undefined) 
+      payload.nombre_ubicacion = cambios.nombreUbicacion;
+    if (cambios.cantidadJugadores !== undefined) 
+      payload.cantidad_jugadores = cambios.cantidadJugadores;
+    if (cambios.precioTotal !== undefined) 
+      payload.precio_total = cambios.precioTotal;
+    if (cambios.descripcion !== undefined) 
+      payload.descripcion = cambios.descripcion;
+    if (cambios.duracionMinutos !== undefined) 
+      payload.duracion_minutos = cambios.duracionMinutos;
+    
     const response = await apiFetch<any>(`/api/partidos/${id}`, {
       method: 'PUT',
-      body: JSON.stringify(cambios)
+      body: JSON.stringify(payload)
     });
 
     console.log("[PartidoAPI.actualizar] Respuesta:", response);
@@ -640,61 +660,102 @@ export const PartidoAPI = {
   },
 
   /**
-   * Cancelar partido
+   * Resto de métodos mantienen la misma estructura...
    */
   cancelar: (id: string, motivo?: string) => {
-    console.log("[PartidoAPI.cancelar] ID:", id, "Motivo:", motivo);
-    
     return apiFetch<void>(`/api/partidos/${id}/cancelar`, {
       method: 'POST',
       body: motivo ? JSON.stringify({ motivo }) : undefined
     });
   },
 
-  /**
-   * Completar partido
-   */
   completar: (id: string) => {
-    console.log("[PartidoAPI.completar] ID:", id);
-    
     return apiFetch<void>(`/api/partidos/${id}/completar`, {
       method: 'POST'
     });
   },
 
-  /**
-   * Obtener jugadores de un partido
-   */
   getJugadores: async (id: string) => {
-    console.log("[PartidoAPI.getJugadores] ID:", id);
+    const response = await apiFetch<any>(`/api/partidos/${id}/jugadores`);
     
-    const response = await apiFetch<UsuarioMinDTO[]>(`/api/partidos/${id}/jugadores`);
+    // Normalizar jugadores
+    const jugadores = (response.data ?? []).map((j: any) => ({
+      id: j.id,
+      nombre: j.nombre,
+      apellido: j.apellido,
+      foto_perfil: j.fotoPerfil ?? j.foto_perfil,
+      posicion: j.posicion,
+      rating: j.rating
+    }));
     
-    console.log("[PartidoAPI.getJugadores] Respuesta:", response);
-    
-    return response;
+    return {
+      ...response,
+      data: jugadores
+    };
   },
 
-  /**
-   * Remover jugador de un partido
-   */
   removerJugador: (partidoId: string, jugadorId: string) => {
-    console.log("[PartidoAPI.removerJugador] Partido:", partidoId, "Jugador:", jugadorId);
-    
     return apiFetch<void>(`/api/partidos/${partidoId}/jugadores/${jugadorId}`, {
       method: 'DELETE'
     });
   },
 
-  /**
-   * Eliminar partido
-   */
   eliminar: (id: string) => {
-    console.log("[PartidoAPI.eliminar] ID:", id);
-    
     return apiFetch<void>(`/api/partidos/${id}`, {
       method: 'DELETE'
     });
+  },
+
+  /**
+   * Listar partidos de un usuario - CORREGIDO
+   */
+  listByUser: async (usuarioId: string) => {
+    console.log("[PartidoAPI.listByUser] Usuario ID:", usuarioId);
+    
+    try {
+      const response = await apiFetch<any>(`/api/partidos/usuario/${usuarioId}`);
+      
+      console.log("[PartidoAPI.listByUser] Respuesta raw:", response);
+      
+      let partidos: any[] = [];
+      
+      if (Array.isArray(response)) {
+        partidos = response;
+      } else if (Array.isArray(response.data)) {
+        partidos = response.data;
+      } else if (response.data && typeof response.data === 'object') {
+        partidos = response.data.items || response.data.content || [];
+      } else {
+        partidos = [];
+      }
+      
+      const normalized = partidos.map((p: any) => {
+        try {
+          return normalizePartido(p);
+        } catch (err) {
+          console.error("[PartidoAPI.listByUser] Error normalizando:", p, err);
+          return null;
+        }
+      }).filter(Boolean) as PartidoDTO[];
+      
+      return {
+        success: true,
+        data: normalized
+      };
+      
+    } catch (error) {
+      console.error("[PartidoAPI.listByUser] Error:", error);
+      
+      if (error instanceof Error && error.message.includes('500')) {
+        return {
+          success: false,
+          data: [],
+          message: "Error del servidor al cargar partidos"
+        };
+      }
+      
+      throw error;
+    }
   }
 };
 
@@ -899,7 +960,7 @@ export function mapFormDataToPartidoDTO(formData: {
   duration: number;
   locationCoordinates?: { lat: number; lng: number } | null;
   organizadorId: string;
-}): Omit<PartidoDTO, 'id' | 'createdAt' | 'jugadoresActuales' | 'precioPorJugador'> {
+}): Partial<PartidoDTO> {
   // Asegurar formato de hora correcto (HH:mm:ss)
   let horaFormateada = formData.time;
   if (!horaFormateada.includes(':')) {
@@ -909,20 +970,28 @@ export function mapFormDataToPartidoDTO(formData: {
   }
 
   return {
-    tipoPartido: formData.type as TipoPartido,
+    // Enviar en ambos formatos para compatibilidad
+    tipoPartido: formData.type,
+    tipo_partido: formData.type,
     genero: formData.gender,
-    nivel: NivelPartido.INTERMEDIO,
+    nivel: 'INTERMEDIO',
     fecha: formData.date,
     hora: horaFormateada,
     duracionMinutos: formData.duration,
+    duracion_minutos: formData.duration,
     nombreUbicacion: formData.location,
+    nombre_ubicacion: formData.location,
     direccionUbicacion: formData.location,
+    direccion_ubicacion: formData.location,
     latitud: formData.locationCoordinates?.lat,
     longitud: formData.locationCoordinates?.lng,
     cantidadJugadores: formData.totalPlayers,
+    cantidad_jugadores: formData.totalPlayers,
     precioTotal: formData.totalPrice,
+    precio_total: formData.totalPrice,
     descripcion: formData.description || undefined,
-    estado: PartidoEstado.PENDIENTE,
-    organizadorId: formData.organizadorId
+    estado: 'PENDIENTE',
+    organizadorId: formData.organizadorId,
+    organizador_id: formData.organizadorId
   };
 }

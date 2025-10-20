@@ -17,7 +17,31 @@ interface MatchDetailProps {
 
 export function MatchDetail({ matchId }: MatchDetailProps) {
   const router = useRouter()
-  
+  const getTipoPartido = (match: PartidoDTO) => {
+    return match.tipoPartido ?? match.tipo_partido ?? 'FUTBOL_5';
+  }
+  const getNivel = (match: PartidoDTO) => {
+    return match.nivel ?? 'INTERMEDIO';
+  }
+  const getJugadoresActuales = (match: PartidoDTO) => {
+    return match.jugadoresActuales ?? match.jugadores_actuales ?? 0;
+  }
+  const getCantidadJugadores = (match: PartidoDTO) => {
+    return match.cantidadJugadores ?? match.cantidad_jugadores ?? 10;
+  }
+  const getPrecioPorJugador = (match: PartidoDTO) => {
+    return match.precioPorJugador ?? match.precio_por_jugador ?? 0;
+  }
+  const getDuracionMinutos = (match: PartidoDTO) => {
+    return match.duracionMinutos ?? match.duracion_minutos ?? 90;
+  }
+  const getNombreUbicacion = (match: PartidoDTO) => {
+    return match.nombreUbicacion ?? match.nombre_ubicacion ?? '';
+  }
+  const getOrganizadorId = (match: PartidoDTO) => {
+    return match.organizadorId ?? match.organizador_id;
+  }
+
   // Estados
   const [match, setMatch] = useState<PartidoDTO | null>(null)
   const [isJoining, setIsJoining] = useState(false)
@@ -42,29 +66,43 @@ export function MatchDetail({ matchId }: MatchDetailProps) {
 
   const loadMatch = async () => {
     try {
-      setIsLoading(true)
-      setError("")
+      setIsLoading(true);
+      setError("");
 
-      // Validar autenticación
       if (!AuthService.isLoggedIn()) {
-        router.push("/login")
-        return
+        router.push("/login");
+        return;
       }
 
-      // Cargar partido usando la API refactorizada
-      const response = await PartidoAPI.get(matchId)
+      console.log("[MatchDetail] Cargando partido:", matchId);
+
+      const response = await PartidoAPI.get(matchId);
+
+      console.log("[MatchDetail] Respuesta completa:", response);
 
       if (response.success && response.data) {
-        setMatch(response.data)
+        const partidoData = response.data;
+        
+        console.log("[MatchDetail] Datos del partido:", {
+          id: partidoData.id,
+          tipoPartido: partidoData.tipoPartido ?? partidoData.tipo_partido,
+          fecha: partidoData.fecha,
+          estado: partidoData.estado,
+          organizadorId: partidoData.organizadorId ?? partidoData.organizador_id,
+          jugadoresActuales: partidoData.jugadoresActuales ?? partidoData.jugadores_actuales,
+          cantidadJugadores: partidoData.cantidadJugadores ?? partidoData.cantidad_jugadores
+        });
+
+        setMatch(partidoData);
       } else {
-        throw new Error(response.message || "Error al cargar el partido")
+        throw new Error(response.message || "Error al cargar el partido");
       }
     } catch (err) {
-      console.error("[MatchDetail] Error cargando partido:", err)
-      const errorMessage = err instanceof Error ? err.message : "Error al cargar el partido"
-      setError(errorMessage)
+      console.error("[MatchDetail] Error cargando partido:", err);
+      const errorMessage = err instanceof Error ? err.message : "Error al cargar el partido";
+      setError(errorMessage);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
@@ -76,7 +114,7 @@ export function MatchDetail({ matchId }: MatchDetailProps) {
     if (!match || !currentUser) return
 
     // Validar que no esté lleno
-    if (match.jugadoresActuales >= match.cantidadJugadores) {
+    if (getJugadoresActuales(match) >= getCantidadJugadores(match)) {
       setError("El partido está completo")
       return
     }
@@ -107,7 +145,7 @@ export function MatchDetail({ matchId }: MatchDetailProps) {
     if (!match) return
 
     const shareData = {
-      title: `Partido de ${formatMatchType(match.tipoPartido)}`,
+      title: `Partido de ${formatMatchType(getTipoPartido(match))}`,
       text: `¡Únete a este partido! ${formatDate(match.fecha)} ${match.hora} en ${match.nombreUbicacion}`,
       url: `${window.location.origin}/matches/${matchId}`,
     }
@@ -141,26 +179,38 @@ export function MatchDetail({ matchId }: MatchDetailProps) {
   // ============================================
 
   const formatMatchType = (type: string) => {
+    // Manejar tanto snake_case como formatos normales
+    const normalizedType = type.toUpperCase().replace(/-/g, '_');
+    
     const typeMap: Record<string, string> = {
-      [TipoPartido.FUTBOL_5]: "Fútbol 5",
-      [TipoPartido.FUTBOL_7]: "Fútbol 7",
-      [TipoPartido.FUTBOL_8]: "Fútbol 8",
-      [TipoPartido.FUTBOL_9]: "Fútbol 9",
-      [TipoPartido.FUTBOL_11]: "Fútbol 11",
-    }
-    return typeMap[type] || type
+      'FUTBOL_5': 'Fútbol 5',
+      'FUTBOL5': 'Fútbol 5',
+      'FUTBOL_7': 'Fútbol 7',
+      'FUTBOL7': 'Fútbol 7',
+      'FUTBOL_8': 'Fútbol 8',
+      'FUTBOL8': 'Fútbol 8',
+      'FUTBOL_9': 'Fútbol 9',
+      'FUTBOL9': 'Fútbol 9',
+      'FUTBOL_11': 'Fútbol 11',
+      'FUTBOL11': 'Fútbol 11',
+    };
+    
+    return typeMap[normalizedType] || type;
   }
 
   const formatLevel = (level?: string) => {
-    if (!level) return "Intermedio"
+    if (!level) return "Intermedio";
+    
+    const normalizedLevel = level.toUpperCase();
     
     const levelMap: Record<string, string> = {
-      [NivelPartido.PRINCIPIANTE]: "Principiante",
-      [NivelPartido.INTERMEDIO]: "Intermedio",
-      [NivelPartido.AVANZADO]: "Avanzado",
-      [NivelPartido.PROFESIONAL]: "Profesional"
-    }
-    return levelMap[level] || level
+      'PRINCIPIANTE': 'Principiante',
+      'INTERMEDIO': 'Intermedio',
+      'AVANZADO': 'Avanzado',
+      'PROFESIONAL': 'Profesional'
+    };
+    
+    return levelMap[normalizedLevel] || level;
   }
 
   const formatDate = (dateString: string) => {
@@ -225,7 +275,7 @@ export function MatchDetail({ matchId }: MatchDetailProps) {
   // CÁLCULOS
   // ============================================
 
-  const spotsLeft = match.cantidadJugadores - match.jugadoresActuales
+  const spotsLeft = getCantidadJugadores(match) - getJugadoresActuales(match)
   const isMatchFull = spotsLeft === 0
   const isMatchCancelled = match.estado === PartidoEstado.CANCELADO
   const isMatchCompleted = match.estado === PartidoEstado.COMPLETADO
@@ -301,7 +351,7 @@ export function MatchDetail({ matchId }: MatchDetailProps) {
           <div className="flex items-center justify-between mb-4">
             <div className="flex gap-2 flex-wrap">
               <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
-                {formatMatchType(match.tipoPartido)}
+                {formatMatchType(getTipoPartido(match))}
               </Badge>
               <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
                 {formatLevel(match.nivel)}
@@ -328,7 +378,7 @@ export function MatchDetail({ matchId }: MatchDetailProps) {
             </div>
             <div className="flex items-center space-x-2 text-gray-600">
               <DollarSign className="w-4 h-4 flex-shrink-0" />
-              <span>${match.precioPorJugador} / jugador</span>
+              <span>${getPrecioPorJugador(match)} / jugador</span>
             </div>
             <div className="flex items-center space-x-2 text-gray-600">
               <Clock className="w-4 h-4 flex-shrink-0" />
@@ -336,12 +386,12 @@ export function MatchDetail({ matchId }: MatchDetailProps) {
             </div>
             <div className="flex items-center space-x-2 text-gray-600">
               <Users className="w-4 h-4 flex-shrink-0" />
-              <span>{match.jugadoresActuales}/{match.cantidadJugadores}</span>
+              <span>{getJugadoresActuales(match)}/{getCantidadJugadores(match)}</span>
             </div>
           </div>
 
           {/* Map */}
-          {(match.latitud && match.longitud) && (
+          {(match.latitud && match.longitud && match.nombreUbicacion) && (
             <CompressedMap
               location={match.nombreUbicacion}
               lat={match.latitud}
@@ -382,7 +432,7 @@ export function MatchDetail({ matchId }: MatchDetailProps) {
         {match.jugadores && match.jugadores.length > 0 && (
           <div className="mb-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4">
-              Jugadores ({match.jugadoresActuales}/{match.cantidadJugadores})
+              Jugadores ({getJugadoresActuales(match)}/{getCantidadJugadores(match)})
             </h3>
 
             <div className="space-y-3">
