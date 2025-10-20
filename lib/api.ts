@@ -753,16 +753,20 @@ export const InscripcionAPI = {
    * Obtener solicitudes pendientes de un partido
    */
   getPendientes: async (partidoId: string) => {
+    console.log("[InscripcionAPI.getPendientes] Partido ID:", partidoId);
+    
     const response = await apiFetch<InscripcionDTO[]>(
       `/api/partidos/${partidoId}/solicitudes`
     );
+
+    console.log("[InscripcionAPI.getPendientes] Respuesta:", response);
 
     return {
       ...response,
       data: response.data.map(normalizeInscripcion)
     };
   },
-
+  
   /**
    * Aceptar inscripción
    */
