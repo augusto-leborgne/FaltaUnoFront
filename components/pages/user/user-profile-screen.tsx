@@ -48,18 +48,31 @@ export function UserProfileScreen({ userId }: UserProfileScreenProps) {
   const [reviews, setReviews] = useState<Review[]>([])
   const [friendRequestSent, setFriendRequestSent] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    // Reset state cuando cambia userId
+    setUser(null)
+    setReviews([])
+    setFriendRequestSent(false)
+    setLoading(true)
+    setError(null)
+    
     loadUserProfile()
   }, [userId])
 
   const loadUserProfile = async () => {
     try {
+      setLoading(true)
+      setError(null)
+      
       const token = AuthService.getToken()
       if (!token) {
         router.push("/login")
         return
       }
+
+      console.log("[UserProfile] Cargando perfil para userId:", userId)
 
       // Cargar usuario
       const userResponse = await fetch(`/api/usuarios/${userId}`, {
@@ -69,10 +82,20 @@ export function UserProfileScreen({ userId }: UserProfileScreenProps) {
         }
       })
 
-      if (userResponse.ok) {
-        const userData = await userResponse.json()
-        setUser(userData.data)
+      if (!userResponse.ok) {
+        const errorText = await userResponse.text()
+        console.error("[UserProfile] Error en respuesta:", errorText)
+        throw new Error(`Error ${userResponse.status}: No se pudo cargar el perfil`)
       }
+
+      const userData = await userResponse.json()
+      console.log("[UserProfile] Usuario cargado:", userData)
+      
+      if (!userData.data) {
+        throw new Error("Usuario no encontrado")
+      }
+      
+      setUser(userData.data)
 
       // Cargar reviews
       const reviewsResponse = await fetch(`/api/reviews?usuarioCalificadoId=${userId}`, {
@@ -88,7 +111,8 @@ export function UserProfileScreen({ userId }: UserProfileScreenProps) {
       }
 
     } catch (err) {
-      console.error("Error cargando perfil:", err)
+      console.error("[UserProfile] Error cargando perfil:", err)
+      setError(err instanceof Error ? err.message : "Error al cargar el perfil")
     } finally {
       setLoading(false)
     }
@@ -112,29 +136,58 @@ export function UserProfileScreen({ userId }: UserProfileScreenProps) {
 
       if (response.ok) {
         setFriendRequestSent(true)
+      } else {
+        const errorData = await response.json()
+        alert(errorData.message || "Error al enviar solicitud")
       }
     } catch (error) {
       console.error("Error enviando solicitud:", error)
+      alert("Error al enviar solicitud")
     }
   }
 
-  const handleUserClick = (id: string) => router.push(`/users/${id}`)
+  const handleUserClick = (id: string) => {
+    router.push(`/users/${id}`)
+  }
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full"></div>
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando perfil...</p>
+        </div>
       </div>
     )
   }
 
-  if (!user) {
+  if (error || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <p className="text-gray-600 mb-4">Usuario no encontrado</p>
-          <Button onClick={handleBack}>Volver</Button>
+      <div className="min-h-screen bg-background flex flex-col">
+        <div className="pt-16 pb-6 px-6 border-b border-border">
+          <div className="flex items-center space-x-4">
+            <button onClick={handleBack} className="p-2 -ml-2">
+              <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+            </button>
+            <h1 className="text-xl font-bold text-foreground">Perfil de usuario</h1>
+          </div>
         </div>
+        
+        <div className="flex-1 flex items-center justify-center px-6">
+          <div className="text-center">
+            <p className="text-red-600 mb-2 font-medium">{error || "Usuario no encontrado"}</p>
+            <p className="text-sm text-muted-foreground mb-4">ID: {userId}</p>
+            <div className="flex gap-3 justify-center">
+              <Button onClick={handleBack} variant="outline">
+                Volver
+              </Button>
+              <Button onClick={() => loadUserProfile()} className="bg-primary hover:bg-primary/90">
+                Reintentar
+              </Button>
+            </div>
+          </div>
+        </div>
+        <BottomNavigation />
       </div>
     )
   }
@@ -157,7 +210,7 @@ export function UserProfileScreen({ userId }: UserProfileScreenProps) {
         </div>
       </div>
 
-      <div className="flex-1 px-6 py-6">
+      <div className="flex-1 px-6 py-6 pb-24">
         {/* User Info */}
         <div className="bg-card border border-border rounded-2xl p-6 mb-6">
           <div className="flex items-center space-x-4 mb-6">
@@ -223,7 +276,7 @@ export function UserProfileScreen({ userId }: UserProfileScreenProps) {
         </div>
 
         {/* Reviews Section */}
-        <div className="bg-card border border-border rounded-2xl p-6 mb-24">
+        <div className="bg-card border border-border rounded-2xl p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-foreground">Reseñas</h3>
             <div className="flex items-center space-x-1">

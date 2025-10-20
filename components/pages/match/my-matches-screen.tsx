@@ -7,39 +7,45 @@ import { Plus, Users, Clock, MapPin, AlertCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { AuthService } from "@/lib/auth"
-import { PartidoAPI, PartidoDTO, PartidoEstado, TipoPartido, NivelPartido } from "@/lib/api"
+
+interface Match {
+  id: string
+  tipoPartido: string
+  genero: string
+  nivel?: string
+  fecha: string
+  hora: string
+  nombreUbicacion: string
+  cantidadJugadores: number
+  jugadoresActuales: number
+  precioPorJugador: number
+  duracionMinutos: number
+  estado: string
+  organizadorId: string
+}
 
 export function MyMatchesScreen() {
   const router = useRouter()
   
-  // Estados
   const [activeTab, setActiveTab] = useState<"Creados" | "Inscriptos">("Creados")
-  const [createdMatches, setCreatedMatches] = useState<PartidoDTO[]>([])
-  const [joinedMatches, setJoinedMatches] = useState<PartidoDTO[]>([])
+  const [createdMatches, setCreatedMatches] = useState<Match[]>([])
+  const [joinedMatches, setJoinedMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
 
   const currentUser = AuthService.getUser()
 
-  // ============================================
-  // EFECTOS
-  // ============================================
-
   useEffect(() => {
     loadMatches()
   }, [])
-
-  // ============================================
-  // FUNCIONES DE CARGA
-  // ============================================
 
   const loadMatches = async () => {
     try {
       setLoading(true)
       setError("")
 
-      // Validar autenticación
-      if (!AuthService.isLoggedIn()) {
+      const token = AuthService.getToken()
+      if (!token) {
         router.push("/login")
         return
       }
@@ -49,21 +55,76 @@ export function MyMatchesScreen() {
         throw new Error("Usuario no encontrado")
       }
 
-      // Cargar partidos del usuario
-      const response = await PartidoAPI.listByUser(user.id)
+      console.log("[MyMatches] Cargando partidos del usuario:", user.id)
 
-      if (!response.success) {
-        throw new Error(response.message || "Error al cargar partidos")
+      // Cargar partidos del usuario
+      const response = await fetch(`/api/partidos/usuario/${user.id}`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      })
+
+      console.log("[MyMatches] Status:", response.status)
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error("[MyMatches] Error response:", errorText)
+        
+        // Si es 500, mostrar mensaje amigable pero continuar
+        if (response.status === 500) {
+          console.warn("[MyMatches] Error 500 del servidor, mostrando vacío")
+          setCreatedMatches([])
+          setJoinedMatches([])
+          setError("El servidor está teniendo problemas. Por favor, intenta más tarde.")
+          return
+        }
+        
+        throw new Error(`Error ${response.status}: ${errorText}`)
       }
 
-      const partidos = response.data || []
+      const result = await response.json()
+      console.log("[MyMatches] Respuesta:", result)
+
+      // Manejar diferentes formatos de respuesta
+      let partidos: any[] = []
+      
+      if (Array.isArray(result)) {
+        partidos = result
+      } else if (result.data && Array.isArray(result.data)) {
+        partidos = result.data
+      } else if (result.data && typeof result.data === 'object') {
+        partidos = result.data.items || result.data.content || []
+      } else {
+        console.warn("[MyMatches] Formato inesperado:", result)
+        partidos = []
+      }
+
+      console.log("[MyMatches] Partidos recibidos:", partidos.length)
+
+      // Normalizar partidos
+      const normalizedMatches = partidos.map((p: any) => ({
+        id: p.id,
+        tipoPartido: p.tipoPartido || p.tipo_partido || "FUTBOL_5",
+        genero: p.genero || "Mixto",
+        nivel: p.nivel || "INTERMEDIO",
+        fecha: p.fecha,
+        hora: p.hora,
+        nombreUbicacion: p.nombreUbicacion || p.nombre_ubicacion || "",
+        cantidadJugadores: p.cantidadJugadores || p.cantidad_jugadores || 10,
+        jugadoresActuales: p.jugadoresActuales || p.jugadores_actuales || 0,
+        precioPorJugador: p.precioPorJugador || p.precio_por_jugador || 0,
+        duracionMinutos: p.duracionMinutos || p.duracion_minutos || 90,
+        estado: p.estado || "PENDIENTE",
+        organizadorId: p.organizadorId || p.organizador_id || ""
+      }))
 
       // Separar en creados vs inscritos
-      const created = partidos.filter((p) => p.organizadorId === user.id)
-      const joined = partidos.filter((p) => p.organizadorId !== user.id)
+      const created = normalizedMatches.filter((p: Match) => p.organizadorId === user.id)
+      const joined = normalizedMatches.filter((p: Match) => p.organizadorId !== user.id)
 
       // Ordenar por fecha (más recientes primero)
-      const sortByDate = (a: PartidoDTO, b: PartidoDTO) => {
+      const sortByDate = (a: Match, b: Match) => {
         try {
           const dateA = new Date(`${a.fecha}T${a.hora}`)
           const dateB = new Date(`${b.fecha}T${b.hora}`)
@@ -73,11 +134,13 @@ export function MyMatchesScreen() {
         }
       }
 
+      console.log("[MyMatches] Creados:", created.length, "Inscritos:", joined.length)
+
       setCreatedMatches(created.sort(sortByDate))
       setJoinedMatches(joined.sort(sortByDate))
 
     } catch (err) {
-      console.error("[MyMatches] Error cargando partidos:", err)
+      console.error("[MyMatches] Error:", err)
       const errorMessage = err instanceof Error ? err.message : "Error al cargar partidos"
       setError(errorMessage)
     } finally {
@@ -85,27 +148,17 @@ export function MyMatchesScreen() {
     }
   }
 
-  // ============================================
-  // HANDLERS
-  // ============================================
-
   const handleCreateMatch = () => {
     router.push("/create-match")
   }
 
-  const handleMatchClick = (match: PartidoDTO) => {
+  const handleMatchClick = (match: Match) => {
     if (activeTab === "Creados" && match.organizadorId === currentUser?.id) {
-      // Si es creador, ir a gestión
       router.push(`/my-matches/${match.id}`)
     } else {
-      // Si es participante, ir a detalle
       router.push(`/matches/${match.id}`)
     }
   }
-
-  // ============================================
-  // HELPERS DE FORMATO
-  // ============================================
 
   const formatMatchType = (type: string) => {
     return type.replace("FUTBOL_", "F")
@@ -115,10 +168,10 @@ export function MyMatchesScreen() {
     if (!level) return "Intermedio"
     
     const levelMap: Record<string, string> = {
-      [NivelPartido.PRINCIPIANTE]: "Principiante",
-      [NivelPartido.INTERMEDIO]: "Intermedio",
-      [NivelPartido.AVANZADO]: "Avanzado",
-      [NivelPartido.PROFESIONAL]: "Profesional"
+      "PRINCIPIANTE": "Principiante",
+      "INTERMEDIO": "Intermedio",
+      "AVANZADO": "Avanzado",
+      "PROFESIONAL": "Profesional"
     }
     return levelMap[level] || level
   }
@@ -135,7 +188,7 @@ export function MyMatchesScreen() {
       const compareDate = new Date(date)
       compareDate.setHours(0, 0, 0, 0)
 
-      const time = timeString.substring(0, 5) // HH:mm
+      const time = timeString.substring(0, 5)
 
       if (compareDate.getTime() === today.getTime()) {
         return `Hoy ${time}`
@@ -152,26 +205,14 @@ export function MyMatchesScreen() {
   }
 
   const getStatusBadge = (estado: string) => {
-    const statusMap: Record<PartidoEstado, { label: string; className: string }> = {
-      [PartidoEstado.CONFIRMADO]: { 
-        label: "Confirmado", 
-        className: "bg-green-100 text-green-800" 
-      },
-      [PartidoEstado.CANCELADO]: { 
-        label: "Cancelado", 
-        className: "bg-red-100 text-red-800" 
-      },
-      [PartidoEstado.COMPLETADO]: { 
-        label: "Completado", 
-        className: "bg-blue-100 text-blue-800" 
-      },
-      [PartidoEstado.PENDIENTE]: { 
-        label: "Pendiente", 
-        className: "bg-yellow-100 text-yellow-800" 
-      },
+    const statusMap: Record<string, { label: string; className: string }> = {
+      "CONFIRMADO": { label: "Confirmado", className: "bg-green-100 text-green-800" },
+      "CANCELADO": { label: "Cancelado", className: "bg-red-100 text-red-800" },
+      "COMPLETADO": { label: "Completado", className: "bg-blue-100 text-blue-800" },
+      "PENDIENTE": { label: "Pendiente", className: "bg-yellow-100 text-yellow-800" },
     }
 
-    const status = statusMap[estado as PartidoEstado] || statusMap[PartidoEstado.PENDIENTE]
+    const status = statusMap[estado] || statusMap["PENDIENTE"]
 
     return (
       <Badge className={`${status.className} hover:${status.className}`}>
@@ -182,29 +223,13 @@ export function MyMatchesScreen() {
 
   const getSpotsLeftBadge = (spotsLeft: number) => {
     if (spotsLeft === 0) {
-      return (
-        <Badge className="bg-red-100 text-red-800 hover:bg-red-100">
-          Completo
-        </Badge>
-      )
+      return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Completo</Badge>
     }
     if (spotsLeft <= 3) {
-      return (
-        <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">
-          Quedan {spotsLeft}
-        </Badge>
-      )
+      return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100">Quedan {spotsLeft}</Badge>
     }
-    return (
-      <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-        Quedan {spotsLeft}
-      </Badge>
-    )
+    return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Quedan {spotsLeft}</Badge>
   }
-
-  // ============================================
-  // RENDER - LOADING
-  // ============================================
 
   if (loading) {
     return (
@@ -224,10 +249,6 @@ export function MyMatchesScreen() {
       </div>
     )
   }
-
-  // ============================================
-  // RENDER - MAIN
-  // ============================================
 
   const displayMatches = activeTab === "Creados" ? createdMatches : joinedMatches
 
@@ -250,18 +271,27 @@ export function MyMatchesScreen() {
       <div className="flex-1 px-6 overflow-y-auto">
         {/* Error Message */}
         {error && (
-          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start space-x-3">
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-red-600 text-sm font-medium">Error</p>
-              <p className="text-red-600 text-sm">{error}</p>
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-2xl">
+            <div className="flex items-start space-x-3">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-red-600 text-sm font-medium">Error</p>
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+              <button 
+                onClick={() => setError("")}
+                className="text-red-600 hover:text-red-700"
+              >
+                ✕
+              </button>
             </div>
-            <button 
-              onClick={() => setError("")}
-              className="text-red-600 hover:text-red-700"
+            <Button 
+              onClick={loadMatches} 
+              className="mt-3 w-full bg-red-600 hover:bg-red-700"
+              size="sm"
             >
-              ✕
-            </button>
+              Reintentar
+            </Button>
           </div>
         )}
 
@@ -316,8 +346,7 @@ export function MyMatchesScreen() {
           ) : (
             displayMatches.map((match) => {
               const spotsLeft = match.cantidadJugadores - match.jugadoresActuales
-              const isActive = match.estado !== PartidoEstado.CANCELADO && 
-                              match.estado !== PartidoEstado.COMPLETADO
+              const isActive = match.estado !== "CANCELADO" && match.estado !== "COMPLETADO"
 
               return (
                 <div
@@ -325,7 +354,6 @@ export function MyMatchesScreen() {
                   onClick={() => handleMatchClick(match)}
                   className="bg-white border border-gray-200 rounded-2xl p-6 cursor-pointer hover:shadow-md transition-all touch-manipulation active:scale-[0.98]"
                 >
-                  {/* Header */}
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex gap-2 flex-wrap">
                       <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
@@ -339,7 +367,6 @@ export function MyMatchesScreen() {
                     {isActive && getSpotsLeftBadge(spotsLeft)}
                   </div>
 
-                  {/* Match Info */}
                   <div className="mb-4">
                     <h3 className="text-xl font-bold text-gray-900 mb-2">
                       {formatDate(match.fecha, match.hora)}
@@ -360,7 +387,6 @@ export function MyMatchesScreen() {
                     </div>
                   </div>
 
-                  {/* Footer */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <Users className="w-4 h-4 text-gray-600" />
