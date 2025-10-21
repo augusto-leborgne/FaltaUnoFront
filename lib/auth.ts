@@ -1,23 +1,24 @@
-import { Usuario } from "./api";
+import { Usuario } from "./api"
+import { jwtDecode } from 'jwt-decode
 
 // ============================================
 // CONFIGURACIÓN
 // ============================================
 
-const STORAGE_TOKEN_KEY = "authToken";
-const STORAGE_USER_KEY = "user";
+const TOKEN_KEY = "authToken";
+const USER_KEY = "user";
 const TOKEN_REFRESH_THRESHOLD = 5 * 60; // 5 minutos antes de expirar
 
 // ============================================
 // INTERFACES
 // ============================================
 
-interface JWTPayload {
-  sub: string; // user id
-  email: string;
-  exp: number; // expiration timestamp (seconds)
-  iat: number; // issued at timestamp (seconds)
-  [key: string]: any;
+interface JwtPayload {
+  sub: string // email
+  userId?: string
+  exp: number
+  iat: number
+  roles?: string[]
 }
 
 // ============================================
@@ -51,382 +52,311 @@ function base64UrlDecode(str: string): string {
 
 export const AuthService = {
   /**
-   * Decodifica un token JWT y retorna el payload
+   * Guardar token JWT
    */
-  decodeToken: (token: string): JWTPayload | null => {
+  setToken(token: string): void {
+    if (typeof window === 'undefined') return
+    
     try {
-      const parts = token.split(".");
-      
-      if (parts.length !== 3) {
-        console.warn("[Auth] Token JWT inválido: no tiene 3 partes");
-        return null;
-      }
-
-      const payload = parts[1];
-      const decoded = base64UrlDecode(payload);
-      const parsed = JSON.parse(decoded) as JWTPayload;
-
-      return parsed;
+      localStorage.setItem(TOKEN_KEY, token)
+      console.log('[AuthService] Token guardado')
     } catch (error) {
-      console.error("[Auth] Error decodificando token:", error);
-      return null;
+      console.error('[AuthService] Error guardando token:', error)
     }
   },
 
   /**
-   * Verifica si un token está expirado
+   * Obtener token JWT
    */
-  isTokenExpired: (token: string): boolean => {
+  getToken(): string | null {
+    if (typeof window === 'undefined') return null
+    
     try {
-      const decoded = AuthService.decodeToken(token);
+      return localStorage.getItem(TOKEN_KEY)
+    } catch (error) {
+      console.error('[AuthService] Error obteniendo token:', error)
+      return null
+    }
+  },
+
+  /**
+   * Guardar datos de usuario
+   */
+  setUser(user: Usuario): void {
+    if (typeof window === 'undefined') return
+    
+    try {
+      // Limpiar password antes de guardar
+      const userToSave = { ...user }
+      delete (userToSave as any).password
       
-      if (!decoded || !decoded.exp) {
-        console.warn("[Auth] Token sin claim 'exp'");
-        return true;
-      }
+      localStorage.setItem(USER_KEY, JSON.stringify(userToSave))
+      console.log('[AuthService] Usuario guardado:', user.email)
+    } catch (error) {
+      console.error('[AuthService] Error guardando usuario:', error)
+    }
+  },
 
-      const now = Math.floor(Date.now() / 1000); // Convertir a segundos
-      const isExpired = decoded.exp < now;
+  /**
+   * Obtener datos de usuario
+   */
+  getUser(): Usuario | null {
+    if (typeof window === 'undefined') return null
+    
+    try {
+      const userStr = localStorage.getItem(USER_KEY)
+      if (!userStr) return null
+      
+      return JSON.parse(userStr) as Usuario
+    } catch (error) {
+      console.error('[AuthService] Error obteniendo usuario:', error)
+      return null
+    }
+  },
 
+  /**
+   * Verificar si hay una sesión activa válida
+   */
+  isAuthenticated(): boolean {
+    const token = this.getToken()
+    
+    if (!token) {
+      console.log('[AuthService] No hay token')
+      return false
+    }
+    
+    if (this.isTokenExpired(token)) {
+      console.log('[AuthService] Token expirado')
+      this.logout() // Limpiar sesión expirada
+      return false
+    }
+    
+    return true
+  },
+
+  /**
+   * Verificar si el token está expirado
+   */
+  isTokenExpired(token: string): boolean {
+    try {
+      const decoded = jwtDecode<JwtPayload>(token)
+      const now = Date.now() / 1000
+      
+      // Considerar expirado si quedan menos de 60 segundos
+      const isExpired = decoded.exp < now + 60
+      
       if (isExpired) {
-        console.log("[Auth] Token expirado:", {
-          exp: new Date(decoded.exp * 1000).toISOString(),
-          now: new Date(now * 1000).toISOString(),
-        });
+        console.log('[AuthService] Token expira en:', decoded.exp - now, 'segundos')
       }
-
-      return isExpired;
+      
+      return isExpired
     } catch (error) {
-      console.error("[Auth] Error verificando expiración:", error);
-      return true;
+      console.error('[AuthService] Error decodificando token:', error)
+      return true // Si no se puede decodificar, considerar expirado
     }
   },
 
   /**
-   * Verifica si el token necesita ser renovado pronto
+   * Decodificar token para obtener información
    */
-  shouldRefreshToken: (token: string): boolean => {
+  decodeToken(token?: string): JwtPayload | null {
+    const tokenToUse = token || this.getToken()
+    
+    if (!tokenToUse) return null
+    
     try {
-      const decoded = AuthService.decodeToken(token);
+      return jwtDecode<JwtPayload>(tokenToUse)
+    } catch (error) {
+      console.error('[AuthService] Error decodificando token:', error)
+      return null
+    }
+  },
+
+  /**
+   * Cerrar sesión - CORREGIDO para evitar race conditions
+   */
+  logout(): void {
+    if (typeof window === 'undefined') return
+    
+    console.log('[AuthService] 🚪 Cerrando sesión...')
+    
+    try {
+      // 1. Limpiar localStorage
+      localStorage.removeItem(TOKEN_KEY)
+      localStorage.removeItem(USER_KEY)
       
-      if (!decoded || !decoded.exp) {
-        return false;
+      // 2. Limpiar cualquier otro dato relacionado
+      Object.keys(localStorage).forEach(key => {
+        if (key.startsWith('faltauno_')) {
+          localStorage.removeItem(key)
+        }
+      })
+      
+      console.log('[AuthService] ✅ Sesión limpiada')
+    } catch (error) {
+      console.error('[AuthService] Error limpiando sesión:', error)
+    }
+  },
+
+  /**
+   * Validar y limpiar sesión si es inválida
+   */
+  validateAndCleanup(): void {
+    if (typeof window === 'undefined') return
+    
+    const token = this.getToken()
+    const user = this.getUser()
+    
+    // Si hay token pero está expirado, limpiar todo
+    if (token && this.isTokenExpired(token)) {
+      console.log('[AuthService] 🧹 Token expirado, limpiando sesión')
+      this.logout()
+      return
+    }
+    
+    // Si hay usuario pero no token, limpiar todo
+    if (user && !token) {
+      console.log('[AuthService] 🧹 Usuario sin token, limpiando sesión')
+      this.logout()
+      return
+    }
+    
+    // Si hay token pero no usuario, intentar recuperar del token
+    if (token && !user) {
+      console.log('[AuthService] ⚠️ Token sin usuario, requiere re-login')
+      this.logout()
+      return
+    }
+  },
+
+  /**
+   * Verificar si el usuario existe en el backend
+   */
+  async verifyUserExists(): Promise<boolean> {
+    if (typeof window === 'undefined') return false
+    
+    const token = this.getToken()
+    if (!token || this.isTokenExpired(token)) {
+      this.logout()
+      return false
+    }
+    
+    try {
+      const response = await fetch('/api/usuarios/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (!response.ok) {
+        console.log('[AuthService] Usuario no existe en BD, limpiando sesión')
+        this.logout()
+        return false
       }
-
-      const now = Math.floor(Date.now() / 1000);
-      const timeUntilExpiry = decoded.exp - now;
-
-      // Refrescar si faltan menos de 5 minutos para expirar
-      return timeUntilExpiry < TOKEN_REFRESH_THRESHOLD && timeUntilExpiry > 0;
-    } catch (error) {
-      console.error("[Auth] Error verificando refresh:", error);
-      return false;
-    }
-  },
-
-  /**
-   * Obtiene el token del localStorage
-   */
-  getToken: (): string | null => {
-    if (!hasWindow()) return null;
-    
-    try {
-      return localStorage.getItem(STORAGE_TOKEN_KEY);
-    } catch (error) {
-      console.warn("[Auth] Error obteniendo token:", error);
-      return null;
-    }
-  },
-
-  /**
-   * Guarda el token en localStorage
-   */
-  setToken: (token: string): void => {
-    if (!hasWindow()) return;
-    
-    try {
-      localStorage.setItem(STORAGE_TOKEN_KEY, token);
-      console.log("[Auth] Token guardado exitosamente");
-    } catch (error) {
-      console.error("[Auth] Error guardando token:", error);
-    }
-  },
-
-  /**
-   * Obtiene el usuario del localStorage
-   */
-  getUser: (): Usuario | null => {
-    if (!hasWindow()) return null;
-    
-    try {
-      const raw = localStorage.getItem(STORAGE_USER_KEY);
-      if (!raw) return null;
       
-      return JSON.parse(raw) as Usuario;
+      const result = await response.json()
+      
+      if (!result.success || !result.data) {
+        this.logout()
+        return false
+      }
+      
+      // Actualizar datos del usuario
+      this.setUser(result.data)
+      return true
+      
     } catch (error) {
-      console.warn("[Auth] Error obteniendo usuario:", error);
-      return null;
+      console.error('[AuthService] Error verificando usuario:', error)
+      this.logout()
+      return false
     }
   },
 
   /**
-   * Guarda el usuario en localStorage
+   * Refrescar datos del usuario desde el backend
    */
-  setUser: (user: Usuario): void => {
-    if (!hasWindow()) return;
+  async refreshUser(): Promise<Usuario | null> {
+    if (typeof window === 'undefined') return null
+    
+    const token = this.getToken()
+    if (!token || this.isTokenExpired(token)) {
+      this.logout()
+      return null
+    }
     
     try {
-      localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(user));
-      console.log("[Auth] Usuario guardado:", user.email);
+      const response = await fetch('/api/usuarios/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (!response.ok) {
+        this.logout()
+        return null
+      }
+      
+      const result = await response.json()
+      
+      if (result.success && result.data) {
+        this.setUser(result.data)
+        return result.data
+      }
+      
+      return null
     } catch (error) {
-      console.error("[Auth] Error guardando usuario:", error);
+      console.error('[AuthService] Error refrescando usuario:', error)
+      return null
     }
   },
 
   /**
-   * Actualiza los datos del usuario en localStorage
+   * Obtener información del token actual
    */
-  updateUser: (updates: Partial<Usuario>): void => {
-    const currentUser = AuthService.getUser();
-    if (!currentUser) return;
-    
-    const updatedUser = { ...currentUser, ...updates };
-    AuthService.setUser(updatedUser);
-  },
-
-  /**
-   * Cierra sesión y limpia localStorage
-   */
-  logout: (): void => {
-    if (!hasWindow()) return;
-    
-    console.log("[Auth] Cerrando sesión");
-    
-    try {
-      localStorage.removeItem(STORAGE_TOKEN_KEY);
-      localStorage.removeItem(STORAGE_USER_KEY);
-    } catch (error) {
-      console.warn("[Auth] Error limpiando localStorage:", error);
-    }
-  },
-
-  /**
-   * Valida el token actual y limpia si está expirado
-   */
-  validateAndCleanup: (): boolean => {
-    if (!hasWindow()) return false;
-    
-    const token = AuthService.getToken();
+  getTokenInfo(): {
+    email: string | null
+    userId: string | null
+    expiresAt: Date | null
+    isExpired: boolean
+  } {
+    const token = this.getToken()
     
     if (!token) {
-      return false;
-    }
-
-    if (AuthService.isTokenExpired(token)) {
-      console.warn("[Auth] Token expirado detectado, limpiando sesión");
-      AuthService.logout();
-      return false;
-    }
-
-    return true;
-  },
-
-  /**
-   * Verifica si el usuario está autenticado
-   */
-  isLoggedIn: (): boolean => {
-    if (!hasWindow()) return false;
-    
-    const token = AuthService.getToken();
-    const user = AuthService.getUser();
-    
-    if (!token || !user) {
-      return false;
-    }
-
-    if (AuthService.isTokenExpired(token)) {
-      console.log("[Auth] Token expirado en isLoggedIn");
-      return false;
-    }
-
-    return true;
-  },
-
-  /**
-   * Obtiene información del usuario desde el token
-   */
-  getUserFromToken: (token?: string): Partial<Usuario> | null => {
-    const tokenToUse = token || AuthService.getToken();
-    if (!tokenToUse) return null;
-
-    try {
-      const decoded = AuthService.decodeToken(tokenToUse);
-      if (!decoded) return null;
-
       return {
-        id: decoded.sub,
-        email: decoded.email,
-        nombre: decoded.nombre,
-        apellido: decoded.apellido,
-      };
-    } catch (error) {
-      console.error("[Auth] Error extrayendo usuario del token:", error);
-      return null;
-    }
-  },
-
-  /**
-   * Obtiene headers de autenticación para requests
-   */
-  getAuthHeaders: (): Record<string, string> => {
-    const token = AuthService.getToken();
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-    };
-
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
-    }
-
-    return headers;
-  },
-
-  /**
-   * Wrapper para fetch que inyecta headers de autenticación
-   */
-  authFetch: async (
-    input: RequestInfo,
-    init: RequestInit = {}
-  ): Promise<Response> => {
-    // Validar token antes del request
-    AuthService.validateAndCleanup();
-
-    const token = AuthService.getToken();
-    if (!token) {
-      throw new Error("No hay token de autenticación");
-    }
-
-    // Preparar headers
-    const headers = new Headers(init.headers);
-    headers.set("Authorization", `Bearer ${token}`);
-    
-    if (!headers.has("Content-Type") && !(init.body instanceof FormData)) {
-      headers.set("Content-Type", "application/json");
-    }
-
-    // Hacer request
-    const response = await fetch(input, {
-      ...init,
-      headers,
-    });
-
-    // Si es 401, limpiar sesión
-    if (response.status === 401) {
-      console.warn("[Auth] 401 recibido, limpiando sesión");
-      AuthService.logout();
-      
-      if (hasWindow()) {
-        window.location.href = "/login";
+        email: null,
+        userId: null,
+        expiresAt: null,
+        isExpired: true
       }
     }
-
-    return response;
-  },
-
-  /**
-   * Verifica si el perfil del usuario está completo
-   */
-  isProfileComplete: (): boolean => {
-    const user = AuthService.getUser();
-    if (!user) return false;
-
-    return user.perfilCompleto ?? false;
-  },
-
-  /**
-   * Verifica si la cédula del usuario está verificada
-   */
-  isCedulaVerified: (): boolean => {
-    const user = AuthService.getUser();
-    if (!user) return false;
-
-    return user.cedulaVerificada ?? false;
-  },
-
-  /**
-   * Obtiene el tiempo restante hasta la expiración del token (en segundos)
-   */
-  getTokenTimeRemaining: (): number | null => {
-    const token = AuthService.getToken();
-    if (!token) return null;
-
+    
     try {
-      const decoded = AuthService.decodeToken(token);
-      if (!decoded || !decoded.exp) return null;
-
-      const now = Math.floor(Date.now() / 1000);
-      const remaining = decoded.exp - now;
-
-      return remaining > 0 ? remaining : 0;
+      const decoded = this.decodeToken(token)
+      
+      if (!decoded) {
+        return {
+          email: null,
+          userId: null,
+          expiresAt: null,
+          isExpired: true
+        }
+      }
+      
+      return {
+        email: decoded.sub,
+        userId: decoded.userId || null,
+        expiresAt: new Date(decoded.exp * 1000),
+        isExpired: this.isTokenExpired(token)
+      }
     } catch (error) {
-      console.error("[Auth] Error calculando tiempo restante:", error);
-      return null;
+      return {
+        email: null,
+        userId: null,
+        expiresAt: null,
+        isExpired: true
+      }
     }
-  },
-
-  /**
-   * Formatea el tiempo restante del token en formato legible
-   */
-  formatTokenTimeRemaining: (): string => {
-    const seconds = AuthService.getTokenTimeRemaining();
-    if (seconds === null) return "Token inválido";
-    if (seconds === 0) return "Expirado";
-
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-
-    if (days > 0) return `${days}d ${hours % 24}h`;
-    if (hours > 0) return `${hours}h ${minutes % 60}m`;
-    if (minutes > 0) return `${minutes}m`;
-    return `${seconds}s`;
-  },
-
-  /**
-   * Debug: Imprime información del token actual
-   */
-  debugToken: (): void => {
-    if (!hasWindow()) {
-      console.log("[Auth Debug] No hay window disponible");
-      return;
-    }
-
-    const token = AuthService.getToken();
-    const user = AuthService.getUser();
-
-    console.group("[Auth Debug]");
-    console.log("Token exists:", !!token);
-    console.log("User exists:", !!user);
-    
-    if (token) {
-      const decoded = AuthService.decodeToken(token);
-      console.log("Token decoded:", decoded);
-      console.log("Is expired:", AuthService.isTokenExpired(token));
-      console.log("Should refresh:", AuthService.shouldRefreshToken(token));
-      console.log("Time remaining:", AuthService.formatTokenTimeRemaining());
-    }
-    
-    if (user) {
-      console.log("User:", {
-        id: user.id,
-        email: user.email,
-        nombre: user.nombre,
-        apellido: user.apellido,
-        perfilCompleto: user.perfilCompleto,
-        cedulaVerificada: user.cedulaVerificada,
-      });
-    }
-    
-    console.groupEnd();
-  },
-};
+  }
+}
