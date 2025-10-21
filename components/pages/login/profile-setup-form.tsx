@@ -9,7 +9,6 @@ import { User, ChevronDown } from "lucide-react"
 import AddressAutocomplete from "@/components/google-maps/address-autocomplete"
 import { AuthService } from "@/lib/auth"
 import { useAuth } from "@/hooks/use-auth"
-import type { google } from "google-maps"
 
 export function ProfileSetupForm() {
   const router = useRouter()

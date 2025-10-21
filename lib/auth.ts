@@ -1,5 +1,5 @@
 import { Usuario } from "./api"
-import { jwtDecode } from 'jwt-decode
+import { jwtDecode } from 'jwt-decode'
 
 // ============================================
 // CONFIGURACIÓN
