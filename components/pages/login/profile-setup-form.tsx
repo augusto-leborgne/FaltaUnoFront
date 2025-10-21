@@ -9,10 +9,13 @@ import { User, ChevronDown } from "lucide-react"
 import AddressAutocomplete from "@/components/google-maps/address-autocomplete"
 import { AuthService } from "@/lib/auth"
 import { useAuth } from "@/hooks/use-auth"
+import { UsuarioAPI } from "@/lib/api"
+import { usePostAuthRedirect } from "@/lib/navigation"
 
 export function ProfileSetupForm() {
   const router = useRouter()
-  const { refreshUser } = useAuth()
+  const { user, setUser } = useAuth()
+  const postAuthRedirect = usePostAuthRedirect()
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   const [formData, setFormData] = useState({
@@ -43,108 +46,70 @@ export function ProfileSetupForm() {
     }
   }, [formData.photoPreviewUrl])
 
-  const openFilePicker = () => { 
-    if (fileInputRef.current) fileInputRef.current.click() 
-  }
+  const openFilePicker = () => fileInputRef.current?.click()
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0] ?? null
     if (!f) return
     if (formData.photoPreviewUrl) URL.revokeObjectURL(formData.photoPreviewUrl)
-    const preview = URL.createObjectURL(f)
-    setFormData(prev => ({ ...prev, photo: f, photoPreviewUrl: preview }))
+    setFormData((p) => ({ ...p, photo: f, photoPreviewUrl: URL.createObjectURL(f) }))
   }
 
   const handlePositionSelect = (position: string) => {
-    setFormData(prev => ({ ...prev, position }))
+    setFormData((p) => ({ ...p, position }))
     setShowPositionDropdown(false)
   }
 
   const handleLevelSelect = (level: string) => {
-    setFormData(prev => ({ ...prev, level }))
+    setFormData((p) => ({ ...p, level }))
     setShowLevelDropdown(false)
   }
 
   const handleAddressChangeFromAutocomplete = (
-    address: string, 
+    address: string,
     placeDetails?: google.maps.places.PlaceResult | null
   ) => {
-    setFormData(prev => ({ 
-      ...prev, 
-      address: address ?? "", 
-      placeDetails: placeDetails ?? null 
-    }))
+    setFormData((p) => ({ ...p, address: address ?? "", placeDetails: placeDetails ?? null }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!formData.photo) {
-      alert("La foto es obligatoria")
-      return
-    }
-    if (!formData.name || !formData.surname) {
-      alert("Nombre y apellido son obligatorios")
-      return
-    }
-    if (!formData.phone) {
-      alert("El número de teléfono es obligatorio")
-      return
-    }
-    if (!formData.fechaNacimiento) {
-      alert("La fecha de nacimiento es obligatoria")
-      return
-    }
+
+    if (!formData.photo) return alert("La foto es obligatoria")
+    if (!formData.name || !formData.surname) return alert("Nombre y apellido son obligatorios")
+    if (!formData.phone) return alert("El número de teléfono es obligatorio")
+    if (!formData.fechaNacimiento) return alert("La fecha de nacimiento es obligatoria")
 
     await handleUploadAndSaveProfile()
   }
 
   async function handleUploadAndSaveProfile() {
     if (!formData.photo) return alert("Foto requerida")
-    
+
     setIsUploading(true)
-    
     try {
       const token = AuthService.getToken()
       console.log("[ProfileSetup] Token disponible:", token ? "SÍ" : "NO")
-      
       if (!token) {
         alert("No estás autenticado. Por favor, inicia sesión nuevamente.")
-        router.push("/login")
+        router.replace("/login")
         return
       }
-
-      // Verificar que el token no esté expirado
       if (AuthService.isTokenExpired(token)) {
         alert("Tu sesión ha expirado. Por favor, inicia sesión nuevamente.")
         AuthService.logout()
-        router.push("/login")
+        router.replace("/login")
         return
       }
 
+      // 1) Subir foto vía API unificada
       console.log("[ProfileSetup] Subiendo foto...")
-      
-      // 1. Subir foto primero
-      const fotoFormData = new FormData()
-      fotoFormData.append("file", formData.photo)
+      const fotoRes = await UsuarioAPI.subirFoto(formData.photo)
+      if (!fotoRes?.success) throw new Error("No se pudo subir la foto")
 
-      const fotoRes = await fetch("/api/usuarios/me/foto", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`
-        },
-        body: fotoFormData
-      })
-
-      if (!fotoRes.ok) {
-        const errorText = await fotoRes.text()
-        throw new Error(`Error subiendo foto: ${errorText}`)
-      }
-
-      console.log("[ProfileSetup] Foto subida exitosamente, actualizando perfil...")
-
-      // 2. Actualizar perfil
-      const perfilPayload = {
+      // 2) Actualizar perfil
+      console.log("[ProfileSetup] Actualizando perfil...")
+      const payload: any = {
         nombre: formData.name,
         apellido: formData.surname,
         celular: formData.phone,
@@ -156,32 +121,27 @@ export function ProfileSetupForm() {
         direccion: formData.address,
         placeDetails: formData.placeDetails ? JSON.stringify(formData.placeDetails) : null,
       }
+      const perfilRes = await UsuarioAPI.actualizarPerfil(payload)
+      if (!perfilRes?.success) throw new Error("No se pudo actualizar el perfil")
 
-      const perfilRes = await fetch("/api/usuarios/me", {
-        method: "PUT",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(perfilPayload)
-      })
-
-      if (!perfilRes.ok) {
-        const errorText = await perfilRes.text()
-        throw new Error(`Error actualizando perfil: ${errorText}`)
+      // 3) Actualizar user local inmediatamente (clave para salir del loop)
+      const serverUser = perfilRes.data || {}
+      const merged: any = {
+        ...(AuthService.getUser() ?? {}),
+        ...serverUser,
+        perfilCompleto: true, // <<<< habilita flujo siguiente
       }
+      AuthService.setUser(merged)
+      setUser(merged)
 
-      console.log("[ProfileSetup] Perfil actualizado exitosamente")
+      // 4) Redirigir según regla global (profile-setup / verification / home)
+      postAuthRedirect(merged) // si cedulaVerificada=false → /verification, si true → /home
 
-      // 3. Refrescar usuario en contexto
-      await refreshUser()
-
-      // 4. Redirigir a verificación
-      router.push("/verification")
-      
+      // (opcional) refrescar en background
+      setTimeout(() => AuthService.fetchCurrentUser(), 1500)
     } catch (err: any) {
       console.error("[ProfileSetup] Error al guardar perfil:", err)
-      alert(`Error al guardar perfil: ${err.message || "Intenta nuevamente"}`)
+      alert(`Error al guardar perfil: ${err?.message ?? "Intenta nuevamente"}`)
     } finally {
       setIsUploading(false)
     }
@@ -199,11 +159,7 @@ export function ProfileSetupForm() {
             <div className="flex items-center space-x-4">
               <Avatar className="w-16 h-16 bg-orange-100">
                 {formData.photoPreviewUrl ? (
-                  <img 
-                    src={formData.photoPreviewUrl} 
-                    alt="preview" 
-                    className="w-16 h-16 object-cover rounded-md" 
-                  />
+                  <img src={formData.photoPreviewUrl} alt="preview" className="w-16 h-16 object-cover rounded-md" />
                 ) : (
                   <AvatarFallback className="bg-orange-100">
                     <User className="w-8 h-8 text-gray-600" />
@@ -231,58 +187,52 @@ export function ProfileSetupForm() {
                 {formData.photo ? "Cambiar" : "Agregar"}
               </Button>
 
-              <input 
-                ref={fileInputRef} 
-                type="file" 
-                accept="image/*" 
-                onChange={handlePhotoChange} 
-                className="hidden" 
-              />
+              <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Input 
-              placeholder="Nombre" 
-              value={formData.name} 
-              onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))} 
-              required 
+            <Input
+              placeholder="Nombre"
+              value={formData.name}
+              onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
+              required
             />
-            <Input 
-              placeholder="Apellido" 
-              value={formData.surname} 
-              onChange={e => setFormData(prev => ({ ...prev, surname: e.target.value }))} 
-              required 
+            <Input
+              placeholder="Apellido"
+              value={formData.surname}
+              onChange={(e) => setFormData((p) => ({ ...p, surname: e.target.value }))}
+              required
             />
           </div>
 
-          <Input 
-            placeholder="Celular" 
-            value={formData.phone} 
-            onChange={e => setFormData(prev => ({ ...prev, phone: e.target.value }))} 
-            required 
+          <Input
+            placeholder="Celular"
+            value={formData.phone}
+            onChange={(e) => setFormData((p) => ({ ...p, phone: e.target.value }))}
+            required
           />
 
           <Input
             placeholder="Fecha de nacimiento"
             value={formData.fechaNacimiento}
-            onChange={e => setFormData(prev => ({ ...prev, fechaNacimiento: e.target.value }))}
+            onChange={(e) => setFormData((p) => ({ ...p, fechaNacimiento: e.target.value }))}
             type="date"
             required
           />
 
           <div className="grid grid-cols-2 gap-4">
-            <Input 
-              placeholder="Altura (cm)" 
+            <Input
+              placeholder="Altura (cm)"
               type="number"
-              value={formData.height} 
-              onChange={e => setFormData(prev => ({ ...prev, height: e.target.value }))} 
+              value={formData.height}
+              onChange={(e) => setFormData((p) => ({ ...p, height: e.target.value }))}
             />
-            <Input 
-              placeholder="Peso (kg)" 
+            <Input
+              placeholder="Peso (kg)"
               type="number"
-              value={formData.weight} 
-              onChange={e => setFormData(prev => ({ ...prev, weight: e.target.value }))} 
+              value={formData.weight}
+              onChange={(e) => setFormData((p) => ({ ...p, weight: e.target.value }))}
             />
           </div>
 
@@ -295,10 +245,10 @@ export function ProfileSetupForm() {
           </div>
 
           <div className="relative">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => setShowPositionDropdown(!showPositionDropdown)} 
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowPositionDropdown(!showPositionDropdown)}
               className="w-full text-left py-3 px-4 rounded-xl border border-gray-300 bg-white justify-between"
             >
               <span>{formData.position || "Selecciona tu posición"}</span>
@@ -306,10 +256,10 @@ export function ProfileSetupForm() {
             </Button>
             {showPositionDropdown && (
               <div className="absolute mt-1 w-full bg-white border border-gray-300 rounded-xl z-50 max-h-60 overflow-auto">
-                {positions.map(pos => (
-                  <div 
-                    key={pos} 
-                    onClick={() => handlePositionSelect(pos)} 
+                {positions.map((pos) => (
+                  <div
+                    key={pos}
+                    onClick={() => handlePositionSelect(pos)}
                     className="p-3 hover:bg-gray-100 cursor-pointer"
                   >
                     {pos}
@@ -320,10 +270,10 @@ export function ProfileSetupForm() {
           </div>
 
           <div className="relative">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => setShowLevelDropdown(!showLevelDropdown)} 
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowLevelDropdown(!showLevelDropdown)}
               className="w-full text-left py-3 px-4 rounded-xl border border-gray-300 bg-white justify-between"
             >
               <span>{formData.level || "Selecciona tu nivel"}</span>
@@ -331,10 +281,10 @@ export function ProfileSetupForm() {
             </Button>
             {showLevelDropdown && (
               <div className="absolute mt-1 w-full bg-white border border-gray-300 rounded-xl z-50">
-                {levels.map(lv => (
-                  <div 
-                    key={lv} 
-                    onClick={() => handleLevelSelect(lv)} 
+                {levels.map((lv) => (
+                  <div
+                    key={lv}
+                    onClick={() => handleLevelSelect(lv)}
                     className="p-3 hover:bg-gray-100 cursor-pointer"
                   >
                     {lv}
@@ -344,11 +294,7 @@ export function ProfileSetupForm() {
             )}
           </div>
 
-          <Button 
-            type="submit" 
-            className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl" 
-            disabled={isUploading}
-          >
+          <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl" disabled={isUploading}>
             {isUploading ? "Guardando..." : "Continuar"}
           </Button>
         </form>

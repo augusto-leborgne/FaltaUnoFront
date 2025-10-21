@@ -1,9 +1,9 @@
-// lib/auth.ts - VERSIÓN MEJORADA
+// lib/auth.ts - VERSIÓN ARREGLADA (usa API_BASE)
 import type { Usuario } from "./api"
+import { API_BASE, normalizeUrl } from "./api"
 
 const TOKEN_KEY = "authToken"
 const USER_KEY = "user"
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
 
 export class AuthService {
   // ============================================
@@ -47,20 +47,16 @@ export class AuthService {
   static setUser(user: Usuario): void {
     if (typeof window === "undefined") return
     try {
-      // ✅ CRÍTICO: Normalizar foto_perfil antes de guardar
-      const normalizedUser = {
+      const normalizedUser: any = {
         ...user,
-        foto_perfil: user.foto_perfil || (user as any).fotoPerfil || undefined,
-        fotoPerfil: undefined // Eliminar duplicado
+        foto_perfil: (user as any).foto_perfil || (user as any).fotoPerfil || undefined,
       }
-      
+      delete normalizedUser.fotoPerfil
+
       localStorage.setItem(USER_KEY, JSON.stringify(normalizedUser))
       console.log("[AuthService] Usuario guardado:", normalizedUser.email)
-      
-      // Disparar evento personalizado para notificar cambios
-      window.dispatchEvent(new CustomEvent('userUpdated', { 
-        detail: normalizedUser 
-      }))
+
+      window.dispatchEvent(new CustomEvent("userUpdated", { detail: normalizedUser }))
     } catch (error) {
       console.error("[AuthService] Error guardando usuario:", error)
     }
@@ -71,13 +67,10 @@ export class AuthService {
     try {
       const userStr = localStorage.getItem(USER_KEY)
       if (!userStr) return null
-      
-      const user = JSON.parse(userStr) as Usuario
-      
-      // ✅ CRÍTICO: Normalizar foto_perfil al leer
+      const user = JSON.parse(userStr) as any
       return {
         ...user,
-        foto_perfil: user.foto_perfil || (user as any).fotoPerfil || undefined
+        foto_perfil: user.foto_perfil || user.fotoPerfil || undefined,
       }
     } catch (error) {
       console.error("[AuthService] Error parseando usuario:", error)
@@ -90,9 +83,7 @@ export class AuthService {
     try {
       localStorage.removeItem(USER_KEY)
       console.log("[AuthService] Usuario eliminado")
-      
-      // Disparar evento de logout
-      window.dispatchEvent(new CustomEvent('userLoggedOut'))
+      window.dispatchEvent(new CustomEvent("userLoggedOut"))
     } catch (error) {
       console.error("[AuthService] Error eliminando usuario:", error)
     }
@@ -104,40 +95,30 @@ export class AuthService {
 
   static logout(): void {
     console.log("[AuthService] Logout iniciado")
-    
-    // Limpiar storage
     this.removeToken()
     this.removeUser()
-    
-    // ✅ CRÍTICO: Limpiar TODOS los datos de sesión
+
     if (typeof window !== "undefined") {
       try {
-        // Limpiar cualquier otro dato de sesión
-        const keys = Object.keys(localStorage)
-        keys.forEach(key => {
-          if (key.startsWith('match_') || key.startsWith('user_')) {
-            localStorage.removeItem(key)
-          }
+        // limpiar otras claves de sesión si las usás
+        Object.keys(localStorage).forEach((k) => {
+          if (k.startsWith("match_") || k.startsWith("user_")) localStorage.removeItem(k)
         })
-      } catch (error) {
-        console.error("[AuthService] Error limpiando storage:", error)
+      } catch (e) {
+        console.error("[AuthService] Error limpiando storage extra:", e)
       }
     }
-    
     console.log("[AuthService] Logout completado")
   }
 
   static isLoggedIn(): boolean {
     const token = this.getToken()
     if (!token) return false
-    
-    // Verificar si el token está expirado
     if (this.isTokenExpired(token)) {
       console.log("[AuthService] Token expirado, limpiando sesión")
       this.logout()
       return false
     }
-    
     return true
   }
 
@@ -147,26 +128,21 @@ export class AuthService {
 
   static isTokenExpired(token: string): boolean {
     try {
-      // Decodificar el payload del JWT
       const payload = JSON.parse(atob(token.split(".")[1]))
-      const exp = payload.exp * 1000 // Convertir a milisegundos
-      const now = Date.now()
-      
-      return now >= exp
+      const exp = payload.exp * 1000
+      return Date.now() >= exp
     } catch (error) {
       console.error("[AuthService] Error verificando token:", error)
-      return true // Si no se puede verificar, asumir expirado
+      return true
     }
   }
 
   static validateAndCleanup(): void {
     const token = this.getToken()
-    
     if (!token) {
       this.removeUser()
       return
     }
-    
     if (this.isTokenExpired(token)) {
       console.log("[AuthService] Token expirado, limpiando")
       this.logout()
@@ -179,137 +155,86 @@ export class AuthService {
 
   static getAuthHeaders(): Record<string, string> {
     const token = this.getToken()
-    
-    if (!token) {
-      return {
-        "Content-Type": "application/json"
-      }
-    }
-    
-    return {
-      "Authorization": `Bearer ${token}`,
-      "Content-Type": "application/json"
-    }
+    const headers: Record<string, string> = { "Content-Type": "application/json" }
+    if (token) headers.Authorization = `Bearer ${token}`
+    return headers
   }
 
-  // ✅ NUEVO: Método para refrescar datos del usuario desde el servidor
+  // ✅ Usa API_BASE normalizado (nada de backend:8080 en el browser)
   static async fetchCurrentUser(): Promise<Usuario | null> {
     try {
       const token = this.getToken()
-      
-      if (!token) {
-        console.log("[AuthService] No hay token para fetch")
-        return null
-      }
-      
+      if (!token) return null
       if (this.isTokenExpired(token)) {
-        console.log("[AuthService] Token expirado")
         this.logout()
         return null
       }
-      
+
       console.log("[AuthService] Fetching current user...")
-      
-      const response = await fetch(`${API_URL}/api/usuarios/me`, {
-        headers: this.getAuthHeaders()
-      })
-      
-      if (!response.ok) {
-        console.error("[AuthService] Error en fetchCurrentUser:", response.status)
-        
-        // Si es 401, el token es inválido
-        if (response.status === 401) {
-          this.logout()
-        }
-        
+      const url = normalizeUrl(`${API_BASE}/api/usuarios/me`)
+      const res = await fetch(url, { headers: this.getAuthHeaders() })
+
+      if (!res.ok) {
+        console.error("[AuthService] fetchCurrentUser status:", res.status)
+        if (res.status === 401) this.logout()
         return null
       }
-      
-      const result = await response.json()
-      const userData = result.data
-      
-      if (!userData) {
-        console.error("[AuthService] No hay datos de usuario en respuesta")
-        return null
+
+      const json = await res.json()
+      const data = json?.data ?? json
+
+      const normalized: any = {
+        ...data,
+        foto_perfil: data?.foto_perfil ?? data?.fotoPerfil ?? undefined,
       }
-      
-      // Normalizar y guardar
-      const normalizedUser: Usuario = {
-        ...userData,
-        foto_perfil: userData.foto_perfil || userData.fotoPerfil || undefined,
-        fotoPerfil: undefined
-      }
-      
-      this.setUser(normalizedUser)
-      
+      delete normalized.fotoPerfil
+
+      this.setUser(normalized)
       console.log("[AuthService] Usuario actualizado desde servidor")
-      
-      return normalizedUser
-    } catch (error) {
-      console.error("[AuthService] Error en fetchCurrentUser:", error)
+      return normalized as Usuario
+    } catch (e) {
+      console.error("[AuthService] Error en fetchCurrentUser:", e)
       return null
     }
   }
 
-  // ✅ NUEVO: Método para actualizar foto de perfil
   static async updateProfilePhoto(file: File): Promise<boolean> {
     try {
       const token = this.getToken()
-      
-      if (!token) {
-        throw new Error("No hay token de autenticación")
-      }
-      
-      const formData = new FormData()
-      formData.append("file", file)
-      
-      const response = await fetch(`${API_URL}/api/usuarios/me/foto`, {
+      if (!token) throw new Error("No hay token")
+
+      const form = new FormData()
+      form.append("file", file)
+
+      const url = normalizeUrl(`${API_BASE}/api/usuarios/me/foto`)
+      const res = await fetch(url, {
         method: "POST",
-        headers: {
-          "Authorization": `Bearer ${token}`
-        },
-        body: formData
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
       })
-      
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${await response.text()}`)
-      }
-      
-      // Refrescar datos del usuario
+
+      if (!res.ok) throw new Error(`Error ${res.status}: ${await res.text()}`)
       await this.fetchCurrentUser()
-      
       return true
-    } catch (error) {
-      console.error("[AuthService] Error actualizando foto:", error)
+    } catch (e) {
+      console.error("[AuthService] Error actualizando foto:", e)
       return false
     }
   }
 
-  // ✅ NUEVO: Método para actualizar perfil
   static async updateProfile(data: Partial<Usuario>): Promise<boolean> {
     try {
-      const token = this.getToken()
-      
-      if (!token) {
-        throw new Error("No hay token de autenticación")
-      }
-      
-      const response = await fetch(`${API_URL}/api/usuarios/me`, {
+      const url = normalizeUrl(`${API_BASE}/api/usuarios/me`)
+      const res = await fetch(url, {
         method: "PUT",
         headers: this.getAuthHeaders(),
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
       })
-      
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${await response.text()}`)
-      }
-      
-      // Refrescar datos del usuario
+      if (!res.ok) throw new Error(`Error ${res.status}: ${await res.text()}`)
       await this.fetchCurrentUser()
-      
       return true
-    } catch (error) {
-      console.error("[AuthService] Error actualizando perfil:", error)
+    } catch (e) {
+      console.error("[AuthService] Error actualizando perfil:", e)
       return false
     }
   }
