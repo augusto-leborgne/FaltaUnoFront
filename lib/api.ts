@@ -4,11 +4,34 @@ import { AuthService } from "./auth";
 // CONFIGURACIÓN
 // ============================================
 
-const RAW_API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080';
-export const API_BASE = typeof window === 'undefined' ? RAW_API_BASE : '';
+const getApiBase = (): string => {
+  // ✅ En el servidor (SSR/SSG) - Comunicación via red Docker 'appnet'
+  if (typeof window === 'undefined') {
+    const serverUrl = process.env.API_URL || 'http://backend:8080';
+    console.log('[API Config SSR] Using Docker network (appnet):', serverUrl);
+    return serverUrl;
+  }
+  
+  // ✅ En el navegador - Acceso al puerto expuesto en localhost
+  const clientUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+  console.log('[API Config Browser] Using public URL:', clientUrl);
+  
+  // 🔒 Protección: Si detectamos un hostname interno de Docker en el navegador, forzar localhost
+  if (clientUrl.includes('backend') || clientUrl.includes('appnet')) {
+    console.warn('[API Config] ⚠️ Detectado hostname Docker en navegador, forzando localhost:8080');
+    return 'http://localhost:8080';
+  }
+  
+  return clientUrl;
+};
+
+export const API_BASE = getApiBase();
 
 // Normalizar URLs (eliminar barras duplicadas)
 export const normalizeUrl = (url: string) => url.replace(/([^:]\/)\/+/g, '$1');
+
+console.log('[API Config] Final API_BASE:', API_BASE);
+console.log('[API Config] Environment:', typeof window === 'undefined' ? 'SERVER (SSR)' : 'BROWSER');
 
 // ============================================
 // TIPOS BASE
@@ -432,7 +455,9 @@ export const UsuarioAPI = {
     // No enviar foto_perfil en creación (se sube después)
     delete payload.foto_perfil;
     
-    return apiFetch<Usuario>('/api/usuarios', {
+    console.log('[UsuarioAPI.crear] Payload:', payload);
+    
+    return apiFetch<{ token?: string; user: Usuario }>('/api/usuarios', {
       method: 'POST',
       body: JSON.stringify(payload),
       skipAuth: true

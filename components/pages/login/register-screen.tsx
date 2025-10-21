@@ -30,8 +30,14 @@ export function RegisterScreen() {
   const handleEmailRegistration = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    // Validaciones
     if (formData.password !== formData.confirmPassword) {
       setError("Las contraseñas no coinciden")
+      return
+    }
+
+    if (formData.password.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres")
       return
     }
 
@@ -44,82 +50,96 @@ export function RegisterScreen() {
         password: formData.password,
       }
 
-      console.log("[RegisterScreen] Creando usuario...")
-      const response = await UsuarioAPI.crear(payload) as any
+      console.log("[RegisterScreen] Creando usuario con email:", formData.email)
+
+      // ✅ CORRECCIÓN: Tipar correctamente la respuesta
+      const response = await UsuarioAPI.crear(payload)
 
       console.log("[RegisterScreen] Respuesta crear usuario:", response)
 
       if (response && response.success) {
-        const user = response.data?.user
+        // ✅ CORRECCIÓN: Manejar ambos formatos de respuesta
+        const user = response.data?.user || response.data
         const token = response.data?.token
 
-        console.log("[RegisterScreen] Usuario recibido:", user)
-        console.log("[RegisterScreen] Token recibido:", token ? "SÍ" : "NO")
+        console.log("[RegisterScreen] Usuario creado:", user?.email)
+        console.log("[RegisterScreen] Token en respuesta:", token ? "SÍ" : "NO")
 
-        // Guardar token si viene del registro
+        // Si viene token en el registro, guardarlo
         if (token) {
           AuthService.setToken(token)
-          console.log("[RegisterScreen] Token guardado desde registro")
+          console.log("[RegisterScreen] ✅ Token guardado desde registro")
+        } else {
+          // ✅ CORRECCIÓN: Si no viene token, hacer login automático
+          console.log("[RegisterScreen] No hay token, haciendo login automático...")
+          
+          try {
+            const loginRes = await UsuarioAPI.login(formData.email, formData.password)
+            console.log("[RegisterScreen] Login automático exitoso:", loginRes.success)
+            
+            if (loginRes.success && loginRes.data?.token) {
+              AuthService.setToken(loginRes.data.token)
+              AuthService.setUser(loginRes.data.user)
+              setUser(loginRes.data.user)
+              console.log("[RegisterScreen] ✅ Token y usuario guardados desde login")
+            }
+          } catch (loginErr) {
+            console.error("[RegisterScreen] ❌ Error en login automático:", loginErr)
+            // Continuar de todas formas si el usuario fue creado
+          }
         }
 
         // Guardar usuario
         if (user) {
           AuthService.setUser(user)
-          setUser(user) // IMPORTANTE: Actualizar contexto
-          console.log("[RegisterScreen] Usuario guardado y contexto actualizado")
+          setUser(user)
+          console.log("[RegisterScreen] ✅ Usuario guardado en contexto")
         }
 
-        // Si no hay token del registro, intentar login
-        if (!token) {
-          console.log("[RegisterScreen] No hay token, intentando login automático...")
-          try {
-            const loginRes = await UsuarioAPI.login(formData.email, formData.password)
-            console.log("[RegisterScreen] Resultado login:", loginRes)
-            
-            if (loginRes && loginRes.success) {
-              if (loginRes.data?.token) {
-                AuthService.setToken(loginRes.data.token)
-                console.log("[RegisterScreen] Token guardado desde login")
-              }
-              if (loginRes.data?.user) {
-                AuthService.setUser(loginRes.data.user)
-                setUser(loginRes.data.user) // Actualizar contexto
-                console.log("[RegisterScreen] Usuario actualizado desde login y contexto sincronizado")
-              }
-            }
-          } catch (loginErr: any) {
-            console.warn("[RegisterScreen] Login automático falló:", loginErr)
-          }
-        }
-
-        // Verificar que tengamos token antes de continuar
+        // ✅ CORRECCIÓN: Verificar estado final antes de redirigir
         const finalToken = AuthService.getToken()
         const finalUser = AuthService.getUser()
         
-        console.log("[RegisterScreen] Estado final - Token:", finalToken ? "SÍ" : "NO")
-        console.log("[RegisterScreen] Estado final - User:", finalUser ? "SÍ" : "NO")
+        console.log("[RegisterScreen] Estado final:")
+        console.log("  - Token:", finalToken ? "✅" : "❌")
+        console.log("  - Usuario:", finalUser ? "✅" : "❌")
+        console.log("  - Perfil completo:", finalUser?.perfilCompleto ? "✅" : "❌")
 
         if (!finalToken) {
-          console.error("[RegisterScreen] No se pudo obtener token, redirigiendo a login")
-          setError("Error en autenticación. Por favor, inicia sesión.")
-          router.push("/login")
+          console.warn("[RegisterScreen] ⚠️ No se pudo obtener token, redirigiendo a login")
+          setError("Cuenta creada. Por favor, inicia sesión.")
+          setTimeout(() => router.push("/login"), 2000)
           return
         }
 
-        // REDIRECCIÓN SEGÚN PERFIL
+        // ✅ REDIRECCIÓN SEGÚN PERFIL
         if (finalUser && !finalUser.perfilCompleto) {
-          console.log("[RegisterScreen] Redirigiendo a profile-setup")
+          console.log("[RegisterScreen] 🔄 Redirigiendo a profile-setup")
           router.push("/profile-setup")
         } else {
-          console.log("[RegisterScreen] Perfil completo, usando postAuthRedirect")
+          console.log("[RegisterScreen] 🔄 Perfil completo, redirigiendo a home")
           postAuthRedirect(finalUser ?? undefined)
         }
       } else {
-        setError(response.message ?? "Error al crear la cuenta.")
+        const errorMsg = response?.message || "Error al crear la cuenta"
+        console.error("[RegisterScreen] ❌ Error en respuesta:", errorMsg)
+        setError(errorMsg)
       }
     } catch (err: any) {
-      console.error("[RegisterScreen] Error en registro:", err)
-      setError(err?.response?.data?.message ?? err?.message ?? "Error al crear la cuenta.")
+      console.error("[RegisterScreen] ❌ Error en registro:", err)
+      
+      // ✅ CORRECCIÓN: Mensajes de error más específicos
+      let errorMessage = "Error al crear la cuenta"
+      
+      if (err.message?.includes("Failed to fetch")) {
+        errorMessage = "No se pudo conectar con el servidor. Verifica tu conexión."
+      } else if (err.message?.includes("409") || err.message?.includes("email ya está registrado")) {
+        errorMessage = "Este email ya está registrado. Intenta iniciar sesión."
+      } else if (err.message) {
+        errorMessage = err.message
+      }
+      
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }
@@ -136,7 +156,11 @@ export function RegisterScreen() {
       </div>
 
       <div className="flex-1 px-6">
-        {error && <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-600">{error}</div>}
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl text-red-600">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleEmailRegistration} className="space-y-6 mb-8">
           <Input
@@ -146,6 +170,7 @@ export function RegisterScreen() {
             onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
             required
             disabled={isLoading}
+            autoComplete="email"
           />
           <Input
             type="password"
@@ -154,6 +179,8 @@ export function RegisterScreen() {
             onChange={(e) => setFormData((prev) => ({ ...prev, password: e.target.value }))}
             required
             disabled={isLoading}
+            autoComplete="new-password"
+            minLength={6}
           />
           <Input
             type="password"
@@ -162,11 +189,30 @@ export function RegisterScreen() {
             onChange={(e) => setFormData((prev) => ({ ...prev, confirmPassword: e.target.value }))}
             required
             disabled={isLoading}
+            autoComplete="new-password"
+            minLength={6}
           />
-          <Button type="submit" disabled={isLoading} className="w-full bg-green-600 text-white py-4 rounded-2xl">
+          <Button 
+            type="submit" 
+            disabled={isLoading} 
+            className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl"
+          >
             {isLoading ? "Creando cuenta..." : "Crear Cuenta"}
           </Button>
         </form>
+
+        <div className="text-center mt-8 pb-8">
+          <p className="text-sm text-gray-500">
+            ¿Ya tienes cuenta?{" "}
+            <button 
+              onClick={() => router.push("/login")} 
+              className="text-green-600 font-medium hover:underline"
+              disabled={isLoading}
+            >
+              Inicia sesión aquí
+            </button>
+          </p>
+        </div>
       </div>
     </div>
   )
