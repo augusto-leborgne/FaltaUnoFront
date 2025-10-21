@@ -135,12 +135,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setLoading(false);
         }
         
-        // ✅ NUEVO: Refrescar en background para obtener datos actualizados
-        setTimeout(() => {
-          if (mounted && !isLoggingOut) {
-            refreshUser();
-          }
-        }, 1000);
+        // Refrescar en background para obtener datos actualizados (sin bloquear UI)
+        // Solo si no estamos en proceso de logout
+        if (mounted && !isLoggingOut) {
+          // Usar un pequeño delay para no hacer request inmediato
+          const timeoutId = setTimeout(async () => {
+            if (mounted && !isLoggingOut && AuthService.isLoggedIn()) {
+              try {
+                await AuthService.fetchCurrentUser();
+              } catch (err) {
+                console.warn("[AuthProvider] Background refresh falló:", err);
+                // No hacer nada, mantener el usuario local
+              }
+            }
+          }, 2000); // 2 segundos en lugar de 1
+          
+          // Cleanup si el componente se desmonta
+          return () => clearTimeout(timeoutId);
+        }
         
         return;
       }

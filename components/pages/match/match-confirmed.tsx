@@ -166,26 +166,28 @@ export function MatchConfirmed({ matchId }: MatchConfirmedProps) {
         )}
 
         {/* Location Card */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900">Ubicación</h3>
-            <Button
-              onClick={handleOpenGoogleMaps}
-              variant="outline"
-              size="sm"
-              className="bg-transparent"
-            >
-              <ExternalLink className="w-4 h-4 mr-2" />
-              Google Maps
-            </Button>
-          </div>
+        {match.nombreUbicacion && match.latitud && match.longitud && (
+          <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-gray-900">Ubicación</h3>
+              <Button
+                onClick={handleOpenGoogleMaps}
+                variant="outline"
+                size="sm"
+                className="bg-transparent"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Google Maps
+              </Button>
+            </div>
 
-          <CompressedMap
-            location={match.nombreUbicacion}
-            lat={match.latitud}
-            lng={match.longitud}
-          />
-        </div>
+            <CompressedMap
+              location={match.nombreUbicacion}
+              lat={match.latitud}
+              lng={match.longitud}
+            />
+          </div>
+        )}
 
         {/* Next Steps */}
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-6">

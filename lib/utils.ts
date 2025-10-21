@@ -52,3 +52,81 @@ export function formatearFechaNacimiento(fechaNacimiento?: string | null): strin
     return fechaNacimiento;
   }
 }
+
+/**
+ * Formatea el tipo de partido a un string legible
+ * @param type Tipo de partido (ej: "FUTBOL_5", "FUTBOL5")
+ * @returns String formateado (ej: "Fútbol 5")
+ */
+export function formatMatchType(type?: string): string {
+  if (!type) return "Fútbol";
+  
+  // Manejar tanto snake_case como formatos normales
+  const normalizedType = type.toUpperCase().replace(/-/g, '_');
+  
+  const typeMap: Record<string, string> = {
+    'FUTBOL_5': 'Fútbol 5',
+    'FUTBOL5': 'Fútbol 5',
+    'FUTBOL_7': 'Fútbol 7',
+    'FUTBOL7': 'Fútbol 7',
+    'FUTBOL_8': 'Fútbol 8',
+    'FUTBOL8': 'Fútbol 8',
+    'FUTBOL_9': 'Fútbol 9',
+    'FUTBOL9': 'Fútbol 9',
+    'FUTBOL_11': 'Fútbol 11',
+    'FUTBOL11': 'Fútbol 11',
+  };
+  
+  return typeMap[normalizedType] || type;
+}
+
+/**
+ * Formatea el nivel de un partido a un string legible
+ * @param level Nivel del partido (ej: "PRINCIPIANTE", "INTERMEDIO")
+ * @returns String formateado (ej: "Principiante")
+ */
+export function formatLevel(level?: string): string {
+  if (!level) return "Intermedio";
+  
+  const normalizedLevel = level.toUpperCase();
+  
+  const levelMap: Record<string, string> = {
+    'PRINCIPIANTE': 'Principiante',
+    'INTERMEDIO': 'Intermedio',
+    'AVANZADO': 'Avanzado',
+    'PROFESIONAL': 'Profesional'
+  };
+  
+  return levelMap[normalizedLevel] || level;
+}
+
+/**
+ * Formatea una fecha a un string legible
+ * @param dateString Fecha en formato ISO o yyyy-MM-dd
+ * @returns String formateado (ej: "lunes, 15 de mayo")
+ */
+export function formatDate(dateString: string): string {
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString;
+    
+    return date.toLocaleDateString("es-ES", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+    });
+  } catch {
+    return dateString;
+  }
+}
+
+/**
+ * Determina el color del badge según los espacios restantes
+ * @param spotsLeft Espacios restantes
+ * @returns Clases CSS para el badge
+ */
+export function getSpotsLeftColor(spotsLeft: number): string {
+  if (spotsLeft === 0) return "bg-red-100 text-red-800";
+  if (spotsLeft <= 3) return "bg-yellow-100 text-yellow-800";
+  return "bg-green-100 text-green-800";
+}

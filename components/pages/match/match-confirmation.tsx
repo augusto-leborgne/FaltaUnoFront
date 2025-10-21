@@ -196,7 +196,7 @@ export function MatchConfirmation({ matchId }: MatchConfirmationProps) {
             </Button>
           </div>
           <p className="text-sm text-gray-600">
-            {match.jugadoresActuales} confirmados • Quedan {match.cantidadJugadores - match.jugadoresActuales} plazas
+            {match.jugadoresActuales || 0} confirmados • Quedan {(match.cantidadJugadores || 10) - (match.jugadoresActuales || 0)} plazas
           </p>
         </div>
 

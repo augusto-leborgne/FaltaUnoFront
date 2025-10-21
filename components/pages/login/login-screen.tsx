@@ -45,10 +45,18 @@ export function LoginScreen() {
           console.log("[LoginScreen] Usuario guardado y contexto actualizado")
         }
 
-        // Redirección correcta:
+        // Redirección correcta: validar returnTo contra estado del usuario
         if (returnTo) {
-          console.log("[LoginScreen] Redirigiendo a returnTo:", returnTo)
-          router.push(returnTo)
+          // Solo redirigir a returnTo si el usuario tiene perfil completo y verificado
+          const canAccessReturnTo = user?.perfilCompleto && (user?.cedulaVerificada || true) // cedulaVerificada es opcional
+          
+          if (canAccessReturnTo) {
+            console.log("[LoginScreen] Redirigiendo a returnTo:", returnTo)
+            router.push(returnTo)
+          } else {
+            console.log("[LoginScreen] Usuario no puede acceder a returnTo, redirigiendo según estado")
+            postAuthRedirect(user)
+          }
         } else {
           console.log("[LoginScreen] Redirección post-auth (profile-setup/home)")
           postAuthRedirect(user)
@@ -67,16 +75,21 @@ export function LoginScreen() {
   // Social OAuth (deja tu implementación actual de backend/redirects)
   const handleSocialAuth = (provider: "google" | "facebook" | "apple") => {
     try {
-      // Si ya tenés utilidades en AuthService para OAuth, usalas:
-      // const url = AuthService.getOAuthUrl(provider)
-      // window.location.href = url
-
-      // Fallback genérico (ajusta si tu backend usa otra ruta/param):
       const base = process.env.NEXT_PUBLIC_API_URL ?? ""
+      
+      if (!base) {
+        setError("Error de configuración: API_URL no definida")
+        return
+      }
+
       const redirect = encodeURIComponent(`${window.location.origin}/oauth2/redirect`)
-      window.location.href = `${base}/oauth2/authorization/${provider}?redirect_uri=${redirect}`
+      const oauthUrl = `${base}/oauth2/authorization/${provider}?redirect_uri=${redirect}`
+      
+      console.log(`[LoginScreen] Redirigiendo a OAuth ${provider}:`, oauthUrl)
+      window.location.href = oauthUrl
     } catch (e) {
       console.error("[LoginScreen] OAuth error:", e)
+      setError(`Error al iniciar sesión con ${provider}. Por favor intenta nuevamente.`)
     }
   }
 

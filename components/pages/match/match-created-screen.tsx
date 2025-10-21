@@ -4,12 +4,12 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Check, Users, Share2, Loader2 } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
-import { UsuarioAPI } from "@/lib/api"
+import { UsuarioAPI, PartidoAPI } from "@/lib/api"
 
 interface MatchCreatedScreenProps {
-  matchId: string
+  matchId?: string
 }
 
 interface Amigo {
@@ -19,12 +19,16 @@ interface Amigo {
   foto_perfil?: string
 }
 
-export function MatchCreatedScreen({ matchId }: MatchCreatedScreenProps) {
+export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
   const [amigos, setAmigos] = useState<Amigo[]>([])
   const [loading, setLoading] = useState(true)
   const [invitando, setInvitando] = useState<Record<string, boolean>>({})
+  
+  // Obtener matchId de props o de URL params
+  const matchId = propMatchId || searchParams.get('matchId') || undefined
 
   useEffect(() => {
     loadAmigos()
@@ -32,46 +36,61 @@ export function MatchCreatedScreen({ matchId }: MatchCreatedScreenProps) {
 
   const loadAmigos = async () => {
     try {
-      // Si tienes un endpoint de amigos, úsalo aquí
-      // const response = await UsuarioAPI.list()
-      // setAmigos(response.data.slice(0, 4))
+      // Intentar cargar amigos del backend
+      // TODO: Implementar endpoint específico /api/usuarios/me/amigos cuando esté disponible
+      const response = await UsuarioAPI.list()
       
-      // Por ahora, mock data
-      setAmigos([
-        { id: "1", nombre: "Carlos", apellido: "Martinez", foto_perfil: undefined },
-        { id: "2", nombre: "Ana", apellido: "Lopez", foto_perfil: undefined },
-        { id: "3", nombre: "Diego", apellido: "Rodriguez", foto_perfil: undefined },
-        { id: "4", nombre: "Sofia", apellido: "Perez", foto_perfil: undefined },
-      ])
+      if (response.success && response.data) {
+        // Tomar los primeros 4 usuarios como sugerencias
+        // En el futuro, esto debería filtrar solo amigos confirmados
+        setAmigos(response.data.slice(0, 4).map(u => ({
+          id: u.id,
+          nombre: u.nombre,
+          apellido: u.apellido,
+          foto_perfil: u.foto_perfil
+        })))
+      } else {
+        // Si no hay usuarios, dejar vacío
+        setAmigos([])
+      }
     } catch (error) {
       console.error("Error cargando amigos:", error)
+      // En caso de error, mostrar lista vacía
+      setAmigos([])
     } finally {
       setLoading(false)
     }
   }
 
   const handleInviteFriend = async (friendId: string) => {
+    if (!matchId) {
+      toast({
+        title: "Error",
+        description: "No se pudo identificar el partido",
+        variant: "destructive"
+      })
+      return
+    }
+
     setInvitando(prev => ({ ...prev, [friendId]: true }))
     
     try {
-      // TODO: Implementar endpoint de invitaciones
-      // await fetch(`/api/partidos/${matchId}/invitar`, {
-      //   method: 'POST',
-      //   headers: AuthService.getAuthHeaders(),
-      //   body: JSON.stringify({ usuarioId: friendId })
-      // })
+      const response = await PartidoAPI.invitarJugador(matchId, friendId)
       
-      // Simulación por ahora
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      toast({
-        title: "Invitación enviada",
-        description: "Tu amigo recibirá una notificación"
-      })
+      if (response.success) {
+        toast({
+          title: "Invitación enviada",
+          description: "Tu amigo recibirá una notificación"
+        })
+      } else {
+        throw new Error(response.message || "Error al enviar invitación")
+      }
     } catch (error) {
+      console.error("Error invitando:", error)
+      const errorMessage = error instanceof Error ? error.message : "No se pudo enviar la invitación"
       toast({
         title: "Error",
-        description: "No se pudo enviar la invitación",
+        description: errorMessage,
         variant: "destructive"
       })
     } finally {

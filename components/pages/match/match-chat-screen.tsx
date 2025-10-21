@@ -94,10 +94,10 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         const matchResponse = await PartidoAPI.get(matchId)
         if (matchResponse.success && matchResponse.data) {
           setMatchInfo({
-            tipo_partido: matchResponse.data.tipoPartido,
+            tipo_partido: matchResponse.data.tipoPartido || "FUTBOL_5",
             fecha: matchResponse.data.fecha,
             hora: matchResponse.data.hora,
-            nombre_ubicacion: matchResponse.data.nombreUbicacion
+            nombre_ubicacion: matchResponse.data.nombreUbicacion || "Ubicación no especificada"
           })
         }
       } catch (err) {

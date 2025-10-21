@@ -319,6 +319,17 @@ function normalizePartido(raw: any): PartidoDTO {
     throw new Error('Datos de partido inválidos');
   }
 
+  // Validar campos críticos
+  if (!raw.id) {
+    throw new Error('Partido sin ID');
+  }
+  if (!raw.fecha) {
+    throw new Error('Partido sin fecha');
+  }
+  if (!raw.hora) {
+    throw new Error('Partido sin hora');
+  }
+
   // Calcular precio por jugador si no viene
   const precioTotal = raw.precioTotal ?? raw.precio_total ?? 0;
   const cantidadJugadores = raw.cantidadJugadores ?? raw.cantidad_jugadores ?? 1;
@@ -781,6 +792,21 @@ export const PartidoAPI = {
       
       throw error;
     }
+  },
+
+  /**
+   * Invitar usuario a un partido
+   */
+  invitarJugador: async (partidoId: string, usuarioId: string) => {
+    console.log("[PartidoAPI.invitarJugador] Partido:", partidoId, "Usuario:", usuarioId);
+    
+    return apiFetch<{ success: boolean; message?: string }>(
+      `/api/partidos/${partidoId}/invitar`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ usuarioId })
+      }
+    );
   }
 };
 

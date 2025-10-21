@@ -99,7 +99,7 @@ export function MatchesListing() {
       const response = await PartidoAPI.list(filtros)
 
       if (!response.success) {
-        throw new Error(response.message || "Error al cargar partidos")
+        throw new Error("Error al cargar partidos")
       }
 
       let partidos = response.data || []
@@ -166,7 +166,8 @@ export function MatchesListing() {
   // HELPERS DE FORMATO
   // ============================================
 
-  const formatMatchType = (type: string) => {
+  const formatMatchType = (type?: string) => {
+    if (!type) return "Fútbol"
     return type.replace("FUTBOL_", "F")
   }
 
@@ -413,7 +414,7 @@ export function MatchesListing() {
             </div>
           ) : (
             matches.map((match) => {
-              const spotsLeft = match.cantidadJugadores - match.jugadoresActuales
+              const spotsLeft = (match.cantidadJugadores ?? 0) - (match.jugadoresActuales ?? 0)
               
               return (
                 <div

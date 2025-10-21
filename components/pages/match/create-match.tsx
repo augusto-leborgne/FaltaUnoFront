@@ -165,10 +165,10 @@ export function CreateMatchScreen() {
 
       setSuccess(true)
 
-      // Redirigir al detalle del partido o a mis partidos
+      // Redirigir a la pantalla de éxito para invitar amigos
       const partidoId = response.data.id
       if (partidoId) {
-        setTimeout(() => router.push(`/matches/${partidoId}`), 1000)
+        setTimeout(() => router.push(`/match-created?matchId=${partidoId}`), 1000)
       } else {
         setTimeout(() => router.push("/my-matches"), 1000)
       }

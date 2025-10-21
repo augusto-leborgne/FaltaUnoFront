@@ -26,6 +26,7 @@ import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { AuthService } from "@/lib/auth"
 import { CompressedMap } from "@/components/google-maps/compressed-map"
+import { formatMatchType } from "@/lib/utils"
 import { 
   PartidoAPI, 
   InscripcionAPI, 
@@ -112,9 +113,9 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
       setEditData({
         fecha: matchData.fecha,
         hora: matchData.hora,
-        nombreUbicacion: matchData.nombreUbicacion,
-        cantidadJugadores: matchData.cantidadJugadores,
-        precioTotal: matchData.precioTotal,
+        nombreUbicacion: matchData.nombreUbicacion || "",
+        cantidadJugadores: matchData.cantidadJugadores || 10,
+        precioTotal: matchData.precioTotal || 0,
         descripcion: matchData.descripcion || "",
       })
 
@@ -164,10 +165,10 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
       return
     }
 
-    if (editData.cantidadJugadores < match.jugadoresActuales) {
+    if (editData.cantidadJugadores < (match.jugadoresActuales || 0)) {
       toast({
         title: "Error",
-        description: `No puedes reducir la cantidad de jugadores por debajo de ${match.jugadoresActuales} (actuales inscritos)`,
+        description: `No puedes reducir la cantidad de jugadores por debajo de ${match.jugadoresActuales || 0} (actuales inscritos)`,
         variant: "destructive",
       })
       return
@@ -210,9 +211,9 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
       setEditData({
         fecha: match.fecha,
         hora: match.hora,
-        nombreUbicacion: match.nombreUbicacion,
-        cantidadJugadores: match.cantidadJugadores,
-        precioTotal: match.precioTotal,
+        nombreUbicacion: match.nombreUbicacion || "",
+        cantidadJugadores: match.cantidadJugadores || 10,
+        precioTotal: match.precioTotal || 0,
         descripcion: match.descripcion || "",
       })
     }
@@ -227,7 +228,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
     if (!match) return
 
     // Validar que haya espacio
-    if (match.jugadoresActuales >= match.cantidadJugadores) {
+    if ((match.jugadoresActuales || 0) >= (match.cantidadJugadores || 10)) {
       toast({
         title: "Partido completo",
         description: "No hay más espacio disponible",
@@ -415,10 +416,6 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
     )
   }
 
-  const formatMatchType = (type: string) => {
-    return type.replace("FUTBOL_", "F")
-  }
-
   // ============================================
   // RENDER - LOADING
   // ============================================
@@ -462,7 +459,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
   // ============================================
 
   const canRemovePlayers = match.estado === PartidoEstado.PENDIENTE
-  const spotsLeft = match.cantidadJugadores - match.jugadoresActuales
+  const spotsLeft = (match.cantidadJugadores || 10) - (match.jugadoresActuales || 0)
 
   // ============================================
   // RENDER - MAIN
@@ -706,7 +703,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
         </div>
 
         {/* Map */}
-        {!isEditing && match.latitud && match.longitud && (
+        {!isEditing && match.latitud && match.longitud && match.nombreUbicacion && (
           <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Ubicación</h3>
             <CompressedMap

@@ -1,91 +1,59 @@
+// components/auth/require-auth.tsx
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
+import { AuthService } from "@/lib/auth"
 
-function isProfileIncomplete(u: any | null | undefined) {
-  if (!u) return true
-  if (u.perfilCompleto === false) return true
-  if (u.perfilCompleto === true) return false
-  return !(u.nombre && u.apellido && (u.foto_perfil || u.fotoPerfil))
+type Props = {
+  children: React.ReactNode
+  /** Permite ver la página aunque el perfil no esté completo */
+  allowIncomplete?: boolean
+  /** Permite ver la página aunque no haya verificado cédula */
+  allowUnverified?: boolean
 }
 
-function needsIdVerification(u: any | null | undefined) {
-  if (!u) return false
-  if (u.cedulaVerificada === false) return true
-  if (u.documentoVerificado === false) return true
-  if (u.identityVerified === false) return true
-  const estado = u?.verificacionCedula?.estado ?? u?.verificacionDocumento?.estado
-  if (estado && ["PENDIENTE", "RECHAZADA", "PENDING", "FAILED"].includes(String(estado).toUpperCase())) {
-    return true
-  }
-  return false
-}
-
-export default function RequireAuth({ children }: { children: React.ReactNode }) {
+export default function RequireAuth({
+  children,
+  allowIncomplete = false,
+  allowUnverified = true,
+}: Props) {
   const router = useRouter()
   const pathname = usePathname()
   const { user, loading } = useAuth()
-  const [canRender, setCanRender] = useState(false)
 
   useEffect(() => {
-    if (loading) {
-      setCanRender(false)
-      return
-    }
+    if (loading) return
 
-    // No autenticado -> /login
-    if (!user) {
-      setCanRender(false)
+    const token = AuthService.getToken()
+    if (!token || AuthService.isTokenExpired(token)) {
+      AuthService.logout()
       router.replace("/login")
       return
     }
 
-    const incomplete = isProfileIncomplete(user)
-    const needsVerification = !incomplete && needsIdVerification(user)
+    // Si no hay user todavía, quedate (render del loader abajo)
+    if (!user) return
 
-    // Reglas de ruteo
-    if (incomplete && pathname !== "/profile-setup") {
-      setCanRender(false)
-      router.replace("/profile-setup")
+    // Redirecciones SOLO para completar flujo de registro/verificación
+    if (!allowIncomplete && !user.perfilCompleto) {
+      if (pathname !== "/profile-setup") router.replace("/profile-setup")
       return
     }
 
-    if (needsVerification && pathname !== "/verification") {
-      setCanRender(false)
-      router.replace("/verification")
+    if (!allowUnverified && user.perfilCompleto && !user.cedulaVerificada) {
+      if (pathname !== "/verification") router.replace("/verification")
       return
     }
 
-    // Evitar que vuelvan a profile-setup/verif cuando ya no corresponde
-    if (!incomplete && pathname === "/profile-setup") {
-      setCanRender(false)
-      router.replace(needsVerification ? "/verification" : "/home")
-      return
-    }
+    // Importante: no redirigir a "/" nunca acá.
+  }, [user, loading, router, pathname, allowIncomplete, allowUnverified])
 
-    if (!needsVerification && pathname === "/verification") {
-      if (incomplete) {
-        setCanRender(false)
-        router.replace("/profile-setup")
-        return
-      }
-      setCanRender(false)
-      router.replace("/home")
-      return
-    }
-
-    setCanRender(true)
-  }, [user, loading, router, pathname])
-
-  if (!canRender) {
+  if (loading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="animate-spin w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4" />
-          <p className="text-gray-600">{loading ? "Verificando acceso..." : "Redirigiendo..."}</p>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
       </div>
     )
   }

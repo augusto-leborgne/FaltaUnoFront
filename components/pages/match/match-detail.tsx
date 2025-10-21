@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation"
 import { CompressedMap } from "@/components/google-maps/compressed-map"
 import { AuthService } from "@/lib/auth"
 import { PartidoAPI, InscripcionAPI, PartidoDTO, PartidoEstado, TipoPartido, NivelPartido } from "@/lib/api"
+import { formatMatchType, formatLevel, formatDate, getSpotsLeftColor } from "@/lib/utils"
 
 interface MatchDetailProps {
   matchId: string
@@ -172,64 +173,6 @@ export function MatchDetail({ matchId }: MatchDetailProps) {
 
   const handleBack = () => {
     router.back()
-  }
-
-  // ============================================
-  // HELPERS DE FORMATO
-  // ============================================
-
-  const formatMatchType = (type: string) => {
-    // Manejar tanto snake_case como formatos normales
-    const normalizedType = type.toUpperCase().replace(/-/g, '_');
-    
-    const typeMap: Record<string, string> = {
-      'FUTBOL_5': 'Fútbol 5',
-      'FUTBOL5': 'Fútbol 5',
-      'FUTBOL_7': 'Fútbol 7',
-      'FUTBOL7': 'Fútbol 7',
-      'FUTBOL_8': 'Fútbol 8',
-      'FUTBOL8': 'Fútbol 8',
-      'FUTBOL_9': 'Fútbol 9',
-      'FUTBOL9': 'Fútbol 9',
-      'FUTBOL_11': 'Fútbol 11',
-      'FUTBOL11': 'Fútbol 11',
-    };
-    
-    return typeMap[normalizedType] || type;
-  }
-
-  const formatLevel = (level?: string) => {
-    if (!level) return "Intermedio";
-    
-    const normalizedLevel = level.toUpperCase();
-    
-    const levelMap: Record<string, string> = {
-      'PRINCIPIANTE': 'Principiante',
-      'INTERMEDIO': 'Intermedio',
-      'AVANZADO': 'Avanzado',
-      'PROFESIONAL': 'Profesional'
-    };
-    
-    return levelMap[normalizedLevel] || level;
-  }
-
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString)
-      return date.toLocaleDateString("es-ES", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-      })
-    } catch {
-      return dateString
-    }
-  }
-
-  const getSpotsLeftColor = (spotsLeft: number) => {
-    if (spotsLeft === 0) return "bg-red-100 text-red-800"
-    if (spotsLeft <= 3) return "bg-yellow-100 text-yellow-800"
-    return "bg-green-100 text-green-800"
   }
 
   // ============================================
