@@ -44,3 +44,5 @@ export function RedirectIfAuthenticated({
 
   return <>{children}</>
 }
+
+export default RedirectIfAuthenticated

@@ -1,3 +1,4 @@
+// components/pages/user/settings-screen.tsx - VERSIÓN MEJORADA
 "use client"
 
 import { useState, useEffect } from "react"
@@ -5,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ArrowLeft, Camera, Save, Bell } from "lucide-react"
+import { ArrowLeft, Camera, Save, Bell, AlertCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { useAuth } from "@/hooks/use-auth"
@@ -14,10 +15,12 @@ const positions = ["Arquero", "Zaguero", "Lateral", "Mediocampista", "Volante", 
 
 export function SettingsScreen() {
   const router = useRouter()
-  const { user: contextUser, refreshUser } = useAuth()
+  const { refreshUser } = useAuth()
   const [authMethod, setAuthMethod] = useState<"email" | "google" | "apple" | "facebook">("email")
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [error, setError] = useState("")
+  const [success, setSuccess] = useState(false)
 
   const [formData, setFormData] = useState({
     name: "",
@@ -47,48 +50,51 @@ export function SettingsScreen() {
 
   const loadUserData = async () => {
     try {
+      setIsLoading(true)
+      setError("")
+      
       const token = AuthService.getToken()
       if (!token) {
         router.push("/login")
         return
       }
 
-      const response = await fetch("/api/usuarios/me", {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
+      console.log("[Settings] Cargando datos del usuario...")
+
+      // ✅ CRÍTICO: Usar fetchCurrentUser para obtener datos actualizados
+      const userData = await AuthService.fetchCurrentUser()
+      
+      if (!userData) {
+        throw new Error("No se pudieron cargar los datos del usuario")
+      }
+
+      console.log("[Settings] Datos cargados:", userData)
+
+      setFormData({
+        name: userData.nombre || "",
+        surname: userData.apellido || "",
+        email: userData.email || "",
+        phone: userData.celular || "",
+        position: userData.posicion || "",
+        height: userData.altura?.toString() || "",
+        weight: userData.peso?.toString() || "",
       })
 
-      if (response.ok) {
-        const result = await response.json()
-        const userData = result.data
+      // ✅ CRÍTICO: Usar foto_perfil normalizada
+      if (userData.foto_perfil) {
+        setAvatar(`data:image/jpeg;base64,${userData.foto_perfil}`)
+      }
 
-        setFormData({
-          name: userData.nombre || "",
-          surname: userData.apellido || "",
-          email: userData.email || "",
-          phone: userData.celular || "",
-          position: userData.posicion || "",
-          height: userData.altura?.toString() || "",
-          weight: userData.peso?.toString() || "",
-        })
-
-        if (userData.fotoPerfil || userData.foto_perfil) {
-          const fotoBase64 = userData.fotoPerfil || userData.foto_perfil
-          setAvatar(`data:image/jpeg;base64,${fotoBase64}`)
-        }
-
-        // Determinar método de autenticación
-        if (userData.provider) {
-          const provider = userData.provider.toLowerCase()
-          if (provider === "google" || provider === "facebook" || provider === "apple") {
-            setAuthMethod(provider as "google" | "facebook" | "apple")
-          }
+      // Determinar método de autenticación
+      if (userData.provider) {
+        const provider = userData.provider.toLowerCase()
+        if (provider === "google" || provider === "facebook" || provider === "apple") {
+          setAuthMethod(provider as "google" | "facebook" | "apple")
         }
       }
     } catch (error) {
-      console.error("Error cargando datos:", error)
+      console.error("[Settings] Error cargando datos:", error)
+      setError("Error al cargar datos del perfil")
     } finally {
       setIsLoading(false)
     }
@@ -106,56 +112,55 @@ export function SettingsScreen() {
 
   const handleSave = async () => {
     setIsSaving(true)
+    setError("")
+    setSuccess(false)
+    
     try {
-      const token = AuthService.getToken()
-      if (!token) {
-        router.push("/login")
-        return
-      }
+      console.log("[Settings] Guardando cambios...")
 
       // 1. Subir foto si hay una nueva
       if (photoFile) {
-        const formData = new FormData()
-        formData.append("file", photoFile)
-
-        await fetch("/api/usuarios/me/foto", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${token}`
-          },
-          body: formData
-        })
+        console.log("[Settings] Subiendo foto...")
+        const success = await AuthService.updateProfilePhoto(photoFile)
+        
+        if (!success) {
+          throw new Error("Error al subir la foto")
+        }
+        
+        console.log("[Settings] Foto subida exitosamente")
       }
 
       // 2. Actualizar perfil (sin nombre, apellido, email)
+      console.log("[Settings] Actualizando perfil...")
+      
       const perfilData = {
         celular: formData.phone,
         posicion: formData.position,
-        altura: formData.height,
-        peso: formData.weight,
+        altura: formData.height ? parseInt(formData.height) : undefined,
+        peso: formData.weight ? parseInt(formData.weight) : undefined,
       }
 
-      const response = await fetch("/api/usuarios/me", {
-        method: "PUT",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(perfilData)
-      })
+      const success = await AuthService.updateProfile(perfilData)
+      
+      if (!success) {
+        throw new Error("Error al actualizar el perfil")
+      }
 
-      if (response.ok) {
-        // Actualizar contexto de autenticación
-        await refreshUser()
-        alert("Cambios guardados exitosamente")
+      console.log("[Settings] Perfil actualizado exitosamente")
+
+      // 3. Refrescar contexto
+      await refreshUser()
+
+      setSuccess(true)
+      
+      // Redirigir después de 1 segundo
+      setTimeout(() => {
         router.back()
-      } else {
-        const errorData = await response.json()
-        alert(errorData.message || "Error al guardar cambios")
-      }
+      }, 1000)
+
     } catch (error) {
-      console.error("Error guardando cambios:", error)
-      alert("Error al guardar cambios")
+      console.error("[Settings] Error guardando cambios:", error)
+      setError(error instanceof Error ? error.message : "Error al guardar cambios")
     } finally {
       setIsSaving(false)
     }
@@ -164,19 +169,37 @@ export function SettingsScreen() {
   const handleUploadPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      // Validar tamaño (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        setError("La imagen debe ser menor a 5MB")
+        return
+      }
+
+      // Validar tipo
+      if (!file.type.startsWith('image/')) {
+        setError("El archivo debe ser una imagen")
+        return
+      }
+
       setPhotoFile(file)
+      
       const reader = new FileReader()
       reader.onload = () => {
         if (reader.result) setAvatar(reader.result as string)
       }
       reader.readAsDataURL(file)
+      
+      console.log("[Settings] Foto seleccionada:", file.name)
     }
   }
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full"></div>
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando configuración...</p>
+        </div>
       </div>
     )
   }
@@ -199,7 +222,39 @@ export function SettingsScreen() {
         </div>
       </div>
 
-      <div className="flex-1 px-6 py-6">
+      <div className="flex-1 px-6 py-6 overflow-y-auto">
+        {/* Success Message */}
+        {success && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-2xl flex items-start space-x-3">
+            <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-green-600 text-sm font-medium">¡Cambios guardados!</p>
+              <p className="text-green-600 text-sm">Redirigiendo...</p>
+            </div>
+          </div>
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start space-x-3">
+            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-red-600 text-sm font-medium">Error</p>
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
+            <button 
+              onClick={() => setError("")}
+              className="text-red-600 hover:text-red-700"
+            >
+              ✕
+            </button>
+          </div>
+        )}
+
         {/* Profile Photo */}
         <div className="text-center mb-8">
           <div className="relative inline-block">
@@ -210,12 +265,21 @@ export function SettingsScreen() {
                 <AvatarFallback className="bg-orange-100 text-2xl">{initials}</AvatarFallback>
               )}
             </Avatar>
-            <label className="absolute -bottom-2 -right-2 bg-green-600 text-white rounded-full p-2 shadow-lg cursor-pointer">
+            <label className="absolute -bottom-2 -right-2 bg-green-600 text-white rounded-full p-2 shadow-lg cursor-pointer hover:bg-green-700 transition-colors">
               <Camera className="w-4 h-4" />
-              <input type="file" accept="image/*" onChange={handleUploadPhoto} className="hidden" />
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={handleUploadPhoto} 
+                className="hidden"
+                disabled={isSaving}
+              />
             </label>
           </div>
           <p className="text-sm text-gray-500 mt-2">Toca para cambiar foto</p>
+          {photoFile && (
+            <p className="text-sm text-green-600 mt-1">Nueva foto seleccionada</p>
+          )}
         </div>
 
         {/* Form Fields */}
@@ -274,6 +338,7 @@ export function SettingsScreen() {
               value={formData.phone}
               onChange={(e) => handleInputChange("phone", e.target.value)}
               className="mt-1"
+              disabled={isSaving}
             />
           </div>
 
@@ -283,8 +348,10 @@ export function SettingsScreen() {
               {positions.map((position) => (
                 <button
                   key={position}
+                  type="button"
                   onClick={() => handleInputChange("position", position)}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                  disabled={isSaving}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50 ${
                     formData.position === position
                       ? "bg-green-100 text-green-800 border-green-300"
                       : "bg-gray-50 text-gray-700 border-gray-300 hover:border-gray-400"
@@ -307,6 +374,7 @@ export function SettingsScreen() {
                 value={formData.height}
                 onChange={(e) => handleInputChange("height", e.target.value)}
                 className="mt-1"
+                disabled={isSaving}
               />
             </div>
             <div>
@@ -319,6 +387,7 @@ export function SettingsScreen() {
                 value={formData.weight}
                 onChange={(e) => handleInputChange("weight", e.target.value)}
                 className="mt-1"
+                disabled={isSaving}
               />
             </div>
           </div>
@@ -347,8 +416,10 @@ export function SettingsScreen() {
                       <p className="font-medium text-gray-900">{labels[key]}</p>
                     </div>
                     <button
+                      type="button"
                       onClick={() => handleNotificationToggle(key)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      disabled={isSaving}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${
                         notificationPreferences[key] ? "bg-green-600" : "bg-gray-300"
                       }`}
                     >
@@ -368,11 +439,24 @@ export function SettingsScreen() {
           <div className="mt-8 pb-8">
             <Button
               onClick={handleSave}
-              disabled={isSaving}
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-4 text-lg font-semibold rounded-2xl disabled:opacity-50"
+              disabled={isSaving || success}
+              className="w-full bg-green-600 hover:bg-green-700 text-white py-4 text-lg font-semibold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Save className="w-5 h-5 mr-2" />
-              {isSaving ? "Guardando..." : "Guardar cambios"}
+              {isSaving ? (
+                <span className="flex items-center justify-center">
+                  <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                  Guardando...
+                </span>
+              ) : success ? (
+                <span className="flex items-center justify-center">
+                  ✓ Cambios guardados
+                </span>
+              ) : (
+                <>
+                  <Save className="w-5 h-5 mr-2" />
+                  Guardar cambios
+                </>
+              )}
             </Button>
           </div>
         </div>

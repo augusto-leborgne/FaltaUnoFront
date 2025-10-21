@@ -1,362 +1,318 @@
-import { Usuario } from "./api"
-import { jwtDecode } from 'jwt-decode'
+// lib/auth.ts - VERSIÓN MEJORADA
+import type { Usuario } from "./api"
 
-// ============================================
-// CONFIGURACIÓN
-// ============================================
+const TOKEN_KEY = "authToken"
+const USER_KEY = "user"
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
 
-const TOKEN_KEY = "authToken";
-const USER_KEY = "user";
-const TOKEN_REFRESH_THRESHOLD = 5 * 60; // 5 minutos antes de expirar
+export class AuthService {
+  // ============================================
+  // TOKEN MANAGEMENT
+  // ============================================
 
-// ============================================
-// INTERFACES
-// ============================================
-
-interface JwtPayload {
-  sub: string // email
-  userId?: string
-  exp: number
-  iat: number
-  roles?: string[]
-}
-
-// ============================================
-// UTILIDADES
-// ============================================
-
-function hasWindow(): boolean {
-  return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
-}
-
-function base64UrlDecode(str: string): string {
-  // Reemplazar caracteres URL-safe
-  str = str.replace(/-/g, "+").replace(/_/g, "/");
-  
-  // Agregar padding si es necesario
-  while (str.length % 4) {
-    str += "=";
-  }
-  
-  try {
-    return atob(str);
-  } catch (e) {
-    console.error("[Auth] Error decodificando base64:", e);
-    throw new Error("Token inválido");
-  }
-}
-
-// ============================================
-// AUTH SERVICE
-// ============================================
-
-export const AuthService = {
-  /**
-   * Guardar token JWT
-   */
-  setToken(token: string): void {
-    if (typeof window === 'undefined') return
-    
+  static setToken(token: string): void {
+    if (typeof window === "undefined") return
     try {
       localStorage.setItem(TOKEN_KEY, token)
-      console.log('[AuthService] Token guardado')
+      console.log("[AuthService] Token guardado")
     } catch (error) {
-      console.error('[AuthService] Error guardando token:', error)
+      console.error("[AuthService] Error guardando token:", error)
     }
-  },
+  }
 
-  /**
-   * Obtener token JWT
-   */
-  getToken(): string | null {
-    if (typeof window === 'undefined') return null
-    
+  static getToken(): string | null {
+    if (typeof window === "undefined") return null
     try {
       return localStorage.getItem(TOKEN_KEY)
     } catch (error) {
-      console.error('[AuthService] Error obteniendo token:', error)
+      console.error("[AuthService] Error obteniendo token:", error)
       return null
     }
-  },
+  }
 
-  /**
-   * Guardar datos de usuario
-   */
-  setUser(user: Usuario): void {
-    if (typeof window === 'undefined') return
-    
+  static removeToken(): void {
+    if (typeof window === "undefined") return
     try {
-      // Limpiar password antes de guardar
-      const userToSave = { ...user }
-      delete (userToSave as any).password
-      
-      localStorage.setItem(USER_KEY, JSON.stringify(userToSave))
-      console.log('[AuthService] Usuario guardado:', user.email)
+      localStorage.removeItem(TOKEN_KEY)
+      console.log("[AuthService] Token eliminado")
     } catch (error) {
-      console.error('[AuthService] Error guardando usuario:', error)
+      console.error("[AuthService] Error eliminando token:", error)
     }
-  },
+  }
 
-  /**
-   * Obtener datos de usuario
-   */
-  getUser(): Usuario | null {
-    if (typeof window === 'undefined') return null
-    
+  // ============================================
+  // USER MANAGEMENT
+  // ============================================
+
+  static setUser(user: Usuario): void {
+    if (typeof window === "undefined") return
+    try {
+      // ✅ CRÍTICO: Normalizar foto_perfil antes de guardar
+      const normalizedUser = {
+        ...user,
+        foto_perfil: user.foto_perfil || (user as any).fotoPerfil || undefined,
+        fotoPerfil: undefined // Eliminar duplicado
+      }
+      
+      localStorage.setItem(USER_KEY, JSON.stringify(normalizedUser))
+      console.log("[AuthService] Usuario guardado:", normalizedUser.email)
+      
+      // Disparar evento personalizado para notificar cambios
+      window.dispatchEvent(new CustomEvent('userUpdated', { 
+        detail: normalizedUser 
+      }))
+    } catch (error) {
+      console.error("[AuthService] Error guardando usuario:", error)
+    }
+  }
+
+  static getUser(): Usuario | null {
+    if (typeof window === "undefined") return null
     try {
       const userStr = localStorage.getItem(USER_KEY)
       if (!userStr) return null
       
-      return JSON.parse(userStr) as Usuario
+      const user = JSON.parse(userStr) as Usuario
+      
+      // ✅ CRÍTICO: Normalizar foto_perfil al leer
+      return {
+        ...user,
+        foto_perfil: user.foto_perfil || (user as any).fotoPerfil || undefined
+      }
     } catch (error) {
-      console.error('[AuthService] Error obteniendo usuario:', error)
+      console.error("[AuthService] Error parseando usuario:", error)
       return null
     }
-  },
+  }
 
-  /**
-   * Verificar si hay una sesión activa válida
-   */
-  isAuthenticated(): boolean {
-    const token = this.getToken()
+  static removeUser(): void {
+    if (typeof window === "undefined") return
+    try {
+      localStorage.removeItem(USER_KEY)
+      console.log("[AuthService] Usuario eliminado")
+      
+      // Disparar evento de logout
+      window.dispatchEvent(new CustomEvent('userLoggedOut'))
+    } catch (error) {
+      console.error("[AuthService] Error eliminando usuario:", error)
+    }
+  }
+
+  // ============================================
+  // SESSION MANAGEMENT
+  // ============================================
+
+  static logout(): void {
+    console.log("[AuthService] Logout iniciado")
     
-    if (!token) {
-      console.log('[AuthService] No hay token')
-      return false
+    // Limpiar storage
+    this.removeToken()
+    this.removeUser()
+    
+    // ✅ CRÍTICO: Limpiar TODOS los datos de sesión
+    if (typeof window !== "undefined") {
+      try {
+        // Limpiar cualquier otro dato de sesión
+        const keys = Object.keys(localStorage)
+        keys.forEach(key => {
+          if (key.startsWith('match_') || key.startsWith('user_')) {
+            localStorage.removeItem(key)
+          }
+        })
+      } catch (error) {
+        console.error("[AuthService] Error limpiando storage:", error)
+      }
     }
     
+    console.log("[AuthService] Logout completado")
+  }
+
+  static isLoggedIn(): boolean {
+    const token = this.getToken()
+    if (!token) return false
+    
+    // Verificar si el token está expirado
     if (this.isTokenExpired(token)) {
-      console.log('[AuthService] Token expirado')
-      this.logout() // Limpiar sesión expirada
+      console.log("[AuthService] Token expirado, limpiando sesión")
+      this.logout()
       return false
     }
     
     return true
-  },
+  }
 
-  /**
-   * Verificar si el token está expirado
-   */
-  isTokenExpired(token: string): boolean {
+  // ============================================
+  // TOKEN VALIDATION
+  // ============================================
+
+  static isTokenExpired(token: string): boolean {
     try {
-      const decoded = jwtDecode<JwtPayload>(token)
-      const now = Date.now() / 1000
+      // Decodificar el payload del JWT
+      const payload = JSON.parse(atob(token.split(".")[1]))
+      const exp = payload.exp * 1000 // Convertir a milisegundos
+      const now = Date.now()
       
-      // Considerar expirado si quedan menos de 60 segundos
-      const isExpired = decoded.exp < now + 60
-      
-      if (isExpired) {
-        console.log('[AuthService] Token expira en:', decoded.exp - now, 'segundos')
-      }
-      
-      return isExpired
+      return now >= exp
     } catch (error) {
-      console.error('[AuthService] Error decodificando token:', error)
-      return true // Si no se puede decodificar, considerar expirado
+      console.error("[AuthService] Error verificando token:", error)
+      return true // Si no se puede verificar, asumir expirado
     }
-  },
+  }
 
-  /**
-   * Decodificar token para obtener información
-   */
-  decodeToken(token?: string): JwtPayload | null {
-    const tokenToUse = token || this.getToken()
-    
-    if (!tokenToUse) return null
-    
-    try {
-      return jwtDecode<JwtPayload>(tokenToUse)
-    } catch (error) {
-      console.error('[AuthService] Error decodificando token:', error)
-      return null
-    }
-  },
-
-  /**
-   * Cerrar sesión - CORREGIDO para evitar race conditions
-   */
-  logout(): void {
-    if (typeof window === 'undefined') return
-    
-    console.log('[AuthService] 🚪 Cerrando sesión...')
-    
-    try {
-      // 1. Limpiar localStorage
-      localStorage.removeItem(TOKEN_KEY)
-      localStorage.removeItem(USER_KEY)
-      
-      // 2. Limpiar cualquier otro dato relacionado
-      Object.keys(localStorage).forEach(key => {
-        if (key.startsWith('faltauno_')) {
-          localStorage.removeItem(key)
-        }
-      })
-      
-      console.log('[AuthService] ✅ Sesión limpiada')
-    } catch (error) {
-      console.error('[AuthService] Error limpiando sesión:', error)
-    }
-  },
-
-  /**
-   * Validar y limpiar sesión si es inválida
-   */
-  validateAndCleanup(): void {
-    if (typeof window === 'undefined') return
-    
+  static validateAndCleanup(): void {
     const token = this.getToken()
-    const user = this.getUser()
     
-    // Si hay token pero está expirado, limpiar todo
-    if (token && this.isTokenExpired(token)) {
-      console.log('[AuthService] 🧹 Token expirado, limpiando sesión')
-      this.logout()
+    if (!token) {
+      this.removeUser()
       return
     }
     
-    // Si hay usuario pero no token, limpiar todo
-    if (user && !token) {
-      console.log('[AuthService] 🧹 Usuario sin token, limpiando sesión')
+    if (this.isTokenExpired(token)) {
+      console.log("[AuthService] Token expirado, limpiando")
       this.logout()
-      return
     }
-    
-    // Si hay token pero no usuario, intentar recuperar del token
-    if (token && !user) {
-      console.log('[AuthService] ⚠️ Token sin usuario, requiere re-login')
-      this.logout()
-      return
-    }
-  },
+  }
 
-  /**
-   * Verificar si el usuario existe en el backend
-   */
-  async verifyUserExists(): Promise<boolean> {
-    if (typeof window === 'undefined') return false
-    
-    const token = this.getToken()
-    if (!token || this.isTokenExpired(token)) {
-      this.logout()
-      return false
-    }
-    
-    try {
-      const response = await fetch('/api/usuarios/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
-      
-      if (!response.ok) {
-        console.log('[AuthService] Usuario no existe en BD, limpiando sesión')
-        this.logout()
-        return false
-      }
-      
-      const result = await response.json()
-      
-      if (!result.success || !result.data) {
-        this.logout()
-        return false
-      }
-      
-      // Actualizar datos del usuario
-      this.setUser(result.data)
-      return true
-      
-    } catch (error) {
-      console.error('[AuthService] Error verificando usuario:', error)
-      this.logout()
-      return false
-    }
-  },
+  // ============================================
+  // API HELPERS
+  // ============================================
 
-  /**
-   * Refrescar datos del usuario desde el backend
-   */
-  async refreshUser(): Promise<Usuario | null> {
-    if (typeof window === 'undefined') return null
-    
-    const token = this.getToken()
-    if (!token || this.isTokenExpired(token)) {
-      this.logout()
-      return null
-    }
-    
-    try {
-      const response = await fetch('/api/usuarios/me', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
-      
-      if (!response.ok) {
-        this.logout()
-        return null
-      }
-      
-      const result = await response.json()
-      
-      if (result.success && result.data) {
-        this.setUser(result.data)
-        return result.data
-      }
-      
-      return null
-    } catch (error) {
-      console.error('[AuthService] Error refrescando usuario:', error)
-      return null
-    }
-  },
-
-  /**
-   * Obtener información del token actual
-   */
-  getTokenInfo(): {
-    email: string | null
-    userId: string | null
-    expiresAt: Date | null
-    isExpired: boolean
-  } {
+  static getAuthHeaders(): Record<string, string> {
     const token = this.getToken()
     
     if (!token) {
       return {
-        email: null,
-        userId: null,
-        expiresAt: null,
-        isExpired: true
+        "Content-Type": "application/json"
       }
     }
     
+    return {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json"
+    }
+  }
+
+  // ✅ NUEVO: Método para refrescar datos del usuario desde el servidor
+  static async fetchCurrentUser(): Promise<Usuario | null> {
     try {
-      const decoded = this.decodeToken(token)
+      const token = this.getToken()
       
-      if (!decoded) {
-        return {
-          email: null,
-          userId: null,
-          expiresAt: null,
-          isExpired: true
+      if (!token) {
+        console.log("[AuthService] No hay token para fetch")
+        return null
+      }
+      
+      if (this.isTokenExpired(token)) {
+        console.log("[AuthService] Token expirado")
+        this.logout()
+        return null
+      }
+      
+      console.log("[AuthService] Fetching current user...")
+      
+      const response = await fetch(`${API_URL}/api/usuarios/me`, {
+        headers: this.getAuthHeaders()
+      })
+      
+      if (!response.ok) {
+        console.error("[AuthService] Error en fetchCurrentUser:", response.status)
+        
+        // Si es 401, el token es inválido
+        if (response.status === 401) {
+          this.logout()
         }
+        
+        return null
       }
       
-      return {
-        email: decoded.sub,
-        userId: decoded.userId || null,
-        expiresAt: new Date(decoded.exp * 1000),
-        isExpired: this.isTokenExpired(token)
+      const result = await response.json()
+      const userData = result.data
+      
+      if (!userData) {
+        console.error("[AuthService] No hay datos de usuario en respuesta")
+        return null
       }
+      
+      // Normalizar y guardar
+      const normalizedUser: Usuario = {
+        ...userData,
+        foto_perfil: userData.foto_perfil || userData.fotoPerfil || undefined,
+        fotoPerfil: undefined
+      }
+      
+      this.setUser(normalizedUser)
+      
+      console.log("[AuthService] Usuario actualizado desde servidor")
+      
+      return normalizedUser
     } catch (error) {
-      return {
-        email: null,
-        userId: null,
-        expiresAt: null,
-        isExpired: true
+      console.error("[AuthService] Error en fetchCurrentUser:", error)
+      return null
+    }
+  }
+
+  // ✅ NUEVO: Método para actualizar foto de perfil
+  static async updateProfilePhoto(file: File): Promise<boolean> {
+    try {
+      const token = this.getToken()
+      
+      if (!token) {
+        throw new Error("No hay token de autenticación")
       }
+      
+      const formData = new FormData()
+      formData.append("file", file)
+      
+      const response = await fetch(`${API_URL}/api/usuarios/me/foto`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        },
+        body: formData
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${await response.text()}`)
+      }
+      
+      // Refrescar datos del usuario
+      await this.fetchCurrentUser()
+      
+      return true
+    } catch (error) {
+      console.error("[AuthService] Error actualizando foto:", error)
+      return false
+    }
+  }
+
+  // ✅ NUEVO: Método para actualizar perfil
+  static async updateProfile(data: Partial<Usuario>): Promise<boolean> {
+    try {
+      const token = this.getToken()
+      
+      if (!token) {
+        throw new Error("No hay token de autenticación")
+      }
+      
+      const response = await fetch(`${API_URL}/api/usuarios/me`, {
+        method: "PUT",
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify(data)
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${await response.text()}`)
+      }
+      
+      // Refrescar datos del usuario
+      await this.fetchCurrentUser()
+      
+      return true
+    } catch (error) {
+      console.error("[AuthService] Error actualizando perfil:", error)
+      return false
     }
   }
 }
+
+export default AuthService

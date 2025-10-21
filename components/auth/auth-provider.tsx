@@ -1,4 +1,4 @@
-// components/auth/auth-provider.tsx
+// components/auth/auth-provider.tsx - VERSIÓN MEJORADA
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
@@ -18,18 +18,31 @@ const AuthContext = createContext<AuthCtx | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUserState] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Wrapper para setUser que preserva firma del contexto
   const setUser = (u: Usuario | null) => {
+    console.log("[AuthProvider] setUser llamado:", u?.email || "null");
     setUserState(u);
+    if (u) {
+      AuthService.setUser(u);
+    }
   };
 
-  // refreshUser: valida token y actualiza user en contexto desde server/localStorage
+  // refreshUser: valida token y actualiza user en contexto desde server
   const refreshUser = async (): Promise<void> => {
     console.log("[AuthProvider] refreshUser iniciado");
+    
+    // Evitar refresh durante logout
+    if (isLoggingOut) {
+      console.log("[AuthProvider] Logout en progreso, cancelando refresh");
+      return;
+    }
+    
     setLoading(true);
+    
     try {
-      // validar y limpiar token expirado primero
+      // Validar y limpiar token expirado primero
       AuthService.validateAndCleanup();
 
       const token = AuthService.getToken();
@@ -40,25 +53,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Intentar obtener usuario desde el backend (me)
-      try {
-        const serverUser = await AuthService.fetchCurrentUser();
-        if (serverUser) {
-          console.log("[AuthProvider] refreshUser: usuario obtenido desde servidor:", serverUser.email);
-          AuthService.setUser(serverUser);
-          setUserState(serverUser);
-          return;
-        }
-      } catch (err) {
-        console.warn("[AuthProvider] refreshUser: fetchCurrentUser falló:", err);
+      console.log("[AuthProvider] Obteniendo usuario desde servidor...");
+      const serverUser = await AuthService.fetchCurrentUser();
+      
+      if (serverUser) {
+        console.log("[AuthProvider] Usuario actualizado desde servidor:", serverUser.email);
+        setUserState(serverUser);
+        return;
       }
 
       // Fallback: cargar desde localStorage si existe y token no expiró
       const localUser = AuthService.getUser();
       if (localUser && !AuthService.isTokenExpired(token)) {
-        console.log("[AuthProvider] refreshUser: usando user desde localStorage");
+        console.log("[AuthProvider] Usando usuario desde localStorage");
         setUserState(localUser);
       } else {
-        console.log("[AuthProvider] refreshUser: no hay user válido");
+        console.log("[AuthProvider] No hay usuario válido");
         AuthService.logout();
         setUserState(null);
       }
@@ -73,12 +83,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // logout: limpiar storage, contexto y redirigir a login
   const logout = () => {
     console.log("[AuthProvider] logout llamado");
-    AuthService.logout();
+    
+    // Marcar que estamos en proceso de logout
+    setIsLoggingOut(true);
+    
+    // Limpiar estado inmediatamente
     setUserState(null);
-    // redirigir a login de forma segura en client
+    
+    // Limpiar storage
+    AuthService.logout();
+    
+    // Redirigir a login de forma segura en client
     if (typeof window !== "undefined") {
       try {
-        window.location.href = "/login";
+        // Usar replace en lugar de href para evitar history
+        window.location.replace("/login");
       } catch (e) {
         console.warn("[AuthProvider] redirect to login failed", e);
       }
@@ -91,10 +110,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const init = async () => {
       console.log("[AuthProvider] Inicializando...");
-      // limpiar tokens expirados
+      
+      // Limpiar tokens expirados
       AuthService.validateAndCleanup();
 
-      // intentar restaurar user desde localStorage
+      // Intentar restaurar user desde localStorage
       const token = AuthService.getToken();
       const localUser = AuthService.getUser();
 
@@ -114,6 +134,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUserState(localUser);
           setLoading(false);
         }
+        
+        // ✅ NUEVO: Refrescar en background para obtener datos actualizados
+        setTimeout(() => {
+          if (mounted && !isLoggingOut) {
+            refreshUser();
+          }
+        }, 1000);
+        
         return;
       }
 
@@ -122,7 +150,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const serverUser = await AuthService.fetchCurrentUser();
         if (serverUser) {
           console.log("[AuthProvider] Usuario restaurado desde servidor:", serverUser.email);
-          AuthService.setUser(serverUser);
           if (mounted) setUserState(serverUser);
         } else {
           console.log("[AuthProvider] Token no validado por servidor, limpiando");
@@ -140,24 +167,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     init();
 
-    // Escuchar cambios en localStorage para sincronizar entre pestañas
+    // ✅ NUEVO: Escuchar eventos personalizados
+    const handleUserUpdated = ((e: CustomEvent) => {
+      console.log("[AuthProvider] Usuario actualizado desde evento");
+      setUserState(e.detail);
+    }) as EventListener;
+    
+    const handleUserLoggedOut = () => {
+      console.log("[AuthProvider] Logout detectado desde evento");
+      setUserState(null);
+    };
+
+    window.addEventListener('userUpdated', handleUserUpdated);
+    window.addEventListener('userLoggedOut', handleUserLoggedOut);
+
+    // Escuchar cambios en localStorage (sync entre pestañas)
     const onStorage = (e: StorageEvent) => {
       console.log("[AuthProvider] Storage event:", e.key);
+      
       if (e.key === "authToken") {
         if (!e.newValue) {
-          // token eliminado en otra pestaña
-          console.log("[AuthProvider] token eliminado en otra pestaña");
+          console.log("[AuthProvider] Token eliminado en otra pestaña");
           setUserState(null);
         } else if (AuthService.isTokenExpired(e.newValue)) {
-          console.log("[AuthProvider] token expirado detectado via storage event");
+          console.log("[AuthProvider] Token expirado detectado via storage event");
           AuthService.logout();
           setUserState(null);
         }
       }
+      
       if (e.key === "user") {
         try {
           const newUser = e.newValue ? JSON.parse(e.newValue) : null;
-          console.log("[AuthProvider] user actualizado desde otra pestaña:", newUser?.email ?? null);
+          console.log("[AuthProvider] Usuario actualizado desde otra pestaña:", newUser?.email ?? null);
           setUserState(newUser);
         } catch {
           setUserState(null);
@@ -170,6 +212,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       mounted = false;
       window.removeEventListener("storage", onStorage);
+      window.removeEventListener('userUpdated', handleUserUpdated);
+      window.removeEventListener('userLoggedOut', handleUserLoggedOut);
     };
   }, []);
 

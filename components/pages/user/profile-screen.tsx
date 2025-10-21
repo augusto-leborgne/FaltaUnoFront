@@ -1,14 +1,16 @@
+// components/pages/user/profile-screen.tsx - VERSIÓN MEJORADA
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Settings, Star, UserPlus, Phone, Users, LogOut } from "lucide-react"
+import { UserAvatar } from "@/components/ui/user-avatar"
+import { Settings, Star, UserPlus, Phone, Users, LogOut, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { calcularEdad } from "@/lib/utils"
 import { AuthService } from "@/lib/auth"
+import { useCurrentUser } from "@/hooks/use-current-user"
 
 interface Review {
   id: string
@@ -39,13 +41,13 @@ interface Contact {
 
 export function ProfileScreen() {
   const router = useRouter()
+  const { user, loading: userLoading, refresh: refreshUser } = useCurrentUser()
+  
   const [reviews, setReviews] = useState<Review[]>([])
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([])
   const [contacts, setContacts] = useState<Contact[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
-  const user = AuthService.getUser()
 
   useEffect(() => {
     if (!user?.id) {
@@ -54,6 +56,14 @@ export function ProfileScreen() {
     }
     loadProfileData()
   }, [user?.id])
+
+  // ✅ NUEVO: Refrescar cuando el usuario cambia
+  useEffect(() => {
+    if (user) {
+      console.log("[ProfileScreen] Usuario actualizado:", user.email)
+      // Podrías refrescar datos adicionales aquí si es necesario
+    }
+  }, [user])
 
   const loadProfileData = async () => {
     try {
@@ -108,7 +118,6 @@ export function ProfileScreen() {
           const contactsData = await contactsResponse.json()
           const allUsers = contactsData.data || []
           
-          // Filtrar usuarios que no sean el usuario actual
           const filteredContacts = allUsers
             .filter((u: any) => u.id !== user.id)
             .map((u: any) => ({
@@ -116,7 +125,7 @@ export function ProfileScreen() {
               nombre: u.nombre || "",
               apellido: u.apellido || "",
               celular: u.celular,
-              foto_perfil: u.fotoPerfil || u.foto_perfil,
+              foto_perfil: u.foto_perfil || u.fotoPerfil,
               isOnApp: true
             }))
           
@@ -135,7 +144,6 @@ export function ProfileScreen() {
   }
 
   const handleReviewClick = (reviewId: string) => {
-    // Navegar al perfil del usuario que hizo la review
     const review = reviews.find(r => r.id === reviewId)
     if (review) {
       router.push(`/users/${review.usuario_que_califica_id}`)
@@ -144,6 +152,7 @@ export function ProfileScreen() {
 
   const handleSettingsClick = () => router.push("/settings")
   const handleContactsClick = () => router.push("/contacts")
+  
   const handleLogout = () => {
     if (confirm("¿Estás seguro de que quieres cerrar sesión?")) {
       AuthService.logout()
@@ -162,10 +171,13 @@ export function ProfileScreen() {
     }
   }
 
-  if (loading) {
+  if (userLoading || loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full"></div>
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-green-600 mx-auto mb-4" />
+          <p className="text-gray-600">Cargando perfil...</p>
+        </div>
       </div>
     )
   }
@@ -188,7 +200,6 @@ export function ProfileScreen() {
     : "0.0"
 
   const fullName = `${user.nombre || ""} ${user.apellido || ""}`.trim() || "Usuario"
-  const initials = fullName.split(" ").map(n => n[0]).join("").toUpperCase()
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -197,19 +208,18 @@ export function ProfileScreen() {
         <h1 className="text-2xl font-bold text-gray-900">Mi Perfil</h1>
       </div>
 
-      <div className="flex-1 px-6 py-6">
+      <div className="flex-1 px-6 py-6 overflow-y-auto">
         {/* Profile Card */}
         <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
           <div className="flex items-center space-x-4 mb-6">
-            <Avatar className="w-20 h-20">
-              {user.foto_perfil ? (
-                <AvatarImage src={`data:image/jpeg;base64,${user.foto_perfil}`} alt={fullName} />
-              ) : (
-                <AvatarFallback className="bg-orange-100 text-2xl">
-                  {initials}
-                </AvatarFallback>
-              )}
-            </Avatar>
+            {/* ✅ NUEVO: Usar UserAvatar component */}
+            <UserAvatar
+              photo={user.foto_perfil}
+              name={user.nombre}
+              surname={user.apellido}
+              className="w-20 h-20"
+              onClick={() => handleSettingsClick()}
+            />
             <div className="flex-1">
               <h2 className="text-xl font-bold text-gray-900">{fullName}</h2>
               <p className="text-gray-600">
@@ -272,11 +282,10 @@ export function ProfileScreen() {
                   className="flex items-center justify-between p-3 bg-gray-50 rounded-xl"
                 >
                   <div className="flex items-center space-x-3">
-                    <Avatar className="w-10 h-10">
-                      <AvatarFallback className="bg-gray-200">
-                        <UserPlus className="w-5 h-5" />
-                      </AvatarFallback>
-                    </Avatar>
+                    <UserAvatar
+                      className="w-10 h-10"
+                      fullName="Nueva solicitud"
+                    />
                     <div>
                       <p className="font-medium text-gray-900">Nueva solicitud</p>
                       <p className="text-xs text-gray-500">
@@ -433,7 +442,6 @@ export function ProfileScreen() {
             <div className="space-y-3">
               {contacts.slice(0, 5).map((contact) => {
                 const contactName = `${contact.nombre} ${contact.apellido}`.trim() || "Usuario"
-                const contactInitials = contactName.split(" ").map(n => n[0]).join("").toUpperCase()
                 
                 return (
                   <div
@@ -442,18 +450,13 @@ export function ProfileScreen() {
                     className="flex items-center justify-between p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors"
                   >
                     <div className="flex items-center space-x-3">
-                      <Avatar className="w-10 h-10">
-                        {contact.foto_perfil ? (
-                          <AvatarImage 
-                            src={`data:image/jpeg;base64,${contact.foto_perfil}`}
-                            alt={contactName}
-                          />
-                        ) : (
-                          <AvatarFallback className="bg-gray-200">
-                            {contactInitials}
-                          </AvatarFallback>
-                        )}
-                      </Avatar>
+                      {/* ✅ NUEVO: Usar UserAvatar component */}
+                      <UserAvatar
+                        photo={contact.foto_perfil}
+                        name={contact.nombre}
+                        surname={contact.apellido}
+                        className="w-10 h-10"
+                      />
                       <div>
                         <p className="font-medium text-gray-900">{contactName}</p>
                         {contact.celular && (
