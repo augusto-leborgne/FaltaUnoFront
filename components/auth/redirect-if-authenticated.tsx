@@ -1,57 +1,46 @@
-"use client";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/use-auth";
+"use client"
 
-interface RedirectIfAuthenticatedProps {
-  children: React.ReactNode;
-}
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/hooks/use-auth"
+import { AuthService } from "@/lib/auth"
 
-/**
- * Guard para páginas públicas (login, register)
- * Si el usuario ya está autenticado, lo redirige a /
- */
-export default function RedirectIfAuthenticated({ children }: RedirectIfAuthenticatedProps) {
-  const router = useRouter();
-  const { user, loading } = useAuth();
-  const [shouldRender, setShouldRender] = useState(false);
+export function RedirectIfAuthenticated({ 
+  children 
+}: { 
+  children: React.ReactNode 
+}) {
+  const router = useRouter()
+  const { user, loading } = useAuth()
 
   useEffect(() => {
-    console.log("[RedirectIfAuthenticated] Checking - Loading:", loading, "User:", user ? "YES" : "NO");
+    // ✅ CORREGIDO: Verificar tanto token como usuario
+    const token = AuthService.getToken()
     
-    // Esperar a que termine de cargar
+    console.log("[RedirectIfAuthenticated] Checking - Loading:", loading, "User:", user ? "YES" : "NO", "Token:", token ? "YES" : "NO")
+    
     if (loading) {
-      setShouldRender(false);
-      return;
+      console.log("[RedirectIfAuthenticated] Still loading, waiting...")
+      return
     }
 
-    // Si hay usuario autenticado → redirigir a home
-    if (user) {
-      console.log("[RedirectIfAuthenticated] User authenticated, redirecting to /");
-      setShouldRender(false);
-      router.replace("/");
-      return;
+    // ✅ Solo redirigir si AMBOS existen
+    if (user && token && !AuthService.isTokenExpired(token)) {
+      console.log("[RedirectIfAuthenticated] User authenticated, redirecting to /home")
+      router.replace("/home")
+    } else {
+      console.log("[RedirectIfAuthenticated] Not authenticated or invalid session, showing page")
     }
+  }, [user, loading, router])
 
-    // No hay usuario → permitir acceso a página pública
-    console.log("[RedirectIfAuthenticated] No user, showing public page");
-    setShouldRender(true);
-  }, [user, loading, router]);
-
-  // Mientras carga o redirige, mostrar loading
-  if (!shouldRender) {
+  // Mostrar nada mientras se verifica
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="animate-spin w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600">
-            {loading ? "Verificando..." : "Redirigiendo..."}
-          </p>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
       </div>
-    );
+    )
   }
 
-  // Renderizar página pública
-  return <>{children}</>;
+  return <>{children}</>
 }
