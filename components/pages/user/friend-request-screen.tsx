@@ -132,6 +132,7 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
 
   const fullName = user ? `${user.nombre || ""} ${user.apellido || ""}`.trim() || "Usuario" : "Usuario"
   const initials = fullName.split(" ").map(n => n[0]).join("").toUpperCase()
+  const fotoBase64 = user?.fotoPerfil || user?.foto_perfil
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -147,8 +148,11 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
       <div className="flex-1 px-6 py-8">
         <div className="text-center mb-8">
           <Avatar className="w-24 h-24 mx-auto mb-4">
-            {user?.fotoPerfil ? (
-              <AvatarImage src={`data:image/jpeg;base64,${user.fotoPerfil}`} />
+            {fotoBase64 ? (
+              <AvatarImage 
+                src={`data:image/jpeg;base64,${fotoBase64}`}
+                alt={fullName}
+              />
             ) : (
               <AvatarFallback className="bg-orange-100 text-2xl">
                 {initials}

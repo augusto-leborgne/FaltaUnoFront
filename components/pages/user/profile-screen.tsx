@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Settings, Star, UserPlus, Phone, Users } from "lucide-react"
+import { Settings, Star, UserPlus, Phone, Users, LogOut } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { calcularEdad } from "@/lib/utils"
 import { AuthService } from "@/lib/auth"
@@ -116,7 +116,7 @@ export function ProfileScreen() {
               nombre: u.nombre || "",
               apellido: u.apellido || "",
               celular: u.celular,
-              foto_perfil: u.fotoPerfil,
+              foto_perfil: u.fotoPerfil || u.foto_perfil,
               isOnApp: true
             }))
           
@@ -144,6 +144,12 @@ export function ProfileScreen() {
 
   const handleSettingsClick = () => router.push("/settings")
   const handleContactsClick = () => router.push("/contacts")
+  const handleLogout = () => {
+    if (confirm("¿Estás seguro de que quieres cerrar sesión?")) {
+      AuthService.logout()
+      router.push("/login")
+    }
+  }
   
   const handlePhoneClick = (telefono: string, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -197,7 +203,7 @@ export function ProfileScreen() {
           <div className="flex items-center space-x-4 mb-6">
             <Avatar className="w-20 h-20">
               {user.foto_perfil ? (
-                <AvatarImage src={`data:image/jpeg;base64,${user.foto_perfil}`} />
+                <AvatarImage src={`data:image/jpeg;base64,${user.foto_perfil}`} alt={fullName} />
               ) : (
                 <AvatarFallback className="bg-orange-100 text-2xl">
                   {initials}
@@ -398,7 +404,7 @@ export function ProfileScreen() {
         </div>
 
         {/* Contacts Section */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-24">
+        <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-gray-900">Contactos</h3>
             <Button
@@ -438,7 +444,10 @@ export function ProfileScreen() {
                     <div className="flex items-center space-x-3">
                       <Avatar className="w-10 h-10">
                         {contact.foto_perfil ? (
-                          <AvatarImage src={`data:image/jpeg;base64,${contact.foto_perfil}`} />
+                          <AvatarImage 
+                            src={`data:image/jpeg;base64,${contact.foto_perfil}`}
+                            alt={contactName}
+                          />
                         ) : (
                           <AvatarFallback className="bg-gray-200">
                             {contactInitials}
@@ -466,6 +475,19 @@ export function ProfileScreen() {
               })}
             </div>
           )}
+        </div>
+
+        {/* Logout Section */}
+        <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-24">
+          <h3 className="text-lg font-bold text-gray-900 mb-4">Sesión</h3>
+          <Button
+            onClick={handleLogout}
+            variant="destructive"
+            className="w-full py-3 rounded-xl"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Cerrar sesión
+          </Button>
         </div>
       </div>
 

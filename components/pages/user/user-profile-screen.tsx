@@ -31,6 +31,7 @@ interface Usuario {
   altura?: number
   peso?: number
   posicion?: string
+  fotoPerfil?: string
   foto_perfil?: string
   ubicacion?: string
   cedula?: string
@@ -123,6 +124,12 @@ export function UserProfileScreen({ userId }: UserProfileScreenProps) {
   const handleSendFriendRequest = async () => {
     try {
       const token = AuthService.getToken()
+      
+      if (!token) {
+        router.push("/login")
+        return
+      }
+
       const response = await fetch("/api/amistades", {
         method: "POST",
         headers: {
@@ -194,6 +201,7 @@ export function UserProfileScreen({ userId }: UserProfileScreenProps) {
 
   const fullName = `${user.nombre || ""} ${user.apellido || ""}`.trim() || "Usuario"
   const edad = calcularEdad(user.fechaNacimiento)
+  const fotoBase64 = user.fotoPerfil || user.foto_perfil
   const averageRating = reviews.length > 0
     ? (reviews.reduce((sum, r) => sum + (r.nivel + r.deportividad + r.companerismo) / 3, 0) / reviews.length).toFixed(1)
     : "0.0"
@@ -215,8 +223,11 @@ export function UserProfileScreen({ userId }: UserProfileScreenProps) {
         <div className="bg-card border border-border rounded-2xl p-6 mb-6">
           <div className="flex items-center space-x-4 mb-6">
             <Avatar className="w-20 h-20">
-              {user.foto_perfil ? (
-                <AvatarImage src={`data:image/jpeg;base64,${user.foto_perfil}`} />
+              {fotoBase64 ? (
+                <AvatarImage 
+                  src={`data:image/jpeg;base64,${fotoBase64}`}
+                  alt={fullName}
+                />
               ) : (
                 <AvatarFallback className="bg-muted text-2xl">
                   {fullName.split(" ").map(n => n[0]).join("").toUpperCase()}
@@ -328,36 +339,6 @@ export function UserProfileScreen({ userId }: UserProfileScreenProps) {
                     <div className="grid grid-cols-3 gap-2 mb-2">
                       <div className="text-center">
                         <div className="text-xs text-muted-foreground mb-1">Nivel</div>
-                        <div className="flex justify-center">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-3 h-3 ${
-                                i < review.nivel 
-                                  ? "fill-accent text-accent" 
-                                  : "text-muted-foreground"
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-xs text-muted-foreground mb-1">Deportividad</div>
-                        <div className="flex justify-center">
-                          {[...Array(5)].map((_, i) => (
-                            <Star
-                              key={i}
-                              className={`w-3 h-3 ${
-                                i < review.deportividad 
-                                  ? "fill-accent text-accent" 
-                                  : "text-muted-foreground"
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-xs text-muted-foreground mb-1">Compañerismo</div>
                         <div className="flex justify-center">
                           {[...Array(5)].map((_, i) => (
                             <Star

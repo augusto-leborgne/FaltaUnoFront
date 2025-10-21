@@ -74,8 +74,9 @@ export function SettingsScreen() {
           weight: userData.peso?.toString() || "",
         })
 
-        if (userData.foto_perfil) {
-          setAvatar(`data:image/jpeg;base64,${userData.foto_perfil}`)
+        if (userData.fotoPerfil || userData.foto_perfil) {
+          const fotoBase64 = userData.fotoPerfil || userData.foto_perfil
+          setAvatar(`data:image/jpeg;base64,${fotoBase64}`)
         }
 
         // Determinar método de autenticación
@@ -126,10 +127,8 @@ export function SettingsScreen() {
         })
       }
 
-      // 2. Actualizar perfil
+      // 2. Actualizar perfil (sin nombre, apellido, email)
       const perfilData = {
-        nombre: formData.name,
-        apellido: formData.surname,
         celular: formData.phone,
         posicion: formData.position,
         altura: formData.height,
@@ -206,7 +205,7 @@ export function SettingsScreen() {
           <div className="relative inline-block">
             <Avatar className="w-24 h-24">
               {avatar ? (
-                <AvatarImage src={avatar} />
+                <AvatarImage src={avatar} alt="Foto de perfil" />
               ) : (
                 <AvatarFallback className="bg-orange-100 text-2xl">{initials}</AvatarFallback>
               )}
@@ -229,9 +228,10 @@ export function SettingsScreen() {
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-                className="mt-1"
+                disabled
+                className="mt-1 bg-gray-100 text-gray-500 cursor-not-allowed"
               />
+              <p className="text-xs text-gray-500 mt-1">No se puede editar</p>
             </div>
             <div>
               <Label htmlFor="surname" className="text-sm font-medium text-gray-700">
@@ -240,9 +240,10 @@ export function SettingsScreen() {
               <Input
                 id="surname"
                 value={formData.surname}
-                onChange={(e) => handleInputChange("surname", e.target.value)}
-                className="mt-1"
+                disabled
+                className="mt-1 bg-gray-100 text-gray-500 cursor-not-allowed"
               />
+              <p className="text-xs text-gray-500 mt-1">No se puede editar</p>
             </div>
           </div>
 
@@ -254,15 +255,14 @@ export function SettingsScreen() {
               id="email"
               type="email"
               value={formData.email}
-              onChange={authMethod === "email" ? (e) => handleInputChange("email", e.target.value) : undefined}
-              disabled={authMethod !== "email"}
-              className={`mt-1 ${authMethod !== "email" ? "bg-gray-100 text-gray-500 cursor-not-allowed" : ""}`}
+              disabled
+              className="mt-1 bg-gray-100 text-gray-500 cursor-not-allowed"
             />
-            {authMethod !== "email" && (
-              <p className="text-xs text-gray-500 mt-1">
-                Registrado con {authMethod === "google" ? "Google" : authMethod === "apple" ? "Apple" : "Facebook"}, no se puede editar
-              </p>
-            )}
+            <p className="text-xs text-gray-500 mt-1">
+              {authMethod !== "email" 
+                ? `Registrado con ${authMethod === "google" ? "Google" : authMethod === "apple" ? "Apple" : "Facebook"}` 
+                : "No se puede editar"}
+            </p>
           </div>
 
           <div>
