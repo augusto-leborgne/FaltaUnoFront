@@ -30,6 +30,16 @@ export function CreateMatchScreen() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
+  
+  // ✅ NUEVO: Errores por campo para validación en tiempo real
+  const [fieldErrors, setFieldErrors] = useState<{
+    date?: string
+    time?: string
+    location?: string
+    totalPlayers?: string
+    totalPrice?: string
+    duration?: string
+  }>({})
 
   const [formData, setFormData] = useState<FormData>({
     type: TipoPartido.FUTBOL_5,
@@ -51,6 +61,54 @@ export function CreateMatchScreen() {
   // ============================================
   // VALIDACIÓN
   // ============================================
+
+  // ✅ NUEVO: Validación individual de campos
+  const validateField = (field: keyof FormData, value: any): string | null => {
+    switch (field) {
+      case "date":
+        if (!value) return "Selecciona una fecha"
+        const selectedDate = new Date(value)
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        if (selectedDate < today) return "La fecha no puede ser en el pasado"
+        return null
+
+      case "time":
+        if (!value) return "Selecciona una hora"
+        if (formData.date) {
+          const dateTime = new Date(`${formData.date}T${value}`)
+          if (dateTime < new Date()) return "La hora debe ser futura"
+        }
+        return null
+
+      case "location":
+        if (!value || value.trim().length < 3) return "Ingresa una ubicación válida (mín. 3 caracteres)"
+        return null
+
+      case "totalPlayers":
+        const players = Number(value)
+        if (isNaN(players)) return "Ingresa un número válido"
+        if (players < 6) return "Mínimo 6 jugadores"
+        if (players > 22) return "Máximo 22 jugadores"
+        return null
+
+      case "totalPrice":
+        const price = Number(value)
+        if (isNaN(price)) return "Ingresa un precio válido"
+        if (price < 0) return "El precio no puede ser negativo"
+        return null
+
+      case "duration":
+        const duration = Number(value)
+        if (isNaN(duration)) return "Ingresa una duración válida"
+        if (duration < 30) return "Duración mínima: 30 minutos"
+        if (duration > 180) return "Duración máxima: 180 minutos"
+        return null
+
+      default:
+        return null
+    }
+  }
 
   const validateForm = (): string | null => {
     // Fecha
@@ -184,6 +242,14 @@ export function CreateMatchScreen() {
 
   const handleInputChange = (field: keyof FormData, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
+    
+    // ✅ Validar campo en tiempo real
+    const fieldError = validateField(field, value)
+    setFieldErrors((prev) => ({
+      ...prev,
+      [field]: fieldError || undefined
+    }))
+    
     if (error) setError("")
   }
 
@@ -191,6 +257,13 @@ export function CreateMatchScreen() {
     console.log("[CreateMatch] Ubicación cambiada:", { address, placeDetails })
     
     setFormData((prev) => ({ ...prev, location: address }))
+    
+    // ✅ Validar ubicación en tiempo real
+    const locationError = validateField("location", address)
+    setFieldErrors((prev) => ({
+      ...prev,
+      location: locationError || undefined
+    }))
 
     if (placeDetails?.geometry?.location) {
       const loc: any = placeDetails.geometry.location
@@ -330,11 +403,17 @@ export function CreateMatchScreen() {
                 value={formData.date}
                 min={today}
                 onChange={(e) => handleInputChange("date", e.target.value)}
-                className="pl-10 py-3 rounded-xl border-gray-300"
+                className={`pl-10 py-3 rounded-xl ${fieldErrors.date ? 'border-red-500' : 'border-gray-300'}`}
                 required
                 disabled={isLoading}
               />
             </div>
+            {fieldErrors.date && (
+              <p className="text-xs text-red-600 mt-1 flex items-center">
+                <AlertCircle className="w-3 h-3 mr-1" />
+                {fieldErrors.date}
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-900 mb-2">
@@ -346,11 +425,17 @@ export function CreateMatchScreen() {
                 type="time"
                 value={formData.time}
                 onChange={(e) => handleInputChange("time", e.target.value)}
-                className="pl-10 py-3 rounded-xl border-gray-300"
+                className={`pl-10 py-3 rounded-xl ${fieldErrors.time ? 'border-red-500' : 'border-gray-300'}`}
                 required
                 disabled={isLoading}
               />
             </div>
+            {fieldErrors.time && (
+              <p className="text-xs text-red-600 mt-1 flex items-center">
+                <AlertCircle className="w-3 h-3 mr-1" />
+                {fieldErrors.time}
+              </p>
+            )}
           </div>
         </div>
 
@@ -371,7 +456,13 @@ export function CreateMatchScreen() {
               />
             </div>
           </div>
-          {formData.location && !locationCoordinates && (
+          {fieldErrors.location && (
+            <p className="text-xs text-red-600 mt-1 flex items-center">
+              <AlertCircle className="w-3 h-3 mr-1" />
+              {fieldErrors.location}
+            </p>
+          )}
+          {formData.location && !locationCoordinates && !fieldErrors.location && (
             <p className="text-xs text-orange-600 mt-2 flex items-center">
               <AlertCircle className="w-3 h-3 mr-1" />
               Ubicación aproximada (sin coordenadas exactas)
@@ -397,12 +488,19 @@ export function CreateMatchScreen() {
               max="22"
               value={formData.totalPlayers}
               onChange={(e) => handleInputChange("totalPlayers", parseInt(e.target.value) || 6)}
-              className="pl-10 py-3 rounded-xl border-gray-300"
+              className={`pl-10 py-3 rounded-xl ${fieldErrors.totalPlayers ? 'border-red-500' : 'border-gray-300'}`}
               required
               disabled={isLoading}
             />
           </div>
-          <p className="text-xs text-gray-500 mt-1">Entre 6 y 22 jugadores</p>
+          {fieldErrors.totalPlayers ? (
+            <p className="text-xs text-red-600 mt-1 flex items-center">
+              <AlertCircle className="w-3 h-3 mr-1" />
+              {fieldErrors.totalPlayers}
+            </p>
+          ) : (
+            <p className="text-xs text-gray-500 mt-1">Entre 6 y 22 jugadores</p>
+          )}
         </div>
 
         {/* Precio */}
@@ -418,11 +516,17 @@ export function CreateMatchScreen() {
               step="10"
               value={formData.totalPrice}
               onChange={(e) => handleInputChange("totalPrice", parseFloat(e.target.value) || 0)}
-              className="pl-10 py-3 rounded-xl border-gray-300"
+              className={`pl-10 py-3 rounded-xl ${fieldErrors.totalPrice ? 'border-red-500' : 'border-gray-300'}`}
               required
               disabled={isLoading}
             />
           </div>
+          {fieldErrors.totalPrice && (
+            <p className="text-xs text-red-600 mt-1 flex items-center">
+              <AlertCircle className="w-3 h-3 mr-1" />
+              {fieldErrors.totalPrice}
+            </p>
+          )}
           <p className="text-sm text-gray-600 mt-2 font-medium">
             ${pricePerPlayer} por jugador
           </p>
@@ -442,11 +546,18 @@ export function CreateMatchScreen() {
               step="15"
               value={formData.duration}
               onChange={(e) => handleInputChange("duration", parseInt(e.target.value) || 90)}
-              className="pl-10 py-3 rounded-xl border-gray-300"
+              className={`pl-10 py-3 rounded-xl ${fieldErrors.duration ? 'border-red-500' : 'border-gray-300'}`}
               disabled={isLoading}
             />
           </div>
-          <p className="text-xs text-gray-500 mt-1">Entre 30 y 180 minutos</p>
+          {fieldErrors.duration ? (
+            <p className="text-xs text-red-600 mt-1 flex items-center">
+              <AlertCircle className="w-3 h-3 mr-1" />
+              {fieldErrors.duration}
+            </p>
+          ) : (
+            <p className="text-xs text-gray-500 mt-1">Entre 30 y 180 minutos</p>
+          )}
         </div>
 
         {/* Descripción */}
@@ -472,7 +583,14 @@ export function CreateMatchScreen() {
         <div className="pb-8">
           <Button
             type="submit"
-            disabled={isLoading || success}
+            disabled={
+              isLoading || 
+              success || 
+              Object.values(fieldErrors).some(error => error !== undefined) ||
+              !formData.date ||
+              !formData.time ||
+              !formData.location
+            }
             className="w-full bg-green-600 hover:bg-green-700 text-white py-4 text-lg font-semibold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {isLoading ? (

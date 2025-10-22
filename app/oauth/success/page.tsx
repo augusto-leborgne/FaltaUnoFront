@@ -37,7 +37,13 @@ export default function OAuthSuccessPage() {
         }
 
         setStatus("success")
-        setMessage(`¡Bienvenido ${user.nombre || user.email}!`)
+        
+        // Mensaje personalizado según si es registro o login
+        if (user.perfilCompleto) {
+          setMessage(`¡Bienvenido de nuevo, ${user.nombre || user.email}!`)
+        } else {
+          setMessage(`¡Bienvenido! Completemos tu perfil para comenzar`)
+        }
 
         // Redirigir según el estado del perfil
         setTimeout(() => {

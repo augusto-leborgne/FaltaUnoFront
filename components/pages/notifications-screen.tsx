@@ -2,11 +2,12 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Bell, CheckCheck, Trash2, Calendar, Users, UserPlus, MessageSquare, Star, TrendingUp, AlertCircle, ArrowLeft } from "lucide-react"
+import { Bell, CheckCheck, Trash2, Calendar, Users, UserPlus, MessageSquare, Star, TrendingUp, AlertCircle } from "lucide-react"
 import { useNotifications } from "@/hooks/use-notifications"
 import { TipoNotificacion, NotificacionDTO } from "@/lib/api"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
+import { BottomNavigation } from "@/components/ui/bottom-navigation"
 
 const tiposFiltro = [
   { label: "Todas", value: "todas" as const },
@@ -83,44 +84,42 @@ export function NotificationsScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1a5f7a] via-[#159895] to-[#57c5b6] p-6">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* Header */}
+      <div className="pt-16 pb-6 px-6 border-b border-gray-100">
+        <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button onClick={() => router.back()} className="p-2 hover:bg-white/10 rounded-lg">
-              <ArrowLeft className="w-6 h-6 text-white" />
-            </button>
-            <div className="bg-white p-3 rounded-full shadow-lg">
-              <Bell className="w-6 h-6 text-[#1a5f7a]" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white">Notificaciones</h1>
-              <p className="text-white/80 text-sm">
-                {count > 0 ? `${count} sin leer` : "Todo al día"}
-              </p>
-            </div>
+            <h1 className="text-2xl font-bold text-gray-900">Notificaciones</h1>
+            {count > 0 && (
+              <span className="px-3 py-1 bg-red-500 text-white text-sm font-semibold rounded-full">
+                {count}
+              </span>
+            )}
           </div>
 
           {count > 0 && (
             <button
               onClick={marcarTodasLeidas}
-              className="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-xl transition-colors text-sm font-medium"
             >
               <CheckCheck className="w-4 h-4" />
-              Marcar todas como leídas
+              Marcar todas
             </button>
           )}
         </div>
+      </div>
 
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+      <div className="flex-1 px-6 overflow-y-auto pb-24">
+        {/* Filtros */}
+        <div className="flex gap-2 mb-6 mt-4 overflow-x-auto pb-2">
           {tiposFiltro.map(({ label, value }) => (
             <button
               key={value}
               onClick={() => setFiltro(value)}
-              className={`px-4 py-2 rounded-lg whitespace-nowrap transition-all ${
+              className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all font-medium text-sm ${
                 filtro === value
-                  ? "bg-white text-[#1a5f7a] shadow-lg"
-                  : "bg-white/20 text-white hover:bg-white/30"
+                  ? "bg-orange-200 text-gray-900"
+                  : "bg-orange-50 text-gray-700 hover:bg-orange-100"
               }`}
             >
               {label}
@@ -135,10 +134,10 @@ export function NotificationsScreen() {
 
         {isLoading ? (
           <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
           </div>
         ) : notificacionesFiltradas.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
+          <div className="bg-gray-50 rounded-2xl border border-gray-200 p-12 text-center">
             <Bell className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500 text-lg">No hay notificaciones</p>
           </div>
@@ -147,12 +146,12 @@ export function NotificationsScreen() {
             <div
               key={notif.id}
               onClick={() => handleClick(notif)}
-              className={`mb-3 p-4 rounded-xl border-l-4 shadow-md hover:shadow-lg transition-all cursor-pointer ${
-                getColorPrioridad(notif.prioridad)
-              } ${!notif.leida ? "ring-2 ring-blue-400" : ""}`}
+              className={`mb-3 p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-pointer ${
+                !notif.leida ? "bg-blue-50 border-blue-200" : "bg-white"
+              }`}
             >
               <div className="flex items-start gap-3">
-                <div className={`p-2 rounded-full ${
+                <div className={`p-2 rounded-full flex-shrink-0 ${
                   notif.prioridad === "URGENTE" ? "bg-red-100" :
                   notif.prioridad === "ALTA" ? "bg-yellow-100" : "bg-blue-100"
                 }`}>
@@ -180,7 +179,7 @@ export function NotificationsScreen() {
                         e.stopPropagation()
                         eliminarNotificacion(notif.id)
                       }}
-                      className="ml-2 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="ml-2 p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
                     >
                       <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-600" />
                     </button>
@@ -191,6 +190,8 @@ export function NotificationsScreen() {
           ))
         )}
       </div>
+
+      <BottomNavigation />
     </div>
   )
 }

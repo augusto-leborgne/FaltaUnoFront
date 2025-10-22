@@ -21,6 +21,45 @@ export function LoginScreen() {
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  
+  // ✅ NUEVO: Validación en tiempo real
+  const [fieldErrors, setFieldErrors] = useState<{
+    email?: string
+    password?: string
+  }>({})
+
+  // ✅ NUEVO: Validar campos individuales
+  const validateField = (field: 'email' | 'password', value: string): string | null => {
+    switch (field) {
+      case 'email':
+        if (!value) return "El email es requerido"
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(value)) return "Email inválido"
+        return null
+      
+      case 'password':
+        if (!value) return "La contraseña es requerida"
+        if (value.length < 6) return "Mínimo 6 caracteres"
+        return null
+      
+      default:
+        return null
+    }
+  }
+
+  const handleEmailChange = (value: string) => {
+    setEmail(value)
+    const emailError = validateField('email', value)
+    setFieldErrors(prev => ({ ...prev, email: emailError || undefined }))
+    if (error) setError("")
+  }
+
+  const handlePasswordChange = (value: string) => {
+    setPassword(value)
+    const passwordError = validateField('password', value)
+    setFieldErrors(prev => ({ ...prev, password: passwordError || undefined }))
+    if (error) setError("")
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -115,11 +154,14 @@ export function LoginScreen() {
             <Input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => handleEmailChange(e.target.value)}
               placeholder="tu@email.com"
               required
-              className="rounded-2xl py-3"
+              className={`rounded-2xl py-3 ${fieldErrors.email ? 'border-red-500' : ''}`}
             />
+            {fieldErrors.email && (
+              <p className="text-xs text-red-600 mt-1">{fieldErrors.email}</p>
+            )}
           </div>
 
           <div>
@@ -127,11 +169,14 @@ export function LoginScreen() {
             <Input
               type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(e) => handlePasswordChange(e.target.value)}
               placeholder="********"
               required
-              className="rounded-2xl py-3"
+              className={`rounded-2xl py-3 ${fieldErrors.password ? 'border-red-500' : ''}`}
             />
+            {fieldErrors.password && (
+              <p className="text-xs text-red-600 mt-1">{fieldErrors.password}</p>
+            )}
           </div>
 
           {error && (
@@ -140,7 +185,7 @@ export function LoginScreen() {
 
           <Button
             type="submit"
-            disabled={isLoading}
+            disabled={isLoading || !!fieldErrors.email || !!fieldErrors.password || !email || !password}
             className="w-full py-4 rounded-2xl"
           >
             {isLoading ? "Entrando..." : "Entrar"}

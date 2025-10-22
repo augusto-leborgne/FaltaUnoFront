@@ -87,15 +87,13 @@ export function ContactsScreen() {
     setIsSendingRequest(true)
     try {
       const token = AuthService.getToken()
-      const response = await fetch("/api/amistades", {
+      // ✅ CORRECCIÓN: Backend espera el ID en la URL, no en el body
+      const response = await fetch(`/api/amistades/${selectedContact.id}`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          amigoId: selectedContact.id
-        })
+        }
       })
 
       if (response.ok) {

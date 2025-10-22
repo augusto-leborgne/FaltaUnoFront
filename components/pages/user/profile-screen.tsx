@@ -10,7 +10,7 @@ import { Settings, Star, UserPlus, Phone, Users, LogOut, Loader2 } from "lucide-
 import { useRouter } from "next/navigation"
 import { calcularEdad } from "@/lib/utils"
 import { AuthService } from "@/lib/auth"
-import { useCurrentUser } from "@/hooks/use-current-user"
+import { useAuth } from "@/hooks/use-auth"
 
 interface Review {
   id: string
@@ -41,7 +41,7 @@ interface Contact {
 
 export function ProfileScreen() {
   const router = useRouter()
-  const { user, loading: userLoading, refresh: refreshUser } = useCurrentUser()
+  const { user, loading: userLoading, refreshUser } = useAuth()
   
   const [reviews, setReviews] = useState<Review[]>([])
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([])
@@ -50,11 +50,9 @@ export function ProfileScreen() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!user?.id) {
-      router.push("/login")
-      return
+    if (user?.id) {
+      loadProfileData()
     }
-    loadProfileData()
   }, [user?.id])
 
   // ✅ NUEVO: Refrescar cuando el usuario cambia
@@ -70,7 +68,7 @@ export function ProfileScreen() {
       setLoading(true)
       const token = AuthService.getToken()
       if (!token || !user?.id) {
-        router.push("/login")
+        setLoading(false)
         return
       }
 
@@ -156,7 +154,7 @@ export function ProfileScreen() {
   const handleLogout = () => {
     if (confirm("¿Estás seguro de que quieres cerrar sesión?")) {
       AuthService.logout()
-      router.push("/login")
+      // No redirigir manualmente, AuthService.logout() ya lo hace
     }
   }
   

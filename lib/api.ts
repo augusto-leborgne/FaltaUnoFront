@@ -66,6 +66,7 @@ export interface Usuario {
   altura?: number;
   peso?: number;
   posicion?: string;
+  nivel?: string;
   foto_perfil?: string; // Base64 string
   ubicacion?: string;
   cedula?: string;

@@ -100,15 +100,13 @@ export default function PlayerProfile({ playerId }: PlayerProfileProps) {
         return
       }
 
-      const response = await fetch("/api/amistades", {
+      // ✅ CORRECCIÓN: Backend espera el ID en la URL, no en el body
+      const response = await fetch(`/api/amistades/${playerId}`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          amigoId: playerId
-        })
+        }
       })
 
       if (response.ok) {

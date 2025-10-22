@@ -12,6 +12,7 @@ import { AuthService } from "@/lib/auth"
 import { useAuth } from "@/hooks/use-auth"
 
 const positions = ["Arquero", "Zaguero", "Lateral", "Mediocampista", "Volante", "Delantero"]
+const levels = ["Principiante", "Intermedio", "Avanzado", "Profesional"]
 
 export function SettingsScreen() {
   const router = useRouter()
@@ -28,6 +29,7 @@ export function SettingsScreen() {
     email: "",
     phone: "",
     position: "",
+    level: "",
     height: "",
     weight: "",
   })
@@ -43,6 +45,42 @@ export function SettingsScreen() {
     newMessages: true,
     generalUpdates: false,
   })
+
+  // ✅ NUEVO: Validación en tiempo real
+  const [fieldErrors, setFieldErrors] = useState<{
+    phone?: string
+    height?: string
+    weight?: string
+  }>({})
+
+  // ✅ NUEVO: Validar campos
+  const validateField = (field: string, value: any): string | null => {
+    switch (field) {
+      case 'phone':
+        if (value) {
+          const phoneRegex = /^[0-9]{8,15}$/
+          if (!phoneRegex.test(value.replace(/\s/g, ''))) return "Teléfono inválido (8-15 dígitos)"
+        }
+        return null
+      
+      case 'height':
+        if (value) {
+          const h = Number(value)
+          if (isNaN(h) || h < 100 || h > 250) return "Altura inválida (100-250 cm)"
+        }
+        return null
+      
+      case 'weight':
+        if (value) {
+          const w = Number(value)
+          if (isNaN(w) || w < 30 || w > 200) return "Peso inválido (30-200 kg)"
+        }
+        return null
+      
+      default:
+        return null
+    }
+  }
 
   useEffect(() => {
     loadUserData()
@@ -76,6 +114,7 @@ export function SettingsScreen() {
         email: userData.email || "",
         phone: userData.celular || "",
         position: userData.posicion || "",
+        level: userData.nivel || "",
         height: userData.altura?.toString() || "",
         weight: userData.peso?.toString() || "",
       })
@@ -102,6 +141,11 @@ export function SettingsScreen() {
 
   const handleInputChange = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
+    // ✅ Validar campos editables (phone, height, weight)
+    if (field === 'phone' || field === 'height' || field === 'weight') {
+      const fieldError = validateField(field, value)
+      setFieldErrors(prev => ({ ...prev, [field]: fieldError || undefined }))
+    }
   }
 
   const handleNotificationToggle = (field: keyof typeof notificationPreferences) => {
@@ -136,6 +180,7 @@ export function SettingsScreen() {
       const perfilData = {
         celular: formData.phone,
         posicion: formData.position,
+        nivel: formData.level,
         altura: formData.height ? parseInt(formData.height) : undefined,
         peso: formData.weight ? parseInt(formData.weight) : undefined,
       }
@@ -337,9 +382,15 @@ export function SettingsScreen() {
               id="phone"
               value={formData.phone}
               onChange={(e) => handleInputChange("phone", e.target.value)}
-              className="mt-1"
+              className={`mt-1 ${fieldErrors.phone ? 'border-red-500' : ''}`}
               disabled={isSaving}
             />
+            {fieldErrors.phone && (
+              <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                {fieldErrors.phone}
+              </p>
+            )}
           </div>
 
           <div>
@@ -363,6 +414,27 @@ export function SettingsScreen() {
             </div>
           </div>
 
+          <div>
+            <Label className="text-sm font-medium text-gray-700 mb-3 block">Nivel de juego</Label>
+            <div className="flex flex-wrap gap-2">
+              {levels.map((level) => (
+                <button
+                  key={level}
+                  type="button"
+                  onClick={() => handleInputChange("level", level)}
+                  disabled={isSaving}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50 ${
+                    formData.level === level
+                      ? "bg-green-100 text-green-800 border-green-300"
+                      : "bg-gray-50 text-gray-700 border-gray-300 hover:border-gray-400"
+                  }`}
+                >
+                  {level}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="height" className="text-sm font-medium text-gray-700">
@@ -373,9 +445,15 @@ export function SettingsScreen() {
                 type="number"
                 value={formData.height}
                 onChange={(e) => handleInputChange("height", e.target.value)}
-                className="mt-1"
+                className={`mt-1 ${fieldErrors.height ? 'border-red-500' : ''}`}
                 disabled={isSaving}
               />
+              {fieldErrors.height && (
+                <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {fieldErrors.height}
+                </p>
+              )}
             </div>
             <div>
               <Label htmlFor="weight" className="text-sm font-medium text-gray-700">
@@ -386,9 +464,15 @@ export function SettingsScreen() {
                 type="number"
                 value={formData.weight}
                 onChange={(e) => handleInputChange("weight", e.target.value)}
-                className="mt-1"
+                className={`mt-1 ${fieldErrors.weight ? 'border-red-500' : ''}`}
                 disabled={isSaving}
               />
+              {fieldErrors.weight && (
+                <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {fieldErrors.weight}
+                </p>
+              )}
             </div>
           </div>
 
@@ -439,7 +523,13 @@ export function SettingsScreen() {
           <div className="mt-8 pb-8">
             <Button
               onClick={handleSave}
-              disabled={isSaving || success}
+              disabled={
+                isSaving || 
+                success || 
+                !!fieldErrors.phone || 
+                !!fieldErrors.height || 
+                !!fieldErrors.weight
+              }
               className="w-full bg-green-600 hover:bg-green-700 text-white py-4 text-lg font-semibold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSaving ? (

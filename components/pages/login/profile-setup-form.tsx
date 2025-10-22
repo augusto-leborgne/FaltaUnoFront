@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useRouter } from "next/navigation"
-import { User, ChevronDown } from "lucide-react"
+import { User, ChevronDown, AlertCircle } from "lucide-react"
 import AddressAutocomplete from "@/components/google-maps/address-autocomplete"
 import { AuthService } from "@/lib/auth"
 import { useAuth } from "@/hooks/use-auth"
@@ -37,6 +37,85 @@ export function ProfileSetupForm() {
   const [showLevelDropdown, setShowLevelDropdown] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
 
+  // ✅ NUEVO: Validación en tiempo real
+  const [fieldErrors, setFieldErrors] = useState<{
+    name?: string
+    surname?: string
+    phone?: string
+    fechaNacimiento?: string
+    position?: string
+    level?: string
+    height?: string
+    weight?: string
+    photo?: string
+    address?: string
+  }>({})
+
+  // ✅ NUEVO: Validar campos individuales
+  const validateField = (field: string, value: any): string | null => {
+    switch (field) {
+      case 'name':
+        if (!value || value.trim().length < 2) return "El nombre debe tener al menos 2 caracteres"
+        return null
+      
+      case 'surname':
+        if (!value || value.trim().length < 2) return "El apellido debe tener al menos 2 caracteres"
+        return null
+      
+      case 'phone':
+        if (!value) return "El teléfono es requerido"
+        const phoneRegex = /^[0-9]{8,15}$/
+        if (!phoneRegex.test(value.replace(/\s/g, ''))) return "Teléfono inválido (8-15 dígitos)"
+        return null
+      
+      case 'fechaNacimiento':
+        if (!value) return "La fecha de nacimiento es requerida"
+        const birthDate = new Date(value)
+        const today = new Date()
+        const age = today.getFullYear() - birthDate.getFullYear()
+        if (age < 13) return "Debes tener al menos 13 años"
+        if (age > 100) return "Fecha inválida"
+        return null
+      
+      case 'position':
+        if (!value) return "Selecciona una posición"
+        return null
+      
+      case 'level':
+        if (!value) return "Selecciona tu nivel"
+        return null
+      
+      case 'height':
+        if (!value) return "La altura es requerida"
+        const h = Number(value)
+        if (isNaN(h) || h < 100 || h > 250) return "Altura inválida (100-250 cm)"
+        return null
+      
+      case 'weight':
+        if (!value) return "El peso es requerido"
+        const w = Number(value)
+        if (isNaN(w) || w < 30 || w > 200) return "Peso inválido (30-200 kg)"
+        return null
+      
+      case 'photo':
+        if (!value) return "La foto de perfil es obligatoria"
+        return null
+      
+      case 'address':
+        if (!value || value.trim().length < 5) return "La dirección debe tener al menos 5 caracteres"
+        return null
+      
+      default:
+        return null
+    }
+  }
+
+  const handleFieldChange = (field: string, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+    const fieldError = validateField(field, value)
+    setFieldErrors(prev => ({ ...prev, [field]: fieldError || undefined }))
+  }
+
   const positions = ["Arquero", "Zaguero", "Lateral", "Mediocampista", "Volante", "Delantero"]
   const levels = ["Principiante", "Intermedio", "Avanzado", "Profesional"]
 
@@ -53,16 +132,25 @@ export function ProfileSetupForm() {
     if (!f) return
     if (formData.photoPreviewUrl) URL.revokeObjectURL(formData.photoPreviewUrl)
     setFormData((p) => ({ ...p, photo: f, photoPreviewUrl: URL.createObjectURL(f) }))
+    // ✅ Validar foto
+    const photoError = validateField('photo', f)
+    setFieldErrors(prev => ({ ...prev, photo: photoError || undefined }))
   }
 
   const handlePositionSelect = (position: string) => {
     setFormData((p) => ({ ...p, position }))
     setShowPositionDropdown(false)
+    // ✅ Validar posición
+    const positionError = validateField('position', position)
+    setFieldErrors(prev => ({ ...prev, position: positionError || undefined }))
   }
 
   const handleLevelSelect = (level: string) => {
     setFormData((p) => ({ ...p, level }))
     setShowLevelDropdown(false)
+    // ✅ Validar nivel
+    const levelError = validateField('level', level)
+    setFieldErrors(prev => ({ ...prev, level: levelError || undefined }))
   }
 
   const handleAddressChangeFromAutocomplete = (
@@ -70,15 +158,24 @@ export function ProfileSetupForm() {
     placeDetails?: google.maps.places.PlaceResult | null
   ) => {
     setFormData((p) => ({ ...p, address: address ?? "", placeDetails: placeDetails ?? null }))
+    // ✅ Validar dirección
+    const addressError = validateField('address', address)
+    setFieldErrors(prev => ({ ...prev, address: addressError || undefined }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    // Validación de campos obligatorios
     if (!formData.photo) return alert("La foto es obligatoria")
     if (!formData.name || !formData.surname) return alert("Nombre y apellido son obligatorios")
     if (!formData.phone) return alert("El número de teléfono es obligatorio")
     if (!formData.fechaNacimiento) return alert("La fecha de nacimiento es obligatoria")
+    if (!formData.position) return alert("La posición es obligatoria")
+    if (!formData.level) return alert("El nivel es obligatorio")
+    if (!formData.height) return alert("La altura es obligatoria")
+    if (!formData.weight) return alert("El peso es obligatorio")
+    if (!formData.address) return alert("La dirección es obligatoria")
 
     await handleUploadAndSaveProfile()
   }
@@ -174,6 +271,13 @@ export function ProfileSetupForm() {
                     {formData.photo.name}
                   </p>
                 )}
+                {/* ✅ Error de validación */}
+                {fieldErrors.photo && (
+                  <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {fieldErrors.photo}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -192,56 +296,118 @@ export function ProfileSetupForm() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Input
-              placeholder="Nombre"
-              value={formData.name}
-              onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
-              required
-            />
-            <Input
-              placeholder="Apellido"
-              value={formData.surname}
-              onChange={(e) => setFormData((p) => ({ ...p, surname: e.target.value }))}
-              required
-            />
+            <div>
+              <Input
+                placeholder="Nombre"
+                value={formData.name}
+                onChange={(e) => handleFieldChange('name', e.target.value)}
+                className={fieldErrors.name ? 'border-red-500' : ''}
+                required
+              />
+              {fieldErrors.name && (
+                <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {fieldErrors.name}
+                </p>
+              )}
+            </div>
+            <div>
+              <Input
+                placeholder="Apellido"
+                value={formData.surname}
+                onChange={(e) => handleFieldChange('surname', e.target.value)}
+                className={fieldErrors.surname ? 'border-red-500' : ''}
+                required
+              />
+              {fieldErrors.surname && (
+                <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {fieldErrors.surname}
+                </p>
+              )}
+            </div>
           </div>
 
-          <Input
-            placeholder="Celular"
-            value={formData.phone}
-            onChange={(e) => setFormData((p) => ({ ...p, phone: e.target.value }))}
-            required
-          />
+          <div>
+            <Input
+              placeholder="Celular"
+              value={formData.phone}
+              onChange={(e) => handleFieldChange('phone', e.target.value)}
+              className={fieldErrors.phone ? 'border-red-500' : ''}
+              required
+            />
+            {fieldErrors.phone && (
+              <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                {fieldErrors.phone}
+              </p>
+            )}
+          </div>
 
-          <Input
-            placeholder="Fecha de nacimiento"
-            value={formData.fechaNacimiento}
-            onChange={(e) => setFormData((p) => ({ ...p, fechaNacimiento: e.target.value }))}
-            type="date"
-            required
-          />
+          <div>
+            <Input
+              placeholder="Fecha de nacimiento"
+              value={formData.fechaNacimiento}
+              onChange={(e) => handleFieldChange('fechaNacimiento', e.target.value)}
+              className={fieldErrors.fechaNacimiento ? 'border-red-500' : ''}
+              type="date"
+              required
+            />
+            {fieldErrors.fechaNacimiento && (
+              <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                {fieldErrors.fechaNacimiento}
+              </p>
+            )}
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Input
-              placeholder="Altura (cm)"
-              type="number"
-              value={formData.height}
-              onChange={(e) => setFormData((p) => ({ ...p, height: e.target.value }))}
-            />
-            <Input
-              placeholder="Peso (kg)"
-              type="number"
-              value={formData.weight}
-              onChange={(e) => setFormData((p) => ({ ...p, weight: e.target.value }))}
-            />
+            <div>
+              <Input
+                placeholder="Altura (cm) *"
+                type="number"
+                value={formData.height}
+                onChange={(e) => handleFieldChange('height', e.target.value)}
+                className={fieldErrors.height ? 'border-red-500' : ''}
+                required
+              />
+              {fieldErrors.height && (
+                <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {fieldErrors.height}
+                </p>
+              )}
+            </div>
+            <div>
+              <Input
+                placeholder="Peso (kg) *"
+                type="number"
+                value={formData.weight}
+                onChange={(e) => handleFieldChange('weight', e.target.value)}
+                className={fieldErrors.weight ? 'border-red-500' : ''}
+                required
+              />
+              {fieldErrors.weight && (
+                <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {fieldErrors.weight}
+                </p>
+              )}
+            </div>
           </div>
 
           <div>
             <AddressAutocomplete
               value={formData.address}
               onChange={(address, placeDetails) => handleAddressChangeFromAutocomplete(address, placeDetails)}
-              placeholder="Ubicación"
+              placeholder="Ubicación *"
             />
+            {fieldErrors.address && (
+              <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                {fieldErrors.address}
+              </p>
+            )}
           </div>
 
           <div className="relative">
@@ -249,9 +415,11 @@ export function ProfileSetupForm() {
               type="button"
               variant="outline"
               onClick={() => setShowPositionDropdown(!showPositionDropdown)}
-              className="w-full text-left py-3 px-4 rounded-xl border border-gray-300 bg-white justify-between"
+              className={`w-full text-left py-3 px-4 rounded-xl border bg-white justify-between ${
+                fieldErrors.position ? 'border-red-500' : 'border-gray-300'
+              }`}
             >
-              <span>{formData.position || "Selecciona tu posición"}</span>
+              <span>{formData.position || "Selecciona tu posición *"}</span>
               <ChevronDown className="w-5 h-5" />
             </Button>
             {showPositionDropdown && (
@@ -267,6 +435,12 @@ export function ProfileSetupForm() {
                 ))}
               </div>
             )}
+            {fieldErrors.position && (
+              <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                {fieldErrors.position}
+              </p>
+            )}
           </div>
 
           <div className="relative">
@@ -274,9 +448,11 @@ export function ProfileSetupForm() {
               type="button"
               variant="outline"
               onClick={() => setShowLevelDropdown(!showLevelDropdown)}
-              className="w-full text-left py-3 px-4 rounded-xl border border-gray-300 bg-white justify-between"
+              className={`w-full text-left py-3 px-4 rounded-xl border bg-white justify-between ${
+                fieldErrors.level ? 'border-red-500' : 'border-gray-300'
+              }`}
             >
-              <span>{formData.level || "Selecciona tu nivel"}</span>
+              <span>{formData.level || "Selecciona tu nivel *"}</span>
               <ChevronDown className="w-5 h-5" />
             </Button>
             {showLevelDropdown && (
@@ -292,9 +468,41 @@ export function ProfileSetupForm() {
                 ))}
               </div>
             )}
+            {fieldErrors.level && (
+              <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                {fieldErrors.level}
+              </p>
+            )}
           </div>
 
-          <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl" disabled={isUploading}>
+          <Button 
+            type="submit" 
+            className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl" 
+            disabled={
+              isUploading || 
+              !!fieldErrors.name || 
+              !!fieldErrors.surname || 
+              !!fieldErrors.phone || 
+              !!fieldErrors.fechaNacimiento || 
+              !!fieldErrors.position || 
+              !!fieldErrors.level || 
+              !!fieldErrors.height || 
+              !!fieldErrors.weight || 
+              !!fieldErrors.photo ||
+              !!fieldErrors.address ||
+              !formData.name ||
+              !formData.surname ||
+              !formData.phone ||
+              !formData.fechaNacimiento ||
+              !formData.position ||
+              !formData.level ||
+              !formData.height ||
+              !formData.weight ||
+              !formData.photo ||
+              !formData.address
+            }
+          >
             {isUploading ? "Guardando..." : "Continuar"}
           </Button>
         </form>

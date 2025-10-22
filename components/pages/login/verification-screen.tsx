@@ -4,7 +4,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import { Shield, CheckCircle } from "lucide-react";
+import { Shield, CheckCircle, AlertCircle } from "lucide-react";
 import { UsuarioAPI } from "@/lib/api";
 import { AuthService } from "@/lib/auth";
 
@@ -14,6 +14,31 @@ export function VerificationScreen() {
   const [isVerifying, setIsVerifying] = React.useState(false);
   const [isVerified, setIsVerified] = React.useState(false);
   const [error, setError] = React.useState("");
+  
+  // ✅ NUEVO: Validación en tiempo real
+  const [fieldError, setFieldError] = React.useState("");
+
+  // ✅ NUEVO: Validar cédula uruguaya (formato: 1.234.567-8 o 12345678)
+  const validateCedula = (value: string): string | null => {
+    if (!value) return "La cédula es requerida";
+    
+    // Eliminar puntos y guiones
+    const cleanCedula = value.replace(/[.-]/g, '');
+    
+    // Debe tener 7 u 8 dígitos
+    if (!/^\d{7,8}$/.test(cleanCedula)) {
+      return "Formato inválido (7-8 dígitos)";
+    }
+    
+    return null;
+  };
+
+  const handleCedulaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setCedula(value);
+    const validationError = validateCedula(value);
+    setFieldError(validationError || "");
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,17 +100,29 @@ export function VerificationScreen() {
       <div className="flex-1 px-6">
         {error && <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-6">
-          <Input
-            type="text"
-            placeholder="Número de cédula"
-            value={cedula}
-            onChange={(e) => setCedula(e.target.value)}
-            maxLength={8}
-            pattern="[0-9]{7,8}"
-            required
-            disabled={isVerifying}
-          />
-          <Button type="submit" disabled={isVerifying} className="w-full bg-green-600 text-white py-4 rounded-2xl">
+          <div>
+            <Input
+              type="text"
+              placeholder="Número de cédula (ej: 1.234.567-8)"
+              value={cedula}
+              onChange={handleCedulaChange}
+              className={fieldError ? 'border-red-500' : ''}
+              maxLength={10}
+              required
+              disabled={isVerifying}
+            />
+            {fieldError && (
+              <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                {fieldError}
+              </p>
+            )}
+          </div>
+          <Button 
+            type="submit" 
+            disabled={isVerifying || !!fieldError || !cedula} 
+            className="w-full bg-green-600 text-white py-4 rounded-2xl"
+          >
             {isVerifying ? "Verificando..." : "Verificar Identidad"}
           </Button>
         </form>

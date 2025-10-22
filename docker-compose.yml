@@ -9,8 +9,10 @@ services:
     ports:
       - "3000:3000"
     environment:
-      # Backend URL - usa el nombre del contenedor del backend
-      - NEXT_PUBLIC_API_URL=http://backend:8080
+      # URL para el servidor Next.js (SSR) - comunicación interna Docker
+      - API_URL=http://backend:8080
+      # URL para el navegador del usuario - debe ser accesible públicamente
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
       # Google Maps API Key
       - NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
       - NODE_ENV=development
