@@ -38,19 +38,23 @@ export default function OAuthSuccessPage() {
 
         setStatus("success")
         
-        // Mensaje personalizado según si es registro o login
-        if (user.perfilCompleto) {
-          setMessage(`¡Bienvenido de nuevo, ${user.nombre || user.email}!`)
-        } else {
+        // Mensaje personalizado según el estado del usuario
+        if (!user.perfilCompleto) {
           setMessage(`¡Bienvenido! Completemos tu perfil para comenzar`)
+        } else if (!user.cedulaVerificada) {
+          setMessage(`¡Bienvenido! Verificá tu cédula para continuar`)
+        } else {
+          setMessage(`¡Bienvenido de nuevo, ${user.nombre || user.email}!`)
         }
 
-        // Redirigir según el estado del perfil
+        // Redirigir según el estado del perfil y verificación
         setTimeout(() => {
-          if (user.perfilCompleto) {
-            router.push("/home")
-          } else {
+          if (!user.perfilCompleto) {
             router.push("/profile-setup")
+          } else if (!user.cedulaVerificada) {
+            router.push("/verification")
+          } else {
+            router.push("/home")
           }
         }, 1500)
 

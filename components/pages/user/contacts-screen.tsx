@@ -24,6 +24,7 @@ export function ContactsScreen() {
   const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
   const [isSendingRequest, setIsSendingRequest] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     loadContacts()
@@ -31,12 +32,18 @@ export function ContactsScreen() {
 
   const loadContacts = async () => {
     try {
+      setLoading(true)
+      setError(null)
+      
       const token = AuthService.getToken()
       if (!token) {
         router.push("/login")
         return
       }
 
+      const currentUser = AuthService.getUser()
+      
+      console.log("[ContactsScreen] Cargando usuarios...")
       const response = await fetch("/api/usuarios", {
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -44,24 +51,39 @@ export function ContactsScreen() {
         }
       })
 
-      if (response.ok) {
-        const result = await response.json()
-        const allUsers = result.data || []
-        
-        // Convertir usuarios a formato Contact
-        const contactsList: Contact[] = allUsers.map((u: any) => ({
+      console.log("[ContactsScreen] Response status:", response.status)
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: No se pudieron cargar los usuarios`)
+      }
+
+      const result = await response.json()
+      console.log("[ContactsScreen] Data recibida:", result)
+      
+      const allUsers = result.data || result || []
+      
+      if (!Array.isArray(allUsers)) {
+        console.error("[ContactsScreen] Formato inesperado:", allUsers)
+        throw new Error("Formato de respuesta inválido")
+      }
+      
+      // Convertir usuarios a formato Contact, filtrando el usuario actual
+      const contactsList: Contact[] = allUsers
+        .filter((u: any) => u.id !== currentUser?.id) // Excluir usuario actual
+        .map((u: any) => ({
           id: u.id,
           nombre: u.nombre || "",
           apellido: u.apellido || "",
           celular: u.celular || "",
-          foto_perfil: u.foto_perfil,
+          foto_perfil: u.foto_perfil || u.fotoPerfil,
           isOnApp: true // Todos los usuarios en la DB están en la app
         }))
-        
-        setContacts(contactsList)
-      }
+      
+      console.log("[ContactsScreen] Contactos procesados:", contactsList.length)
+      setContacts(contactsList)
     } catch (error) {
-      console.error("Error cargando contactos:", error)
+      console.error("[ContactsScreen] Error cargando contactos:", error)
+      setError(error instanceof Error ? error.message : "Error al cargar contactos")
     } finally {
       setLoading(false)
     }
@@ -111,7 +133,10 @@ export function ContactsScreen() {
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full"></div>
+        <div className="text-center">
+          <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando contactos...</p>
+        </div>
       </div>
     )
   }
@@ -121,7 +146,7 @@ export function ContactsScreen() {
       {/* Header */}
       <div className="pt-16 pb-6 px-6 border-b border-gray-100">
         <div className="flex items-center space-x-4">
-          <button onClick={handleBack} className="p-2 -ml-2">
+          <button onClick={handleBack} className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors">
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </button>
           <h1 className="text-xl font-bold text-gray-900">Contactos</h1>
@@ -132,6 +157,20 @@ export function ContactsScreen() {
         <div className="mb-6 text-center text-sm text-gray-600">
           Encuentra a tus amigos que ya están en Falta Uno e invita a los que aún no se han unido.
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl">
+            <p className="text-red-600 text-sm mb-3">{error}</p>
+            <Button 
+              onClick={loadContacts}
+              className="w-full bg-red-600 hover:bg-red-700"
+              size="sm"
+            >
+              Reintentar
+            </Button>
+          </div>
+        )}
 
         <div className="space-y-3">
           {contacts.map((contact) => {

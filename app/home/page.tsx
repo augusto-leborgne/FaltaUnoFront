@@ -3,7 +3,7 @@ import { HomeScreen } from "@/components/pages/home-screen";
 
 export default function HomePage() {
   return (
-    <RequireAuth>
+    <RequireAuth allowIncomplete={false} allowUnverified={false}>
       <HomeScreen />
     </RequireAuth>
   );

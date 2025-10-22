@@ -71,12 +71,19 @@ export function MyMatchesScreen() {
         const errorText = await response.text()
         console.error("[MyMatches] Error response:", errorText)
         
-        // Si es 500, mostrar mensaje amigable pero continuar
+        // Si es 404, significa que no hay partidos - no es un error
+        if (response.status === 404) {
+          console.log("[MyMatches] No se encontraron partidos")
+          setCreatedMatches([])
+          setJoinedMatches([])
+          return
+        }
+        
+        // Si es 500, mostrar arrays vacíos sin mensaje de error
         if (response.status === 500) {
           console.warn("[MyMatches] Error 500 del servidor, mostrando vacío")
           setCreatedMatches([])
           setJoinedMatches([])
-          setError("El servidor está teniendo problemas. Por favor, intenta más tarde.")
           return
         }
         
@@ -141,8 +148,10 @@ export function MyMatchesScreen() {
 
     } catch (err) {
       console.error("[MyMatches] Error:", err)
-      const errorMessage = err instanceof Error ? err.message : "Error al cargar partidos"
-      setError(errorMessage)
+      // No mostrar error si es un problema de carga simple
+      // Solo mantener arrays vacíos
+      setCreatedMatches([])
+      setJoinedMatches([])
     } finally {
       setLoading(false)
     }
@@ -269,32 +278,6 @@ export function MyMatchesScreen() {
       </div>
 
       <div className="flex-1 px-6 overflow-y-auto">
-        {/* Error Message */}
-        {error && (
-          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-2xl">
-            <div className="flex items-start space-x-3">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-red-600 text-sm font-medium">Error</p>
-                <p className="text-red-600 text-sm">{error}</p>
-              </div>
-              <button 
-                onClick={() => setError("")}
-                className="text-red-600 hover:text-red-700"
-              >
-                ✕
-              </button>
-            </div>
-            <Button 
-              onClick={loadMatches} 
-              className="mt-3 w-full bg-red-600 hover:bg-red-700"
-              size="sm"
-            >
-              Reintentar
-            </Button>
-          </div>
-        )}
-
         {/* Tabs */}
         <div className="flex bg-orange-50 rounded-2xl p-1 mb-6 mt-4">
           {(["Creados", "Inscriptos"] as const).map((tab) => (

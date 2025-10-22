@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Bell, CheckCheck, Trash2, Calendar, Users, UserPlus, MessageSquare, Star, TrendingUp, AlertCircle } from "lucide-react"
+import { Bell, CheckCheck, Trash2, Calendar, Users, UserPlus, MessageSquare, Star, TrendingUp, AlertCircle, ArrowLeft } from "lucide-react"
 import { useNotifications } from "@/hooks/use-notifications"
 import { TipoNotificacion, NotificacionDTO } from "@/lib/api"
 import { format } from "date-fns"
@@ -87,8 +87,15 @@ export function NotificationsScreen() {
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
       <div className="pt-16 pb-6 px-6 border-b border-gray-100">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4 mb-4">
+          <button
+            onClick={() => router.back()}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors touch-manipulation"
+            aria-label="Volver"
+          >
+            <ArrowLeft className="w-5 h-5 text-gray-700" />
+          </button>
+          <div className="flex items-center gap-3 flex-1">
             <h1 className="text-2xl font-bold text-gray-900">Notificaciones</h1>
             {count > 0 && (
               <span className="px-3 py-1 bg-red-500 text-white text-sm font-semibold rounded-full">
@@ -96,17 +103,17 @@ export function NotificationsScreen() {
               </span>
             )}
           </div>
-
-          {count > 0 && (
-            <button
-              onClick={marcarTodasLeidas}
-              className="flex items-center gap-2 px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-xl transition-colors text-sm font-medium"
-            >
-              <CheckCheck className="w-4 h-4" />
-              Marcar todas
-            </button>
-          )}
         </div>
+
+        {count > 0 && (
+          <button
+            onClick={marcarTodasLeidas}
+            className="flex items-center gap-2 px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 rounded-xl transition-colors text-sm font-medium w-full justify-center touch-manipulation"
+          >
+            <CheckCheck className="w-4 h-4" />
+            Marcar todas como leídas
+          </button>
+        )}
       </div>
 
       <div className="flex-1 px-6 overflow-y-auto pb-24">
