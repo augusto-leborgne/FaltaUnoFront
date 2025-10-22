@@ -28,6 +28,7 @@ export function AddressAutocomplete({
   const [isLoadingMaps, setIsLoadingMaps] = useState(true);
   const [mapsError, setMapsError] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [hasSelectedAddress, setHasSelectedAddress] = useState(false);
   
   const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
   const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
@@ -38,6 +39,10 @@ export function AddressAutocomplete({
   // Sincronizar valor externo
   useEffect(() => {
     setQuery(value);
+    // Si el valor externo cambia y tiene contenido, marcar como seleccionado
+    if (value && value.length > 0) {
+      setHasSelectedAddress(true);
+    }
   }, [value]);
 
   // Cargar Google Maps
@@ -125,6 +130,7 @@ export function AddressAutocomplete({
   // Manejar cambio de input
   const handleInputChange = (newValue: string) => {
     setQuery(newValue);
+    setHasSelectedAddress(false); // Usuario está escribiendo manualmente
     onChange(newValue, null);
 
     // Limpiar timer anterior
@@ -148,6 +154,7 @@ export function AddressAutocomplete({
     setQuery(prediction.description);
     setSuggestions([]);
     setIsSearching(false);
+    setHasSelectedAddress(true); // Usuario ha seleccionado una dirección válida
 
     if (!placesServiceRef.current) {
       onChange(prediction.description, null);
@@ -180,6 +187,7 @@ export function AddressAutocomplete({
   const handleClear = () => {
     setQuery("");
     setSuggestions([]);
+    setHasSelectedAddress(false); // Resetear estado de selección
     onChange("", null);
   };
 
@@ -278,7 +286,7 @@ export function AddressAutocomplete({
       )}
 
       {/* Mensaje de no resultados */}
-      {query.length >= 2 && suggestions.length === 0 && !isSearching && (
+      {query.length >= 2 && suggestions.length === 0 && !isSearching && !hasSelectedAddress && (
         <div className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-xl shadow-lg p-3">
           <p className="text-sm text-gray-500 text-center">
             No se encontraron ubicaciones
