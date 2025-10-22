@@ -4,7 +4,7 @@ import { VerificationScreen } from "@/components/pages/login/verification-screen
 
 export default function VerificationPage() {
   return (
-    <RequireAuth>
+    <RequireAuth allowIncomplete={false} allowUnverified={true}>
       <VerificationScreen />
     </RequireAuth>
   );

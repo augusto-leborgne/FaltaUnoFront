@@ -7,9 +7,11 @@ import { useRouter } from "next/navigation";
 import { Shield, CheckCircle, AlertCircle } from "lucide-react";
 import { UsuarioAPI } from "@/lib/api";
 import { AuthService } from "@/lib/auth";
+import { useAuth } from "@/hooks/use-auth";
 
 export function VerificationScreen() {
   const router = useRouter();
+  const { refreshUser } = useAuth();
   const [cedula, setCedula] = React.useState("");
   const [isVerifying, setIsVerifying] = React.useState(false);
   const [isVerified, setIsVerified] = React.useState(false);
@@ -44,34 +46,53 @@ export function VerificationScreen() {
     e.preventDefault();
     setIsVerifying(true);
     setError("");
+    
     try {
+      console.log("[VerificationScreen] Verificando cédula:", cedula);
       const res = await UsuarioAPI.verificarCedula(cedula);
+      console.log("[VerificationScreen] Respuesta:", res);
 
       if (res.success) {
         if (res.data?.verified) {
-          setIsVerified(true);
+          console.log("[VerificationScreen] Cédula verificada exitosamente");
 
-          // Guardar usuario actualizado
-          if (res.data.user) {
-            AuthService.setUser(res.data.user);
-          } else {
-            const current = AuthService.getUser();
-            if (current) {
-              (current as any).cedulaVerificada = true;
-              AuthService.setUser(current);
-            }
+          // Actualizar usuario en localStorage primero
+          const currentUser = AuthService.getUser();
+          if (currentUser) {
+            currentUser.cedulaVerificada = true;
+            currentUser.cedula = cedula;
+            AuthService.setUser(currentUser);
+            console.log("[VerificationScreen] Usuario actualizado en localStorage");
           }
 
-          // Redirigir a home
-          setTimeout(() => router.push("/"), 800);
+          // Refrescar contexto desde el servidor para obtener datos más recientes
+          try {
+            console.log("[VerificationScreen] Refrescando usuario desde servidor...");
+            await refreshUser();
+            console.log("[VerificationScreen] Usuario refrescado exitosamente");
+          } catch (refreshError) {
+            console.warn("[VerificationScreen] Error al refrescar usuario:", refreshError);
+            // Continuar de todos modos, el usuario ya está actualizado en localStorage
+          }
+
+          // Mostrar mensaje de éxito
+          setIsVerified(true);
+
+          // Redirigir a home después de un delay
+          console.log("[VerificationScreen] Redirigiendo a /home");
+          setTimeout(() => {
+            router.replace("/home");
+          }, 1500);
         } else {
+          console.log("[VerificationScreen] Cédula no verificada");
           setError(res.message ?? "Cédula inválida");
         }
       } else {
+        console.log("[VerificationScreen] Error en verificación:", res.message);
         setError(res.message ?? "No se pudo verificar la cédula");
       }
     } catch (err) {
-      console.error("Verification error:", err);
+      console.error("[VerificationScreen] Error:", err);
       setError("Error al verificar la identidad. Intenta nuevamente.");
     } finally {
       setIsVerifying(false);
