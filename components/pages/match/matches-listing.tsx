@@ -8,6 +8,7 @@ import { MapPin, Plus, Search, Filter, X, AlertCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { AuthService } from "@/lib/auth"
+import { MatchesMapView } from "@/components/google-maps/matches-map-view"
 import { 
   PartidoAPI, 
   PartidoDTO, 
@@ -26,6 +27,7 @@ export function MatchesListing() {
   const [selectedFilters, setSelectedFilters] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+  const [selectedMatchId, setSelectedMatchId] = useState<string | undefined>()
 
   // Filtros rápidos
   const quickFilters = [
@@ -277,6 +279,17 @@ export function MatchesListing() {
               </button>
             )}
           </div>
+
+          {/* Interactive Map - Airbnb Style */}
+          <MatchesMapView
+            matches={matches}
+            selectedMatchId={selectedMatchId}
+            onMarkerClick={(matchId) => {
+              setSelectedMatchId(matchId)
+              router.push(`/matches/${matchId}`)
+            }}
+            className="h-[300px] mb-6 rounded-2xl overflow-hidden shadow-sm"
+          />
 
           {/* Quick Filters */}
           <div className="flex items-center justify-between mb-4">
