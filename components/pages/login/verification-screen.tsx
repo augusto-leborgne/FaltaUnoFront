@@ -72,7 +72,20 @@ export function VerificationScreen() {
           try {
             console.log("[VerificationScreen] Refrescando usuario desde servidor...");
             await refreshUser();
-            console.log("[VerificationScreen] Usuario refrescado exitosamente");
+            
+            // Verificar qué devolvió el refresh
+            const refreshedUser = AuthService.getUser();
+            console.log("[VerificationScreen] Usuario después del refresh:", {
+              email: refreshedUser?.email,
+              cedulaVerificada: refreshedUser?.cedulaVerificada,
+              perfilCompleto: refreshedUser?.perfilCompleto
+            });
+            
+            if (!refreshedUser?.cedulaVerificada) {
+              console.error("[VerificationScreen] ⚠️ PROBLEMA: El backend no devolvió cedulaVerificada=true después del refresh");
+            } else {
+              console.log("[VerificationScreen] ✅ Usuario refrescado correctamente con cedulaVerificada=true");
+            }
           } catch (refreshError) {
             console.warn("[VerificationScreen] Error al refrescar usuario:", refreshError);
             // Continuar de todos modos, el usuario ya está actualizado en localStorage
