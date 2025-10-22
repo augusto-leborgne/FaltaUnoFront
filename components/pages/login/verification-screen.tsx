@@ -65,6 +65,9 @@ export function VerificationScreen() {
             console.log("[VerificationScreen] Usuario actualizado en localStorage");
           }
 
+          // Mostrar mensaje de éxito inmediatamente
+          setIsVerified(true);
+
           // Refrescar contexto desde el servidor para obtener datos más recientes
           try {
             console.log("[VerificationScreen] Refrescando usuario desde servidor...");
@@ -75,14 +78,14 @@ export function VerificationScreen() {
             // Continuar de todos modos, el usuario ya está actualizado en localStorage
           }
 
-          // Mostrar mensaje de éxito
-          setIsVerified(true);
+          // IMPORTANTE: Esperar un momento para que React actualice el estado
+          // antes de redirigir, esto asegura que el RequireAuth en /home
+          // vea el usuario actualizado
+          await new Promise(resolve => setTimeout(resolve, 500));
 
-          // Redirigir a home después de un delay
+          // Redirigir a home
           console.log("[VerificationScreen] Redirigiendo a /home");
-          setTimeout(() => {
-            router.replace("/home");
-          }, 1500);
+          router.replace("/home");
         } else {
           console.log("[VerificationScreen] Cédula no verificada");
           setError(res.message ?? "Cédula inválida");
