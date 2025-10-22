@@ -8,6 +8,7 @@ import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { Clock, Calendar, Star, Bell, Newspaper, TrendingUp, Award } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
+import { useNotifications } from "@/hooks/use-notifications"
 
 interface NewsUpdate {
   id: number
@@ -79,6 +80,7 @@ interface PendingReview {
 
 export function HomeScreen() {
   const router = useRouter()
+  const { count: notificationCount } = useNotifications()
   const [upcomingMatches, setUpcomingMatches] = useState<Partido[]>([])
   const [pendingReviews, setPendingReviews] = useState<PendingReview[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -208,9 +210,9 @@ export function HomeScreen() {
               className="relative p-2 rounded-full hover:bg-white/20 transition-colors"
             >
               <Bell className="w-6 h-6 text-foreground" />
-              {pendingReviews.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                  {pendingReviews.length}
+              {notificationCount > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1">
+                  {notificationCount > 99 ? '99+' : notificationCount}
                 </span>
               )}
             </button>
