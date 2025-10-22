@@ -12,9 +12,14 @@ dist/
 coverage/
 .nyc_output/
 
-# Environment (keep .env.production for build)
-.env
+# Environment (exclude all except what's needed for build)
+.env.local
 .env*.local
+
+# GCP Credentials
+*-key.json
+*-credentials.json
+service-account*.json
 
 # Logs
 npm-debug.log*

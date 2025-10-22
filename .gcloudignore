@@ -20,6 +20,12 @@ dist/
 .env
 .env*.local
 
+# GCP Credentials
+*-key.json
+*-credentials.json
+service-account*.json
+gcp-*.json
+
 # IDE
 .vscode/
 .idea/

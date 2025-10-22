@@ -20,6 +20,12 @@ yarn-error.log*
 .env.production
 !.env.example
 
+# GCP & Cloud Credentials
+*-key.json
+*-credentials.json
+service-account*.json
+gcp-*.json
+
 # vercel
 .vercel
 
