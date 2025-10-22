@@ -1,5 +1,6 @@
 /// <reference types="google.maps" />
 import { useEffect, useState } from 'react';
+import { logger } from './logger';
 
 /**
  * Utilidad centralizada para cargar Google Maps API
@@ -56,7 +57,7 @@ class GoogleMapsLoader {
       const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
       if (!apiKey) {
         const error = new Error('NEXT_PUBLIC_GOOGLE_MAPS_API_KEY no está configurada');
-        console.error('❌ [GoogleMapsLoader]', error.message);
+        logger.error('[GoogleMapsLoader]', error.message);
         this.handleError(error);
         reject(error);
         return;
@@ -64,7 +65,7 @@ class GoogleMapsLoader {
 
       // Si ya está disponible, marcar como cargado
       if (this.isGoogleAvailable()) {
-        console.log('✅ [GoogleMapsLoader] Google Maps ya estaba disponible');
+        logger.debug('[GoogleMapsLoader] Google Maps ya estaba disponible');
         this.handleSuccess();
         resolve();
         return;
@@ -73,7 +74,7 @@ class GoogleMapsLoader {
       // Verificar si ya existe el script
       const existingScript = document.getElementById(this.scriptId) as HTMLScriptElement | null;
       if (existingScript) {
-        console.log('⏳ [GoogleMapsLoader] Script ya existe, esperando carga...');
+        logger.debug('[GoogleMapsLoader] Script ya existe, esperando carga...');
         
         const checkGoogleAvailable = setInterval(() => {
           if (this.isGoogleAvailable()) {
@@ -97,7 +98,7 @@ class GoogleMapsLoader {
       }
 
       // Crear script
-      console.log('📦 [GoogleMapsLoader] Creando script de Google Maps...');
+      logger.debug('[GoogleMapsLoader] Creando script de Google Maps...');
       const script = document.createElement('script');
       script.id = this.scriptId;
       script.async = true;
@@ -105,7 +106,7 @@ class GoogleMapsLoader {
       script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
 
       script.onload = () => {
-        console.log('✅ [GoogleMapsLoader] Script cargado exitosamente');
+        logger.debug('[GoogleMapsLoader] Script cargado exitosamente');
         
         // Esperar a que google.maps esté disponible
         const checkGoogleAvailable = setInterval(() => {
@@ -128,7 +129,7 @@ class GoogleMapsLoader {
       };
 
       script.onerror = (event) => {
-        console.error('❌ [GoogleMapsLoader] Error cargando script:', event);
+        logger.error('[GoogleMapsLoader] Error cargando script:', event);
         const error = new Error('Error al cargar el script de Google Maps');
         this.handleError(error);
         reject(error);

@@ -1,6 +1,7 @@
 // lib/auth.ts - VERSIÓN ARREGLADA (usa API_BASE)
 import type { Usuario } from "./api"
 import { API_BASE, normalizeUrl } from "./api"
+import { logger } from "./logger"
 
 const TOKEN_KEY = "authToken"
 const USER_KEY = "user"
@@ -14,9 +15,9 @@ export class AuthService {
     if (typeof window === "undefined") return
     try {
       localStorage.setItem(TOKEN_KEY, token)
-      console.log("[AuthService] Token guardado")
+      logger.debug("[AuthService] Token guardado")
     } catch (error) {
-      console.error("[AuthService] Error guardando token:", error)
+      logger.error("[AuthService] Error guardando token:", error)
     }
   }
 
@@ -25,7 +26,7 @@ export class AuthService {
     try {
       return localStorage.getItem(TOKEN_KEY)
     } catch (error) {
-      console.error("[AuthService] Error obteniendo token:", error)
+      logger.error("[AuthService] Error obteniendo token:", error)
       return null
     }
   }
@@ -34,9 +35,9 @@ export class AuthService {
     if (typeof window === "undefined") return
     try {
       localStorage.removeItem(TOKEN_KEY)
-      console.log("[AuthService] Token eliminado")
+      logger.debug("[AuthService] Token eliminado")
     } catch (error) {
-      console.error("[AuthService] Error eliminando token:", error)
+      logger.error("[AuthService] Error eliminando token:", error)
     }
   }
 
@@ -54,11 +55,11 @@ export class AuthService {
       delete normalizedUser.fotoPerfil
 
       localStorage.setItem(USER_KEY, JSON.stringify(normalizedUser))
-      console.log("[AuthService] Usuario guardado:", normalizedUser.email)
+      logger.debug("[AuthService] Usuario guardado:", normalizedUser.email)
 
       window.dispatchEvent(new CustomEvent("userUpdated", { detail: normalizedUser }))
     } catch (error) {
-      console.error("[AuthService] Error guardando usuario:", error)
+      logger.error("[AuthService] Error guardando usuario:", error)
     }
   }
 
@@ -73,7 +74,7 @@ export class AuthService {
         foto_perfil: user.foto_perfil || user.fotoPerfil || undefined,
       }
     } catch (error) {
-      console.error("[AuthService] Error parseando usuario:", error)
+      logger.error("[AuthService] Error parseando usuario:", error)
       return null
     }
   }
@@ -82,10 +83,10 @@ export class AuthService {
     if (typeof window === "undefined") return
     try {
       localStorage.removeItem(USER_KEY)
-      console.log("[AuthService] Usuario eliminado")
+      logger.debug("[AuthService] Usuario eliminado")
       window.dispatchEvent(new CustomEvent("userLoggedOut"))
     } catch (error) {
-      console.error("[AuthService] Error eliminando usuario:", error)
+      logger.error("[AuthService] Error eliminando usuario:", error)
     }
   }
 
@@ -94,7 +95,7 @@ export class AuthService {
   // ============================================
 
   static logout(): void {
-    console.log("[AuthService] Logout iniciado")
+    logger.debug("[AuthService] Logout iniciado")
     this.removeToken()
     this.removeUser()
 
@@ -105,17 +106,17 @@ export class AuthService {
           if (k.startsWith("match_") || k.startsWith("user_")) localStorage.removeItem(k)
         })
       } catch (e) {
-        console.error("[AuthService] Error limpiando storage extra:", e)
+        logger.error("[AuthService] Error limpiando storage extra:", e)
       }
     }
-    console.log("[AuthService] Logout completado")
+    logger.debug("[AuthService] Logout completado")
   }
 
   static isLoggedIn(): boolean {
     const token = this.getToken()
     if (!token) return false
     if (this.isTokenExpired(token)) {
-      console.log("[AuthService] Token expirado, limpiando sesión")
+      logger.debug("[AuthService] Token expirado, limpiando sesión")
       this.logout()
       return false
     }
@@ -132,7 +133,7 @@ export class AuthService {
       const exp = payload.exp * 1000
       return Date.now() >= exp
     } catch (error) {
-      console.error("[AuthService] Error verificando token:", error)
+      logger.error("[AuthService] Error verificando token:", error)
       return true
     }
   }
@@ -144,7 +145,7 @@ export class AuthService {
       return
     }
     if (this.isTokenExpired(token)) {
-      console.log("[AuthService] Token expirado, limpiando")
+      logger.debug("[AuthService] Token expirado, limpiando")
       this.logout()
     }
   }
@@ -170,12 +171,12 @@ export class AuthService {
         return null
       }
 
-      console.log("[AuthService] Fetching current user...")
+      logger.debug("[AuthService] Fetching current user...")
       const url = normalizeUrl(`${API_BASE}/api/usuarios/me`)
       const res = await fetch(url, { headers: this.getAuthHeaders() })
 
       if (!res.ok) {
-        console.error("[AuthService] fetchCurrentUser status:", res.status)
+        logger.error("[AuthService] fetchCurrentUser status:", res.status)
         if (res.status === 401) this.logout()
         return null
       }
@@ -190,10 +191,10 @@ export class AuthService {
       delete normalized.fotoPerfil
 
       this.setUser(normalized)
-      console.log("[AuthService] Usuario actualizado desde servidor")
+      logger.debug("[AuthService] Usuario actualizado desde servidor")
       return normalized as Usuario
     } catch (e) {
-      console.error("[AuthService] Error en fetchCurrentUser:", e)
+      logger.error("[AuthService] Error en fetchCurrentUser:", e)
       return null
     }
   }
@@ -217,7 +218,7 @@ export class AuthService {
       await this.fetchCurrentUser()
       return true
     } catch (e) {
-      console.error("[AuthService] Error actualizando foto:", e)
+      logger.error("[AuthService] Error actualizando foto:", e)
       return false
     }
   }
@@ -234,7 +235,7 @@ export class AuthService {
       await this.fetchCurrentUser()
       return true
     } catch (e) {
-      console.error("[AuthService] Error actualizando perfil:", e)
+      logger.error("[AuthService] Error actualizando perfil:", e)
       return false
     }
   }
