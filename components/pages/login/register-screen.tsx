@@ -122,71 +122,77 @@ export function RegisterScreen() {
       // ✅ CORRECCIÓN: Tipar correctamente la respuesta
       const response = await UsuarioAPI.crear(payload)
 
-      console.log("[RegisterScreen] Respuesta crear usuario:", response)
+      console.log("[RegisterScreen] Respuesta crear usuario:", response);
 
       if (response && response.success) {
-        // ✅ CORRECCIÓN: Manejar ambos formatos de respuesta
-        const user = response.data?.user || response.data
-        const token = response.data?.token
+        // ✅ CORRECCIÓN: Manejar formato de respuesta del backend
+        const responseData = response.data
+        const user = responseData?.user
+        const token = responseData?.token
 
         console.log("[RegisterScreen] Usuario creado:", user?.email)
         console.log("[RegisterScreen] Token en respuesta:", token ? "SÍ" : "NO")
 
-        // Si viene token en el registro, guardarlo
+        // Si viene token en el registro, guardarlo (lo más común)
         if (token) {
           AuthService.setToken(token)
           console.log("[RegisterScreen] ✅ Token guardado desde registro")
+          
+          // Guardar usuario
+          if (user) {
+            AuthService.setUser(user)
+            setUser(user)
+            console.log("[RegisterScreen] ✅ Usuario guardado en contexto")
+          }
         } else {
-          // ✅ CORRECCIÓN: Si no viene token, hacer login automático
+          // ✅ Fallback: Si no viene token, hacer login automático
           console.log("[RegisterScreen] No hay token, haciendo login automático...")
           
           try {
             const loginRes = await UsuarioAPI.login(formData.email, formData.password)
-            console.log("[RegisterScreen] Login automático exitoso:", loginRes.success)
+            console.log("[RegisterScreen] Login automático:", loginRes.success ? "✅" : "❌")
             
             if (loginRes.success && loginRes.data?.token) {
               AuthService.setToken(loginRes.data.token)
               AuthService.setUser(loginRes.data.user)
               setUser(loginRes.data.user)
               console.log("[RegisterScreen] ✅ Token y usuario guardados desde login")
+            } else {
+              throw new Error("No se pudo obtener token en login automático")
             }
           } catch (loginErr) {
             console.error("[RegisterScreen] ❌ Error en login automático:", loginErr)
-            // Continuar de todas formas si el usuario fue creado
+            // Si falló el login automático, redirigir a login manual
+            setError("Cuenta creada exitosamente. Por favor, inicia sesión.")
+            setTimeout(() => router.push("/login"), 2000)
+            return
           }
         }
 
-        // Guardar usuario
-        if (user) {
-          AuthService.setUser(user)
-          setUser(user)
-          console.log("[RegisterScreen] ✅ Usuario guardado en contexto")
-        }
-
-        // ✅ CORRECCIÓN: Verificar estado final antes de redirigir
+        // ✅ Verificar estado final antes de redirigir
         const finalToken = AuthService.getToken()
         const finalUser = AuthService.getUser()
         
         console.log("[RegisterScreen] Estado final:")
         console.log("  - Token:", finalToken ? "✅" : "❌")
         console.log("  - Usuario:", finalUser ? "✅" : "❌")
-        console.log("  - Perfil completo:", finalUser?.perfilCompleto ? "✅" : "❌")
+        console.log("  - Email:", finalUser?.email)
+        console.log("  - Perfil completo:", finalUser?.perfilCompleto)
+        console.log("  - Cédula verificada:", finalUser?.cedulaVerificada)
 
-        if (!finalToken) {
-          console.warn("[RegisterScreen] ⚠️ No se pudo obtener token, redirigiendo a login")
-          setError("Cuenta creada. Por favor, inicia sesión.")
+        if (!finalToken || !finalUser) {
+          console.error("[RegisterScreen] ⚠️ Estado inválido después del registro")
+          setError("Error al completar el registro. Por favor, inicia sesión.")
           setTimeout(() => router.push("/login"), 2000)
           return
         }
 
         // ✅ REDIRECCIÓN SEGÚN PERFIL
-        if (finalUser && !finalUser.perfilCompleto) {
-          console.log("[RegisterScreen] 🔄 Redirigiendo a profile-setup")
-          router.push("/profile-setup")
-        } else {
-          console.log("[RegisterScreen] 🔄 Perfil completo, redirigiendo a home")
-          postAuthRedirect(finalUser ?? undefined)
-        }
+        // Siempre redirigir a profile-setup después del registro
+        // (El usuario recién creado NUNCA tiene perfil completo)
+        console.log("[RegisterScreen] 🔄 Redirigiendo a /profile-setup")
+        router.push("/profile-setup")
+        
       } else {
         const errorMsg = response?.message || "Error al crear la cuenta"
         console.error("[RegisterScreen] ❌ Error en respuesta:", errorMsg)
