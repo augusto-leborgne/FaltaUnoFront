@@ -1,29 +1,271 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ArrowLeft, Check, X, Users, Calendar, MessageCircle, Star } from "lucide-react"
+import { 
+  ArrowLeft, 
+  Check, 
+  X, 
+  Users, 
+  Calendar, 
+  MessageCircle, 
+  Star,
+  Bell,
+  Trash2,
+  AlertCircle,
+  UserPlus,
+  UserCheck
+} from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useToast } from "@/hooks/use-toast"
-import { AuthService } from "@/lib/auth"
-
-type NotificationType = "match_invitation" | "friend_request" | "review_request" | "new_message" | "match_update"
-
-interface Notification {
-  id: string
-  type: NotificationType
-  title: string
-  message: string
-  time: string
-  read: boolean
-  avatar?: string
-  matchId?: string
-  userId?: string
-  matchTitle?: string
-}
+import { useNotifications } from "@/hooks/use-notifications"
+import { TipoNotificacion, NotificacionDTO } from "@/lib/api"
+import { formatDistanceToNow } from "date-fns"
+import { es } from "date-fns/locale"
 
 export function NotificationsScreen() {
+  const router = useRouter()
+  const { 
+    notificaciones, 
+    count, 
+    isLoading, 
+    marcarComoLeida, 
+    marcarTodasLeidas,
+    eliminarNotificacion 
+  } = useNotifications()
+
+  const [filter, setFilter] = useState<'todas' | 'no-leidas'>('todas')
+
+  const notificacionesFiltradas = filter === 'todas' 
+    ? notificaciones 
+    : notificaciones.filter(n => !n.leida)
+
+  const getIcon = (tipo: TipoNotificacion) => {
+    switch (tipo) {
+      case TipoNotificacion.INVITACION_PARTIDO:
+        return <Calendar className="w-5 h-5 text-green-600" />
+      case TipoNotificacion.SOLICITUD_AMISTAD:
+        return <UserPlus className="w-5 h-5 text-blue-600" />
+      case TipoNotificacion.AMISTAD_ACEPTADA:
+        return <UserCheck className="w-5 h-5 text-green-600" />
+      case TipoNotificacion.INSCRIPCION_ACEPTADA:
+        return <Check className="w-5 h-5 text-green-600" />
+      case TipoNotificacion.INSCRIPCION_RECHAZADA:
+        return <X className="w-5 h-5 text-red-600" />
+      case TipoNotificacion.PARTIDO_CANCELADO:
+        return <AlertCircle className="w-5 h-5 text-red-600" />
+      case TipoNotificacion.PARTIDO_COMPLETADO:
+        return <Check className="w-5 h-5 text-green-600" />
+      case TipoNotificacion.JUGADOR_ELIMINADO:
+        return <X className="w-5 h-5 text-red-600" />
+      case TipoNotificacion.NUEVO_MENSAJE:
+        return <MessageCircle className="w-5 h-5 text-blue-600" />
+      case TipoNotificacion.REVISION_PENDIENTE:
+        return <Star className="w-5 h-5 text-orange-600" />
+      case TipoNotificacion.PARTIDO_PROXIMO:
+        return <Calendar className="w-5 h-5 text-orange-600" />
+      case TipoNotificacion.CAMBIO_PARTIDO:
+        return <AlertCircle className="w-5 h-5 text-orange-600" />
+      default:
+        return <Bell className="w-5 h-5 text-gray-600" />
+    }
+  }
+
+  const getPriorityColor = (prioridad: string) => {
+    switch (prioridad) {
+      case 'URGENTE':
+        return 'border-red-500'
+      case 'ALTA':
+        return 'border-orange-500'
+      case 'NORMAL':
+        return 'border-blue-500'
+      case 'BAJA':
+        return 'border-gray-300'
+      default:
+        return 'border-gray-200'
+    }
+  }
+
+  const handleNotificationClick = async (notif: NotificacionDTO) => {
+    // Marcar como leída
+    if (!notif.leida) {
+      await marcarComoLeida(notif.id)
+    }
+
+    // Navegar a la URL de acción si existe
+    if (notif.url_accion) {
+      router.push(notif.url_accion)
+    } else if (notif.entidad_id) {
+      // Navegar según el tipo de entidad
+      switch (notif.entidad_tipo) {
+        case 'PARTIDO':
+          router.push(`/matches/${notif.entidad_id}`)
+          break
+        case 'USUARIO':
+          router.push(`/users/${notif.entidad_id}`)
+          break
+        case 'AMISTAD':
+          router.push(`/friends`)
+          break
+        default:
+          break
+      }
+    }
+  }
+
+  const formatTime = (dateString: string) => {
+    try {
+      const date = new Date(dateString)
+      return formatDistanceToNow(date, { addSuffix: true, locale: es })
+    } catch {
+      return dateString
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 pb-20">
+      {/* Header */}
+      <div className="sticky top-0 z-30 pt-16 pb-4 px-6 bg-white border-b border-gray-100">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-4">
+            <button onClick={() => router.back()} className="p-2 -ml-2 hover:bg-gray-100 rounded-lg">
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </button>
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">Notificaciones</h1>
+              {count > 0 && <p className="text-sm text-gray-500">{count} sin leer</p>}
+            </div>
+          </div>
+          
+          {notificaciones.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={marcarTodasLeidas}
+              className="text-green-600 hover:text-green-700 hover:bg-green-50"
+            >
+              <Check className="w-4 h-4 mr-1" />
+              Marcar todas
+            </Button>
+          )}
+        </div>
+
+        {/* Filter */}
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setFilter('todas')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              filter === 'todas'
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Todas ({notificaciones.length})
+          </button>
+          <button
+            onClick={() => setFilter('no-leidas')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              filter === 'no-leidas'
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            No leídas ({count})
+          </button>
+        </div>
+      </div>
+
+      {/* Notifications List */}
+      <div className="px-6 py-4 space-y-3">
+        {isLoading ? (
+          <div className="text-center py-12">
+            <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full mx-auto"></div>
+            <p className="text-gray-500 mt-4">Cargando notificaciones...</p>
+          </div>
+        ) : notificacionesFiltradas.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Bell className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              {filter === 'todas' ? 'No hay notificaciones' : 'No hay notificaciones sin leer'}
+            </h3>
+            <p className="text-gray-500">
+              {filter === 'todas' 
+                ? 'Cuando tengas nuevas notificaciones aparecerán aquí'
+                : 'Todas tus notificaciones están marcadas como leídas'
+              }
+            </p>
+          </div>
+        ) : (
+          notificacionesFiltradas.map((notif) => (
+            <div
+              key={notif.id}
+              className={`bg-white rounded-xl p-4 border-l-4 ${getPriorityColor(notif.prioridad)} ${
+                !notif.leida ? "bg-green-50/30 shadow-sm" : ""
+              } hover:shadow-md transition-shadow cursor-pointer`}
+              onClick={() => handleNotificationClick(notif)}
+            >
+              <div className="flex items-start space-x-3">
+                {/* Icon */}
+                <div className="flex-shrink-0 mt-1">
+                  <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                    {getIcon(notif.tipo)}
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-900 mb-1 flex items-center">
+                        {notif.titulo}
+                        {!notif.leida && (
+                          <span className="ml-2 inline-block w-2 h-2 bg-green-600 rounded-full animate-pulse"></span>
+                        )}
+                      </h3>
+                      {notif.mensaje && (
+                        <p className="text-sm text-gray-600 mb-2 line-clamp-2">
+                          {notif.mensaje}
+                        </p>
+                      )}
+                      <div className="flex items-center space-x-2 text-xs text-gray-400">
+                        <span>{formatTime(notif.created_at)}</span>
+                        {notif.prioridad !== 'NORMAL' && (
+                          <>
+                            <span>•</span>
+                            <span className={`font-medium ${
+                              notif.prioridad === 'URGENTE' ? 'text-red-600' :
+                              notif.prioridad === 'ALTA' ? 'text-orange-600' :
+                              'text-gray-500'
+                            }`}>
+                              {notif.prioridad}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Delete button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        eliminarNotificacion(notif.id)
+                      }}
+                      className="ml-2 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-600" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  )
+}
   const router = useRouter()
   const { toast } = useToast()
   const [notifications, setNotifications] = useState<Notification[]>([])

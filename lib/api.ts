@@ -198,6 +198,48 @@ export interface ReviewDTO {
 }
 
 // ============================================
+// INTERFACES DE NOTIFICACIONES
+// ============================================
+
+export enum TipoNotificacion {
+  INVITACION_PARTIDO = "INVITACION_PARTIDO",
+  SOLICITUD_AMISTAD = "SOLICITUD_AMISTAD",
+  AMISTAD_ACEPTADA = "AMISTAD_ACEPTADA",
+  INSCRIPCION_ACEPTADA = "INSCRIPCION_ACEPTADA",
+  INSCRIPCION_RECHAZADA = "INSCRIPCION_RECHAZADA",
+  PARTIDO_CANCELADO = "PARTIDO_CANCELADO",
+  PARTIDO_COMPLETADO = "PARTIDO_COMPLETADO",
+  JUGADOR_ELIMINADO = "JUGADOR_ELIMINADO",
+  NUEVO_MENSAJE = "NUEVO_MENSAJE",
+  REVISION_PENDIENTE = "REVISION_PENDIENTE",
+  PARTIDO_PROXIMO = "PARTIDO_PROXIMO",
+  CAMBIO_PARTIDO = "CAMBIO_PARTIDO",
+  GENERAL = "GENERAL"
+}
+
+export enum PrioridadNotificacion {
+  BAJA = "BAJA",
+  NORMAL = "NORMAL",
+  ALTA = "ALTA",
+  URGENTE = "URGENTE"
+}
+
+export interface NotificacionDTO {
+  id: string;
+  usuario_id: string;
+  tipo: TipoNotificacion;
+  titulo: string;
+  mensaje?: string;
+  entidad_id?: string;
+  entidad_tipo?: string;
+  url_accion?: string;
+  leida: boolean;
+  fecha_lectura?: string;
+  prioridad: PrioridadNotificacion;
+  created_at: string;
+}
+
+// ============================================
 // FUNCIÓN CENTRAL DE API FETCH
 // ============================================
 
@@ -992,6 +1034,60 @@ export const ReviewAPI = {
    */
   listByPartido: (partidoId: string) => {
     return apiFetch<ReviewDTO[]>(`/api/reviews?partidoId=${partidoId}`);
+  }
+};
+
+// ============================================
+// API DE NOTIFICACIONES
+// ============================================
+
+export const NotificacionAPI = {
+  /**
+   * Obtener todas las notificaciones del usuario actual
+   */
+  list: () => {
+    return apiFetch<NotificacionDTO[]>('/api/notificaciones');
+  },
+
+  /**
+   * Obtener notificaciones no leídas
+   */
+  getNoLeidas: () => {
+    return apiFetch<NotificacionDTO[]>('/api/notificaciones/no-leidas');
+  },
+
+  /**
+   * Contar notificaciones no leídas
+   */
+  count: () => {
+    return apiFetch<{ count: number }>('/api/notificaciones/count');
+  },
+
+  /**
+   * Marcar notificación como leída
+   */
+  marcarLeida: (id: string) => {
+    return apiFetch<NotificacionDTO>(`/api/notificaciones/${id}/leer`, {
+      method: 'PUT'
+    });
+  },
+
+  /**
+   * Marcar todas las notificaciones como leídas
+   */
+  marcarTodasLeidas: () => {
+    return apiFetch<{ count: number }>('/api/notificaciones/leer-todas', {
+      method: 'PUT'
+    });
+  },
+
+  /**
+   * Eliminar notificación
+   */
+  eliminar: (id: string) => {
+    return apiFetch<void>(`/api/notificaciones/${id}`, {
+      method: 'DELETE'
+    });
   }
 };
 
