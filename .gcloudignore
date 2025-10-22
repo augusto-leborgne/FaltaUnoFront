@@ -1,0 +1,48 @@
+# This file specifies files that are *not* uploaded to Google Cloud
+# using gcloud. It follows the same syntax as .gitignore
+
+.gcloudignore
+.git
+.gitignore
+.dockerignore
+
+# Node.js dependencies
+node_modules/
+.pnpm-store/
+
+# Next.js build files (will be built in Cloud Run)
+.next/
+out/
+build/
+dist/
+
+# Environment files (use Cloud Run env vars)
+.env
+.env*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+coverage/
+.nyc_output/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation
+*.md
+
+# Misc
+.vercel/
+.turbo/
