@@ -84,58 +84,61 @@ export function SettingsScreen() {
 
   useEffect(() => {
     loadUserData()
+    loadNotificationPreferences()
   }, [])
 
   const loadUserData = async () => {
     try {
-      setIsLoading(true)
-      setError("")
+      // Primero intentar obtener del cache
+      let user = AuthService.getUser()
       
-      const token = AuthService.getToken()
-      if (!token) {
+      // Si no hay en cache, fetchear del servidor
+      if (!user) {
+        user = await AuthService.fetchCurrentUser()
+      }
+      
+      if (!user) {
         router.push("/login")
         return
       }
 
-      console.log("[Settings] Cargando datos del usuario...")
-
-      // ✅ CRÍTICO: Usar fetchCurrentUser para obtener datos actualizados
-      const userData = await AuthService.fetchCurrentUser()
-      
-      if (!userData) {
-        throw new Error("No se pudieron cargar los datos del usuario")
+      // Construir URL de foto de perfil si existe
+      if (user.id && user.foto_perfil) {
+        const photoUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/usuarios/${user.id}/foto`
+        setAvatar(photoUrl)
       }
-
-      console.log("[Settings] Datos cargados:", userData)
 
       setFormData({
-        name: userData.nombre || "",
-        surname: userData.apellido || "",
-        email: userData.email || "",
-        phone: userData.celular || "",
-        position: userData.posicion || "",
-        level: userData.nivel || "",
-        height: userData.altura?.toString() || "",
-        weight: userData.peso?.toString() || "",
+        name: user.nombre || "",
+        surname: user.apellido || "",
+        email: user.email || "",
+        phone: user.celular || "",
+        position: user.posicion || "",
+        level: user.nivel || "",
+        height: user.altura?.toString() || "",
+        weight: user.peso?.toString() || "",
       })
 
-      // ✅ CRÍTICO: Usar foto_perfil normalizada
-      if (userData.foto_perfil) {
-        setAvatar(`data:image/jpeg;base64,${userData.foto_perfil}`)
-      }
+      setAuthMethod(user.provider === "GOOGLE" ? "google" : "email")
 
-      // Determinar método de autenticación
-      if (userData.provider) {
-        const provider = userData.provider.toLowerCase()
-        if (provider === "google" || provider === "facebook" || provider === "apple") {
-          setAuthMethod(provider as "google" | "facebook" | "apple")
-        }
-      }
     } catch (error) {
       console.error("[Settings] Error cargando datos:", error)
       setError("Error al cargar datos del perfil")
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const loadNotificationPreferences = async () => {
+    try {
+      const { NotificationPreferencesAPI } = await import('@/lib/api')
+      const response = await NotificationPreferencesAPI.get()
+      
+      if (response.success && response.data) {
+        setNotificationPreferences(response.data)
+      }
+    } catch (error) {
+      console.error("[Settings] Error cargando preferencias:", error)
     }
   }
 
@@ -193,7 +196,18 @@ export function SettingsScreen() {
 
       console.log("[Settings] Perfil actualizado exitosamente")
 
-      // 3. Refrescar contexto
+      // 3. Guardar preferencias de notificación
+      console.log("[Settings] Guardando preferencias de notificación...")
+      try {
+        const { NotificationPreferencesAPI } = await import('@/lib/api')
+        await NotificationPreferencesAPI.update(notificationPreferences)
+        console.log("[Settings] Preferencias de notificación guardadas")
+      } catch (prefError) {
+        console.warn("[Settings] Error guardando preferencias de notificación:", prefError)
+        // No fallar el guardado completo por esto
+      }
+
+      // 4. Refrescar contexto
       await refreshUser()
 
       setSuccess(true)

@@ -39,7 +39,7 @@ export function FriendsScreen() {
         return
       }
 
-      const response = await fetch("/api/usuarios", {
+      const response = await fetch("/api/amistades", {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
@@ -48,12 +48,25 @@ export function FriendsScreen() {
 
       if (response.ok) {
         const result = await response.json()
-        const currentUser = AuthService.getUser()
-        const allUsers = result.data || []
+        const amistades = result.data || []
         
-        // Filtrar el usuario actual
-        const otherUsers = allUsers.filter((u: any) => u.id !== currentUser?.id)
-        setFriends(otherUsers)
+        // Extraer datos del amigo de cada amistad
+        const currentUser = AuthService.getUser()
+        const amigos = amistades.map((amistad: any) => {
+          // Determinar cuál es el amigo (el que no es el usuario actual)
+          const esSolicitante = amistad.usuarioId === currentUser?.id
+          const amigoData = esSolicitante ? amistad.amigo : amistad.usuario
+          
+          return {
+            id: amigoData?.id,
+            nombre: amigoData?.nombre,
+            apellido: amigoData?.apellido,
+            foto_perfil: amigoData?.fotoPerfil,
+            posicion: amigoData?.posicion
+          }
+        }).filter((amigo: any) => amigo.id) // Filtrar amigos sin datos
+        
+        setFriends(amigos)
       }
     } catch (error) {
       console.error("Error cargando amigos:", error)

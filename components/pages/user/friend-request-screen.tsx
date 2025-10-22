@@ -70,15 +70,12 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
         return
       }
 
-      const response = await fetch("/api/amistades", {
+      const response = await fetch(`/api/amistades/${userId}`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          amigoId: userId
-        })
+        }
       })
 
       if (response.ok) {

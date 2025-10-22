@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -59,6 +59,32 @@ export function CreateMatchScreen() {
   } | null>(null)
 
   // ============================================
+  // AUTO-CALCULAR CANTIDAD DE JUGADORES
+  // ============================================
+  
+  useEffect(() => {
+    // Auto-calcular cantidad de jugadores según el tipo de partido
+    const playerCounts: Record<string, number> = {
+      [TipoPartido.FUTBOL_5]: 10,
+      [TipoPartido.FUTBOL_7]: 14,
+      [TipoPartido.FUTBOL_11]: 22,
+    }
+    
+    const newPlayerCount = playerCounts[formData.type] || 10
+    
+    if (formData.totalPlayers !== newPlayerCount) {
+      console.log(`[CreateMatch] Auto-ajustando jugadores: ${formData.type} → ${newPlayerCount} jugadores`)
+      setFormData((prev) => ({ ...prev, totalPlayers: newPlayerCount }))
+      
+      // Limpiar error de validación si existe
+      setFieldErrors((prev) => ({
+        ...prev,
+        totalPlayers: undefined
+      }))
+    }
+  }, [formData.type])
+
+  // ============================================
   // VALIDACIÓN
   // ============================================
 
@@ -67,7 +93,7 @@ export function CreateMatchScreen() {
     switch (field) {
       case "date":
         if (!value) return "Selecciona una fecha"
-        const selectedDate = new Date(value)
+        const selectedDate = new Date(value + "T00:00:00")
         const today = new Date()
         today.setHours(0, 0, 0, 0)
         if (selectedDate < today) return "La fecha no puede ser en el pasado"
@@ -77,7 +103,8 @@ export function CreateMatchScreen() {
         if (!value) return "Selecciona una hora"
         if (formData.date) {
           const dateTime = new Date(`${formData.date}T${value}`)
-          if (dateTime < new Date()) return "La hora debe ser futura"
+          const now = new Date()
+          if (dateTime <= now) return "La fecha y hora deben ser futuras"
         }
         return null
 
@@ -121,14 +148,12 @@ export function CreateMatchScreen() {
       return "Debes seleccionar una hora"
     }
 
-    // Validar que sea fecha futura
+    // Validar que sea fecha y hora futuras
     try {
-      const [year, month, day] = formData.date.split("-").map(Number)
-      const [hour, minute] = formData.time.split(":").map(Number)
-      const matchDate = new Date(year, month - 1, day, hour, minute)
+      const dateTime = new Date(`${formData.date}T${formData.time}`)
       const now = new Date()
 
-      if (matchDate <= now) {
+      if (dateTime <= now) {
         return "La fecha y hora deben ser futuras"
       }
     } catch {
@@ -288,6 +313,21 @@ export function CreateMatchScreen() {
 
   const today = new Date().toISOString().split('T')[0]
 
+  // Generar opciones de hora cada 5 minutos
+  const generateTimeOptions = () => {
+    const options: string[] = []
+    for (let hour = 0; hour < 24; hour++) {
+      for (let minute = 0; minute < 60; minute += 5) {
+        const hourStr = hour.toString().padStart(2, '0')
+        const minuteStr = minute.toString().padStart(2, '0')
+        options.push(`${hourStr}:${minuteStr}`)
+      }
+    }
+    return options
+  }
+
+  const timeOptions = generateTimeOptions()
+
   // ============================================
   // RENDER
   // ============================================
@@ -401,7 +441,6 @@ export function CreateMatchScreen() {
               <Input
                 type="date"
                 value={formData.date}
-                min={today}
                 onChange={(e) => handleInputChange("date", e.target.value)}
                 className={`pl-10 py-3 rounded-xl ${fieldErrors.date ? 'border-red-500' : 'border-gray-300'}`}
                 required
@@ -421,14 +460,20 @@ export function CreateMatchScreen() {
             </label>
             <div className="relative">
               <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
-              <Input
-                type="time"
+              <select
                 value={formData.time}
                 onChange={(e) => handleInputChange("time", e.target.value)}
-                className={`pl-10 py-3 rounded-xl ${fieldErrors.time ? 'border-red-500' : 'border-gray-300'}`}
+                className={`w-full pl-10 pr-4 py-3 rounded-xl border ${fieldErrors.time ? 'border-red-500' : 'border-gray-300'} bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed`}
                 required
                 disabled={isLoading}
-              />
+              >
+                <option value="">Seleccionar hora</option>
+                {timeOptions.map((time) => (
+                  <option key={time} value={time}>
+                    {time}
+                  </option>
+                ))}
+              </select>
             </div>
             {fieldErrors.time && (
               <p className="text-xs text-red-600 mt-1 flex items-center">
@@ -586,7 +631,6 @@ export function CreateMatchScreen() {
             disabled={
               isLoading || 
               success || 
-              Object.values(fieldErrors).some(error => error !== undefined) ||
               !formData.date ||
               !formData.time ||
               !formData.location

@@ -20,6 +20,8 @@ interface SearchResult {
   nombre_ubicacion?: string
   foto_perfil?: string
   posicion?: string
+  esAmigo?: boolean
+  solicitudPendiente?: boolean
 }
 
 export function SearchScreen() {
@@ -53,6 +55,25 @@ export function SearchScreen() {
       if (usersResponse.ok) {
         const usersData = await usersResponse.json()
         const users = usersData.data || []
+        
+        // Cargar amistades para verificar estado
+        const amisταdesResponse = await fetch("/api/amistades", {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        })
+        
+        const amigosIds = new Set<string>()
+        if (amisταdesResponse.ok) {
+          const amisταdesData = await amisταdesResponse.json()
+          const amistades = amisταdesData.data || []
+          amistades.forEach((amistad: any) => {
+            amigosIds.add(amistad.usuarioId)
+            amigosIds.add(amistad.amigoId)
+          })
+        }
+        
         users.forEach((u: any) => {
           allResults.push({
             id: u.id,
@@ -60,7 +81,8 @@ export function SearchScreen() {
             nombre: u.nombre,
             apellido: u.apellido,
             foto_perfil: u.fotoPerfil,
-            posicion: u.posicion
+            posicion: u.posicion,
+            esAmigo: amigosIds.has(u.id)
           })
         })
       }
@@ -179,31 +201,38 @@ export function SearchScreen() {
                 className="bg-gray-50 rounded-xl p-4 cursor-pointer hover:bg-gray-100 transition-colors"
               >
                 {result.tipo === "usuario" ? (
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                      {result.foto_perfil ? (
-                        <img 
-                          src={`data:image/jpeg;base64,${result.foto_perfil}`} 
-                          className="w-12 h-12 rounded-full object-cover"
-                          alt={result.nombre}
-                        />
-                      ) : (
-                        <span className="text-gray-600 font-medium">
-                          {result.nombre?.[0]}{result.apellido?.[0]}
-                        </span>
-                      )}
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                        {result.foto_perfil ? (
+                          <img 
+                            src={`data:image/jpeg;base64,${result.foto_perfil}`} 
+                            className="w-12 h-12 rounded-full object-cover"
+                            alt={result.nombre}
+                          />
+                        ) : (
+                          <span className="text-gray-600 font-medium">
+                            {result.nombre?.[0]}{result.apellido?.[0]}
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {result.nombre} {result.apellido}
+                        </p>
+                        {result.posicion && (
+                          <p className="text-sm text-gray-500">{result.posicion}</p>
+                        )}
+                        <Badge className="bg-blue-100 text-blue-800 text-xs mt-1">
+                          Usuario
+                        </Badge>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        {result.nombre} {result.apellido}
-                      </p>
-                      {result.posicion && (
-                        <p className="text-sm text-gray-500">{result.posicion}</p>
-                      )}
-                      <Badge className="bg-blue-100 text-blue-800 text-xs mt-1">
-                        Usuario
+                    {result.esAmigo && (
+                      <Badge className="bg-green-100 text-green-800 text-xs">
+                        Amigo
                       </Badge>
-                    </div>
+                    )}
                   </div>
                 ) : (
                   <div>

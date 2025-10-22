@@ -1093,6 +1093,38 @@ export const NotificacionAPI = {
 };
 
 // ============================================
+// API DE PREFERENCIAS DE NOTIFICACIÓN
+// ============================================
+
+export interface NotificationPreferences {
+  matchInvitations: boolean;
+  friendRequests: boolean;
+  matchUpdates: boolean;
+  reviewRequests: boolean;
+  newMessages: boolean;
+  generalUpdates: boolean;
+}
+
+export const NotificationPreferencesAPI = {
+  /**
+   * Obtener preferencias de notificación del usuario actual
+   */
+  get: () => {
+    return apiFetch<NotificationPreferences>('/api/usuarios/me/notification-preferences');
+  },
+
+  /**
+   * Actualizar preferencias de notificación
+   */
+  update: (preferences: Partial<NotificationPreferences>) => {
+    return apiFetch<NotificationPreferences>('/api/usuarios/me/notification-preferences', {
+      method: 'PUT',
+      body: JSON.stringify(preferences)
+    });
+  }
+};
+
+// ============================================
 // HELPER: Mapear form data a PartidoDTO
 // ============================================
 
