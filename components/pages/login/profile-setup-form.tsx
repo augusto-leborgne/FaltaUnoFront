@@ -127,7 +127,7 @@ export function ProfileSetupForm() {
 
   const positions = ["Arquero", "Zaguero", "Lateral", "Mediocampista", "Volante", "Delantero"]
   const levels = ["Principiante", "Intermedio", "Avanzado", "Profesional"]
-  const generos = ["Masculino", "Femenino", "Otro"]
+  const generos = ["Masculino", "Femenino"]
 
   useEffect(() => {
     return () => {
