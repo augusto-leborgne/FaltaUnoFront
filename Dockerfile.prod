@@ -42,6 +42,12 @@ COPY . .
 # Disable telemetry
 ENV NEXT_TELEMETRY_DISABLED 1
 
+# Debug: Print environment variables during build
+RUN echo "=== BUILD TIME ENV VARS ===" && \
+    echo "NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}" && \
+    echo "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY:0:10}..." && \
+    echo "==========================="
+
 # Build application
 RUN corepack enable && corepack prepare pnpm@latest --activate && \
     pnpm run build
