@@ -254,10 +254,14 @@ export function CreateMatchScreen() {
       setSuccess(true)
 
       // Redirigir a la pantalla de éxito para invitar amigos
-      const partidoId = response.data.id
+      const partidoId = response.data?.id
+      console.log("[CreateMatch] Partido ID obtenido:", partidoId)
+      
       if (partidoId) {
+        console.log("[CreateMatch] Redirigiendo a match-created con ID:", partidoId)
         setTimeout(() => router.push(`/match-created?matchId=${partidoId}`), 1000)
       } else {
+        console.warn("[CreateMatch] No se obtuvo ID del partido, redirigiendo a my-matches")
         setTimeout(() => router.push("/my-matches"), 1000)
       }
 

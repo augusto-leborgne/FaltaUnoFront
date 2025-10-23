@@ -582,6 +582,12 @@ export const PartidoAPI = {
 
     console.log("[PartidoAPI.crear] Respuesta:", response);
 
+    // Verificar que tengamos datos antes de normalizar
+    if (!response.success || !response.data) {
+      console.error("[PartidoAPI.crear] Error: respuesta sin datos válidos");
+      return response;
+    }
+
     return {
       ...response,
       data: normalizePartido(response.data)
