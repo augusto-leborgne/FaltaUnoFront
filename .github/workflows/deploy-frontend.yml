@@ -39,7 +39,7 @@ jobs:
           # Build Docker image usando Dockerfile.prod y pasar NEXT_PUBLIC_API_URL y GOOGLE_MAPS_API_KEY
           docker build \
             --build-arg NEXT_PUBLIC_API_URL="$BACKEND_URL" \
-            --build-arg NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="${{ secrets.GOOGLE_MAPS_API_KEY }}" \
+            --build-arg NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}" \
             -f Dockerfile.prod \
             -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/faltauno/${{ env.SERVICE_NAME }}:latest .
           
@@ -58,7 +58,7 @@ jobs:
             --max-instances 10 \
             --port 8080 \
             --set-env-vars NEXT_PUBLIC_API_URL="$BACKEND_URL" \
-            --set-env-vars NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="${{ secrets.GOOGLE_MAPS_API_KEY }}" \
+            --set-env-vars NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}" \
             --project ${{ env.GCP_PROJECT_ID }}
       
       - name: Get Service URL
