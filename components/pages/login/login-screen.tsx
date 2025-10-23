@@ -120,8 +120,9 @@ export function LoginScreen() {
         return
       }
 
-      // Usar ruta relativa que será proxeada por Next.js al backend
-      const oauthUrl = `/oauth2/authorization/${provider}`
+      // URL completa del backend en Cloud Run
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-169771742214.us-central1.run.app'
+      const oauthUrl = `${backendUrl}/oauth2/authorization/${provider}`
       
       console.log(`[LoginScreen] Redirigiendo a OAuth ${provider}:`, oauthUrl)
       window.location.href = oauthUrl

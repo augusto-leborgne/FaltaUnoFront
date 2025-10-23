@@ -36,13 +36,17 @@ jobs:
           # Backend URL - Ahora usa Cloud Run con HTTPS
           BACKEND_URL="https://faltauno-backend-169771742214.us-central1.run.app"
 
-          # Build Docker image usando Dockerfile.prod y pasar NEXT_PUBLIC_API_URL
-          docker build --build-arg NEXT_PUBLIC_API_URL="$BACKEND_URL" -f Dockerfile.prod -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/faltauno/${{ env.SERVICE_NAME }}:latest .
+          # Build Docker image usando Dockerfile.prod y pasar NEXT_PUBLIC_API_URL y GOOGLE_MAPS_API_KEY
+          docker build \
+            --build-arg NEXT_PUBLIC_API_URL="$BACKEND_URL" \
+            --build-arg NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="${{ secrets.GOOGLE_MAPS_API_KEY }}" \
+            -f Dockerfile.prod \
+            -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/faltauno/${{ env.SERVICE_NAME }}:latest .
           
           # Push image to Artifact Registry
           docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/faltauno/${{ env.SERVICE_NAME }}:latest
           
-          # Deploy to Cloud Run y setear variable de entorno NEXT_PUBLIC_API_URL
+          # Deploy to Cloud Run y setear variables de entorno
           gcloud run deploy ${{ env.SERVICE_NAME }} \
             --image ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/faltauno/${{ env.SERVICE_NAME }}:latest \
             --platform managed \
@@ -54,6 +58,7 @@ jobs:
             --max-instances 10 \
             --port 8080 \
             --set-env-vars NEXT_PUBLIC_API_URL="$BACKEND_URL" \
+            --set-env-vars NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="${{ secrets.GOOGLE_MAPS_API_KEY }}" \
             --project ${{ env.GCP_PROJECT_ID }}
       
       - name: Get Service URL

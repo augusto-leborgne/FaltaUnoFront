@@ -26,9 +26,12 @@ FROM base AS builder
 
 WORKDIR /app
 
-# Allow passing NEXT_PUBLIC_API_URL at build time (defaults to empty)
+# Allow passing NEXT_PUBLIC environment variables at build time
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+
+ARG NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+ENV NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
 
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
