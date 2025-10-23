@@ -56,10 +56,12 @@ export function ProfileSetupForm() {
     switch (field) {
       case 'name':
         if (!value || value.trim().length < 2) return "El nombre debe tener al menos 2 caracteres"
+        if (value.trim().length > 50) return "El nombre no puede superar 50 caracteres"
         return null
       
       case 'surname':
         if (!value || value.trim().length < 2) return "El apellido debe tener al menos 2 caracteres"
+        if (value.trim().length > 50) return "El apellido no puede superar 50 caracteres"
         return null
       
       case 'phone':
@@ -302,6 +304,7 @@ export function ProfileSetupForm() {
                 value={formData.name}
                 onChange={(e) => handleFieldChange('name', e.target.value)}
                 className={fieldErrors.name ? 'border-red-500' : ''}
+                maxLength={50}
                 required
               />
               {fieldErrors.name && (
@@ -317,6 +320,7 @@ export function ProfileSetupForm() {
                 value={formData.surname}
                 onChange={(e) => handleFieldChange('surname', e.target.value)}
                 className={fieldErrors.surname ? 'border-red-500' : ''}
+                maxLength={50}
                 required
               />
               {fieldErrors.surname && (

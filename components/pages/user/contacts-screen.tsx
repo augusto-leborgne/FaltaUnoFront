@@ -7,6 +7,7 @@ import { ArrowLeft, UserPlus, Check } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { AuthService } from "@/lib/auth"
+import { UsuarioAPI } from "@/lib/api"
 
 interface Contact {
   id: string
@@ -35,8 +36,7 @@ export function ContactsScreen() {
       setLoading(true)
       setError(null)
       
-      const token = AuthService.getToken()
-      if (!token) {
+      if (!AuthService.isLoggedIn()) {
         router.push("/login")
         return
       }
@@ -44,28 +44,17 @@ export function ContactsScreen() {
       const currentUser = AuthService.getUser()
       
       console.log("[ContactsScreen] Cargando usuarios...")
-      const response = await fetch("/api/usuarios", {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      })
+      
+      // Usar UsuarioAPI en lugar de fetch directo
+      const response = await UsuarioAPI.list()
+      
+      console.log("[ContactsScreen] Response:", response)
 
-      console.log("[ContactsScreen] Response status:", response.status)
-
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: No se pudieron cargar los usuarios`)
+      if (!response.success || !response.data) {
+        throw new Error(response.message || "No se pudieron cargar los usuarios")
       }
 
-      const result = await response.json()
-      console.log("[ContactsScreen] Data recibida:", result)
-      
-      const allUsers = result.data || result || []
-      
-      if (!Array.isArray(allUsers)) {
-        console.error("[ContactsScreen] Formato inesperado:", allUsers)
-        throw new Error("Formato de respuesta inválido")
-      }
+      const allUsers = response.data
       
       // Convertir usuarios a formato Contact, filtrando el usuario actual
       const contactsList: Contact[] = allUsers
