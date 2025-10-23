@@ -6,6 +6,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
 import { Toaster } from "@/components/ui/toaster"
 import { useVersionCheck } from "@/hooks/use-version-check"
+import { ProtectedRoute } from "@/components/auth/protected-route"
 
 export default function ClientLayout({
   children,
@@ -16,10 +17,12 @@ export default function ClientLayout({
   useVersionCheck()
   
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      {children}
-      <Analytics />
-      <Toaster />
-    </Suspense>
+    <ProtectedRoute>
+      <Suspense fallback={<div>Loading...</div>}>
+        {children}
+        <Analytics />
+        <Toaster />
+      </Suspense>
+    </ProtectedRoute>
   )
 }

@@ -15,6 +15,8 @@ export class AuthService {
     if (typeof window === "undefined") return
     try {
       localStorage.setItem(TOKEN_KEY, token)
+      // También guardar en cookie para que el middleware pueda acceder
+      document.cookie = `authToken=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
       logger.debug("[AuthService] Token guardado")
     } catch (error) {
       logger.error("[AuthService] Error guardando token:", error)
@@ -35,6 +37,8 @@ export class AuthService {
     if (typeof window === "undefined") return
     try {
       localStorage.removeItem(TOKEN_KEY)
+      // También eliminar de cookies
+      document.cookie = 'authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
       logger.debug("[AuthService] Token eliminado")
     } catch (error) {
       logger.error("[AuthService] Error eliminando token:", error)
