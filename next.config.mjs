@@ -3,22 +3,9 @@ const nextConfig = {
   reactStrictMode: true,
   // Enable standalone output for Docker
   output: 'standalone',
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: process.env.NEXT_PUBLIC_API_URL 
-          ? `${process.env.NEXT_PUBLIC_API_URL}/api/:path*`
-          : 'http://backend:8080/api/:path*',
-      },
-      {
-        source: '/oauth2/:path*',
-        destination: process.env.NEXT_PUBLIC_API_URL 
-          ? `${process.env.NEXT_PUBLIC_API_URL}/oauth2/:path*`
-          : 'http://backend:8080/oauth2/:path*',
-      },
-    ]
-  },
+  // ❌ NO SE NECESITA PROXY - Cloud Run backend tiene HTTPS
+  // El frontend se comunica directamente con https://faltauno-backend-169771742214.us-central1.run.app
+  // Sin Mixed Content errors porque ambos usan HTTPS
 }
 
 export default nextConfig

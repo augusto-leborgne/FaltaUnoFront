@@ -33,8 +33,8 @@ jobs:
       
       - name: Build and Deploy to Cloud Run
         run: |
-          # Backend URL used by frontend
-          BACKEND_URL="http://34.66.92.72:8080"
+          # Backend URL - Ahora usa Cloud Run con HTTPS
+          BACKEND_URL="https://faltauno-backend-169771742214.us-central1.run.app"
 
           # Build Docker image usando Dockerfile.prod y pasar NEXT_PUBLIC_API_URL
           docker build --build-arg NEXT_PUBLIC_API_URL="$BACKEND_URL" -f Dockerfile.prod -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/faltauno/${{ env.SERVICE_NAME }}:latest .

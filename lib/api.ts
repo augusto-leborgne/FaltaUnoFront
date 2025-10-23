@@ -5,24 +5,13 @@ import { AuthService } from "./auth";
 // ============================================
 
 const getApiBase = (): string => {
-  // ✅ En el servidor (SSR/SSG) - Comunicación via red Docker 'appnet'
-  if (typeof window === 'undefined') {
-    const serverUrl = process.env.API_URL || 'http://backend:8080';
-    console.log('[API Config SSR] Using Docker network (appnet):', serverUrl);
-    return serverUrl;
-  }
+  // ✅ Backend en Cloud Run con HTTPS - Comunicación directa sin proxy
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-169771742214.us-central1.run.app';
   
-  // ✅ En el navegador - Acceso al puerto expuesto en localhost
-  const clientUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-  console.log('[API Config Browser] Using public URL:', clientUrl);
+  console.log('[API Config] Using Cloud Run backend URL:', backendUrl);
+  console.log('[API Config] Environment:', typeof window === 'undefined' ? 'SERVER (SSR)' : 'BROWSER');
   
-  // 🔒 Protección: Si detectamos un hostname interno de Docker en el navegador, forzar localhost
-  if (clientUrl.includes('backend') || clientUrl.includes('appnet')) {
-    console.warn('[API Config] ⚠️ Detectado hostname Docker en navegador, forzando localhost:8080');
-    return 'http://localhost:8080';
-  }
-  
-  return clientUrl;
+  return backendUrl;
 };
 
 export const API_BASE = getApiBase();
