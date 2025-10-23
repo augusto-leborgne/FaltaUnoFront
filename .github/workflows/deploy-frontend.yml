@@ -33,13 +33,16 @@ jobs:
       
       - name: Build and Deploy to Cloud Run
         run: |
-          # Build Docker image usando Dockerfile.prod
-          docker build -f Dockerfile.prod -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/faltauno/${{ env.SERVICE_NAME }}:latest .
+          # Backend URL used by frontend
+          BACKEND_URL="http://34.66.92.72:8080"
+
+          # Build Docker image usando Dockerfile.prod y pasar NEXT_PUBLIC_API_URL
+          docker build --build-arg NEXT_PUBLIC_API_URL="$BACKEND_URL" -f Dockerfile.prod -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/faltauno/${{ env.SERVICE_NAME }}:latest .
           
           # Push image to Artifact Registry
           docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/faltauno/${{ env.SERVICE_NAME }}:latest
           
-          # Deploy to Cloud Run
+          # Deploy to Cloud Run y setear variable de entorno NEXT_PUBLIC_API_URL
           gcloud run deploy ${{ env.SERVICE_NAME }} \
             --image ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/faltauno/${{ env.SERVICE_NAME }}:latest \
             --platform managed \
@@ -50,6 +53,7 @@ jobs:
             --min-instances 0 \
             --max-instances 10 \
             --port 8080 \
+            --set-env-vars NEXT_PUBLIC_API_URL="$BACKEND_URL" \
             --project ${{ env.GCP_PROJECT_ID }}
       
       - name: Get Service URL
