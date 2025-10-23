@@ -114,21 +114,14 @@ export function LoginScreen() {
   // Social OAuth - Login con Google
   const handleSocialAuth = (provider: "google" | "facebook" | "apple") => {
     try {
-      const base = process.env.NEXT_PUBLIC_API_URL ?? ""
-      
-      if (!base) {
-        setError("Error de configuración: API_URL no definida")
-        return
-      }
-
       // Solo Google está implementado por ahora
       if (provider !== "google") {
         setError(`Login con ${provider} aún no está disponible`)
         return
       }
 
-      // Spring Boot OAuth2 maneja la redirección automáticamente
-      const oauthUrl = `${base}/oauth2/authorization/${provider}`
+      // Usar ruta relativa que será proxeada por Next.js al backend
+      const oauthUrl = `/oauth2/authorization/${provider}`
       
       console.log(`[LoginScreen] Redirigiendo a OAuth ${provider}:`, oauthUrl)
       window.location.href = oauthUrl

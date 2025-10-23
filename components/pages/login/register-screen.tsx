@@ -77,15 +77,8 @@ export function RegisterScreen() {
   // Social OAuth - Registro con Google
   const handleSocialAuth = (provider: "google" | "facebook" | "apple") => {
     try {
-      const base = process.env.NEXT_PUBLIC_API_URL ?? ""
-      
-      if (!base) {
-        setError("Error de configuración: API_URL no definida")
-        return
-      }
-
-      // Redirigir al backend para OAuth
-      const redirectUrl = `${base}/oauth2/authorization/${provider}`
+      // Usar ruta relativa que será proxeada por Next.js al backend
+      const redirectUrl = `/oauth2/authorization/${provider}`
       console.log("[RegisterScreen] Redirigiendo a OAuth:", redirectUrl)
       window.location.href = redirectUrl
     } catch (err) {

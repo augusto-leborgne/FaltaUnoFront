@@ -11,6 +11,12 @@ const nextConfig = {
           ? `${process.env.NEXT_PUBLIC_API_URL}/api/:path*`
           : 'http://backend:8080/api/:path*',
       },
+      {
+        source: '/oauth2/:path*',
+        destination: process.env.NEXT_PUBLIC_API_URL 
+          ? `${process.env.NEXT_PUBLIC_API_URL}/oauth2/:path*`
+          : 'http://backend:8080/oauth2/:path*',
+      },
     ]
   },
 }
