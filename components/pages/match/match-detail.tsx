@@ -252,22 +252,6 @@ export function MatchDetail({ matchId }: MatchDetailProps) {
       </div>
 
       <div className="flex-1 px-6 py-6 overflow-y-auto">
-        {/* Error Message */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start space-x-3">
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-red-600 text-sm font-medium">Error</p>
-              <p className="text-red-600 text-sm">{error}</p>
-            </div>
-            <button 
-              onClick={() => setError("")}
-              className="text-red-600 hover:text-red-700"
-            >
-              ✕
-            </button>
-          </div>
-        )}
 
         {/* Estado cancelado/completado */}
         {isMatchCancelled && (

@@ -594,14 +594,39 @@ export const PartidoAPI = {
   get: async (id: string) => {
     console.log("[PartidoAPI.get] ID:", id);
     
-    const response = await apiFetch<any>(`/api/partidos/${id}`);
-    
-    console.log("[PartidoAPI.get] Respuesta raw:", response);
-    
-    return {
-      ...response,
-      data: normalizePartido(response.data)
-    };
+    try {
+      const response = await apiFetch<any>(`/api/partidos/${id}`);
+      
+      console.log("[PartidoAPI.get] Respuesta raw:", response);
+      
+      if (!response.success) {
+        console.error("[PartidoAPI.get] Error en respuesta:", response.message);
+        return response;
+      }
+      
+      return {
+        ...response,
+        data: normalizePartido(response.data)
+      };
+    } catch (error: any) {
+      console.error("[PartidoAPI.get] Error obteniendo partido:", error);
+      
+      // Si es 404, devolver respuesta estructurada
+      if (error.status === 404) {
+        return {
+          success: false,
+          message: "Partido no encontrado",
+          data: null
+        };
+      }
+      
+      // Otros errores
+      return {
+        success: false,
+        message: error.message || "Error al obtener el partido",
+        data: null
+      };
+    }
   },
 
   /**

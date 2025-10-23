@@ -55,6 +55,8 @@ class GoogleMapsLoader {
 
       // Verificar API key
       const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+      console.log('[GoogleMapsLoader] API Key:', apiKey ? `${apiKey.substring(0, 10)}...` : 'NO CONFIGURADA');
+      
       if (!apiKey) {
         const error = new Error('NEXT_PUBLIC_GOOGLE_MAPS_API_KEY no está configurada');
         logger.error('[GoogleMapsLoader]', error.message);

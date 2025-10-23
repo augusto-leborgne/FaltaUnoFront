@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Check, Users, Share2, Loader2 } from "lucide-react"
+import { Check, Users, Share2, Loader2, AlertCircle } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { UsuarioAPI, PartidoAPI } from "@/lib/api"
@@ -96,6 +96,27 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
     } finally {
       setInvitando(prev => ({ ...prev, [friendId]: false }))
     }
+  }
+
+  // Si no hay matchId, mostrar error
+  if (!matchId) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6">
+        <div className="text-center">
+          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-10 h-10 text-red-600" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Error</h1>
+          <p className="text-gray-600 mb-6">No se pudo identificar el partido creado</p>
+          <Button 
+            onClick={() => router.push("/my-matches")}
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            Ir a Mis Partidos
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   const handleShareMatch = async () => {

@@ -30,15 +30,26 @@ export function MatchesMapView({
 
     const initMap = async () => {
       try {
-        if (!mapRef.current) return
+        if (!mapRef.current) {
+          console.log("[MatchesMapView] mapRef no disponible")
+          return
+        }
+
+        console.log("[MatchesMapView] Iniciando carga de Google Maps...")
 
         // Cargar Google Maps
         await googleMapsLoader.load()
         
-        if (!mounted) return
+        console.log("[MatchesMapView] Google Maps cargado exitosamente")
+
+        if (!mounted) {
+          console.log("[MatchesMapView] Componente desmontado, cancelando")
+          return
+        }
 
         // Calcular el centro basado en los partidos
         const center = calculateCenter(matches)
+        console.log("[MatchesMapView] Centro del mapa:", center)
 
         // Crear mapa
         const map = new google.maps.Map(mapRef.current, {
@@ -62,10 +73,12 @@ export function MatchesMapView({
 
         googleMapRef.current = map
         setIsMapReady(true)
+        console.log("[MatchesMapView] Mapa inicializado correctamente")
 
       } catch (err) {
         console.error("[MatchesMapView] Error inicializando mapa:", err)
-        setError("Error al cargar el mapa")
+        const errorMsg = err instanceof Error ? err.message : "Error al cargar el mapa"
+        setError(errorMsg)
       }
     }
 

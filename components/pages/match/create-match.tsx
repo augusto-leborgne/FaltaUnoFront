@@ -522,27 +522,6 @@ export function CreateMatchScreen() {
           )}
         </div>
 
-        {/* Jugadores - Auto-calculado */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-900 mb-2">
-            Cantidad de jugadores <span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <Users className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-            <Input
-              type="number"
-              min="6"
-              max="22"
-              value={formData.totalPlayers}
-              className="pl-10 py-3 rounded-xl border-gray-300 bg-gray-50 cursor-not-allowed"
-              required
-              disabled={true}
-              readOnly
-            />
-          </div>
-          <p className="text-xs text-gray-500 mt-1">Auto-calculado según tipo de partido</p>
-        </div>
-
         {/* Precio */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-900 mb-2">
