@@ -81,27 +81,35 @@ export function MatchDetail({ matchId }: MatchDetailProps) {
 
       console.log("[MatchDetail] Respuesta completa:", response);
 
-      if (response.success && response.data) {
-        const partidoData = response.data;
-        
-        console.log("[MatchDetail] Datos del partido:", {
-          id: partidoData.id,
-          tipoPartido: partidoData.tipoPartido ?? partidoData.tipo_partido,
-          fecha: partidoData.fecha,
-          estado: partidoData.estado,
-          organizadorId: partidoData.organizadorId ?? partidoData.organizador_id,
-          jugadoresActuales: partidoData.jugadoresActuales ?? partidoData.jugadores_actuales,
-          cantidadJugadores: partidoData.cantidadJugadores ?? partidoData.cantidad_jugadores
-        });
-
-        setMatch(partidoData);
-      } else {
-        throw new Error(response.message || "Error al cargar el partido");
+      // Manejar respuesta sin éxito
+      if (!response.success) {
+        const errorMessage = response.message || "Error al cargar el partido";
+        console.error("[MatchDetail] Error:", errorMessage);
+        setError(errorMessage);
+        setMatch(null);
+        return;
       }
+
+      // Verificar que tengamos datos
+      if (!response.data) {
+        console.error("[MatchDetail] Respuesta sin datos");
+        setError("Partido no encontrado");
+        setMatch(null);
+        return;
+      }
+
+      console.log("[MatchDetail] Partido cargado exitosamente:", {
+        id: response.data.id,
+        tipo: response.data.tipoPartido,
+        fecha: response.data.fecha
+      });
+
+      setMatch(response.data);
     } catch (err) {
-      console.error("[MatchDetail] Error cargando partido:", err);
+      console.error("[MatchDetail] Error en catch:", err);
       const errorMessage = err instanceof Error ? err.message : "Error al cargar el partido";
       setError(errorMessage);
+      setMatch(null);
     } finally {
       setIsLoading(false);
     }

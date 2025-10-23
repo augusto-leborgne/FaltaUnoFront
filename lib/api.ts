@@ -553,12 +553,37 @@ export const PartidoAPI = {
    * Crear partido - CORREGIDO para coincidir con el backend
    */
   crear: async (partido: Partial<PartidoDTO>) => {
-    console.log("[PartidoAPI.crear] Enviando:", partido);
+    console.log("[PartidoAPI.crear] Datos recibidos:", partido);
     
-    // El backend espera snake_case
+    // Validar campos requeridos
+    if (!partido.fecha) {
+      return {
+        success: false,
+        message: "La fecha es requerida",
+        data: null
+      };
+    }
+    
+    if (!partido.hora) {
+      return {
+        success: false,
+        message: "La hora es requerida",
+        data: null
+      };
+    }
+    
+    if (!partido.nombreUbicacion && !partido.nombre_ubicacion) {
+      return {
+        success: false,
+        message: "La ubicación es requerida",
+        data: null
+      };
+    }
+    
+    // Construir payload con snake_case para el backend
     const payload = {
-      tipo_partido: partido.tipoPartido ?? partido.tipo_partido,
-      genero: partido.genero,
+      tipo_partido: partido.tipoPartido ?? partido.tipo_partido ?? 'FUTBOL_5',
+      genero: partido.genero ?? 'Mixto',
       nivel: partido.nivel ?? 'INTERMEDIO',
       fecha: partido.fecha,
       hora: partido.hora,
@@ -567,38 +592,54 @@ export const PartidoAPI = {
       direccion_ubicacion: partido.direccionUbicacion ?? partido.direccion_ubicacion,
       latitud: partido.latitud,
       longitud: partido.longitud,
-      cantidad_jugadores: partido.cantidadJugadores ?? partido.cantidad_jugadores,
+      cantidad_jugadores: partido.cantidadJugadores ?? partido.cantidad_jugadores ?? 10,
       precio_total: partido.precioTotal ?? partido.precio_total ?? 0,
       descripcion: partido.descripcion,
       organizador_id: partido.organizadorId ?? partido.organizador_id
     };
 
-    console.log("[PartidoAPI.crear] Payload normalizado:", payload);
+    console.log("[PartidoAPI.crear] Payload a enviar:", payload);
 
-    const response = await apiFetch<any>('/api/partidos', {
-      method: 'POST',
-      body: JSON.stringify(payload)
-    });
+    try {
+      const response = await apiFetch<any>('/api/partidos', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
 
-    console.log("[PartidoAPI.crear] Respuesta:", response);
+      console.log("[PartidoAPI.crear] Respuesta del servidor:", response);
 
-    // Verificar que tengamos datos antes de normalizar
-    if (!response.success || !response.data) {
-      console.error("[PartidoAPI.crear] Error: respuesta sin datos válidos");
-      return response;
+      if (!response.success || !response.data) {
+        console.error("[PartidoAPI.crear] Error en respuesta:", response.message);
+        return {
+          success: false,
+          message: response.message || "Error al crear el partido",
+          data: null
+        };
+      }
+
+      return {
+        success: true,
+        data: normalizePartido(response.data),
+        message: "Partido creado exitosamente"
+      };
+      
+    } catch (error: any) {
+      console.error("[PartidoAPI.crear] Error capturado:", error);
+      
+      return {
+        success: false,
+        message: error.message || "Error al crear el partido",
+        data: null,
+        error: error.message
+      };
     }
-
-    return {
-      ...response,
-      data: normalizePartido(response.data)
-    };
   },
 
   /**
    * Obtener partido por ID
    */
   get: async (id: string) => {
-    console.log("[PartidoAPI.get] ID:", id);
+    console.log("[PartidoAPI.get] Solicitando partido ID:", id);
     
     try {
       const response = await apiFetch<any>(`/api/partidos/${id}`);
@@ -607,18 +648,16 @@ export const PartidoAPI = {
       
       if (!response.success) {
         console.error("[PartidoAPI.get] Error en respuesta:", response.message);
-        return response;
+        return {
+          success: false,
+          message: response.message || "Partido no encontrado",
+          data: null
+        };
       }
       
-      return {
-        ...response,
-        data: normalizePartido(response.data)
-      };
-    } catch (error: any) {
-      console.error("[PartidoAPI.get] Error obteniendo partido:", error);
-      
-      // Si es 404, devolver respuesta estructurada
-      if (error.status === 404) {
+      // Verificar que tengamos datos válidos
+      if (!response.data) {
+        console.error("[PartidoAPI.get] Respuesta sin datos");
         return {
           success: false,
           message: "Partido no encontrado",
@@ -626,11 +665,32 @@ export const PartidoAPI = {
         };
       }
       
+      // Normalizar y retornar
+      return {
+        success: true,
+        data: normalizePartido(response.data),
+        message: response.message
+      };
+      
+    } catch (error: any) {
+      console.error("[PartidoAPI.get] Error capturado:", error);
+      
+      // Manejar 404 específicamente
+      if (error.message?.includes('404')) {
+        return {
+          success: false,
+          message: "Partido no encontrado. Puede haber sido eliminado.",
+          data: null,
+          error: error.message
+        };
+      }
+      
       // Otros errores
       return {
         success: false,
         message: error.message || "Error al obtener el partido",
-        data: null
+        data: null,
+        error: error.message
       };
     }
   },
@@ -640,52 +700,36 @@ export const PartidoAPI = {
    */
   list: async (filtros?: {
     tipoPartido?: string;
-    tipo_partido?: string;
     nivel?: string;
     genero?: string;
     fecha?: string;
     estado?: string;
     search?: string;
-    latitud?: number;
-    longitud?: number;
-    radioKm?: number;
   }) => {
     console.log("[PartidoAPI.list] Filtros:", filtros);
     
-    const params = new URLSearchParams();
-    
-    if (filtros) {
-      // Convertir camelCase a snake_case para el backend
-      const backendFiltros: any = {
-        tipo_partido: filtros.tipoPartido ?? filtros.tipo_partido,
-        nivel: filtros.nivel,
-        genero: filtros.genero,
-        fecha: filtros.fecha,
-        estado: filtros.estado,
-        search: filtros.search,
-        latitud: filtros.latitud,
-        longitud: filtros.longitud,
-        radioKm: filtros.radioKm
-      };
-
-      Object.entries(backendFiltros).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          params.append(key, String(value));
-        }
-      });
-    }
-
-    const query = params.toString();
-    const endpoint = query ? `/api/partidos?${query}` : '/api/partidos';
-    
-    console.log("[PartidoAPI.list] Endpoint:", endpoint);
-
     try {
+      const params = new URLSearchParams();
+      
+      if (filtros) {
+        // Solo enviar filtros con valores definidos
+        Object.entries(filtros).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== '') {
+            params.append(key, String(value));
+          }
+        });
+      }
+
+      const query = params.toString();
+      const endpoint = query ? `/api/partidos?${query}` : '/api/partidos';
+      
+      console.log("[PartidoAPI.list] Endpoint:", endpoint);
+
       const response = await apiFetch<any>(endpoint);
       
       console.log("[PartidoAPI.list] Respuesta raw:", response);
       
-      // Manejar diferentes formatos de respuesta
+      // Extraer array de partidos de diferentes formatos de respuesta
       let partidos: any[] = [];
       
       if (Array.isArray(response)) {
@@ -695,31 +739,42 @@ export const PartidoAPI = {
       } else if (response.data && typeof response.data === 'object') {
         partidos = response.data.items || response.data.content || [];
       } else {
-        console.warn("[PartidoAPI.list] Formato de respuesta inesperado:", response);
+        console.warn("[PartidoAPI.list] Formato de respuesta inesperado");
         partidos = [];
       }
       
       console.log("[PartidoAPI.list] Partidos a normalizar:", partidos.length);
       
-      const normalized = partidos.map((p: any) => {
-        try {
-          return normalizePartido(p);
-        } catch (err) {
-          console.error("[PartidoAPI.list] Error normalizando partido:", p, err);
-          return null;
-        }
-      }).filter(Boolean) as PartidoDTO[];
+      // Normalizar cada partido de forma segura
+      const normalized = partidos
+        .map((p: any) => {
+          try {
+            return normalizePartido(p);
+          } catch (err) {
+            console.error("[PartidoAPI.list] Error normalizando partido:", err);
+            console.error("[PartidoAPI.list] Datos del partido problemático:", p);
+            return null;
+          }
+        })
+        .filter(Boolean) as PartidoDTO[];
       
-      console.log("[PartidoAPI.list] Partidos normalizados:", normalized.length);
+      console.log("[PartidoAPI.list] Partidos normalizados exitosamente:", normalized.length);
       
       return {
         success: true,
-        data: normalized
+        data: normalized,
+        message: `${normalized.length} partidos encontrados`
       };
       
-    } catch (error) {
+    } catch (error: any) {
       console.error("[PartidoAPI.list] Error:", error);
-      throw error;
+      
+      return {
+        success: false,
+        data: [],
+        message: error.message || "Error al cargar partidos",
+        error: error.message
+      };
     }
   },
 
@@ -883,7 +938,7 @@ export const PartidoAPI = {
       
       console.log("[PartidoAPI.misPartidos] Respuesta raw:", response);
       
-      // Manejar diferentes formatos de respuesta
+      // Extraer array de partidos
       let partidos: any[] = [];
       
       if (Array.isArray(response)) {
@@ -894,14 +949,17 @@ export const PartidoAPI = {
         partidos = response.data.items || response.data.content || [];
       }
       
-      const normalized = partidos.map((p: any) => {
-        try {
-          return normalizePartido(p);
-        } catch (err) {
-          console.error("[PartidoAPI.misPartidos] Error normalizando:", p, err);
-          return null;
-        }
-      }).filter(Boolean) as PartidoDTO[];
+      // Normalizar de forma segura
+      const normalized = partidos
+        .map((p: any) => {
+          try {
+            return normalizePartido(p);
+          } catch (err) {
+            console.error("[PartidoAPI.misPartidos] Error normalizando:", err);
+            return null;
+          }
+        })
+        .filter(Boolean) as PartidoDTO[];
       
       return {
         success: true,
@@ -911,17 +969,19 @@ export const PartidoAPI = {
     } catch (error: any) {
       console.error("[PartidoAPI.misPartidos] Error:", error);
       
-      // Si es 404 o 500, retornar array vacío en lugar de error
-      if (error.status === 404 || error.status === 500) {
+      // Si es 404 o 500, retornar array vacío
+      if (error.message?.includes('404') || error.message?.includes('500')) {
+        console.warn("[PartidoAPI.misPartidos] Backend no disponible, retornando array vacío");
         return {
           success: true,
-          data: []
+          data: [],
+          message: "No hay partidos disponibles"
         };
       }
       
       throw error;
     }
-  }
+  },
 };
 
 
