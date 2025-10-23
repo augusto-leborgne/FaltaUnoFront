@@ -1,9 +1,11 @@
+// components/google-maps/matches-map-view.tsx - VERSIÓN CORREGIDA
+
 "use client"
 
 import { useState, useEffect, useRef } from "react"
 import { googleMapsLoader } from "@/lib/google-maps-loader"
 import { PartidoDTO } from "@/lib/api"
-import { MapPin, Navigation } from "lucide-react"
+import { MapPin, Navigation, AlertCircle } from "lucide-react"
 
 interface MatchesMapViewProps {
   matches: PartidoDTO[]
@@ -23,41 +25,52 @@ export function MatchesMapView({
   const markersRef = useRef<google.maps.Marker[]>([])
   const [isMapReady, setIsMapReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
-  // Inicializar mapa
+  // ============================================
+  // INICIALIZAR MAPA - SOLO UNA VEZ
+  // ============================================
   useEffect(() => {
     let mounted = true
-    let timeoutId: NodeJS.Timeout
+    let timeoutId: NodeJS.Timeout | undefined
 
     const initMap = async () => {
       try {
+        // Validar que tenemos el contenedor
         if (!mapRef.current) {
-          console.log("[MatchesMapView] mapRef no disponible")
+          console.log("[MatchesMapView] mapRef no disponible aún")
           return
         }
 
         console.log("[MatchesMapView] Iniciando carga de Google Maps...")
+        setIsLoading(true)
+        setError(null)
 
-        // Timeout de 10 segundos para cargar Maps
+        // Cargar Google Maps con timeout de 15 segundos
         const loadPromise = googleMapsLoader.load()
-        const timeoutPromise = new Promise((_, reject) => {
+        const timeoutPromise = new Promise<never>((_, reject) => {
           timeoutId = setTimeout(() => {
-            reject(new Error("Timeout: Google Maps tardó más de 10 segundos en cargar"))
-          }, 10000)
+            reject(new Error("Timeout: Google Maps tardó más de 15 segundos en cargar"))
+          }, 15000)
         })
 
-        // Cargar Google Maps con timeout
         await Promise.race([loadPromise, timeoutPromise])
         
-        clearTimeout(timeoutId)
-        console.log("[MatchesMapView] Google Maps cargado exitosamente")
-
+        if (timeoutId) clearTimeout(timeoutId)
+        
         if (!mounted) {
           console.log("[MatchesMapView] Componente desmontado, cancelando")
           return
         }
 
-        // Calcular el centro basado en los partidos
+        console.log("[MatchesMapView] Google Maps cargado exitosamente")
+
+        // Verificar que google.maps esté disponible
+        if (!window.google?.maps) {
+          throw new Error("Google Maps no está disponible después de cargar")
+        }
+
+        // Calcular centro del mapa
         const center = calculateCenter(matches)
         console.log("[MatchesMapView] Centro del mapa:", center)
 
@@ -83,12 +96,16 @@ export function MatchesMapView({
 
         googleMapRef.current = map
         setIsMapReady(true)
+        setIsLoading(false)
         console.log("[MatchesMapView] Mapa inicializado correctamente")
 
       } catch (err) {
         console.error("[MatchesMapView] Error inicializando mapa:", err)
-        const errorMsg = err instanceof Error ? err.message : "Error al cargar el mapa"
-        setError(errorMsg)
+        if (mounted) {
+          const errorMsg = err instanceof Error ? err.message : "Error al cargar el mapa"
+          setError(errorMsg)
+          setIsLoading(false)
+        }
       }
     }
 
@@ -96,31 +113,69 @@ export function MatchesMapView({
 
     return () => {
       mounted = false
+      if (timeoutId) clearTimeout(timeoutId)
+      
       // Limpiar marcadores al desmontar
-      markersRef.current.forEach(marker => marker.setMap(null))
+      markersRef.current.forEach(marker => {
+        try {
+          marker.setMap(null)
+        } catch (e) {
+          console.warn("[MatchesMapView] Error limpiando marcador:", e)
+        }
+      })
       markersRef.current = []
     }
-  }, [])
+  }, []) // ✅ Solo ejecutar una vez al montar
 
-  // Actualizar marcadores cuando cambien los partidos
+  // ============================================
+  // ACTUALIZAR MARCADORES - CUANDO CAMBIEN PARTIDOS
+  // ============================================
   useEffect(() => {
-    if (!isMapReady || !googleMapRef.current) return
+    // Solo actualizar si el mapa está listo
+    if (!isMapReady || !googleMapRef.current) {
+      console.log("[MatchesMapView] Mapa no está listo aún, esperando...")
+      return
+    }
+
+    console.log("[MatchesMapView] Actualizando marcadores:", matches.length, "partidos")
 
     // Limpiar marcadores existentes
-    markersRef.current.forEach(marker => marker.setMap(null))
+    markersRef.current.forEach(marker => {
+      try {
+        marker.setMap(null)
+      } catch (e) {
+        console.warn("[MatchesMapView] Error limpiando marcador:", e)
+      }
+    })
     markersRef.current = []
+
+    // Si no hay partidos, no hacer nada más
+    if (matches.length === 0) {
+      console.log("[MatchesMapView] No hay partidos para mostrar")
+      return
+    }
 
     // Crear nuevos marcadores
     const bounds = new google.maps.LatLngBounds()
     let hasValidLocations = false
 
     matches.forEach((match) => {
-      if (!match.latitud || !match.longitud) return
-
-      const position = {
-        lat: match.latitud,
-        lng: match.longitud
+      // Validar coordenadas
+      if (!match.latitud || !match.longitud) {
+        console.warn("[MatchesMapView] Partido sin coordenadas:", match.id)
+        return
       }
+
+      // Validar que sean números válidos
+      const lat = Number(match.latitud)
+      const lng = Number(match.longitud)
+      
+      if (isNaN(lat) || isNaN(lng)) {
+        console.warn("[MatchesMapView] Coordenadas inválidas:", match.id, lat, lng)
+        return
+      }
+
+      const position = { lat, lng }
 
       // Determinar icono según estado del partido
       const spotsLeft = (match.cantidadJugadores || 0) - (match.jugadoresActuales || 0)
@@ -133,82 +188,96 @@ export function MatchesMapView({
         pinColor = "#f59e0b" // amber-500 (pocos lugares)
       }
 
-      // Crear custom marker SVG
-      const markerIcon = {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: isSelected ? 12 : 10,
-        fillColor: pinColor,
-        fillOpacity: 1,
-        strokeColor: "white",
-        strokeWeight: isSelected ? 3 : 2,
+      try {
+        // Crear marcador
+        const marker = new google.maps.Marker({
+          position,
+          map: googleMapRef.current!,
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: isSelected ? 12 : 10,
+            fillColor: pinColor,
+            fillOpacity: 1,
+            strokeColor: "white",
+            strokeWeight: isSelected ? 3 : 2,
+          },
+          title: match.nombreUbicacion || "Partido",
+          animation: isSelected ? google.maps.Animation.BOUNCE : undefined,
+        })
+
+        // Info window con preview del partido
+        const infoWindow = new google.maps.InfoWindow({
+          content: createInfoWindowContent(match),
+        })
+
+        // Click en marcador
+        marker.addListener("click", () => {
+          if (onMarkerClick && match.id) {
+            onMarkerClick(match.id)
+          }
+          infoWindow.open(googleMapRef.current!, marker)
+        })
+
+        // Hover efecto
+        marker.addListener("mouseover", () => {
+          marker.setAnimation(google.maps.Animation.BOUNCE)
+          setTimeout(() => marker.setAnimation(null), 750)
+        })
+
+        markersRef.current.push(marker)
+        bounds.extend(position)
+        hasValidLocations = true
+        
+      } catch (err) {
+        console.error("[MatchesMapView] Error creando marcador:", err)
       }
-
-      const marker = new google.maps.Marker({
-        position,
-        map: googleMapRef.current!,
-        icon: markerIcon,
-        title: match.nombreUbicacion || "Partido",
-        animation: isSelected ? google.maps.Animation.BOUNCE : undefined,
-      })
-
-      // Info window con preview del partido
-      const infoWindow = new google.maps.InfoWindow({
-        content: createInfoWindowContent(match),
-      })
-
-      // Click en marcador
-      marker.addListener("click", () => {
-        if (onMarkerClick && match.id) {
-          onMarkerClick(match.id)
-        }
-        // Mostrar info window
-        infoWindow.open(googleMapRef.current!, marker)
-      })
-
-      // Hover efecto
-      marker.addListener("mouseover", () => {
-        marker.setAnimation(google.maps.Animation.BOUNCE)
-        setTimeout(() => marker.setAnimation(null), 750)
-      })
-
-      markersRef.current.push(marker)
-      bounds.extend(position)
-      hasValidLocations = true
     })
 
     // Ajustar vista para mostrar todos los marcadores
     if (hasValidLocations && matches.length > 0) {
-      if (matches.length === 1) {
-        googleMapRef.current.setCenter(bounds.getCenter())
-        googleMapRef.current.setZoom(15)
-      } else {
-        googleMapRef.current.fitBounds(bounds, {
-          top: 50,
-          bottom: 50,
-          left: 50,
-          right: 50
-        })
+      try {
+        if (matches.length === 1) {
+          googleMapRef.current.setCenter(bounds.getCenter())
+          googleMapRef.current.setZoom(15)
+        } else {
+          googleMapRef.current.fitBounds(bounds, {
+            top: 50,
+            bottom: 50,
+            left: 50,
+            right: 50
+          })
+        }
+      } catch (err) {
+        console.error("[MatchesMapView] Error ajustando bounds:", err)
       }
     }
 
-  }, [matches, isMapReady, selectedMatchId, onMarkerClick])
+    console.log("[MatchesMapView] Marcadores actualizados:", markersRef.current.length)
 
-  // Calcular centro del mapa
+  }, [matches, isMapReady, selectedMatchId, onMarkerClick]) // ✅ Dependencias correctas
+
+  // ============================================
+  // HELPERS
+  // ============================================
+
   const calculateCenter = (matches: PartidoDTO[]): google.maps.LatLngLiteral => {
-    const validMatches = matches.filter(m => m.latitud && m.longitud)
+    const validMatches = matches.filter(m => {
+      const lat = Number(m.latitud)
+      const lng = Number(m.longitud)
+      return !isNaN(lat) && !isNaN(lng)
+    })
     
     if (validMatches.length === 0) {
       // Centro de Montevideo por defecto
       return { lat: -34.9011, lng: -56.1645 }
     }
 
-    const avgLat = validMatches.reduce((sum, m) => sum + (m.latitud || 0), 0) / validMatches.length
-    const avgLng = validMatches.reduce((sum, m) => sum + (m.longitud || 0), 0) / validMatches.length
+    const avgLat = validMatches.reduce((sum, m) => sum + Number(m.latitud || 0), 0) / validMatches.length
+    const avgLng = validMatches.reduce((sum, m) => sum + Number(m.longitud || 0), 0) / validMatches.length
 
     return { lat: avgLat, lng: avgLng }
   }
 
-  // Crear contenido del info window
   const createInfoWindowContent = (match: PartidoDTO): string => {
     const spotsLeft = (match.cantidadJugadores || 0) - (match.jugadoresActuales || 0)
     const pricePerPlayer = match.precioPorJugador || 
@@ -220,7 +289,7 @@ export function MatchesMapView({
           ${match.nombreUbicacion || "Partido"}
         </h3>
         <div style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">
-          ${match.tipoPartido?.replace("FUTBOL_", "F")} • ${formatDate(match.fecha, match.hora)}
+          ${match.tipoPartido?.replace("FUTBOL_", "F") || "Fútbol"} • ${formatDate(match.fecha, match.hora)}
         </div>
         <div style="font-size: 14px; color: #6b7280; margin-bottom: 8px;">
           <strong>${spotsLeft}</strong> ${spotsLeft === 1 ? "lugar" : "lugares"} disponible${spotsLeft === 1 ? "" : "s"}
@@ -242,21 +311,28 @@ export function MatchesMapView({
     }
   }
 
+  // ============================================
+  // RENDER - ESTADOS
+  // ============================================
+
+  // Render error
   if (error) {
     return (
-      <div className={`bg-gray-100 rounded-2xl flex items-center justify-center ${className}`}>
-        <div className="text-center p-6">
-          <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+      <div className={`bg-gray-100 rounded-2xl flex items-center justify-center p-8 ${className}`}>
+        <div className="text-center">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
+          <p className="text-gray-900 font-medium mb-1">Error al cargar el mapa</p>
           <p className="text-gray-600 text-sm">{error}</p>
         </div>
       </div>
     )
   }
 
+  // Render sin partidos
   if (matches.length === 0) {
     return (
-      <div className={`bg-gray-100 rounded-2xl flex items-center justify-center ${className}`}>
-        <div className="text-center p-6">
+      <div className={`bg-gray-100 rounded-2xl flex items-center justify-center p-8 ${className}`}>
+        <div className="text-center">
           <Navigation className="w-12 h-12 text-gray-400 mx-auto mb-3" />
           <p className="text-gray-600 text-sm">No hay partidos para mostrar en el mapa</p>
         </div>
@@ -264,22 +340,29 @@ export function MatchesMapView({
     )
   }
 
+  // ============================================
+  // RENDER - MAPA
+  // ============================================
+
   return (
     <div className={`relative bg-gray-100 rounded-2xl overflow-hidden ${className}`}>
+      {/* Contenedor del mapa */}
       <div ref={mapRef} className="w-full h-full" />
       
       {/* Badge con cantidad de partidos */}
-      <div className="absolute top-4 left-4 bg-white rounded-full px-3 py-1.5 shadow-lg">
-        <div className="flex items-center space-x-1.5">
-          <MapPin className="w-4 h-4 text-green-600" />
-          <span className="text-sm font-medium text-gray-900">
-            {matches.filter(m => m.latitud && m.longitud).length} {matches.length === 1 ? "partido" : "partidos"}
-          </span>
+      {isMapReady && matches.length > 0 && (
+        <div className="absolute top-4 left-4 bg-white rounded-full px-3 py-1.5 shadow-lg z-10">
+          <div className="flex items-center space-x-1.5">
+            <MapPin className="w-4 h-4 text-green-600" />
+            <span className="text-sm font-medium text-gray-900">
+              {matches.filter(m => m.latitud && m.longitud).length} {matches.length === 1 ? "partido" : "partidos"}
+            </span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Loading overlay */}
-      {!isMapReady && (
+      {isLoading && (
         <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-3"></div>
