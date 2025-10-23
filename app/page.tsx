@@ -8,7 +8,7 @@ export default function RootPage() {
   const router = useRouter();
 
   useEffect(() => {
-    console.log("[RootPage] Decidiendo redirección...");
+    console.log("[RootPage v2.0] Decidiendo redirección...");
     
     // Limpiar tokens expirados
     AuthService.validateAndCleanup();
