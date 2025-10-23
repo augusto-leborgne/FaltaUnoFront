@@ -7,22 +7,10 @@ import { Plus, Users, Clock, MapPin, AlertCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { AuthService } from "@/lib/auth"
+import { PartidoAPI, PartidoDTO } from "@/lib/api"
 
-interface Match {
-  id: string
-  tipoPartido: string
-  genero: string
-  nivel?: string
-  fecha: string
-  hora: string
-  nombreUbicacion: string
-  cantidadJugadores: number
-  jugadoresActuales: number
-  precioPorJugador: number
-  duracionMinutos: number
-  estado: string
-  organizadorId: string
-}
+// Usar PartidoDTO del API
+type Match = PartidoDTO
 
 export function MyMatchesScreen() {
   const router = useRouter()
@@ -44,8 +32,7 @@ export function MyMatchesScreen() {
       setLoading(true)
       setError("")
 
-      const token = AuthService.getToken()
-      if (!token) {
+      if (!AuthService.isLoggedIn()) {
         router.push("/login")
         return
       }
@@ -57,78 +44,16 @@ export function MyMatchesScreen() {
 
       console.log("[MyMatches] Cargando partidos del usuario:", user.id)
 
-      // Cargar partidos del usuario
-      const response = await fetch(`/api/partidos/usuario/${user.id}`, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      })
+      // Usar PartidoAPI en lugar de fetch directo
+      const response = await PartidoAPI.misPartidos(user.id)
 
-      console.log("[MyMatches] Status:", response.status)
+      console.log("[MyMatches] Respuesta:", response)
 
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error("[MyMatches] Error response:", errorText)
-        
-        // Si es 404, significa que no hay partidos - no es un error
-        if (response.status === 404) {
-          console.log("[MyMatches] No se encontraron partidos")
-          setCreatedMatches([])
-          setJoinedMatches([])
-          return
-        }
-        
-        // Si es 500, mostrar arrays vacíos sin mensaje de error
-        if (response.status === 500) {
-          console.warn("[MyMatches] Error 500 del servidor, mostrando vacío")
-          setCreatedMatches([])
-          setJoinedMatches([])
-          return
-        }
-        
-        throw new Error(`Error ${response.status}: ${errorText}`)
-      }
-
-      const result = await response.json()
-      console.log("[MyMatches] Respuesta:", result)
-
-      // Manejar diferentes formatos de respuesta
-      let partidos: any[] = []
-      
-      if (Array.isArray(result)) {
-        partidos = result
-      } else if (result.data && Array.isArray(result.data)) {
-        partidos = result.data
-      } else if (result.data && typeof result.data === 'object') {
-        partidos = result.data.items || result.data.content || []
-      } else {
-        console.warn("[MyMatches] Formato inesperado:", result)
-        partidos = []
-      }
-
-      console.log("[MyMatches] Partidos recibidos:", partidos.length)
-
-      // Normalizar partidos
-      const normalizedMatches = partidos.map((p: any) => ({
-        id: p.id,
-        tipoPartido: p.tipoPartido || p.tipo_partido || "FUTBOL_5",
-        genero: p.genero || "Mixto",
-        nivel: p.nivel || "INTERMEDIO",
-        fecha: p.fecha,
-        hora: p.hora,
-        nombreUbicacion: p.nombreUbicacion || p.nombre_ubicacion || "",
-        cantidadJugadores: p.cantidadJugadores || p.cantidad_jugadores || 10,
-        jugadoresActuales: p.jugadoresActuales || p.jugadores_actuales || 0,
-        precioPorJugador: p.precioPorJugador || p.precio_por_jugador || 0,
-        duracionMinutos: p.duracionMinutos || p.duracion_minutos || 90,
-        estado: p.estado || "PENDIENTE",
-        organizadorId: p.organizadorId || p.organizador_id || ""
-      }))
+      const partidos = response.data || []
 
       // Separar en creados vs inscritos
-      const created = normalizedMatches.filter((p: Match) => p.organizadorId === user.id)
-      const joined = normalizedMatches.filter((p: Match) => p.organizadorId !== user.id)
+      const created = partidos.filter((p: Match) => p.organizadorId === user.id)
+      const joined = partidos.filter((p: Match) => p.organizadorId !== user.id)
 
       // Ordenar por fecha (más recientes primero)
       const sortByDate = (a: Match, b: Match) => {
@@ -328,7 +253,7 @@ export function MyMatchesScreen() {
             </div>
           ) : (
             displayMatches.map((match) => {
-              const spotsLeft = match.cantidadJugadores - match.jugadoresActuales
+              const spotsLeft = (match.cantidadJugadores || 0) - (match.jugadoresActuales || 0)
               const isActive = match.estado !== "CANCELADO" && match.estado !== "COMPLETADO"
 
               return (
@@ -340,10 +265,10 @@ export function MyMatchesScreen() {
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex gap-2 flex-wrap">
                       <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
-                        {formatMatchType(match.tipoPartido)}
+                        {formatMatchType(match.tipoPartido || 'FUTBOL_5')}
                       </Badge>
                       <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
-                        {formatLevel(match.nivel)}
+                        {formatLevel(match.nivel || 'INTERMEDIO')}
                       </Badge>
                       {getStatusBadge(match.estado)}
                     </div>

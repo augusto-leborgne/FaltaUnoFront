@@ -839,6 +839,57 @@ export const PartidoAPI = {
         body: JSON.stringify({ usuarioId })
       }
     );
+  },
+
+  /**
+   * Obtener partidos del usuario (creados e inscritos)
+   */
+  misPartidos: async (usuarioId: string) => {
+    console.log("[PartidoAPI.misPartidos] Usuario:", usuarioId);
+    
+    try {
+      const response = await apiFetch<any>(`/api/partidos/usuario/${usuarioId}`);
+      
+      console.log("[PartidoAPI.misPartidos] Respuesta raw:", response);
+      
+      // Manejar diferentes formatos de respuesta
+      let partidos: any[] = [];
+      
+      if (Array.isArray(response)) {
+        partidos = response;
+      } else if (Array.isArray(response.data)) {
+        partidos = response.data;
+      } else if (response.data && typeof response.data === 'object') {
+        partidos = response.data.items || response.data.content || [];
+      }
+      
+      const normalized = partidos.map((p: any) => {
+        try {
+          return normalizePartido(p);
+        } catch (err) {
+          console.error("[PartidoAPI.misPartidos] Error normalizando:", p, err);
+          return null;
+        }
+      }).filter(Boolean) as PartidoDTO[];
+      
+      return {
+        success: true,
+        data: normalized
+      };
+      
+    } catch (error: any) {
+      console.error("[PartidoAPI.misPartidos] Error:", error);
+      
+      // Si es 404 o 500, retornar array vacío en lugar de error
+      if (error.status === 404 || error.status === 500) {
+        return {
+          success: true,
+          data: []
+        };
+      }
+      
+      throw error;
+    }
   }
 };
 

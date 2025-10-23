@@ -48,9 +48,9 @@ export function CreateMatchScreen() {
     time: "",
     location: "",
     totalPlayers: 10,
-    totalPrice: 800,
+    totalPrice: 0,
     description: "",
-    duration: 90,
+    duration: 60,
   })
 
   const [locationCoordinates, setLocationCoordinates] = useState<{
@@ -311,6 +311,7 @@ export function CreateMatchScreen() {
     ? (formData.totalPrice / formData.totalPlayers).toFixed(0)
     : "0"
 
+  // Obtener fecha mínima (hoy)
   const today = new Date().toISOString().split('T')[0]
 
   // Generar opciones de hora cada 5 minutos
@@ -442,6 +443,7 @@ export function CreateMatchScreen() {
                 type="date"
                 value={formData.date}
                 onChange={(e) => handleInputChange("date", e.target.value)}
+                min={today}
                 className={`pl-10 py-3 rounded-xl ${fieldErrors.date ? 'border-red-500' : 'border-gray-300'}`}
                 required
                 disabled={isLoading}
@@ -520,7 +522,7 @@ export function CreateMatchScreen() {
           )}
         </div>
 
-        {/* Jugadores */}
+        {/* Jugadores - Auto-calculado */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-900 mb-2">
             Cantidad de jugadores <span className="text-red-500">*</span>
@@ -532,20 +534,13 @@ export function CreateMatchScreen() {
               min="6"
               max="22"
               value={formData.totalPlayers}
-              onChange={(e) => handleInputChange("totalPlayers", parseInt(e.target.value) || 6)}
-              className={`pl-10 py-3 rounded-xl ${fieldErrors.totalPlayers ? 'border-red-500' : 'border-gray-300'}`}
+              className="pl-10 py-3 rounded-xl border-gray-300 bg-gray-50 cursor-not-allowed"
               required
-              disabled={isLoading}
+              disabled={true}
+              readOnly
             />
           </div>
-          {fieldErrors.totalPlayers ? (
-            <p className="text-xs text-red-600 mt-1 flex items-center">
-              <AlertCircle className="w-3 h-3 mr-1" />
-              {fieldErrors.totalPlayers}
-            </p>
-          ) : (
-            <p className="text-xs text-gray-500 mt-1">Entre 6 y 22 jugadores</p>
-          )}
+          <p className="text-xs text-gray-500 mt-1">Auto-calculado según tipo de partido</p>
         </div>
 
         {/* Precio */}
@@ -559,8 +554,9 @@ export function CreateMatchScreen() {
               type="number"
               min="0"
               step="10"
-              value={formData.totalPrice}
-              onChange={(e) => handleInputChange("totalPrice", parseFloat(e.target.value) || 0)}
+              value={formData.totalPrice === 0 ? "" : formData.totalPrice}
+              onChange={(e) => handleInputChange("totalPrice", e.target.value === "" ? 0 : parseFloat(e.target.value))}
+              placeholder="0"
               className={`pl-10 py-3 rounded-xl ${fieldErrors.totalPrice ? 'border-red-500' : 'border-gray-300'}`}
               required
               disabled={isLoading}
@@ -572,9 +568,11 @@ export function CreateMatchScreen() {
               {fieldErrors.totalPrice}
             </p>
           )}
-          <p className="text-sm text-gray-600 mt-2 font-medium">
-            ${pricePerPlayer} por jugador
-          </p>
+          {formData.totalPrice > 0 && (
+            <p className="text-sm text-gray-600 mt-2 font-medium">
+              ${pricePerPlayer} por jugador
+            </p>
+          )}
         </div>
 
         {/* Duración */}
@@ -589,8 +587,9 @@ export function CreateMatchScreen() {
               min="30"
               max="180"
               step="15"
-              value={formData.duration}
-              onChange={(e) => handleInputChange("duration", parseInt(e.target.value) || 90)}
+              value={formData.duration === 0 ? "" : formData.duration}
+              onChange={(e) => handleInputChange("duration", e.target.value === "" ? 60 : parseInt(e.target.value))}
+              placeholder="60"
               className={`pl-10 py-3 rounded-xl ${fieldErrors.duration ? 'border-red-500' : 'border-gray-300'}`}
               disabled={isLoading}
             />
@@ -601,7 +600,7 @@ export function CreateMatchScreen() {
               {fieldErrors.duration}
             </p>
           ) : (
-            <p className="text-xs text-gray-500 mt-1">Entre 30 y 180 minutos</p>
+            <p className="text-xs text-gray-500 mt-1">Entre 30 y 180 minutos (default: 60)</p>
           )}
         </div>
 

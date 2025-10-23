@@ -6,6 +6,7 @@ interface MatchDetailPageProps {
   }
 }
 
-export default function MatchDetailPage({ params }: MatchDetailPageProps) {
-  return <MatchDetail matchId={params.id} />
+export default async function MatchDetailPage({ params }: MatchDetailPageProps) {
+  const { id } = await Promise.resolve(params)
+  return <MatchDetail matchId={id} />
 }
