@@ -91,14 +91,12 @@ export function VerificationScreen() {
             // Continuar de todos modos, el usuario ya está actualizado en localStorage
           }
 
-          // IMPORTANTE: Esperar un momento para que React actualice el estado
-          // antes de redirigir, esto asegura que el RequireAuth en /home
-          // vea el usuario actualizado
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Esperar 1.5 segundos mostrando el mensaje de éxito antes de redirigir
+          await new Promise(resolve => setTimeout(resolve, 1500));
 
-          // Redirigir a home
+          // Redirigir a home con push en vez de replace para mejor transición
           console.log("[VerificationScreen] Redirigiendo a /home");
-          router.replace("/home");
+          router.push("/home");
         } else {
           console.log("[VerificationScreen] Cédula no verificada");
           setError(res.message ?? "Cédula inválida");

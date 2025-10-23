@@ -373,6 +373,11 @@ export function ProfileSetupForm() {
               onChange={(e) => handleFieldChange('fechaNacimiento', e.target.value)}
               className={fieldErrors.fechaNacimiento ? 'border-red-500' : ''}
               type="date"
+              max={(() => {
+                const yesterday = new Date()
+                yesterday.setDate(yesterday.getDate() - 1)
+                return yesterday.toISOString().split('T')[0]
+              })()}
               required
             />
             {fieldErrors.fechaNacimiento && (

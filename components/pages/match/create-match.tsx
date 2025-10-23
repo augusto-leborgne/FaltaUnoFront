@@ -128,6 +128,7 @@ export function CreateMatchScreen() {
         const price = Number(value)
         if (isNaN(price)) return "Ingresa un precio válido"
         if (price < 0) return "El precio no puede ser negativo"
+        if (price > 1000000) return "El precio no puede superar $1,000,000"
         return null
 
       case "duration":
@@ -547,6 +548,7 @@ export function CreateMatchScreen() {
             <Input
               type="number"
               min="0"
+              max="1000000"
               step="10"
               value={formData.totalPrice === 0 ? "" : formData.totalPrice}
               onChange={(e) => handleInputChange("totalPrice", e.target.value === "" ? 0 : parseFloat(e.target.value))}
