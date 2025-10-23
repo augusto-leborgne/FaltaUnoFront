@@ -33,13 +33,19 @@ jobs:
       
       - name: Build and Deploy to Cloud Run
         run: |
-          # Desplegar directamente desde source
+          # Build Docker image usando Dockerfile.prod
+          docker build -f Dockerfile.prod -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/faltauno/${{ env.SERVICE_NAME }}:latest .
+          
+          # Push image to Artifact Registry
+          docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/faltauno/${{ env.SERVICE_NAME }}:latest
+          
+          # Deploy to Cloud Run
           gcloud run deploy ${{ env.SERVICE_NAME }} \
-            --source . \
+            --image ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/faltauno/${{ env.SERVICE_NAME }}:latest \
             --platform managed \
             --region ${{ env.GCP_REGION }} \
             --allow-unauthenticated \
-            --memory 1Gi \
+            --memory 512Mi \
             --cpu 1 \
             --min-instances 0 \
             --max-instances 10 \
