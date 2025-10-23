@@ -97,6 +97,11 @@ export function CreateMatchScreen() {
         const today = new Date()
         today.setHours(0, 0, 0, 0)
         if (selectedDate < today) return "La fecha no puede ser en el pasado"
+        
+        // Máximo 1 año adelante
+        const oneYearFromNow = new Date()
+        oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1)
+        if (selectedDate > oneYearFromNow) return "La fecha no puede ser más de 1 año adelante"
         return null
 
       case "time":
@@ -313,6 +318,11 @@ export function CreateMatchScreen() {
 
   // Obtener fecha mínima (hoy)
   const today = new Date().toISOString().split('T')[0]
+  
+  // Fecha máxima: 1 año adelante
+  const oneYearFromNow = new Date()
+  oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1)
+  const maxDate = oneYearFromNow.toISOString().split('T')[0]
 
   // Generar opciones de hora cada 5 minutos
   const generateTimeOptions = () => {
@@ -444,6 +454,7 @@ export function CreateMatchScreen() {
                 value={formData.date}
                 onChange={(e) => handleInputChange("date", e.target.value)}
                 min={today}
+                max={maxDate}
                 className={`pl-10 py-3 rounded-xl ${fieldErrors.date ? 'border-red-500' : 'border-gray-300'}`}
                 required
                 disabled={isLoading}
@@ -560,26 +571,24 @@ export function CreateMatchScreen() {
             Duración (minutos)
           </label>
           <div className="relative">
-            <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-            <Input
-              type="number"
-              min="30"
-              max="180"
-              step="15"
-              value={formData.duration === 0 ? "" : formData.duration}
-              onChange={(e) => handleInputChange("duration", e.target.value === "" ? 60 : parseInt(e.target.value))}
-              placeholder="60"
-              className={`pl-10 py-3 rounded-xl ${fieldErrors.duration ? 'border-red-500' : 'border-gray-300'}`}
+            <Clock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
+            <select
+              value={formData.duration || 60}
+              onChange={(e) => handleInputChange("duration", parseInt(e.target.value))}
+              className={`w-full pl-10 pr-4 py-3 rounded-xl border ${fieldErrors.duration ? 'border-red-500' : 'border-gray-300'} bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed`}
               disabled={isLoading}
-            />
+            >
+              <option value={60}>60 minutos</option>
+              <option value={90}>90 minutos</option>
+              <option value={120}>120 minutos</option>
+              <option value={150}>150 minutos</option>
+            </select>
           </div>
-          {fieldErrors.duration ? (
+          {fieldErrors.duration && (
             <p className="text-xs text-red-600 mt-1 flex items-center">
               <AlertCircle className="w-3 h-3 mr-1" />
               {fieldErrors.duration}
             </p>
-          ) : (
-            <p className="text-xs text-gray-500 mt-1">Entre 30 y 180 minutos (default: 60)</p>
           )}
         </div>
 

@@ -1190,6 +1190,77 @@ export const NotificationPreferencesAPI = {
 };
 
 // ============================================
+// API DE AMISTADES
+// ============================================
+
+export interface AmistadDTO {
+  id: string;
+  usuario1Id: string;
+  usuario2Id: string;
+  estado: string;
+  fechaSolicitud: string;
+  fechaAceptacion?: string;
+  amigo?: Usuario; // Usuario del otro lado de la amistad
+}
+
+export const AmistadAPI = {
+  /**
+   * Obtener lista de amigos del usuario actual (solo aceptados)
+   */
+  listarAmigos: async () => {
+    const response = await apiFetch<any[]>('/api/amistades');
+    return {
+      ...response,
+      data: response.data?.map((a: any) => ({
+        id: a.id,
+        usuario1Id: a.usuario1Id || a.usuario1_id,
+        usuario2Id: a.usuario2Id || a.usuario2_id,
+        estado: a.estado,
+        fechaSolicitud: a.fechaSolicitud || a.fecha_solicitud,
+        fechaAceptacion: a.fechaAceptacion || a.fecha_aceptacion,
+        amigo: a.amigo
+      })) || []
+    };
+  },
+
+  /**
+   * Enviar solicitud de amistad
+   */
+  enviarSolicitud: (usuarioId: string) => {
+    return apiFetch<void>(`/api/amistades/${usuarioId}`, {
+      method: 'POST'
+    });
+  },
+
+  /**
+   * Aceptar solicitud de amistad
+   */
+  aceptarSolicitud: (amistadId: string) => {
+    return apiFetch<void>(`/api/amistades/${amistadId}/aceptar`, {
+      method: 'POST'
+    });
+  },
+
+  /**
+   * Rechazar solicitud de amistad
+   */
+  rechazarSolicitud: (amistadId: string) => {
+    return apiFetch<void>(`/api/amistades/${amistadId}/rechazar`, {
+      method: 'POST'
+    });
+  },
+
+  /**
+   * Eliminar amistad
+   */
+  eliminarAmistad: (amistadId: string) => {
+    return apiFetch<void>(`/api/amistades/${amistadId}`, {
+      method: 'DELETE'
+    });
+  }
+};
+
+// ============================================
 // HELPER: Mapear form data a PartidoDTO
 // ============================================
 

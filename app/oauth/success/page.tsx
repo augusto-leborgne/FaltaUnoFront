@@ -70,8 +70,8 @@ export default function OAuthSuccessPage() {
   }, [searchParams, router])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#1a5f7a] via-[#159895] to-[#57c5b6] flex items-center justify-center p-6">
-      <div className="bg-white rounded-3xl shadow-2xl p-12 max-w-md w-full text-center">
+    <div className="min-h-screen bg-white flex items-center justify-center p-6">
+      <div className="max-w-md w-full text-center">
         {status === "loading" && (
           <>
             <div className="mb-6">

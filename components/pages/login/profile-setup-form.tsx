@@ -23,6 +23,7 @@ export function ProfileSetupForm() {
     surname: "",
     phone: "",
     fechaNacimiento: "",
+    genero: "",
     position: "",
     level: "",
     height: "",
@@ -35,6 +36,7 @@ export function ProfileSetupForm() {
 
   const [showPositionDropdown, setShowPositionDropdown] = useState(false)
   const [showLevelDropdown, setShowLevelDropdown] = useState(false)
+  const [showGeneroDropdown, setShowGeneroDropdown] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
 
   // ✅ NUEVO: Validación en tiempo real
@@ -43,6 +45,7 @@ export function ProfileSetupForm() {
     surname?: string
     phone?: string
     fechaNacimiento?: string
+    genero?: string
     position?: string
     level?: string
     height?: string
@@ -77,6 +80,10 @@ export function ProfileSetupForm() {
         const age = today.getFullYear() - birthDate.getFullYear()
         if (age < 13) return "Debes tener al menos 13 años"
         if (age > 100) return "Fecha inválida"
+        return null
+      
+      case 'genero':
+        if (!value) return "Selecciona tu género"
         return null
       
       case 'position':
@@ -120,6 +127,7 @@ export function ProfileSetupForm() {
 
   const positions = ["Arquero", "Zaguero", "Lateral", "Mediocampista", "Volante", "Delantero"]
   const levels = ["Principiante", "Intermedio", "Avanzado", "Profesional"]
+  const generos = ["Masculino", "Femenino", "Otro"]
 
   useEffect(() => {
     return () => {
@@ -155,6 +163,14 @@ export function ProfileSetupForm() {
     setFieldErrors(prev => ({ ...prev, level: levelError || undefined }))
   }
 
+  const handleGeneroSelect = (genero: string) => {
+    setFormData((p) => ({ ...p, genero }))
+    setShowGeneroDropdown(false)
+    // ✅ Validar género
+    const generoError = validateField('genero', genero)
+    setFieldErrors(prev => ({ ...prev, genero: generoError || undefined }))
+  }
+
   const handleAddressChangeFromAutocomplete = (
     address: string,
     placeDetails?: google.maps.places.PlaceResult | null
@@ -173,6 +189,7 @@ export function ProfileSetupForm() {
     if (!formData.name || !formData.surname) return alert("Nombre y apellido son obligatorios")
     if (!formData.phone) return alert("El número de teléfono es obligatorio")
     if (!formData.fechaNacimiento) return alert("La fecha de nacimiento es obligatoria")
+    if (!formData.genero) return alert("El género es obligatorio")
     if (!formData.position) return alert("La posición es obligatoria")
     if (!formData.level) return alert("El nivel es obligatorio")
     if (!formData.height) return alert("La altura es obligatoria")
@@ -213,6 +230,7 @@ export function ProfileSetupForm() {
         apellido: formData.surname,
         celular: formData.phone,
         fecha_nacimiento: formData.fechaNacimiento,
+        genero: formData.genero,
         posicion: formData.position,
         nivel: formData.level,
         altura: formData.height,
@@ -365,6 +383,39 @@ export function ProfileSetupForm() {
             )}
           </div>
 
+          <div className="relative">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowGeneroDropdown(!showGeneroDropdown)}
+              className={`w-full text-left py-3 px-4 rounded-xl border bg-white justify-between ${
+                fieldErrors.genero ? 'border-red-500' : 'border-gray-300'
+              }`}
+            >
+              <span>{formData.genero || "Selecciona tu género *"}</span>
+              <ChevronDown className="w-5 h-5" />
+            </Button>
+            {showGeneroDropdown && (
+              <div className="absolute mt-1 w-full bg-white border border-gray-300 rounded-xl z-50">
+                {generos.map((gen) => (
+                  <div
+                    key={gen}
+                    onClick={() => handleGeneroSelect(gen)}
+                    className="p-3 hover:bg-gray-100 cursor-pointer"
+                  >
+                    {gen}
+                  </div>
+                ))}
+              </div>
+            )}
+            {fieldErrors.genero && (
+              <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
+                <AlertCircle className="w-4 h-4" />
+                {fieldErrors.genero}
+              </p>
+            )}
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Input
@@ -489,6 +540,7 @@ export function ProfileSetupForm() {
               !!fieldErrors.surname || 
               !!fieldErrors.phone || 
               !!fieldErrors.fechaNacimiento || 
+              !!fieldErrors.genero ||
               !!fieldErrors.position || 
               !!fieldErrors.level || 
               !!fieldErrors.height || 
@@ -499,6 +551,7 @@ export function ProfileSetupForm() {
               !formData.surname ||
               !formData.phone ||
               !formData.fechaNacimiento ||
+              !formData.genero ||
               !formData.position ||
               !formData.level ||
               !formData.height ||
