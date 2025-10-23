@@ -2,6 +2,8 @@
 
 A Next.js application for organizing and joining football matches, designed to work with a Spring Boot backend.
 
+<!-- Build: Google Maps API Key Integration -->
+
 ## Features
 
 - User authentication and identity verification
