@@ -149,6 +149,22 @@ export function AddressAutocomplete({
     }
   };
 
+  // Validar que la dirección sea específica (no solo ciudad/país/zona)
+  const isAddressSpecific = (place: google.maps.places.PlaceResult): boolean => {
+    const addressComponents = place.address_components || [];
+    
+    // Verificar si tiene número de calle (street_number)
+    const hasStreetNumber = addressComponents.some(
+      component => component.types.includes('street_number')
+    );
+    
+    // O si es un lugar específico con nombre (establecimiento, complejo, etc.)
+    const isNamedPlace = !!(place.name && place.name !== place.formatted_address);
+    
+    // La dirección es válida si tiene número de calle O es un lugar con nombre
+    return hasStreetNumber || isNamedPlace;
+  };
+
   // Seleccionar una predicción
   const selectPrediction = (prediction: google.maps.places.AutocompletePrediction) => {
     setQuery(prediction.description);
@@ -164,12 +180,22 @@ export function AddressAutocomplete({
     // Obtener detalles del lugar
     const request: google.maps.places.PlaceDetailsRequest = {
       placeId: prediction.place_id,
-      fields: ['geometry', 'formatted_address', 'name', 'address_components'],
+      fields: ['geometry', 'formatted_address', 'name', 'address_components', 'types'],
       sessionToken: sessionTokenRef.current || undefined,
     };
 
     placesServiceRef.current.getDetails(request, (place, status) => {
       if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
+        // Validar que sea una dirección específica
+        if (!isAddressSpecific(place)) {
+          console.warn("[AddressAutocomplete] Dirección no específica, rechazando");
+          alert("Por favor selecciona una dirección exacta con número de calle o un lugar específico (no solo ciudad/barrio/zona)");
+          setQuery("");
+          setHasSelectedAddress(false);
+          onChange("", null);
+          return;
+        }
+        
         onChange(prediction.description, place);
         
         // Renovar session token después de obtener detalles

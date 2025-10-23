@@ -27,6 +27,7 @@ export function MatchesMapView({
   // Inicializar mapa
   useEffect(() => {
     let mounted = true
+    let timeoutId: NodeJS.Timeout
 
     const initMap = async () => {
       try {
@@ -37,9 +38,18 @@ export function MatchesMapView({
 
         console.log("[MatchesMapView] Iniciando carga de Google Maps...")
 
-        // Cargar Google Maps
-        await googleMapsLoader.load()
+        // Timeout de 10 segundos para cargar Maps
+        const loadPromise = googleMapsLoader.load()
+        const timeoutPromise = new Promise((_, reject) => {
+          timeoutId = setTimeout(() => {
+            reject(new Error("Timeout: Google Maps tardó más de 10 segundos en cargar"))
+          }, 10000)
+        })
+
+        // Cargar Google Maps con timeout
+        await Promise.race([loadPromise, timeoutPromise])
         
+        clearTimeout(timeoutId)
         console.log("[MatchesMapView] Google Maps cargado exitosamente")
 
         if (!mounted) {
