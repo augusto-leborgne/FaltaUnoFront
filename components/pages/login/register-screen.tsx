@@ -46,8 +46,7 @@ export function RegisterScreen() {
       case 'password':
         if (!value) return "La contraseña es requerida"
         if (value.length < 6) return "Mínimo 6 caracteres"
-        if (!/[A-Z]/.test(value)) return "Debe contener al menos una mayúscula"
-        if (!/[0-9]/.test(value)) return "Debe contener al menos un número"
+        // Validaciones de mayúscula y número removidas para simplificar
         return null
       
       case 'confirmPassword':
@@ -250,7 +249,7 @@ export function RegisterScreen() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
             <Input
               type="password"
-              placeholder="Min. 6 caracteres, 1 mayúscula, 1 número"
+              placeholder="Mínimo 6 caracteres"
               value={formData.password}
               onChange={(e) => handleFieldChange('password', e.target.value)}
               required
