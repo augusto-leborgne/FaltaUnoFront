@@ -209,7 +209,12 @@ export function ProfileSetupForm() {
       // 1) Subir foto vía API unificada
       console.log("[ProfileSetup] Subiendo foto...")
       const fotoRes = await UsuarioAPI.subirFoto(formData.photo)
-      if (!fotoRes?.success) throw new Error("No se pudo subir la foto")
+      console.log("[ProfileSetup] Respuesta subir foto:", fotoRes)
+      if (!fotoRes?.success) {
+        const errorMsg = fotoRes?.message || "No se pudo subir la foto"
+        console.error("[ProfileSetup] Error subiendo foto:", errorMsg)
+        throw new Error(errorMsg)
+      }
 
       // 2) Actualizar perfil
       console.log("[ProfileSetup] Actualizando perfil...")
@@ -227,7 +232,12 @@ export function ProfileSetupForm() {
       }
       console.log("[ProfileSetup] Payload a enviar:", payload)
       const perfilRes = await UsuarioAPI.actualizarPerfil(payload)
-      if (!perfilRes?.success) throw new Error("No se pudo actualizar el perfil")
+      console.log("[ProfileSetup] Respuesta actualizar perfil:", perfilRes)
+      if (!perfilRes?.success) {
+        const errorMsg = perfilRes?.message || "No se pudo actualizar el perfil"
+        console.error("[ProfileSetup] Error actualizando perfil:", errorMsg)
+        throw new Error(errorMsg)
+      }
 
       // 3) Actualizar user local inmediatamente (clave para salir del loop)
       const serverUser = perfilRes.data || {}
@@ -255,7 +265,18 @@ export function ProfileSetupForm() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <div className="pt-16 pb-8 text-center border-b border-gray-100">
-        <h1 className="text-2xl font-bold text-gray-900">Crea tu perfil</h1>
+        <div className="flex items-center justify-between px-6 mb-4">
+          <h1 className="text-2xl font-bold text-gray-900 flex-1 text-center">Crea tu perfil</h1>
+          <button
+            onClick={() => {
+              AuthService.logout()
+              router.push("/login")
+            }}
+            className="text-sm text-red-600 hover:text-red-700 underline"
+          >
+            Salir
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 px-6 py-8">
