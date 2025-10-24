@@ -17,6 +17,9 @@ export function ProfileSetupForm() {
   const { user, setUser } = useAuth()
   const postAuthRedirect = usePostAuthRedirect()
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  
+  // DEBUG: Modo skip temporal
+  const [showSkipOption, setShowSkipOption] = useState(false)
 
   const [formData, setFormData] = useState({
     name: "",
@@ -264,18 +267,58 @@ export function ProfileSetupForm() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      <div className="pt-16 pb-8 text-center border-b border-gray-100">
-        <div className="flex items-center justify-between px-6 mb-4">
+      <div className="pt-16 pb-8 border-b border-gray-100">
+        <div className="flex items-center justify-between px-6 mb-2">
+          <div className="flex-1"></div>
           <h1 className="text-2xl font-bold text-gray-900 flex-1 text-center">Crea tu perfil</h1>
+          <div className="flex-1 flex justify-end">
+            <button
+              type="button"
+              onClick={() => {
+                if (confirm("¿Estás seguro de que quieres cerrar sesión?")) {
+                  console.log("[ProfileSetup] Cerrando sesión...")
+                  AuthService.logout()
+                  setUser(null)
+                  window.location.href = "/login"
+                }
+              }}
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg"
+            >
+              Cerrar sesión
+            </button>
+          </div>
+        </div>
+        <p className="text-sm text-gray-500 text-center mt-2">Completa tu información para continuar</p>
+        
+        {/* DEBUG: Botón para mostrar opción de skip */}
+        <div className="text-center mt-4">
           <button
-            onClick={() => {
-              AuthService.logout()
-              router.push("/login")
-            }}
-            className="text-sm text-red-600 hover:text-red-700 underline"
+            type="button"
+            onClick={() => setShowSkipOption(!showSkipOption)}
+            className="text-xs text-gray-400 hover:text-gray-600"
           >
-            Salir
+            {showSkipOption ? "Ocultar opciones" : "Opciones de desarrollo"}
           </button>
+          
+          {showSkipOption && (
+            <div className="mt-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-xs text-yellow-800 mb-2">⚠️ Solo para debugging</p>
+              <button
+                type="button"
+                onClick={() => {
+                  if (confirm("¿Omitir setup de perfil? (Solo para testing)")) {
+                    const updatedUser: any = { ...user, perfilCompleto: true }
+                    AuthService.setUser(updatedUser)
+                    setUser(updatedUser)
+                    router.push("/home")
+                  }
+                }}
+                className="px-3 py-1 text-xs bg-yellow-600 text-white rounded hover:bg-yellow-700"
+              >
+                Skip Profile Setup (Testing)
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
