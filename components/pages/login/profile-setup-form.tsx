@@ -25,7 +25,7 @@ export function ProfileSetupForm() {
     fechaNacimiento: "",
     genero: "",
     position: "",
-    level: "",
+    // nivel: "",  // Campo removido - no existe en backend
     height: "",
     weight: "",
     photo: null as File | null,
@@ -35,7 +35,7 @@ export function ProfileSetupForm() {
   })
 
   const [showPositionDropdown, setShowPositionDropdown] = useState(false)
-  const [showLevelDropdown, setShowLevelDropdown] = useState(false)
+  // const [showLevelDropdown, setShowLevelDropdown] = useState(false)  // Removido
   const [showGeneroDropdown, setShowGeneroDropdown] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
 
@@ -88,10 +88,6 @@ export function ProfileSetupForm() {
       
       case 'position':
         if (!value) return "Selecciona una posición"
-        return null
-      
-      case 'level':
-        if (!value) return "Selecciona tu nivel"
         return null
       
       case 'height':
@@ -155,14 +151,6 @@ export function ProfileSetupForm() {
     setFieldErrors(prev => ({ ...prev, position: positionError || undefined }))
   }
 
-  const handleLevelSelect = (level: string) => {
-    setFormData((p) => ({ ...p, level }))
-    setShowLevelDropdown(false)
-    // ✅ Validar nivel
-    const levelError = validateField('level', level)
-    setFieldErrors(prev => ({ ...prev, level: levelError || undefined }))
-  }
-
   const handleGeneroSelect = (genero: string) => {
     setFormData((p) => ({ ...p, genero }))
     setShowGeneroDropdown(false)
@@ -191,7 +179,7 @@ export function ProfileSetupForm() {
     if (!formData.fechaNacimiento) return alert("La fecha de nacimiento es obligatoria")
     if (!formData.genero) return alert("El género es obligatorio")
     if (!formData.position) return alert("La posición es obligatoria")
-    if (!formData.level) return alert("El nivel es obligatorio")
+    // Nivel removido - no existe en backend
     if (!formData.height) return alert("La altura es obligatoria")
     if (!formData.weight) return alert("El peso es obligatorio")
     if (!formData.address) return alert("La dirección es obligatoria")
@@ -232,12 +220,12 @@ export function ProfileSetupForm() {
         fecha_nacimiento: formData.fechaNacimiento,
         genero: formData.genero,
         posicion: formData.position,
-        nivel: formData.level,
-        altura: formData.height,
-        peso: formData.weight,
+        altura: String(formData.height),  // Backend espera string
+        peso: String(formData.weight),    // Backend espera string
         direccion: formData.address,
         placeDetails: formData.placeDetails ? JSON.stringify(formData.placeDetails) : null,
       }
+      console.log("[ProfileSetup] Payload a enviar:", payload)
       const perfilRes = await UsuarioAPI.actualizarPerfil(payload)
       if (!perfilRes?.success) throw new Error("No se pudo actualizar el perfil")
 
@@ -503,39 +491,6 @@ export function ProfileSetupForm() {
             )}
           </div>
 
-          <div className="relative">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setShowLevelDropdown(!showLevelDropdown)}
-              className={`w-full text-left py-3 px-4 rounded-xl border bg-white justify-between ${
-                fieldErrors.level ? 'border-red-500' : 'border-gray-300'
-              }`}
-            >
-              <span>{formData.level || "Selecciona tu nivel *"}</span>
-              <ChevronDown className="w-5 h-5" />
-            </Button>
-            {showLevelDropdown && (
-              <div className="absolute mt-1 w-full bg-white border border-gray-300 rounded-xl z-50">
-                {levels.map((lv) => (
-                  <div
-                    key={lv}
-                    onClick={() => handleLevelSelect(lv)}
-                    className="p-3 hover:bg-gray-100 cursor-pointer"
-                  >
-                    {lv}
-                  </div>
-                ))}
-              </div>
-            )}
-            {fieldErrors.level && (
-              <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
-                <AlertCircle className="w-4 h-4" />
-                {fieldErrors.level}
-              </p>
-            )}
-          </div>
-
           <Button 
             type="submit" 
             className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl" 
@@ -547,7 +502,6 @@ export function ProfileSetupForm() {
               !!fieldErrors.fechaNacimiento || 
               !!fieldErrors.genero ||
               !!fieldErrors.position || 
-              !!fieldErrors.level || 
               !!fieldErrors.height || 
               !!fieldErrors.weight || 
               !!fieldErrors.photo ||
@@ -558,7 +512,6 @@ export function ProfileSetupForm() {
               !formData.fechaNacimiento ||
               !formData.genero ||
               !formData.position ||
-              !formData.level ||
               !formData.height ||
               !formData.weight ||
               !formData.photo ||
