@@ -115,6 +115,7 @@ export function SearchScreen() {
 
       // Buscar usuarios si aplica
       if (filter === "todos" || filter === "usuarios") {
+        console.log("[SearchScreen] Buscando usuarios con token:", token ? "SÍ" : "NO")
         const usersResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/usuarios?${queryParams}`, {
           headers: {
             "Authorization": `Bearer ${token}`,
@@ -122,9 +123,20 @@ export function SearchScreen() {
           }
         })
 
+        console.log("[SearchScreen] Respuesta usuarios:", usersResponse.status, usersResponse.statusText)
+
+        // Manejar error 401
+        if (usersResponse.status === 401) {
+          console.error("[SearchScreen] Token inválido o expirado")
+          AuthService.logout()
+          router.push("/login")
+          return
+        }
+
         if (usersResponse.ok) {
           const usersData = await usersResponse.json()
           const users = usersData.data || []
+          console.log("[SearchScreen] Usuarios encontrados:", users.length)
           
           // Cargar amistades
           const amisταdesResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/amistades`, {
@@ -157,17 +169,30 @@ export function SearchScreen() {
               esAmigo: amigosIds.has(u.id)
             })
           })
+        } else {
+          console.error("[SearchScreen] Error al buscar usuarios:", await usersResponse.text())
         }
       }
 
       // Buscar partidos si aplica
       if (filter === "todos" || filter === "partidos") {
+        console.log("[SearchScreen] Buscando partidos...")
         const partidosResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/partidos?${queryParams}`, {
           headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
           }
         })
+
+        console.log("[SearchScreen] Respuesta partidos:", partidosResponse.status, partidosResponse.statusText)
+
+        // Manejar error 401
+        if (partidosResponse.status === 401) {
+          console.error("[SearchScreen] Token inválido o expirado en búsqueda de partidos")
+          AuthService.logout()
+          router.push("/login")
+          return
+        }
 
         if (partidosResponse.ok) {
           const partidosData = await partidosResponse.json()
