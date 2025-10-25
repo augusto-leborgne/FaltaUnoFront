@@ -176,6 +176,12 @@ export function MatchDetail({ matchId }: MatchDetailProps) {
   }
 
   const handlePlayerClick = (playerId: string) => {
+    if (!playerId || playerId === 'undefined' || playerId === 'null') {
+      console.error("[MatchDetail] ID de usuario inválido:", playerId)
+      alert("Error: No se pudo obtener la información del usuario")
+      return
+    }
+    console.log("[MatchDetail] Navegando a perfil de usuario:", playerId)
     router.push(`/users/${playerId}`)
   }
 
@@ -341,7 +347,11 @@ export function MatchDetail({ matchId }: MatchDetailProps) {
           <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Organizador</h3>
             <div
-              onClick={() => handlePlayerClick(match.organizador!.id)}
+              onClick={() => {
+                console.log("[MatchDetail] Click en organizador, ID:", match.organizador?.id)
+                console.log("[MatchDetail] Organizador completo:", match.organizador)
+                handlePlayerClick(match.organizador!.id)
+              }}
               className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors"
             >
               <Avatar className="w-12 h-12">
