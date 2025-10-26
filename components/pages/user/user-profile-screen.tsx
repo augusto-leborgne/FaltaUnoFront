@@ -63,8 +63,10 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
         return
       }
 
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
+
       // Usuario
-      const userRes = await fetch(`/api/usuarios/${userId}`, {
+      const userRes = await fetch(`${API_BASE}/api/usuarios/${userId}`, {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       })
       if (!userRes.ok) {
@@ -75,7 +77,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       setUser(userJson.data)
 
       // Reviews
-      const revRes = await fetch(`/api/reviews?usuarioCalificadoId=${userId}`, {
+      const revRes = await fetch(`${API_BASE}/api/reviews?usuarioCalificadoId=${userId}`, {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       })
       if (revRes.ok) {
