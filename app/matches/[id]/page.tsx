@@ -1,4 +1,4 @@
-import { MatchDetail } from "@/components/pages/match/match-detail"
+import MatchDetail from "@/components/pages/match/match-detail"
 
 interface MatchDetailPageProps {
   params: {
