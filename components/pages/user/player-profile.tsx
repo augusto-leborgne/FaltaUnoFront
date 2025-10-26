@@ -8,9 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Star, ArrowLeft, MapPin, UserPlus } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { AuthService } from "@/lib/auth"
+import AuthService from "@/lib/auth"
 import { calcularEdad } from "@/lib/utils"
-import { API_BASE, normalizeUrl } from "@/lib/api"
 
 interface Review {
   id: string
@@ -38,85 +37,83 @@ export default function PlayerProfile({ playerId }: PlayerProfileProps) {
   const [requestSent, setRequestSent] = useState(false)
 
   useEffect(() => {
-    loadPlayerData()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [playerId])
+    let mounted = true
+    const run = async () => {
+      try {
+        setLoading(true)
+        setError(null)
 
-  const loadPlayerData = async () => {
-    try {
-      setLoading(true)
-      const token = AuthService.getToken()
+        const token = await AuthService.ensureToken()
+        if (!token) {
+          router.push("/login")
+          return
+        }
 
-      if (!token) {
-        router.push("/login")
-        return
+        // Usuario
+        const r1 = await fetch(`/api/usuarios/${playerId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        })
+        if (!mounted) return
+        if (!r1.ok) throw new Error("No se pudo cargar el perfil del jugador")
+        const userData = await r1.json()
+        setPlayer(userData.data)
+
+        // Reviews
+        const r2 = await fetch(`/api/reviews?usuarioCalificadoId=${playerId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        })
+        if (r2.ok) {
+          const reviewsData = await r2.json()
+          if (mounted) setReviews(reviewsData.data || [])
+        }
+      } catch (err: any) {
+        if (mounted) {
+          console.error("Error cargando perfil del jugador:", err)
+          setError(err?.message || "Error al cargar el perfil")
+        }
+      } finally {
+        if (mounted) setLoading(false)
       }
-
-      const authHeaders = {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      }
-
-      // Cargar datos del jugador (✅ usa backend directo)
-      const playerRes = await fetch(normalizeUrl(`${API_BASE}/api/usuarios/${playerId}`), {
-        headers: authHeaders,
-      })
-
-      if (!playerRes.ok) {
-        const txt = await playerRes.text().catch(() => "")
-        console.error("[PlayerProfile] Error backend usuario:", playerRes.status, txt)
-        throw new Error("No se pudo cargar el perfil del jugador")
-      }
-
-      const playerJson = await playerRes.json()
-      setPlayer(playerJson.data)
-
-      // Cargar reviews del jugador (✅ usa backend directo)
-      const reviewsRes = await fetch(
-        normalizeUrl(`${API_BASE}/api/reviews?usuarioCalificadoId=${playerId}`),
-        { headers: authHeaders }
-      )
-
-      if (reviewsRes.ok) {
-        const reviewsJson = await reviewsRes.json()
-        setReviews(reviewsJson.data || [])
-      }
-    } catch (err) {
-      console.error("[PlayerProfile] Error cargando perfil del jugador:", err)
-      setError(err instanceof Error ? err.message : "Error al cargar el perfil")
-    } finally {
+    }
+    run()
+    return () => {
+      mounted = false
+      setPlayer(null)
+      setReviews([])
+      setError(null)
       setLoading(false)
     }
-  }
+  }, [playerId, router])
 
   const handleBack = () => router.back()
 
   const handleSendFriendRequest = async () => {
     setSendingRequest(true)
     try {
-      const token = AuthService.getToken()
+      const token = await AuthService.ensureToken()
       if (!token) {
         router.push("/login")
         return
       }
-
-      // ✅ backend espera el ID en la URL; usamos API_BASE para evitar 404 del frontend
-      const res = await fetch(normalizeUrl(`${API_BASE}/api/amistades/${playerId}`), {
+      // Backend espera ID en la URL
+      const response = await fetch(`/api/amistades/${playerId}`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       })
-
-      if (res.ok) {
+      if (response.ok) {
         setRequestSent(true)
       } else {
-        const data = await res.json().catch(() => ({}))
-        alert(data.message || "Error al enviar solicitud")
+        const errorData = await response.json().catch(() => null)
+        alert(errorData?.message || "Error al enviar solicitud")
       }
     } catch (err) {
-      console.error("[PlayerProfile] Error enviando solicitud:", err)
+      console.error("Error enviando solicitud:", err)
       alert("Error al enviar solicitud")
     } finally {
       setSendingRequest(false)
@@ -148,20 +145,11 @@ export default function PlayerProfile({ playerId }: PlayerProfileProps) {
   }
 
   const fullName = `${player.nombre || ""} ${player.apellido || ""}`.trim() || "Usuario"
-  const initials = fullName
-    .split(" ")
-    .filter(Boolean)
-    .map((n: string) => n[0])
-    .join("")
-    .toUpperCase()
+  const initials = fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase()
   const edad = calcularEdad(player.fechaNacimiento)
-
   const averageRating =
     reviews.length > 0
-      ? (
-          reviews.reduce((sum, r) => sum + (r.nivel + r.deportividad + r.companerismo) / 3, 0) /
-          reviews.length
-        ).toFixed(1)
+      ? (reviews.reduce((sum, r) => sum + (r.nivel + r.deportividad + r.companerismo) / 3, 0) / reviews.length).toFixed(1)
       : "0.0"
 
   return (
@@ -180,10 +168,8 @@ export default function PlayerProfile({ playerId }: PlayerProfileProps) {
         {/* Profile Header */}
         <div className="text-center mb-8">
           <Avatar className="w-24 h-24 mx-auto mb-4">
-            {player.fotoPerfil ? (
-              <AvatarImage src={`data:image/jpeg;base64,${player.fotoPerfil}`} />
-            ) : player.foto_perfil ? (
-              <AvatarImage src={`data:image/jpeg;base64,${player.foto_perfil}`} />
+            {player.fotoPerfil || player.foto_perfil ? (
+              <AvatarImage src={`data:image/jpeg;base64,${player.foto_perfil || player.fotoPerfil}`} />
             ) : (
               <AvatarFallback className="bg-green-100 text-green-700 text-2xl">{initials}</AvatarFallback>
             )}
@@ -256,7 +242,6 @@ export default function PlayerProfile({ playerId }: PlayerProfileProps) {
         {/* Reviews */}
         <div className="mb-8">
           <h3 className="text-lg font-bold text-gray-900 mb-4">Reseñas</h3>
-
           {reviews.length === 0 ? (
             <div className="text-center py-8 bg-gray-50 rounded-xl">
               <p className="text-gray-500">Este jugador aún no tiene reseñas</p>
@@ -264,7 +249,7 @@ export default function PlayerProfile({ playerId }: PlayerProfileProps) {
           ) : (
             <div className="space-y-4">
               {reviews.map((review) => {
-                const avgReviewRating = Math.round((review.nivel + review.deportividad + review.companerismo) / 3)
+                const avg = Math.round((review.nivel + review.deportividad + review.companerismo) / 3)
                 return (
                   <div key={review.id} className="bg-gray-50 rounded-xl p-4">
                     <div className="flex items-center justify-between mb-3">
@@ -276,7 +261,9 @@ export default function PlayerProfile({ playerId }: PlayerProfileProps) {
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`w-3 h-3 ${i < avgReviewRating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
+                              className={`w-3 h-3 ${
+                                i < avg ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                              }`}
                             />
                           ))}
                         </div>
@@ -293,7 +280,9 @@ export default function PlayerProfile({ playerId }: PlayerProfileProps) {
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`w-3 h-3 ${i < review.nivel ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
+                              className={`w-3 h-3 ${
+                                i < review.nivel ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                              }`}
                             />
                           ))}
                         </div>

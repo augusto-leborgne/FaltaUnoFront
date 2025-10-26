@@ -9,7 +9,7 @@ import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { Star, ArrowLeft, Share2, MapPin, Users, DollarSign, Clock, AlertCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { CompressedMap } from "@/components/google-maps/compressed-map"
-import { AuthService } from "@/lib/auth"
+import AuthService from "@/lib/auth"
 import { PartidoAPI, InscripcionAPI, PartidoDTO, PartidoEstado } from "@/lib/api"
 import { formatMatchType, formatLevel, formatDate, getSpotsLeftColor } from "@/lib/utils"
 
@@ -17,17 +17,27 @@ interface MatchDetailProps {
   matchId: string
 }
 
+function getTipoPartido(m: PartidoDTO) {
+  return (m as any).tipoPartido ?? (m as any).tipo_partido ?? "FUTBOL_5"
+}
+function getNivel(m: PartidoDTO) {
+  return (m as any).nivel ?? "INTERMEDIO"
+}
+function getJugadoresActuales(m: PartidoDTO) {
+  return (m as any).jugadoresActuales ?? (m as any).jugadores_actuales ?? 0
+}
+function getCantidadJugadores(m: PartidoDTO) {
+  return (m as any).cantidadJugadores ?? (m as any).cantidad_jugadores ?? 10
+}
+function getPrecioPorJugador(m: PartidoDTO) {
+  return (m as any).precioPorJugador ?? (m as any).precio_por_jugador ?? 0
+}
+function getDuracionMinutos(m: PartidoDTO) {
+  return (m as any).duracionMinutos ?? (m as any).duracion_minutos ?? 90
+}
+
 export default function MatchDetail({ matchId }: MatchDetailProps) {
   const router = useRouter()
-
-  const getTipoPartido = (match: PartidoDTO) => match.tipoPartido ?? match.tipo_partido ?? "FUTBOL_5"
-  const getNivel = (match: PartidoDTO) => match.nivel ?? "INTERMEDIO"
-  const getJugadoresActuales = (match: PartidoDTO) => match.jugadoresActuales ?? match.jugadores_actuales ?? 0
-  const getCantidadJugadores = (match: PartidoDTO) => match.cantidadJugadores ?? match.cantidad_jugadores ?? 10
-  const getPrecioPorJugador = (match: PartidoDTO) => match.precioPorJugador ?? match.precio_por_jugador ?? 0
-  const getDuracionMinutos = (match: PartidoDTO) => match.duracionMinutos ?? match.duracion_minutos ?? 90
-  const getNombreUbicacion = (match: PartidoDTO) => match.nombreUbicacion ?? match.nombre_ubicacion ?? ""
-  const getOrganizadorId = (match: PartidoDTO) => match.organizadorId ?? match.organizador_id
 
   const [match, setMatch] = useState<PartidoDTO | null>(null)
   const [isJoining, setIsJoining] = useState(false)
@@ -35,75 +45,61 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
   const [error, setError] = useState<string>("")
 
   const currentUser = AuthService.getUser()
-  const isOrganizer = currentUser?.id && match?.id ? currentUser.id === getOrganizadorId(match) : false
+  const isOrganizer = currentUser?.id && match?.organizadorId && currentUser.id === match.organizadorId
 
   useEffect(() => {
-    loadMatch()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [matchId])
+    let mounted = true
+    const run = async () => {
+      try {
+        setIsLoading(true)
+        setError("")
+        const token = await AuthService.ensureToken()
+        if (!token) {
+          router.push("/login")
+          return
+        }
+        // Cargar partido
+        const response = await PartidoAPI.get(matchId)
+        if (!mounted) return
 
-  const loadMatch = async () => {
-    try {
-      setIsLoading(true)
-      setError("")
-
-      if (!AuthService.isLoggedIn()) {
-        router.push("/login")
-        return
-      }
-
-      console.log("[MatchDetail] Cargando partido:", matchId)
-      const response = await PartidoAPI.get(matchId)
-      console.log("[MatchDetail] Respuesta completa:", response)
-
-      if (!response.success || !response.data) {
-        const errorMessage = response.message || "Error al cargar el partido"
-        console.error("[MatchDetail] Error:", errorMessage)
-        setError(errorMessage)
+        if (!response.success || !response.data) {
+          setError(response.message || "Error al cargar el partido")
+          setMatch(null)
+          return
+        }
+        setMatch(response.data)
+      } catch (err: any) {
+        if (!mounted) return
+        setError(err?.message || "Error al cargar el partido")
         setMatch(null)
-        return
+      } finally {
+        if (mounted) setIsLoading(false)
       }
+    }
 
-      console.log("[MatchDetail] Partido cargado exitosamente:", {
-        id: response.data.id,
-        tipo: response.data.tipoPartido,
-        fecha: response.data.fecha,
-      })
-
-      setMatch(response.data)
-    } catch (err) {
-      console.error("[MatchDetail] Error en catch:", err)
-      const errorMessage = err instanceof Error ? err.message : "Error al cargar el partido"
-      setError(errorMessage)
+    run()
+    return () => {
+      mounted = false
       setMatch(null)
-    } finally {
+      setError("")
       setIsLoading(false)
     }
-  }
+  }, [matchId, router])
 
   const handleJoinMatch = async () => {
     if (!match || !currentUser) return
-
     if (getJugadoresActuales(match) >= getCantidadJugadores(match)) {
       setError("El partido está completo")
       return
     }
-
     setIsJoining(true)
     setError("")
-
     try {
-      const response = await InscripcionAPI.crear(match.id!, currentUser.id)
-
-      if (response.success) {
-        router.push(`/matches/${matchId}/confirmed`)
-      } else {
-        throw new Error(response.message || "Error al inscribirse")
-      }
-    } catch (err) {
-      console.error("[MatchDetail] Error inscribiéndose:", err)
-      const errorMessage = err instanceof Error ? err.message : "Error al inscribirse al partido"
-      setError(errorMessage)
+      const res = await InscripcionAPI.crear(match.id!, currentUser.id)
+      if (!res.success) throw new Error(res.message || "Error al inscribirse")
+      router.push(`/matches/${matchId}/confirmed`)
+    } catch (e: any) {
+      setError(e?.message || "Error al inscribirse al partido")
     } finally {
       setIsJoining(false)
     }
@@ -111,38 +107,29 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
 
   const handleShareMatch = async () => {
     if (!match) return
-
     const shareData = {
       title: `Partido de ${formatMatchType(getTipoPartido(match))}`,
-      text: `¡Únete a este partido! ${formatDate(match.fecha)} ${match.hora} en ${getNombreUbicacion(match)}`,
+      text: `¡Únete a este partido! ${formatDate(match.fecha)} ${match.hora} en ${match.nombreUbicacion}`,
       url: `${window.location.origin}/matches/${matchId}`,
     }
-
     if (navigator.share) {
       try {
         await navigator.share(shareData)
-      } catch (err) {
-        console.log("[MatchDetail] Error compartiendo:", err)
-      }
+      } catch {}
     } else {
       try {
         await navigator.clipboard.writeText(shareData.url)
         alert("Link copiado al portapapeles")
-      } catch (err) {
-        console.error("[MatchDetail] Error copiando:", err)
-      }
+      } catch {}
     }
   }
 
-  const handlePlayerClick = (playerId?: string | null) => {
-    const id = playerId ?? ""
-    if (!id || id === "undefined" || id === "null") {
-      console.error("[MatchDetail] ID de usuario inválido:", id)
+  const handlePlayerClick = (playerId?: string) => {
+    if (!playerId || playerId === "undefined" || playerId === "null") {
       alert("Error: No se pudo obtener la información del usuario")
       return
     }
-    console.log("[MatchDetail] Navegando a perfil de usuario:", id)
-    router.push(`/users/${id}`)
+    router.push(`/users/${playerId}`)
   }
 
   const handleBack = () => router.back()
@@ -170,7 +157,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
           <Button onClick={() => router.back()} variant="outline">
             Volver
           </Button>
-          <Button onClick={loadMatch} className="bg-green-600 hover:bg-green-700">
+          <Button onClick={() => location.reload()} className="bg-green-600 hover:bg-green-700">
             Reintentar
           </Button>
         </div>
@@ -202,7 +189,6 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
       </div>
 
       <div className="flex-1 px-6 py-6 overflow-y-auto">
-        {/* Estado cancelado/completado */}
         {isMatchCancelled && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl">
             <p className="text-red-800 font-medium">⚠️ Partido cancelado</p>
@@ -217,36 +203,29 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
           </div>
         )}
 
-        {/* Match Info Card */}
+        {/* Match Card */}
         <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
-          {/* Match Header */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex gap-2 flex-wrap">
               <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
                 {formatMatchType(getTipoPartido(match))}
               </Badge>
-              <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
-                {formatLevel(getNivel(match))}
-              </Badge>
-              {match.genero && (
-                <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">{match.genero}</Badge>
-              )}
+              <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">{formatLevel(getNivel(match))}</Badge>
+              <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">{(match as any).genero}</Badge>
             </div>
             <Badge className={`${getSpotsLeftColor(spotsLeft)} hover:bg-current`}>
               {spotsLeft === 0 ? "Completo" : `Quedan ${spotsLeft}`}
             </Badge>
           </div>
 
-          {/* Match Time */}
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            {formatDate(match.fecha)} {match.hora?.substring(0, 5)}
+            {formatDate(match.fecha)} {match.hora.substring(0, 5)}
           </h2>
 
-          {/* Match Details */}
           <div className="grid grid-cols-2 gap-4 text-sm mb-4">
             <div className="flex items-center space-x-2 text-gray-600">
               <MapPin className="w-4 h-4 flex-shrink-0" />
-              <span className="truncate">{getNombreUbicacion(match)}</span>
+              <span className="truncate">{(match as any).nombreUbicacion}</span>
             </div>
             <div className="flex items-center space-x-2 text-gray-600">
               <DollarSign className="w-4 h-4 flex-shrink-0" />
@@ -264,42 +243,37 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
             </div>
           </div>
 
-          {/* Map */}
-          {match.latitud && match.longitud && getNombreUbicacion(match) && (
+          {(match as any).latitud && (match as any).longitud && (match as any).nombreUbicacion && (
             <CompressedMap
-              location={getNombreUbicacion(match)}
-              lat={match.latitud}
-              lng={match.longitud}
+              location={(match as any).nombreUbicacion}
+              lat={(match as any).latitud}
+              lng={(match as any).longitud}
               className="mb-4"
             />
           )}
         </div>
 
-        {/* Organizer Section */}
-        {match.organizador && (
+        {/* Organizer */}
+        {(match as any).organizador && (
           <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Organizador</h3>
             <div
-              onClick={() => {
-                console.log("[MatchDetail] Click en organizador, ID:", match.organizador?.id)
-                console.log("[MatchDetail] Organizador completo:", match.organizador)
-                handlePlayerClick(match.organizador?.id)
-              }}
+              onClick={() => handlePlayerClick((match as any).organizador?.id)}
               className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors"
             >
               <Avatar className="w-12 h-12">
-                {match.organizador.foto_perfil ? (
-                  <AvatarImage src={`data:image/jpeg;base64,${match.organizador.foto_perfil}`} />
+                {(match as any).organizador?.foto_perfil ? (
+                  <AvatarImage src={`data:image/jpeg;base64,${(match as any).organizador.foto_perfil}`} />
                 ) : (
                   <AvatarFallback className="bg-orange-100">
-                    {match.organizador.nombre?.[0]}
-                    {match.organizador.apellido?.[0]}
+                    {(match as any).organizador?.nombre?.[0]}
+                    {(match as any).organizador?.apellido?.[0]}
                   </AvatarFallback>
                 )}
               </Avatar>
               <div>
                 <span className="font-semibold text-gray-900 block">
-                  {match.organizador.nombre} {match.organizador.apellido}
+                  {(match as any).organizador?.nombre} {(match as any).organizador?.apellido}
                 </span>
                 <div className="text-sm text-gray-600">Capitán</div>
               </div>
@@ -307,15 +281,14 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
           </div>
         )}
 
-        {/* Players Section */}
-        {match.jugadores && match.jugadores.length > 0 && (
+        {/* Players */}
+        {(match as any).jugadores && (match as any).jugadores.length > 0 && (
           <div className="mb-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4">
               Jugadores ({getJugadoresActuales(match)}/{getCantidadJugadores(match)})
             </h3>
-
             <div className="space-y-3">
-              {match.jugadores.map((player) => (
+              {(match as any).jugadores.map((player: any) => (
                 <div
                   key={player.id}
                   onClick={() => handlePlayerClick(player.id)}
@@ -334,7 +307,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
                     </Avatar>
                     <div>
                       <div className="font-semibold text-gray-900">
-                        {player.nombre} {player.apellido?.[0] && `${player.apellido[0]}.`}
+                        {player.nombre} {player.apellido?.[0]}.
                       </div>
                       <div className="flex items-center space-x-2 text-sm text-gray-600">
                         {player.posicion && <span>{player.posicion}</span>}
@@ -357,16 +330,16 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
         )}
 
         {/* Description */}
-        {match.descripcion && (
+        {(match as any).descripcion && (
           <div className="mb-8">
             <h3 className="text-lg font-bold text-gray-900 mb-3">Descripción</h3>
             <div className="bg-gray-50 rounded-xl p-4">
-              <p className="text-gray-700 whitespace-pre-wrap">{match.descripcion}</p>
+              <p className="text-gray-700 whitespace-pre-wrap">{(match as any).descripcion}</p>
             </div>
           </div>
         )}
 
-        {/* Join Button */}
+        {/* Join */}
         <div className="pb-24">
           {isOrganizer ? (
             <Button
