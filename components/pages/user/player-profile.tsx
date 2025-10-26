@@ -1,4 +1,3 @@
-// components/pages/user/player-profile.tsx
 "use client"
 
 import React, { useEffect, useState } from "react"
@@ -8,8 +7,9 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Star, ArrowLeft, MapPin, UserPlus } from "lucide-react"
 import { useRouter } from "next/navigation"
-import AuthService from "@/lib/auth"
+import { AuthService } from "@/lib/auth"
 import { calcularEdad } from "@/lib/utils"
+import { API_BASE, normalizeUrl } from "@/lib/api"
 
 interface Review {
   id: string
@@ -27,7 +27,7 @@ interface PlayerProfileProps {
   playerId: string
 }
 
-export default function PlayerProfile({ playerId }: PlayerProfileProps) {
+function PlayerProfile({ playerId }: PlayerProfileProps) {
   const router = useRouter()
   const [player, setPlayer] = useState<any>(null)
   const [reviews, setReviews] = useState<Review[]>([])
@@ -37,79 +37,76 @@ export default function PlayerProfile({ playerId }: PlayerProfileProps) {
   const [requestSent, setRequestSent] = useState(false)
 
   useEffect(() => {
-    let mounted = true
-    const run = async () => {
+    let abort = new AbortController()
+
+    ;(async () => {
       try {
         setLoading(true)
-        setError(null)
-
-        const token = await AuthService.ensureToken()
+        const token = AuthService.getToken()
         if (!token) {
           router.push("/login")
           return
         }
 
-        // Usuario
-        const r1 = await fetch(`/api/usuarios/${playerId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+        // Jugador
+        const pUrl = normalizeUrl(`${API_BASE}/api/usuarios/${playerId}`)
+        const playerResponse = await fetch(pUrl, {
+          headers: AuthService.getAuthHeaders(),
+          signal: abort.signal,
         })
-        if (!mounted) return
-        if (!r1.ok) throw new Error("No se pudo cargar el perfil del jugador")
-        const userData = await r1.json()
-        setPlayer(userData.data)
+        if (!playerResponse.ok) {
+          throw new Error("No se pudo cargar el perfil del jugador")
+        }
+        const playerData = await playerResponse.json()
+        setPlayer(playerData.data)
 
         // Reviews
-        const r2 = await fetch(`/api/reviews?usuarioCalificadoId=${playerId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+        const rUrl = normalizeUrl(`${API_BASE}/api/reviews?usuarioCalificadoId=${playerId}`)
+        const reviewsResponse = await fetch(rUrl, {
+          headers: AuthService.getAuthHeaders(),
+          signal: abort.signal,
         })
-        if (r2.ok) {
-          const reviewsData = await r2.json()
-          if (mounted) setReviews(reviewsData.data || [])
+        if (reviewsResponse.ok) {
+          const reviewsData = await reviewsResponse.json()
+          setReviews(reviewsData.data || [])
         }
       } catch (err: any) {
-        if (mounted) {
+        if (err?.name !== "AbortError") {
           console.error("Error cargando perfil del jugador:", err)
-          setError(err?.message || "Error al cargar el perfil")
+          setError(err instanceof Error ? err.message : "Error al cargar el perfil")
         }
       } finally {
-        if (mounted) setLoading(false)
+        setLoading(false)
       }
-    }
-    run()
-    return () => {
-      mounted = false
-      setPlayer(null)
-      setReviews([])
-      setError(null)
-      setLoading(false)
-    }
+    })()
+
+    return () => abort.abort()
   }, [playerId, router])
 
-  const handleBack = () => router.back()
+  const handleBack = () => {
+    router.back()
+  }
 
   const handleSendFriendRequest = async () => {
     setSendingRequest(true)
     try {
-      const token = await AuthService.ensureToken()
+      const token = AuthService.getToken()
       if (!token) {
         router.push("/login")
         return
       }
-      // Backend espera ID en la URL
-      const response = await fetch(`/api/amistades/${playerId}`, {
+
+      // POST /api/amistades/{playerId}
+      const url = normalizeUrl(`${API_BASE}/api/amistades/${playerId}`)
+      const response = await fetch(url, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        headers: AuthService.getAuthHeaders(),
       })
+
       if (response.ok) {
         setRequestSent(true)
       } else {
-        const errorData = await response.json().catch(() => null)
+        const errorData = await response.json().catch(() => ({}))
         alert(errorData?.message || "Error al enviar solicitud")
       }
     } catch (err) {
@@ -147,10 +144,9 @@ export default function PlayerProfile({ playerId }: PlayerProfileProps) {
   const fullName = `${player.nombre || ""} ${player.apellido || ""}`.trim() || "Usuario"
   const initials = fullName.split(" ").map((n: string) => n[0]).join("").toUpperCase()
   const edad = calcularEdad(player.fechaNacimiento)
-  const averageRating =
-    reviews.length > 0
-      ? (reviews.reduce((sum, r) => sum + (r.nivel + r.deportividad + r.companerismo) / 3, 0) / reviews.length).toFixed(1)
-      : "0.0"
+  const averageRating = reviews.length > 0
+    ? (reviews.reduce((sum, r) => sum + (r.nivel + r.deportividad + r.companerismo) / 3, 0) / reviews.length).toFixed(1)
+    : "0.0"
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -171,7 +167,9 @@ export default function PlayerProfile({ playerId }: PlayerProfileProps) {
             {player.fotoPerfil || player.foto_perfil ? (
               <AvatarImage src={`data:image/jpeg;base64,${player.foto_perfil || player.fotoPerfil}`} />
             ) : (
-              <AvatarFallback className="bg-green-100 text-green-700 text-2xl">{initials}</AvatarFallback>
+              <AvatarFallback className="bg-green-100 text-green-700 text-2xl">
+                {initials}
+              </AvatarFallback>
             )}
           </Avatar>
 
@@ -179,7 +177,9 @@ export default function PlayerProfile({ playerId }: PlayerProfileProps) {
 
           <div className="flex items-center justify-center space-x-4 mb-4">
             {player.posicion && (
-              <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">{player.posicion}</Badge>
+              <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
+                {player.posicion}
+              </Badge>
             )}
             <div className="flex items-center space-x-1">
               <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -213,7 +213,11 @@ export default function PlayerProfile({ playerId }: PlayerProfileProps) {
             <UserPlus className="w-4 h-4 mr-2" />
             {requestSent ? "Solicitud enviada" : sendingRequest ? "Enviando..." : "Enviar solicitud de amistad"}
           </Button>
-          {requestSent && <p className="text-sm text-green-600 text-center mt-2">✓ Solicitud enviada correctamente</p>}
+          {requestSent && (
+            <p className="text-sm text-green-600 text-center mt-2">
+              ✓ Solicitud enviada correctamente
+            </p>
+          )}
         </div>
 
         {/* Stats */}
@@ -242,6 +246,7 @@ export default function PlayerProfile({ playerId }: PlayerProfileProps) {
         {/* Reviews */}
         <div className="mb-8">
           <h3 className="text-lg font-bold text-gray-900 mb-4">Reseñas</h3>
+
           {reviews.length === 0 ? (
             <div className="text-center py-8 bg-gray-50 rounded-xl">
               <p className="text-gray-500">Este jugador aún no tiene reseñas</p>
@@ -249,7 +254,8 @@ export default function PlayerProfile({ playerId }: PlayerProfileProps) {
           ) : (
             <div className="space-y-4">
               {reviews.map((review) => {
-                const avg = Math.round((review.nivel + review.deportividad + review.companerismo) / 3)
+                const avgReviewRating = Math.round((review.nivel + review.deportividad + review.companerismo) / 3)
+
                 return (
                   <div key={review.id} className="bg-gray-50 rounded-xl p-4">
                     <div className="flex items-center justify-between mb-3">
@@ -262,7 +268,9 @@ export default function PlayerProfile({ playerId }: PlayerProfileProps) {
                             <Star
                               key={i}
                               className={`w-3 h-3 ${
-                                i < avg ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                                i < avgReviewRating
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-gray-300"
                               }`}
                             />
                           ))}
@@ -281,7 +289,9 @@ export default function PlayerProfile({ playerId }: PlayerProfileProps) {
                             <Star
                               key={i}
                               className={`w-3 h-3 ${
-                                i < review.nivel ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                                i < review.nivel
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-gray-300"
                               }`}
                             />
                           ))}
@@ -294,7 +304,9 @@ export default function PlayerProfile({ playerId }: PlayerProfileProps) {
                             <Star
                               key={i}
                               className={`w-3 h-3 ${
-                                i < review.deportividad ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                                i < review.deportividad
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-gray-300"
                               }`}
                             />
                           ))}
@@ -307,7 +319,9 @@ export default function PlayerProfile({ playerId }: PlayerProfileProps) {
                             <Star
                               key={i}
                               className={`w-3 h-3 ${
-                                i < review.companerismo ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                                i < review.companerismo
+                                  ? "fill-yellow-400 text-yellow-400"
+                                  : "text-gray-300"
                               }`}
                             />
                           ))}
@@ -315,7 +329,9 @@ export default function PlayerProfile({ playerId }: PlayerProfileProps) {
                       </div>
                     </div>
 
-                    {review.comentario && <p className="text-gray-700 text-sm">{review.comentario}</p>}
+                    {review.comentario && (
+                      <p className="text-gray-700 text-sm">{review.comentario}</p>
+                    )}
                   </div>
                 )
               })}
@@ -324,7 +340,11 @@ export default function PlayerProfile({ playerId }: PlayerProfileProps) {
         </div>
 
         <div className="pb-24">
-          <Button onClick={handleBack} variant="outline" className="w-full py-4 text-lg font-semibold rounded-2xl border-gray-300 bg-transparent">
+          <Button
+            onClick={handleBack}
+            variant="outline"
+            className="w-full py-4 text-lg font-semibold rounded-2xl border-gray-300 bg-transparent"
+          >
             Volver
           </Button>
         </div>
@@ -334,3 +354,6 @@ export default function PlayerProfile({ playerId }: PlayerProfileProps) {
     </div>
   )
 }
+
+export default PlayerProfile
+export { PlayerProfile }

@@ -1,4 +1,3 @@
-// components/pages/user/user-profile-screen.tsx
 "use client"
 
 import React, { useEffect, useState } from "react"
@@ -7,8 +6,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { Star, ArrowLeft, UserPlus } from "lucide-react"
 import { useRouter } from "next/navigation"
-import AuthService from "@/lib/auth"
+import { AuthService } from "@/lib/auth"
 import { calcularEdad } from "@/lib/utils"
+import { API_BASE, normalizeUrl } from "@/lib/api"
 
 interface Review {
   id: string
@@ -39,12 +39,13 @@ interface Usuario {
   created_at?: string
 }
 
-interface Props {
+interface UserProfileScreenProps {
   userId: string
 }
 
-export default function UserProfileScreen({ userId }: Props) {
+function UserProfileScreen({ userId }: UserProfileScreenProps) {
   const router = useRouter()
+
   const [user, setUser] = useState<Usuario | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [friendRequestSent, setFriendRequestSent] = useState(false)
@@ -52,77 +53,83 @@ export default function UserProfileScreen({ userId }: Props) {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    let mounted = true
-    const run = async () => {
-      try {
-        setLoading(true)
-        setError(null)
+    let abort = new AbortController()
+    // Reset state cuando cambia userId
+    setUser(null)
+    setReviews([])
+    setFriendRequestSent(false)
+    setLoading(true)
+    setError(null)
 
-        const token = await AuthService.ensureToken()
+    ;(async () => {
+      try {
+        const token = AuthService.getToken()
         if (!token) {
           router.push("/login")
           return
         }
 
         // Usuario
-        const r1 = await fetch(`/api/usuarios/${userId}`, {
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        const userUrl = normalizeUrl(`${API_BASE}/api/usuarios/${userId}`)
+        const userResponse = await fetch(userUrl, {
+          headers: AuthService.getAuthHeaders(),
+          signal: abort.signal,
         })
-        if (!mounted) return
-        if (!r1.ok) {
-          const t = await r1.text().catch(() => "")
-          console.error("[UserProfile] Error en respuesta:", t)
-          throw new Error(`Error ${r1.status}: No se pudo cargar el perfil`)
-        }
-        const userData = await r1.json()
-        if (!userData?.data) throw new Error("Usuario no encontrado")
-        setUser(userData.data)
 
-        // Reviews
-        const r2 = await fetch(`/api/reviews?usuarioCalificadoId=${userId}`, {
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        if (!userResponse.ok) {
+          const t = await userResponse.text()
+          console.error("[UserProfile] Error en respuesta:", t)
+          throw new Error(`Error ${userResponse.status}: No se pudo cargar el perfil`)
+        }
+
+        const userJson = await userResponse.json()
+        if (!userJson?.data) throw new Error("Usuario no encontrado")
+        setUser(userJson.data)
+
+        // Reseñas
+        const reviewsUrl = normalizeUrl(`${API_BASE}/api/reviews?usuarioCalificadoId=${userId}`)
+        const reviewsResponse = await fetch(reviewsUrl, {
+          headers: AuthService.getAuthHeaders(),
+          signal: abort.signal,
         })
-        if (r2.ok) {
-          const reviewsData = await r2.json()
-          if (mounted) setReviews(reviewsData.data || [])
+        if (reviewsResponse.ok) {
+          const reviewsData = await reviewsResponse.json()
+          setReviews(reviewsData.data || [])
         }
       } catch (err: any) {
-        if (mounted) {
+        if (err?.name !== "AbortError") {
           console.error("[UserProfile] Error cargando perfil:", err)
-          setError(err?.message || "Error al cargar el perfil")
+          setError(err instanceof Error ? err.message : "Error al cargar el perfil")
         }
       } finally {
-        if (mounted) setLoading(false)
+        setLoading(false)
       }
-    }
-    run()
-    return () => {
-      mounted = false
-      setUser(null)
-      setReviews([])
-      setFriendRequestSent(false)
-      setError(null)
-      setLoading(false)
-    }
+    })()
+
+    return () => abort.abort()
   }, [userId, router])
 
   const handleBack = () => router.back()
 
   const handleSendFriendRequest = async () => {
     try {
-      const token = await AuthService.ensureToken()
+      const token = AuthService.getToken()
       if (!token) {
         router.push("/login")
         return
       }
-      const response = await fetch(`/api/amistades/${userId}`, {
+
+      // Tu backend espera POST /api/amistades/{amigoId}
+      const url = normalizeUrl(`${API_BASE}/api/amistades/${userId}`)
+      const response = await fetch(url, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        headers: AuthService.getAuthHeaders(),
       })
+
       if (response.ok) {
         setFriendRequestSent(true)
       } else {
-        const errorData = await response.json().catch(() => null)
+        const errorData = await response.json().catch(() => ({}))
         alert(errorData?.message || "Error al enviar solicitud")
       }
     } catch (error) {
@@ -131,7 +138,10 @@ export default function UserProfileScreen({ userId }: Props) {
     }
   }
 
-  const handleUserClick = (id: string) => router.push(`/users/${id}`)
+  const handleUserClick = (id: string) => {
+    if (!id) return
+    router.push(`/users/${id}`)
+  }
 
   if (loading) {
     return (
@@ -177,11 +187,10 @@ export default function UserProfileScreen({ userId }: Props) {
 
   const fullName = `${user.nombre || ""} ${user.apellido || ""}`.trim() || "Usuario"
   const edad = calcularEdad(user.fechaNacimiento)
-  const fotoBase64 = (user as any).fotoPerfil || (user as any).foto_perfil
-  const averageRating =
-    reviews.length > 0
-      ? (reviews.reduce((sum, r) => sum + (r.nivel + r.deportividad + r.companerismo) / 3, 0) / reviews.length).toFixed(1)
-      : "0.0"
+  const fotoBase64 = user.fotoPerfil || user.foto_perfil
+  const averageRating = reviews.length > 0
+    ? (reviews.reduce((sum, r) => sum + (r.nivel + r.deportividad + r.companerismo) / 3, 0) / reviews.length).toFixed(1)
+    : "0.0"
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -201,37 +210,46 @@ export default function UserProfileScreen({ userId }: Props) {
           <div className="flex items-center space-x-4 mb-6">
             <Avatar className="w-20 h-20">
               {fotoBase64 ? (
-                <AvatarImage src={`data:image/jpeg;base64,${fotoBase64}`} alt={fullName} />
+                <AvatarImage
+                  src={`data:image/jpeg;base64,${fotoBase64}`}
+                  alt={fullName}
+                />
               ) : (
                 <AvatarFallback className="bg-muted text-2xl">
-                  {fullName
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .toUpperCase()}
+                  {fullName.split(" ").map(n => n[0]).join("").toUpperCase()}
                 </AvatarFallback>
               )}
             </Avatar>
             <div className="flex-1">
               <h2 className="text-xl font-bold text-foreground">{fullName}</h2>
-              <p className="text-muted-foreground">{(user as any).posicion || "Sin posición"}</p>
-              {(user as any).ubicacion && <p className="text-sm text-muted-foreground">{(user as any).ubicacion}</p>}
-              {(user as any).celular && <p className="text-sm text-muted-foreground">{(user as any).celular}</p>}
+              <p className="text-muted-foreground">{user.posicion || "Sin posición"}</p>
+              {user.ubicacion && (
+                <p className="text-sm text-muted-foreground">{user.ubicacion}</p>
+              )}
+              {user.celular && (
+                <p className="text-sm text-muted-foreground">{user.celular}</p>
+              )}
             </div>
           </div>
 
           {/* Stats */}
           <div className="grid grid-cols-3 gap-4 mb-6">
             <div className="text-center">
-              <div className="text-lg font-bold text-foreground">{edad !== null ? `${edad}` : "-"}</div>
+              <div className="text-lg font-bold text-foreground">
+                {edad !== null ? `${edad}` : "-"}
+              </div>
               <div className="text-sm text-muted-foreground">Edad</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold text-foreground">{(user as any).altura ?? "-"}</div>
+              <div className="text-lg font-bold text-foreground">
+                {user.altura ? `${user.altura}` : "-"}
+              </div>
               <div className="text-sm text-muted-foreground">Altura</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold text-foreground">{(user as any).peso ?? "-"}</div>
+              <div className="text-lg font-bold text-foreground">
+                {user.peso ? `${user.peso}` : "-"}
+              </div>
               <div className="text-sm text-muted-foreground">Peso</div>
             </div>
           </div>
@@ -247,12 +265,14 @@ export default function UserProfileScreen({ userId }: Props) {
               {friendRequestSent ? "Solicitud enviada" : "Enviar solicitud de amistad"}
             </Button>
             {friendRequestSent && (
-              <p className="text-sm text-primary font-medium text-center">✓ Solicitud enviada correctamente</p>
+              <p className="text-sm text-primary font-medium text-center">
+                ✓ Solicitud enviada correctamente
+              </p>
             )}
           </div>
         </div>
 
-        {/* Reviews */}
+        {/* Reviews Section */}
         <div className="bg-card border border-border rounded-2xl p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-bold text-foreground">Reseñas</h3>
@@ -264,11 +284,14 @@ export default function UserProfileScreen({ userId }: Props) {
           </div>
 
           {reviews.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">Este usuario aún no tiene reseñas</div>
+            <div className="text-center py-8 text-muted-foreground">
+              Este usuario aún no tiene reseñas
+            </div>
           ) : (
             <div className="space-y-4">
               {reviews.map((review) => {
                 const avgRating = Math.round((review.nivel + review.deportividad + review.companerismo) / 3)
+
                 return (
                   <div
                     key={review.id}
@@ -289,7 +312,11 @@ export default function UserProfileScreen({ userId }: Props) {
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
-                            className={`w-3 h-3 ${i < avgRating ? "fill-accent text-accent" : "text-muted-foreground"}`}
+                            className={`w-3 h-3 ${
+                              i < avgRating
+                                ? "fill-accent text-accent"
+                                : "text-muted-foreground"
+                            }`}
                           />
                         ))}
                       </div>
@@ -303,7 +330,9 @@ export default function UserProfileScreen({ userId }: Props) {
                             <Star
                               key={i}
                               className={`w-3 h-3 ${
-                                i < review.nivel ? "fill-accent text-accent" : "text-muted-foreground"
+                                i < review.nivel
+                                  ? "fill-accent text-accent"
+                                  : "text-muted-foreground"
                               }`}
                             />
                           ))}
@@ -316,7 +345,9 @@ export default function UserProfileScreen({ userId }: Props) {
                             <Star
                               key={i}
                               className={`w-3 h-3 ${
-                                i < review.deportividad ? "fill-accent text-accent" : "text-muted-foreground"
+                                i < review.deportividad
+                                  ? "fill-accent text-accent"
+                                  : "text-muted-foreground"
                               }`}
                             />
                           ))}
@@ -329,7 +360,9 @@ export default function UserProfileScreen({ userId }: Props) {
                             <Star
                               key={i}
                               className={`w-3 h-3 ${
-                                i < review.companerismo ? "fill-accent text-accent" : "text-muted-foreground"
+                                i < review.companerismo
+                                  ? "fill-accent text-accent"
+                                  : "text-muted-foreground"
                               }`}
                             />
                           ))}
@@ -337,7 +370,9 @@ export default function UserProfileScreen({ userId }: Props) {
                       </div>
                     </div>
 
-                    {review.comentario && <p className="text-sm text-muted-foreground mb-1">{review.comentario}</p>}
+                    {review.comentario && (
+                      <p className="text-sm text-muted-foreground mb-1">{review.comentario}</p>
+                    )}
                     <p className="text-xs text-muted-foreground">
                       {new Date(review.createdAt).toLocaleDateString("es-ES")}
                     </p>
@@ -353,3 +388,6 @@ export default function UserProfileScreen({ userId }: Props) {
     </div>
   )
 }
+
+export default UserProfileScreen
+export { UserProfileScreen }
