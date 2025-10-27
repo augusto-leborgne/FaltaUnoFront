@@ -57,7 +57,8 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       setUser(null)
       setReviews([])
 
-      const token = AuthService.getToken()
+      // Esperar un tick para evitar condiciones de carrera con la lectura del token
+      const token = await AuthService.ensureToken()
       if (!token) {
         router.push("/login")
         return

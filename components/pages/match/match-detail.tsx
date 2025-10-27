@@ -58,7 +58,10 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
       setError("")
       setMatch(null)
 
-      if (!AuthService.isLoggedIn()) {
+      // Evitar condiciones de carrera al volver desde otra pantalla:
+      // esperamos un tick para que AuthService cargue/normalice el token
+      const token = await AuthService.ensureToken()
+      if (!token) {
         router.push("/login")
         return
       }
@@ -165,7 +168,19 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
     router.push(`/users/${playerId}`)
   }
 
-  const handleBack = () => router.back()
+  const [retryCount, setRetryCount] = useState(0)
+  const handleBack = () => {
+    setError("")
+    setMatch(null)
+    router.back()
+  }
+
+  const handleRetry = () => {
+    setError("")
+    setMatch(null)
+    setRetryCount((c) => c + 1)
+    loadMatch()
+  }
 
   // ====== ESTADOS DE CARGA/ERROR ======
   if (isLoading) {
@@ -190,12 +205,15 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
           <p className="text-gray-600">
             {error ? "Por favor intenta nuevamente" : "El partido que buscas no existe"}
           </p>
+          {retryCount >= 2 && (
+            <p className="text-gray-500 mt-2">Si el problema persiste, vuelve al inicio.</p>
+          )}
         </div>
         <div className="flex gap-3">
-          <Button onClick={() => router.back()} variant="outline">
+          <Button onClick={handleBack} variant="outline">
             Volver
           </Button>
-          <Button onClick={loadMatch} className="bg-green-600 hover:bg-green-700">
+          <Button onClick={handleRetry} className="bg-green-600 hover:bg-green-700">
             Reintentar
           </Button>
         </div>

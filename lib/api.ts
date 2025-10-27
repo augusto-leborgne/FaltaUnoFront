@@ -249,8 +249,9 @@ async function apiFetch<T>(
     AuthService.validateAndCleanup();
   }
 
-  // Obtener token
+  // Obtener token (no esperamos aquí para no añadir latencia a todas las peticiones)
   const token = customToken || (!skipAuth ? AuthService.getToken() : null);
+  const hadToken = !!token // si al momento de construir la petición había token
   
   // Construir URL completa
   const fullUrl = normalizeUrl(`${API_BASE}${endpoint}`);
@@ -278,14 +279,19 @@ async function apiFetch<T>(
 
     // Manejo de 401 - Sesión expirada
     if (response.status === 401) {
-      console.warn('[API] 401 Unauthorized - Limpiando sesión');
-      AuthService.logout();
-      
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+      // Sólo hacemos logout+redirect si la petición se envió con token.
+      // Evita que transitorios (p. ej. token aún no cargado en navegación) produzcan un logout global.
+      if (hadToken) {
+        console.warn('[API] 401 Unauthorized - Limpiando sesión');
+        AuthService.logout();
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+        throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.');
+      } else {
+        console.warn('[API] 401 recibido pero no había token en la petición - no se hace logout');
+        throw new Error('No autorizado');
       }
-      
-      throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.');
     }
 
     // Manejo de 403 - Sin permisos
