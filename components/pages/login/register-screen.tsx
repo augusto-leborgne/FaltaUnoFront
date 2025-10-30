@@ -77,7 +77,7 @@ export function RegisterScreen() {
   const handleSocialAuth = (provider: "google" | "facebook" | "apple") => {
     try {
       // URL completa del backend en Cloud Run
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-169771742214.us-central1.run.app'
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-pg4rwegknq-uc.a.run.app'
       const redirectUrl = `${backendUrl}/oauth2/authorization/${provider}`
       console.log("[RegisterScreen] Redirigiendo a OAuth:", redirectUrl)
       window.location.href = redirectUrl

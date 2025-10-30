@@ -121,7 +121,7 @@ export function LoginScreen() {
       }
 
       // URL completa del backend en Cloud Run
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-169771742214.us-central1.run.app'
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-pg4rwegknq-uc.a.run.app'
       const oauthUrl = `${backendUrl}/oauth2/authorization/${provider}`
       
       console.log(`[LoginScreen] Redirigiendo a OAuth ${provider}:`, oauthUrl)
