@@ -68,16 +68,18 @@ export function MatchesMapView({
         // Centro inicial en promedio de partidos o Montevideo
         const center = calculateCenter(matches)
 
-        // Crear mapa
+        // Crear mapa con zoom apropiado para la ciudad (no país/continente)
         const map = new window.google.maps.Map(mapDivRef.current!, {
           center,
-          zoom: 13,
+          zoom: matches.length > 0 ? 13 : 12, // Zoom 12-13 = ciudad, 13-15 = barrio
           styles: [{ featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] }],
           mapTypeControl: false,
           streetViewControl: false,
           fullscreenControl: false,
           zoomControl: true,
           zoomControlOptions: { position: window.google.maps.ControlPosition.RIGHT_CENTER },
+          minZoom: 10, // Evitar zoom muy alejado (país/continente)
+          maxZoom: 18,
         })
 
         googleMapRef.current = map

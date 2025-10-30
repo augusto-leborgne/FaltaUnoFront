@@ -259,23 +259,22 @@ export function CreateMatchScreen() {
       // Llamar a la API
       const response = await PartidoAPI.crear(partidoDTO)
 
-      if (!response.success) {
-        throw new Error(response.message || "Error al crear el partido")
-      }
+      console.log("[CreateMatch] Respuesta de la API:", response)
 
-      console.log("[CreateMatch] Partido creado exitosamente:", response.data)
-
-      setSuccess(true)
-
-      // Redirigir a la pantalla de éxito para invitar amigos
-      const partidoId = response.data?.id
-      console.log("[CreateMatch] Partido ID obtenido:", partidoId)
+      // El partido puede haber sido creado aunque response.success sea false
+      // Verificar si tenemos un ID de partido
+      const partidoId = response.data?.id || (response as any)?.id
       
       if (partidoId) {
+        console.log("[CreateMatch] Partido creado exitosamente con ID:", partidoId)
+        setSuccess(true)
         console.log("[CreateMatch] Redirigiendo a match-created con ID:", partidoId)
         setTimeout(() => router.push(`/match-created?matchId=${partidoId}`), 1000)
+      } else if (!response.success) {
+        throw new Error(response.message || "Error al crear el partido")
       } else {
-        console.warn("[CreateMatch] No se obtuvo ID del partido, redirigiendo a my-matches")
+        console.warn("[CreateMatch] Partido creado pero sin ID, redirigiendo a my-matches")
+        setSuccess(true)
         setTimeout(() => router.push("/my-matches"), 1000)
       }
 

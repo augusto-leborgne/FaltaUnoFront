@@ -93,10 +93,13 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
   // Re-cargar al volver atrás (popstate) y al recuperar foco de la pestaña
   useEffect(() => {
     const onFocus = () => {
-      // Si venimos de /users/... y volvemos, aseguramos que se refresque
-      loadMatch()
+      // Solo recargar si el componente está montado y no hay error crítico
+      if (!error) {
+        loadMatch()
+      }
     }
     const onPopState = () => {
+      // Recargar cuando el usuario navega hacia atrás
       loadMatch()
     }
 
@@ -106,7 +109,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
       window.removeEventListener("focus", onFocus)
       window.removeEventListener("popstate", onPopState)
     }
-  }, [loadMatch])
+  }, [loadMatch, error])
 
   // ====== HANDLERS ======
   const handleJoinMatch = async () => {
@@ -351,7 +354,10 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
               </Avatar>
               <div>
                 <span className="font-semibold text-gray-900 block">
-                  {((match as any).organizador?.nombre ?? "")} {((match as any).organizador?.apellido ?? "")}
+                  {[
+                    (match as any).organizador?.nombre ?? "",
+                    (match as any).organizador?.apellido ?? ""
+                  ].filter(Boolean).join(" ")}
                 </span>
                 <div className="text-sm text-gray-600">Capitán</div>
               </div>
