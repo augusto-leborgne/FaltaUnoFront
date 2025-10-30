@@ -49,7 +49,7 @@ export function ContactsScreen() {
       // Extraer los usuarios amigos de la relación de amistad
       const friendsList: Usuario[] = response.data
         .map((amistad: any) => amistad.amigo)
-        .filter((amigo: any) => amigo != null)
+        .filter((amigo: any) => amigo != null && amigo.id && amigo.nombre && amigo.apellido) // ✅ Filter out null/undefined/invalid users
       
       console.log("[ContactsScreen] Amigos procesados:", friendsList.length)
       setAmigos(friendsList)
@@ -79,6 +79,9 @@ export function ContactsScreen() {
       if (response.success && response.data) {
         const currentUser = AuthService.getUser()
         const filtered = response.data.filter((u: Usuario) => {
+          // ✅ Filter out null/undefined/invalid users
+          if (!u || !u.id || !u.nombre || !u.apellido) return false
+          
           const fullName = `${u.nombre} ${u.apellido}`.toLowerCase()
           const matchesSearch = fullName.includes(query.toLowerCase())
           const isNotCurrentUser = u.id !== currentUser?.id

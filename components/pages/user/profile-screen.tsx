@@ -105,7 +105,13 @@ function ProfileScreenInner() {
           const allUsers = contactsData.data || []
 
           const filteredContacts: Contact[] = allUsers
-            .filter((u: any) => u.id !== user.id)
+            .filter((u: any) => 
+              u && 
+              u.id && 
+              u.id !== user.id &&
+              u.nombre &&
+              u.apellido
+            ) // ✅ Filter out null/undefined/invalid users
             .map((u: any) => ({
               id: u.id,
               nombre: u.nombre || "",
@@ -267,13 +273,21 @@ function ProfileScreenInner() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => router.push(`/friend-request/${request.requesterId}`)}
+                    onClick={() => router.push(`/friend-requests`)}
                     className="bg-transparent"
                   >
                     Ver
                   </Button>
                 </div>
               ))}
+              {friendRequests.length > 3 && (
+                <Button
+                  onClick={() => router.push(`/friend-requests`)}
+                  className="w-full bg-orange-100 hover:bg-orange-200 text-gray-900 border-0"
+                >
+                  Ver todas ({friendRequests.length})
+                </Button>
+              )}
             </div>
           </div>
         )}

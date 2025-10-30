@@ -1310,6 +1310,17 @@ export const AmistadAPI = {
   },
 
   /**
+   * Obtener solicitudes de amistad pendientes (recibidas)
+   */
+  listarSolicitudesPendientes: async () => {
+    const response = await apiFetch<any[]>('/api/amistades/pendientes');
+    return {
+      ...response,
+      data: response.data || []
+    };
+  },
+
+  /**
    * Enviar solicitud de amistad
    */
   enviarSolicitud: (usuarioId: string) => {
