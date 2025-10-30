@@ -8,6 +8,7 @@ import { Star, ArrowLeft, UserPlus } from "lucide-react"
 import { useRouter } from "next/navigation"
 import AuthService from "@/lib/auth"
 import { calcularEdad } from "@/lib/utils"
+import { API_BASE } from "@/lib/api"
 
 interface Review {
   id: string
@@ -120,7 +121,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
         router.push("/login")
         return
       }
-      const res = await fetch(`/api/amistades/${userId}`, {
+      const res = await fetch(`${API_BASE}/api/amistades/${userId}`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       })
@@ -130,7 +131,8 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
         const err = await res.json().catch(() => null)
         alert(err?.message || "Error al enviar solicitud")
       }
-    } catch {
+    } catch (error) {
+      console.error("Error sending friend request:", error)
       alert("Error al enviar solicitud")
     }
   }

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { ArrowLeft, Star } from "lucide-react"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { AuthService } from "@/lib/auth"
+import { API_BASE } from "@/lib/api"
 
 interface Review {
   id: string
@@ -35,7 +36,7 @@ export function ReviewsScreen() {
         return
       }
 
-      const response = await fetch(`/api/reviews?usuarioCalificadoId=${user.id}`, {
+      const response = await fetch(`${API_BASE}/api/reviews?usuarioCalificadoId=${user.id}`, {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
@@ -45,9 +46,13 @@ export function ReviewsScreen() {
       if (response.ok) {
         const result = await response.json()
         setReviews(result.data || [])
+      } else {
+        console.error("Error response:", response.status)
+        setReviews([])
       }
     } catch (error) {
       console.error("Error cargando reviews:", error)
+      setReviews([]) // Set empty array on error to prevent crashes
     } finally {
       setLoading(false)
     }
