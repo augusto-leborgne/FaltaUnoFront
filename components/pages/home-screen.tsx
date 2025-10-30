@@ -8,6 +8,7 @@ import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { Clock, Calendar, Star, Bell, Newspaper, TrendingUp, Award } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
+import { API_BASE } from "@/lib/api"
 import { useNotifications } from "@/hooks/use-notifications"
 
 interface NewsUpdate {
@@ -109,7 +110,7 @@ export function HomeScreen() {
       }
 
       // Cargar partidos del usuario
-      const matchesResponse = await fetch(`/api/partidos/usuario/${user.id}`, {
+      const matchesResponse = await fetch(`${API_BASE}/api/partidos/usuario/${user.id}`, {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
@@ -131,7 +132,7 @@ export function HomeScreen() {
       }
 
       // Cargar reseñas pendientes
-      const reviewsResponse = await fetch(`/api/usuarios/${user.id}/pending-reviews`, {
+      const reviewsResponse = await fetch(`${API_BASE}/api/usuarios/${user.id}/pending-reviews`, {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
@@ -144,7 +145,7 @@ export function HomeScreen() {
       }
 
       // Cargar estadísticas de la comunidad
-      const statsResponse = await fetch("/api/stats/community", {
+      const statsResponse = await fetch(`${API_BASE}/api/stats/community`, {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"

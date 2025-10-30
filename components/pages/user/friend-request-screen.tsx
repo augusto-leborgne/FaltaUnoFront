@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowLeft, Check } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
+import { API_BASE } from "@/lib/api"
 
 interface FriendRequestScreenProps {
   userId: string
@@ -33,7 +34,7 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
         return
       }
 
-      const response = await fetch(`/api/usuarios/${userId}`, {
+      const response = await fetch(`${API_BASE}/api/usuarios/${userId}`, {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
@@ -70,7 +71,7 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
         return
       }
 
-      const response = await fetch(`/api/amistades/${userId}`, {
+      const response = await fetch(`${API_BASE}/api/amistades/${userId}`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,

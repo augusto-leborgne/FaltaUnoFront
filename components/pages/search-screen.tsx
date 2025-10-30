@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { AuthService } from "@/lib/auth"
+import { API_BASE } from "@/lib/api"
 import { SearchMapView } from "./search-map-view"
 
 interface SearchResult {
@@ -116,7 +117,7 @@ export function SearchScreen() {
       // Buscar usuarios si aplica
       if (filter === "todos" || filter === "usuarios") {
         console.log("[SearchScreen] Buscando usuarios con token:", token ? "SÍ" : "NO")
-        const usersResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/usuarios?${queryParams}`, {
+        const usersResponse = await fetch(`${API_BASE}/api/usuarios?${queryParams}`, {
           headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
@@ -139,7 +140,7 @@ export function SearchScreen() {
           console.log("[SearchScreen] Usuarios encontrados:", users.length)
           
           // Cargar amistades
-          const amisταdesResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/amistades`, {
+          const amisταdesResponse = await fetch(`${API_BASE}/api/amistades`, {
             headers: {
               "Authorization": `Bearer ${token}`,
               "Content-Type": "application/json"
@@ -176,8 +177,8 @@ export function SearchScreen() {
 
       // Buscar partidos si aplica
       if (filter === "todos" || filter === "partidos") {
-        console.log("[SearchScreen] Buscando partidos...")
-        const partidosResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/partidos?${queryParams}`, {
+        console.log("[SearchScreen] Buscando partidos")
+        const partidosResponse = await fetch(`${API_BASE}/api/partidos?${queryParams}`, {
           headers: {
             "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
@@ -604,7 +605,7 @@ function ResultCard({ result, onClick }: { result: SearchResult; onClick: () => 
             <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
               {result.foto_perfil ? (
                 <img 
-                  src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/usuarios/${result.id}/foto`}
+                  src={`${API_BASE}/api/usuarios/${result.id}/foto`}
                   className="w-12 h-12 rounded-full object-cover"
                   alt={result.nombre}
                   onError={(e) => {

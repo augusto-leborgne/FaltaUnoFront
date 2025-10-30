@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { AuthService } from "@/lib/auth"
+import { API_BASE } from "@/lib/api"
 
 interface Friend {
   id: string
@@ -39,7 +40,7 @@ export function FriendsScreen() {
         return
       }
 
-      const response = await fetch("/api/amistades", {
+      const response = await fetch(`${API_BASE}/api/amistades`, {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
