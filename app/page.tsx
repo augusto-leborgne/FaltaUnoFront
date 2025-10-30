@@ -3,12 +3,13 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AuthService } from "@/lib/auth";
+import { logger } from "@/lib/logger";
 
 export default function RootPage() {
   const router = useRouter();
 
   useEffect(() => {
-  console.log("[RootPage v2.3] Decidiendo redirección...");
+  logger.debug("[RootPage v2.3] Decidiendo redirección...");
     
     // Limpiar tokens expirados
     AuthService.validateAndCleanup();
@@ -16,19 +17,19 @@ export default function RootPage() {
     const token = AuthService.getToken();
     const user = AuthService.getUser();
     
-    console.log("[RootPage] Token:", token ? "SÍ" : "NO");
-    console.log("[RootPage] User:", user ? "SÍ" : "NO");
+    logger.debug("[RootPage] Token:", token ? "SÍ" : "NO");
+    logger.debug("[RootPage] User:", user ? "SÍ" : "NO");
 
     // Si no hay token o está expirado → login
     if (!token || AuthService.isTokenExpired(token)) {
-      console.log("[RootPage] No autenticado, redirigiendo a /login");
+      logger.debug("[RootPage] No autenticado, redirigiendo a /login");
       router.replace("/login");
       return;
     }
 
     // Si hay token válido y user → decidir según estado del perfil
     if (user) {
-      console.log("[RootPage] Usuario completo:", {
+      logger.debug("[RootPage] Usuario completo:", {
         email: user.email,
         perfilCompleto: user.perfilCompleto,
         cedulaVerificada: user.cedulaVerificada,
@@ -41,26 +42,26 @@ export default function RootPage() {
       
       // Si el perfil no está completo → profile-setup
       if (user.perfilCompleto === false || !user.perfilCompleto) {
-        console.log("[RootPage] Perfil incompleto, redirigiendo a /profile-setup");
+        logger.debug("[RootPage] Perfil incompleto, redirigiendo a /profile-setup");
         router.replace("/profile-setup");
         return;
       }
 
       // Si la cédula no está verificada → verification
       if (user.cedulaVerificada === false || !user.cedulaVerificada) {
-        console.log("[RootPage] Cédula no verificada, redirigiendo a /verification");
+        logger.debug("[RootPage] Cédula no verificada, redirigiendo a /verification");
         router.replace("/verification");
         return;
       }
 
       // Todo completo → home
-      console.log("[RootPage] Usuario completo, redirigiendo a /home");
+      logger.debug("[RootPage] Usuario completo, redirigiendo a /home");
       router.replace("/home");
       return;
     }
 
     // Fallback: si hay token pero no user → login (caso raro)
-    console.log("[RootPage] Token sin user, redirigiendo a /login");
+    logger.debug("[RootPage] Token sin user, redirigiendo a /login");
     router.replace("/login");
   }, [router]);
 

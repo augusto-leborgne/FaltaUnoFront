@@ -13,34 +13,56 @@ const nextConfig = {
     return process.env.BUILD_ID || `build-${Date.now()}`
   },
   
-  // Add cache control headers to force fresh content
+  // Add cache control headers - optimized for dynamic content
   async headers() {
     return [
       {
-        // Apply to all pages
-        source: '/:path*',
+        // API routes and dynamic pages - no cache
+        source: '/api/:path*',
         headers: [
           {
             key: 'Cache-Control',
             value: 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
           },
+        ],
+      },
+      {
+        // Dynamic user pages - short cache with revalidation
+        source: '/(home|profile|matches|search|notifications)/:path*',
+        headers: [
           {
-            key: 'Pragma',
-            value: 'no-cache',
-          },
-          {
-            key: 'Expires',
-            value: '0',
+            key: 'Cache-Control',
+            value: 'private, no-cache, must-revalidate',
           },
         ],
       },
       {
-        // Static assets can have longer cache with ETag validation
+        // Static assets - long cache with immutable
         source: '/_next/static/:path*',
         headers: [
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        // Images and media - cache with revalidation
+        source: '/images/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400, stale-while-revalidate=43200',
+          },
+        ],
+      },
+      {
+        // Public static files - cache for 1 hour
+        source: '/:path*.{jpg,jpeg,png,gif,svg,ico,webp}',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=3600, stale-while-revalidate=86400',
           },
         ],
       },

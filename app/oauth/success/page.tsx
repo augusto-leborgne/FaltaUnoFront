@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { AuthService } from "@/lib/auth"
+import { logger } from "@/lib/logger"
 import { CheckCircle2, XCircle, Loader2 } from "lucide-react"
 
 export default function OAuthSuccessPage() {
@@ -59,7 +60,7 @@ export default function OAuthSuccessPage() {
         }, 1500)
 
       } catch (error) {
-        console.error("[OAuthSuccess] Error procesando OAuth:", error)
+        logger.error("[OAuthSuccess] Error procesando OAuth:", error)
         setStatus("error")
         setMessage("Error al procesar la autenticación")
         setTimeout(() => router.push("/login"), 2000)

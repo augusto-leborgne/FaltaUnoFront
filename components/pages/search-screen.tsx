@@ -29,6 +29,7 @@ interface SearchResult {
   genero?: string
   rating?: number
   distancia?: number
+  imageError?: boolean // Track image load errors
   inscritos?: number
   capacidad?: number
   esAmigo?: boolean
@@ -90,6 +91,14 @@ export function SearchScreen() {
     setRecentSearches([])
     localStorage.removeItem("recentSearches")
   }
+
+  const handleImageError = useCallback((userId: string) => {
+    setResults((prev: SearchResult[]) => 
+      prev.map((r: SearchResult) => 
+        r.id === userId ? { ...r, imageError: true } : r
+      )
+    )
+  }, [])
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return
@@ -551,7 +560,12 @@ export function SearchScreen() {
             {/* Results List */}
             <div className="space-y-3">
               {filteredResults.map((result) => (
-                <ResultCard key={result.id} result={result} onClick={() => handleResultClick(result)} />
+                <ResultCard 
+                  key={result.id} 
+                  result={result} 
+                  onClick={() => handleResultClick(result)}
+                  onImageError={handleImageError}
+                />
               ))}
             </div>
           </div>
@@ -593,7 +607,15 @@ function EmptyState({ message, icon }: { message: string; icon?: React.ReactNode
 }
 
 // Result Card Component
-function ResultCard({ result, onClick }: { result: SearchResult; onClick: () => void }) {
+function ResultCard({ 
+  result, 
+  onClick, 
+  onImageError 
+}: { 
+  result: SearchResult
+  onClick: () => void
+  onImageError?: (id: string) => void
+}) {
   if (result.tipo === "usuario") {
     return (
       <div
@@ -603,14 +625,14 @@ function ResultCard({ result, onClick }: { result: SearchResult; onClick: () => 
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center space-x-3 flex-1">
             <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-              {result.foto_perfil ? (
+              {result.foto_perfil && !result.imageError ? (
                 <img 
                   src={`${API_BASE}/api/usuarios/${result.id}/foto`}
                   className="w-12 h-12 rounded-full object-cover"
                   alt={result.nombre}
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none'
-                    e.currentTarget.parentElement!.innerHTML = `<span class="text-gray-600 font-medium text-sm">${result.nombre?.[0]}${result.apellido?.[0]}</span>`
+                  onError={() => {
+                    // Call parent callback to update state safely
+                    onImageError?.(result.id)
                   }}
                 />
               ) : (

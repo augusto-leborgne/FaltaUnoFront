@@ -1,4 +1,6 @@
 import { AuthService } from "./auth";
+import { keysToCamelCase, keysToSnakeCase, dualCaseKeys } from "./case-converter";
+import { logger } from "./logger";
 
 // ============================================
 // CONFIGURACIÓN
@@ -8,8 +10,8 @@ const getApiBase = (): string => {
   // ✅ Backend en Cloud Run con HTTPS - Comunicación directa sin proxy
   const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-pg4rwegknq-uc.a.run.app';
   
-  console.log('[API Config] Using Cloud Run backend URL:', backendUrl);
-  console.log('[API Config] Environment:', typeof window === 'undefined' ? 'SERVER (SSR)' : 'BROWSER');
+  logger.debug('[API Config] Using Cloud Run backend URL:', backendUrl);
+  logger.debug('[API Config] Environment:', typeof window === 'undefined' ? 'SERVER (SSR)' : 'BROWSER');
   
   return backendUrl;
 };
@@ -19,8 +21,8 @@ export const API_BASE = getApiBase();
 // Normalizar URLs (eliminar barras duplicadas)
 export const normalizeUrl = (url: string) => url.replace(/([^:]\/)\/+/g, '$1');
 
-console.log('[API Config] Final API_BASE:', API_BASE);
-console.log('[API Config] Environment:', typeof window === 'undefined' ? 'SERVER (SSR)' : 'BROWSER');
+logger.debug('[API Config] Final API_BASE:', API_BASE);
+logger.debug('[API Config] Environment:', typeof window === 'undefined' ? 'SERVER (SSR)' : 'BROWSER');
 
 // ============================================
 // TIPOS BASE

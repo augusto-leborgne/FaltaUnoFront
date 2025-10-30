@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { AuthService } from '@/lib/auth'
+import { logger } from '@/lib/logger'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -28,7 +29,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
     // Validar autenticación
     if (!AuthService.isLoggedIn()) {
-      console.log('[ProtectedRoute] Usuario no autenticado, redirigiendo a login')
+      logger.debug('[ProtectedRoute] Usuario no autenticado, redirigiendo a login')
       router.push(`/login?redirect=${encodeURIComponent(pathname || '/')}`)
       return
     }
@@ -36,7 +37,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     // Opcional: Verificar si el perfil está completo
     const user = AuthService.getUser()
     if (user && !user.perfilCompleto && pathname !== '/profile-setup') {
-      console.log('[ProtectedRoute] Perfil incompleto, redirigiendo a profile-setup')
+      logger.debug('[ProtectedRoute] Perfil incompleto, redirigiendo a profile-setup')
       router.push('/profile-setup')
       return
     }
