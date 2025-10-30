@@ -34,7 +34,7 @@ jobs:
       - name: Build and Deploy to Cloud Run
         run: |
           # Backend URL - Ahora usa Cloud Run con HTTPS
-          BACKEND_URL="https://faltauno-backend-169771742214.us-central1.run.app"
+          BACKEND_URL="https://faltauno-backend-pg4rwegknq-uc.a.run.app"
           
           # Generate unique build timestamp for version tracking
           BUILD_TIMESTAMP=$(date +%s)
