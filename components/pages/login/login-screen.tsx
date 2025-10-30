@@ -69,9 +69,9 @@ export function LoginScreen() {
     try {
       const res = await UsuarioAPI.login(email, password)
 
-      if (res?.success) {
-        const token = res.data?.token
-        const user = res.data?.user as Usuario | undefined
+      if (res?.success && res.data) {
+        const token = res.data.token
+        const user = res.data.user
 
         if (token) {
           AuthService.setToken(token)
@@ -101,11 +101,12 @@ export function LoginScreen() {
           postAuthRedirect(user)
         }
       } else {
-        setError(res?.message ?? "Credenciales inválidas")
+        setError(res?.message || res?.error || "Credenciales inválidas")
       }
     } catch (err) {
       console.error("[LoginScreen] Error login:", err)
-      setError("Error al iniciar sesión. Verifica tus credenciales.")
+      const errorMessage = err instanceof Error ? err.message : "Error al iniciar sesión. Verifica tus credenciales."
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }

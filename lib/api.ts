@@ -466,22 +466,34 @@ export const UsuarioAPI = {
    * Login con email y password
    */
   login: async (email: string, password: string) => {
-    const response = await apiFetch<{ token: string; user: Usuario }>(
-      '/api/auth/login-json',
-      {
-        method: 'POST',
-        body: JSON.stringify({ email, password }),
-        skipAuth: true
+    try {
+      const response = await apiFetch<{ token: string; user: Usuario }>(
+        '/api/auth/login-json',
+        {
+          method: 'POST',
+          body: JSON.stringify({ email, password }),
+          skipAuth: true
+        }
+      );
+
+      // Guardar token y usuario en localStorage
+      if (response.success && response.data?.token) {
+        AuthService.setToken(response.data.token);
+        if (response.data.user) {
+          AuthService.setUser(response.data.user);
+        }
       }
-    );
 
-    // Guardar token y usuario en localStorage
-    if (response.success && response.data.token) {
-      AuthService.setToken(response.data.token);
-      AuthService.setUser(response.data.user);
+      return response;
+    } catch (error) {
+      console.error('[UsuarioAPI.login] Error:', error);
+      return {
+        success: false,
+        data: null as any,
+        message: error instanceof Error ? error.message : 'Error al iniciar sesión',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
     }
-
-    return response;
   },
 
   /**
