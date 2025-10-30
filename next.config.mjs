@@ -7,10 +7,10 @@ const nextConfig = {
   // El frontend se comunica directamente con https://faltauno-backend-169771742214.us-central1.run.app
   // Sin Mixed Content errors porque ambos usan HTTPS
   
-  // Disable caching in production to always get fresh data
+  // Use BUILD_ID from environment (set during Docker build with timestamp)
+  // This ensures each deployment has a unique ID for version checking
   generateBuildId: async () => {
-    // Generate unique build ID based on timestamp to force cache busting
-    return `build-${Date.now()}`
+    return process.env.BUILD_ID || `build-${Date.now()}`
   },
   
   // Add cache control headers to force fresh content

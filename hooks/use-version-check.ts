@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 
 /**
  * Hook para detectar nuevas versiones del frontend y forzar recarga automática
- * Revisa cada 5 minutos si hay una nueva versión desplegada
+ * Revisa cada 2 minutos si hay una nueva versión desplegada
  */
 export function useVersionCheck() {
   useEffect(() => {
@@ -39,17 +39,28 @@ export function useVersionCheck() {
           console.log('[Version Check] New version detected! Reloading...')
           console.log(`Old: ${buildId}, New: ${data.buildId}`)
           
-          // Limpiar todos los caches y recargar
-          if ('caches' in window) {
-            caches.keys().then((names) => {
-              names.forEach((name) => {
-                caches.delete(name)
-              })
-            })
-          }
+          // Mostrar notificación al usuario antes de recargar
+          const shouldReload = confirm(
+            '🎉 Una nueva versión está disponible!\n\n' +
+            'La página se recargará para aplicar las actualizaciones.'
+          )
           
-          // Forzar hard reload
-          window.location.reload()
+          if (shouldReload) {
+            // Limpiar todos los caches y recargar
+            if ('caches' in window) {
+              caches.keys().then((names) => {
+                names.forEach((name) => {
+                  caches.delete(name)
+                })
+              })
+            }
+            
+            // Forzar hard reload
+            window.location.reload()
+          } else {
+            // Usuario rechazó, actualizar el buildId para no preguntar de nuevo
+            buildId = data.buildId
+          }
         }
       } catch (error) {
         console.error('[Version Check] Error checking version:', error)
@@ -59,8 +70,8 @@ export function useVersionCheck() {
     // Revisar inmediatamente
     checkVersion()
     
-    // Revisar cada 5 minutos (300000 ms)
-    const interval = setInterval(checkVersion, 300000)
+    // Revisar cada 2 minutos (120000 ms) para detectar cambios más rápido
+    const interval = setInterval(checkVersion, 120000)
     
     return () => clearInterval(interval)
   }, [])
