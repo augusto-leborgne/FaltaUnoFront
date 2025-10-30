@@ -41,11 +41,23 @@ export function CreateMatchScreen() {
     duration?: string
   }>({})
 
+  // ✅ Inicializar con hora actual más cercana (siguiente intervalo de 5 minutos)
+  const getInitialTime = () => {
+    const now = new Date()
+    const minutes = now.getMinutes()
+    const roundedMinutes = Math.ceil(minutes / 5) * 5
+    const futureTime = new Date(now.getTime() + (roundedMinutes - minutes + 15) * 60000) // +15 min mínimo
+    
+    const hours = futureTime.getHours().toString().padStart(2, '0')
+    const mins = (futureTime.getMinutes()).toString().padStart(2, '0')
+    return `${hours}:${mins}`
+  }
+
   const [formData, setFormData] = useState<FormData>({
     type: TipoPartido.FUTBOL_5,
     gender: "Mixto",
     date: "",
-    time: "",
+    time: getInitialTime(),
     location: "",
     totalPlayers: 10,
     totalPrice: 0,
@@ -106,10 +118,11 @@ export function CreateMatchScreen() {
 
       case "time":
         if (!value) return "Selecciona una hora"
+        // Validar que sea hora futura si es hoy
         if (formData.date) {
           const dateTime = new Date(`${formData.date}T${value}`)
           const now = new Date()
-          if (dateTime <= now) return "La fecha y hora deben ser futuras"
+          if (dateTime <= now) return "La hora debe ser futura"
         }
         return null
 
@@ -154,13 +167,13 @@ export function CreateMatchScreen() {
       return "Debes seleccionar una hora"
     }
 
-    // Validar que sea fecha y hora futuras
+    // Validar que sea fecha y hora futuras (permitir hoy si la hora es futura)
     try {
       const dateTime = new Date(`${formData.date}T${formData.time}`)
       const now = new Date()
 
       if (dateTime <= now) {
-        return "La fecha y hora deben ser futuras"
+        return "La fecha y hora deben ser futuras (al menos 15 minutos adelante)"
       }
     } catch {
       return "Fecha u hora inválidas"
@@ -332,11 +345,23 @@ export function CreateMatchScreen() {
   // Generar opciones de hora cada 5 minutos
   const generateTimeOptions = () => {
     const options: string[] = []
+    const now = new Date()
+    const isToday = formData.date === today
+    
     for (let hour = 0; hour < 24; hour++) {
       for (let minute = 0; minute < 60; minute += 5) {
         const hourStr = hour.toString().padStart(2, '0')
         const minuteStr = minute.toString().padStart(2, '0')
-        options.push(`${hourStr}:${minuteStr}`)
+        const timeStr = `${hourStr}:${minuteStr}`
+        
+        // Si es hoy, solo mostrar horas futuras (con al menos 15 minutos de margen)
+        if (isToday) {
+          const timeDate = new Date(`${formData.date}T${timeStr}`)
+          const minTime = new Date(now.getTime() + 15 * 60000) // +15 minutos
+          if (timeDate < minTime) continue
+        }
+        
+        options.push(timeStr)
       }
     }
     return options

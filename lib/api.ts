@@ -549,6 +549,18 @@ export const UsuarioAPI = {
         body: JSON.stringify({ cedula })
       }
     );
+  },
+
+  /**
+   * Eliminar cuenta del usuario actual
+   */
+  eliminarCuenta: () => {
+    return apiFetch<{ success: boolean; message?: string }>(
+      '/api/usuarios/me',
+      {
+        method: 'DELETE'
+      }
+    );
   }
 };
 

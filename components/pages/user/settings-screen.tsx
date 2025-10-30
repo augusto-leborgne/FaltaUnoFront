@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ArrowLeft, Camera, Save, Bell, AlertCircle } from "lucide-react"
+import { ArrowLeft, Camera, Save, Bell, AlertCircle, Trash2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { useAuth } from "@/hooks/use-auth"
@@ -22,6 +22,9 @@ export function SettingsScreen() {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState("")
 
   const [formData, setFormData] = useState({
     name: "",
@@ -249,6 +252,38 @@ export function SettingsScreen() {
       reader.readAsDataURL(file)
       
       console.log("[Settings] Foto seleccionada:", file.name)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText.toLowerCase() !== "eliminar") {
+      setError("Debes escribir 'ELIMINAR' para confirmar")
+      return
+    }
+
+    setIsDeleting(true)
+    setError("")
+
+    try {
+      console.log("[Settings] Eliminando cuenta...")
+      
+      const { UsuarioAPI } = await import('@/lib/api')
+      const response = await UsuarioAPI.eliminarCuenta()
+
+      if (!response.success) {
+        throw new Error(response.message || "Error al eliminar la cuenta")
+      }
+
+      console.log("[Settings] Cuenta eliminada exitosamente")
+      
+      // Cerrar sesión y redirigir
+      AuthService.logout()
+      router.replace("/login")
+      
+    } catch (error) {
+      console.error("[Settings] Error eliminando cuenta:", error)
+      setError(error instanceof Error ? error.message : "Error al eliminar la cuenta")
+      setIsDeleting(false)
     }
   }
 
@@ -534,7 +569,7 @@ export function SettingsScreen() {
           </div>
 
           {/* Save Button */}
-          <div className="mt-8 pb-8">
+          <div className="mt-8 pb-4">
             <Button
               onClick={handleSave}
               disabled={
@@ -562,6 +597,79 @@ export function SettingsScreen() {
                 </>
               )}
             </Button>
+          </div>
+
+          {/* Danger Zone - Delete Account */}
+          <div className="mt-8 pb-8 border-t border-gray-200 pt-8">
+            <h3 className="text-lg font-bold text-red-600 mb-4 flex items-center">
+              <Trash2 className="w-5 h-5 mr-2" />
+              Zona de peligro
+            </h3>
+            
+            {!showDeleteConfirm ? (
+              <div>
+                <p className="text-sm text-gray-600 mb-4">
+                  Una vez eliminada tu cuenta, no podrás recuperarla. Todos tus datos, partidos y conexiones se perderán permanentemente.
+                </p>
+                <Button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  variant="outline"
+                  className="w-full border-red-300 text-red-600 hover:bg-red-50 py-3"
+                  disabled={isSaving || isDeleting}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Eliminar mi cuenta
+                </Button>
+              </div>
+            ) : (
+              <div className="bg-red-50 rounded-2xl p-6 border border-red-200">
+                <p className="text-sm text-red-700 mb-4 font-medium">
+                  ⚠️ Esta acción no se puede deshacer. Todos tus datos serán eliminados permanentemente.
+                </p>
+                <p className="text-sm text-gray-700 mb-4">
+                  Para confirmar, escribe <strong>ELIMINAR</strong> en el campo de abajo:
+                </p>
+                <Input
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  placeholder="Escribe ELIMINAR"
+                  className="mb-4"
+                  disabled={isDeleting}
+                />
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => {
+                      setShowDeleteConfirm(false)
+                      setDeleteConfirmText("")
+                      setError("")
+                    }}
+                    variant="outline"
+                    className="flex-1"
+                    disabled={isDeleting}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    onClick={handleDeleteAccount}
+                    disabled={isDeleting || deleteConfirmText.toLowerCase() !== "eliminar"}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    {isDeleting ? (
+                      <span className="flex items-center justify-center">
+                        <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                        Eliminando...
+                      </span>
+                    ) : (
+                      <>
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Eliminar cuenta
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

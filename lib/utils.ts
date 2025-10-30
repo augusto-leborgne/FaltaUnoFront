@@ -121,6 +121,50 @@ export function formatDate(dateString: string): string {
 }
 
 /**
+ * Formatea una fecha en formato dd/mm/yyyy (formato regional para Uruguay/América Latina)
+ * @param dateString Fecha en formato ISO, yyyy-MM-dd, o Date object
+ * @returns String formateado (ej: "15/05/1990")
+ */
+export function formatDateRegional(dateString: string | Date | null | undefined): string {
+  if (!dateString) return '';
+  
+  try {
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    if (isNaN(date.getTime())) return '';
+    
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    
+    return `${day}/${month}/${year}`;
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Formatea una fecha y hora en formato dd/mm/yyyy HH:mm
+ * @param dateString Fecha en formato ISO o Date object
+ * @returns String formateado (ej: "15/05/2024 14:30")
+ */
+export function formatDateTimeRegional(dateString: string | Date | null | undefined): string {
+  if (!dateString) return '';
+  
+  try {
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    if (isNaN(date.getTime())) return '';
+    
+    const datePart = formatDateRegional(date);
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    
+    return `${datePart} ${hours}:${minutes}`;
+  } catch {
+    return '';
+  }
+}
+
+/**
  * Determina el color del badge según los espacios restantes
  * @param spotsLeft Espacios restantes
  * @returns Clases CSS para el badge
