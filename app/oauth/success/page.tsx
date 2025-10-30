@@ -17,6 +17,8 @@ export default function OAuthSuccessPage() {
       try {
         const token = searchParams.get("token")
         
+        logger.info("[OAuthSuccess] Token recibido:", token ? "SI (length: " + token.length + ")" : "NO")
+        
         if (!token) {
           setStatus("error")
           setMessage("No se recibió el token de autenticación")
@@ -26,17 +28,30 @@ export default function OAuthSuccessPage() {
 
         // Guardar token en localStorage
         AuthService.setToken(token)
+        logger.info("[OAuthSuccess] Token guardado en localStorage")
         
-        // Obtener información completa del usuario desde el backend
+        // Pequeña espera para asegurar que el backend haya procesado el usuario
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
+        // Intentar obtener información completa del usuario desde el backend
+        logger.info("[OAuthSuccess] Intentando obtener usuario...")
         const user = await AuthService.fetchCurrentUser()
         
         if (!user) {
-          setStatus("error")
-          setMessage("Error al obtener información del usuario")
-          setTimeout(() => router.push("/login"), 2000)
+          logger.warn("[OAuthSuccess] No se pudo obtener el usuario, probablemente necesita completar perfil")
+          
+          // Si no se puede obtener el usuario, asumimos que necesita completar perfil
+          // El token es válido, solo falta información
+          setStatus("success")
+          setMessage("¡Bienvenido! Completemos tu perfil para comenzar")
+          
+          setTimeout(() => {
+            router.push("/profile-setup")
+          }, 1500)
           return
         }
 
+        logger.info("[OAuthSuccess] Usuario obtenido:", user.email)
         setStatus("success")
         
         // Mensaje personalizado según el estado del usuario
@@ -62,8 +77,11 @@ export default function OAuthSuccessPage() {
       } catch (error) {
         logger.error("[OAuthSuccess] Error procesando OAuth:", error)
         setStatus("error")
-        setMessage("Error al procesar la autenticación")
-        setTimeout(() => router.push("/login"), 2000)
+        setMessage("Error al procesar la autenticación. Redirigiendo a completar perfil...")
+        
+        // En caso de error, intentar ir a profile-setup
+        // El token podría ser válido pero faltar datos
+        setTimeout(() => router.push("/profile-setup"), 2000)
       }
     }
 
