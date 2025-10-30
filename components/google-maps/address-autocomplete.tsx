@@ -149,6 +149,22 @@ export function AddressAutocomplete({
     }
   };
 
+  // Validar al perder el foco
+  const handleBlur = () => {
+    // Si hay texto pero no se seleccionó de la lista, advertir
+    if (query && !hasSelectedAddress) {
+      console.warn("[AddressAutocomplete] Dirección no seleccionada de la lista");
+      // Mostrar mensaje de advertencia después de un pequeño delay para que el clic en sugerencia funcione
+      setTimeout(() => {
+        if (query && !hasSelectedAddress) {
+          alert("Por favor selecciona una dirección de las sugerencias para asegurar la ubicación exacta");
+          setQuery("");
+          onChange("", null);
+        }
+      }, 200);
+    }
+  };
+
   // Validar que la dirección sea específica (no solo ciudad/país/zona)
   const isAddressSpecific = (place: google.maps.places.PlaceResult): boolean => {
     const addressComponents = place.address_components || [];
@@ -259,15 +275,22 @@ export function AddressAutocomplete({
     <div ref={containerRef} className="relative">
       {/* Input */}
       <div className="relative">
-        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+        <MapPin className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none ${
+          hasSelectedAddress ? 'text-green-600' : 'text-gray-400'
+        }`} />
         
         <input
-          className="w-full py-3 pl-10 pr-10 rounded-xl border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+          className={`w-full py-3 pl-10 pr-10 rounded-xl border bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
+            hasSelectedAddress 
+              ? 'border-green-500 bg-green-50' 
+              : 'border-gray-300'
+          }`}
           placeholder={placeholder}
           value={query}
           required={required}
           disabled={disabled}
           onChange={(e) => handleInputChange(e.target.value)}
+          onBlur={handleBlur}
           autoComplete="off"
         />
 
