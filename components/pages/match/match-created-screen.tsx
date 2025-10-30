@@ -43,7 +43,7 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
       if (response.success && response.data) {
         // Tomar los primeros 4 usuarios como sugerencias
         // En el futuro, esto debería filtrar solo amigos confirmados
-        setAmigos(response.data.slice(0, 4).map(u => ({
+        setAmigos(response.data.slice(0, 4).map((u: any) => ({
           id: u.id,
           nombre: u.nombre,
           apellido: u.apellido,
