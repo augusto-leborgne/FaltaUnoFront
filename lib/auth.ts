@@ -135,8 +135,8 @@ export class AuthService {
     }
     logger?.debug?.("[AuthService] Logout completado")
     if (typeof window !== "undefined") {
-      // Redirección suave
-      window.location.href = "/login"
+      // INMEDIATO: Usar replace para evitar que el usuario use "back"
+      window.location.replace("/login")
     }
   }
 
@@ -220,11 +220,28 @@ export class AuthService {
         if (!res.ok) {
           logger?.error?.("[AuthService] fetchCurrentUser status:", res.status)
           
-          // 401 = token inválido o expirado → limpiar sesión
+          // 401 = token inválido o expirado
           if (res.status === 401) {
-            logger?.error?.("[AuthService] 401 Unauthorized - Token inválido, limpiando sesión")
-            this.logout()
-            return null
+            // CRÍTICO: Solo hacer logout si el token realmente está expirado
+            // NO hacer logout por errores transitorios del backend
+            if (this.isTokenExpired(token)) {
+              logger?.error?.("[AuthService] 401 Unauthorized - Token REALMENTE expirado")
+              logger?.error?.("[AuthService] 🚪 LOGOUT INMEDIATO - Redirigiendo a login...")
+              this.logout() // Esto hace window.location.replace("/login") inmediatamente
+              return null
+            } else {
+              logger?.warn?.("[AuthService] 401 pero token aún válido - Podría ser error transitorio")
+              // Reintentar en caso de error transitorio del backend
+              if (attempt < retries) {
+                const delay = attempt * 1000 // 1s, 2s, 3s
+                logger?.warn?.(`[AuthService] Reintentando en ${delay}ms...`)
+                await new Promise(resolve => setTimeout(resolve, delay))
+                continue
+              }
+              // No hacer logout - preservar token para recuperación
+              logger?.error?.("[AuthService] 401 persistente pero token válido - NO haciendo logout")
+              return null
+            }
           }
           
           // 404 = usuario no encontrado

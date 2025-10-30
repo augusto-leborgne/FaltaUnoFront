@@ -67,6 +67,19 @@ export default function OAuthSuccessPage() {
           logger.error("[OAuthSuccess] 1. Usuario no creado en el backend")
           logger.error("[OAuthSuccess] 2. Token no contiene userId correcto")
           logger.error("[OAuthSuccess] 3. Problemas de latencia/sincronización con la BD")
+          logger.error("[OAuthSuccess] 4. Backend respondió 401 pero token es válido (error transitorio)")
+          logger.error("[OAuthSuccess] 5. Backend respondió 404 - usuario no encontrado en BD")
+          
+          // Verificar si el token sigue ahí después del error
+          const tokenAfterError = TokenPersistence.recoverToken()
+          logger.info("[OAuthSuccess] Token después del error:", tokenAfterError ? "PRESENTE" : "AUSENTE")
+          
+          // Verificar si el token está expirado
+          if (tokenAfterError && AuthService.isTokenExpired(tokenAfterError)) {
+            logger.error("[OAuthSuccess] ⚠️ Token EXPIRADO - esto NO debería pasar en OAuth recién completado")
+          } else if (tokenAfterError) {
+            logger.info("[OAuthSuccess] ✅ Token aún VÁLIDO - el error fue transitorio del backend")
+          }
           
           setStatus("error")
           setMessage("No pudimos verificar tu cuenta. Por favor, intentá iniciar sesión nuevamente.")
