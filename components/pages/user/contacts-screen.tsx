@@ -73,6 +73,7 @@ export function ContactsScreen() {
     try {
       setSearching(true)
       setIsSearchMode(true)
+      setError(null)
       
       const response = await UsuarioAPI.list()
       
@@ -88,9 +89,13 @@ export function ContactsScreen() {
           return matchesSearch && isNotCurrentUser
         })
         setSearchResults(filtered)
+      } else {
+        setError(response.message || "No se pudieron cargar los usuarios")
       }
     } catch (error) {
       console.error("[ContactsScreen] Error buscando usuarios:", error)
+      setError(error instanceof Error ? error.message : "Error al buscar usuarios. Por favor intenta nuevamente.")
+      setSearchResults([])
     } finally {
       setSearching(false)
     }
@@ -214,15 +219,20 @@ export function ContactsScreen() {
 
       <div className="flex-1 px-6 py-6 overflow-y-auto">
         {/* Error Message */}
-        {error && !isSearchMode && (
+        {error && (
           <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl">
             <p className="text-red-600 text-sm mb-3">{error}</p>
             <Button 
-              onClick={loadAmigos}
+              onClick={() => {
+                setError(null)
+                if (!isSearchMode) {
+                  loadAmigos()
+                }
+              }}
               className="w-full bg-red-600 hover:bg-red-700"
               size="sm"
             >
-              Reintentar
+              {isSearchMode ? "Cerrar" : "Reintentar"}
             </Button>
           </div>
         )}

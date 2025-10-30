@@ -238,13 +238,14 @@ export interface NotificacionDTO {
 interface ApiFetchOptions extends RequestInit {
   skipAuth?: boolean;
   customToken?: string;
+  skipAutoLogout?: boolean; // New option to prevent automatic logout on 401
 }
 
 async function apiFetch<T>(
   endpoint: string,
   options: ApiFetchOptions = {}
 ): Promise<ApiResponse<T>> {
-  const { skipAuth = false, customToken, ...fetchOptions } = options;
+  const { skipAuth = false, customToken, skipAutoLogout = false, ...fetchOptions } = options;
 
   // Validar y limpiar tokens expirados
   if (!skipAuth) {
@@ -281,9 +282,9 @@ async function apiFetch<T>(
 
     // Manejo de 401 - Sesión expirada
     if (response.status === 401) {
-      // Sólo hacemos logout+redirect si la petición se envió con token.
+      // Sólo hacemos logout+redirect si la petición se envió con token y no se especificó skipAutoLogout.
       // Evita que transitorios (p. ej. token aún no cargado en navegación) produzcan un logout global.
-      if (hadToken) {
+      if (hadToken && !skipAutoLogout) {
         console.warn('[API] 401 Unauthorized - Limpiando sesión');
         AuthService.logout();
         if (typeof window !== 'undefined') {
@@ -291,8 +292,8 @@ async function apiFetch<T>(
         }
         throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.');
       } else {
-        console.warn('[API] 401 recibido pero no había token en la petición - no se hace logout');
-        throw new Error('No autorizado');
+        console.warn('[API] 401 recibido - no se hace logout automático');
+        throw new Error('No autorizado. Es posible que no tengas permisos para esta acción.');
       }
     }
 
@@ -496,7 +497,9 @@ export const UsuarioAPI = {
   /**
    * Listar usuarios
    */
-  list: () => apiFetch<Usuario[]>('/api/usuarios'),
+  list: () => apiFetch<Usuario[]>('/api/usuarios', { 
+    skipAutoLogout: true // Don't auto-logout on 401, handle error gracefully
+  }),
 
   /**
    * Crear usuario
