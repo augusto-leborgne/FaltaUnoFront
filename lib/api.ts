@@ -499,83 +499,169 @@ export const UsuarioAPI = {
   /**
    * Obtener usuario actual (me)
    */
-  getMe: () => apiFetch<Usuario>('/api/usuarios/me'),
+  getMe: async () => {
+    try {
+      return await apiFetch<Usuario>('/api/usuarios/me');
+    } catch (error) {
+      console.error('[UsuarioAPI.getMe] Error:', error);
+      return {
+        success: false,
+        data: null as any,
+        message: error instanceof Error ? error.message : 'Error al obtener perfil',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
+  },
 
   /**
    * Obtener usuario por ID
    */
-  get: (id: string) => apiFetch<Usuario>(`/api/usuarios/${id}`),
+  get: async (id: string) => {
+    try {
+      return await apiFetch<Usuario>(`/api/usuarios/${id}`);
+    } catch (error) {
+      console.error('[UsuarioAPI.get] Error:', error);
+      return {
+        success: false,
+        data: null as any,
+        message: error instanceof Error ? error.message : 'Error al obtener usuario',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
+  },
 
   /**
    * Listar usuarios
    */
-  list: () => apiFetch<Usuario[]>('/api/usuarios', { 
-    skipAutoLogout: true // Don't auto-logout on 401, handle error gracefully
-  }),
+  list: async () => {
+    try {
+      return await apiFetch<Usuario[]>('/api/usuarios', { 
+        skipAutoLogout: true // Don't auto-logout on 401, handle error gracefully
+      });
+    } catch (error) {
+      console.error('[UsuarioAPI.list] Error:', error);
+      return {
+        success: false,
+        data: [] as any,
+        message: error instanceof Error ? error.message : 'Error al listar usuarios',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
+  },
 
   /**
    * Crear usuario
    */
-  crear: (usuario: Partial<Usuario>) => {
-    const payload = { ...usuario };
-    // No enviar foto_perfil en creación (se sube después)
-    delete payload.foto_perfil;
-    
-    console.log('[UsuarioAPI.crear] Payload:', payload);
-    
-    return apiFetch<{ token?: string; user: Usuario }>('/api/usuarios', {
-      method: 'POST',
-      body: JSON.stringify(payload),
-      skipAuth: true
-    });
+  crear: async (usuario: Partial<Usuario>) => {
+    try {
+      const payload = { ...usuario };
+      // No enviar foto_perfil en creación (se sube después)
+      delete payload.foto_perfil;
+      
+      console.log('[UsuarioAPI.crear] Payload:', payload);
+      
+      return await apiFetch<{ token?: string; user: Usuario }>('/api/usuarios', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+        skipAuth: true
+      });
+    } catch (error) {
+      console.error('[UsuarioAPI.crear] Error:', error);
+      return {
+        success: false,
+        data: null as any,
+        message: error instanceof Error ? error.message : 'Error al crear usuario',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
   },
 
   /**
    * Actualizar perfil del usuario actual
    */
-  actualizarPerfil: (perfil: Partial<Usuario>) => {
-    return apiFetch<Usuario>('/api/usuarios/me', {
-      method: 'PUT',
-      body: JSON.stringify(perfil)
-    });
+  actualizarPerfil: async (perfil: Partial<Usuario>) => {
+    try {
+      return await apiFetch<Usuario>('/api/usuarios/me', {
+        method: 'PUT',
+        body: JSON.stringify(perfil)
+      });
+    } catch (error) {
+      console.error('[UsuarioAPI.actualizarPerfil] Error:', error);
+      return {
+        success: false,
+        data: null as any,
+        message: error instanceof Error ? error.message : 'Error al actualizar perfil',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
   },
 
   /**
    * Subir foto de perfil
    */
   subirFoto: async (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
 
-    return apiFetch<{ success: boolean }>('/api/usuarios/me/foto', {
-      method: 'POST',
-      body: formData
-    });
+      return await apiFetch<{ success: boolean }>('/api/usuarios/me/foto', {
+        method: 'POST',
+        body: formData
+      });
+    } catch (error) {
+      console.error('[UsuarioAPI.subirFoto] Error:', error);
+      return {
+        success: false,
+        data: null as any,
+        message: error instanceof Error ? error.message : 'Error al subir foto',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
   },
 
   /**
    * Verificar cédula
    */
-  verificarCedula: (cedula: string) => {
-    return apiFetch<{ verified: boolean; user?: Usuario }>(
-      '/api/usuarios/me/verify-cedula',
-      {
-        method: 'POST',
-        body: JSON.stringify({ cedula })
-      }
-    );
+  verificarCedula: async (cedula: string) => {
+    try {
+      return await apiFetch<{ verified: boolean; user?: Usuario }>(
+        '/api/usuarios/me/verify-cedula',
+        {
+          method: 'POST',
+          body: JSON.stringify({ cedula })
+        }
+      );
+    } catch (error) {
+      console.error('[UsuarioAPI.verificarCedula] Error:', error);
+      return {
+        success: false,
+        data: null as any,
+        message: error instanceof Error ? error.message : 'Error al verificar cédula',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
   },
 
   /**
    * Eliminar cuenta del usuario actual
    */
-  eliminarCuenta: () => {
-    return apiFetch<{ success: boolean; message?: string }>(
-      '/api/usuarios/me',
-      {
-        method: 'DELETE'
-      }
-    );
+  eliminarCuenta: async () => {
+    try {
+      return await apiFetch<{ success: boolean; message?: string }>(
+        '/api/usuarios/me',
+        {
+          method: 'DELETE'
+        }
+      );
+    } catch (error) {
+      console.error('[UsuarioAPI.eliminarCuenta] Error:', error);
+      return {
+        success: false,
+        data: null as any,
+        message: error instanceof Error ? error.message : 'Error al eliminar cuenta',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
   }
 };
 
@@ -1212,49 +1298,109 @@ export const NotificacionAPI = {
   /**
    * Obtener todas las notificaciones del usuario actual
    */
-  list: () => {
-    return apiFetch<NotificacionDTO[]>('/api/notificaciones');
+  list: async () => {
+    try {
+      return await apiFetch<NotificacionDTO[]>('/api/notificaciones');
+    } catch (error) {
+      console.error('[NotificacionAPI.list] Error:', error);
+      return {
+        success: false,
+        data: [],
+        message: error instanceof Error ? error.message : 'Error al listar notificaciones',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
   },
 
   /**
    * Obtener notificaciones no leídas
    */
-  getNoLeidas: () => {
-    return apiFetch<NotificacionDTO[]>('/api/notificaciones/no-leidas');
+  getNoLeidas: async () => {
+    try {
+      return await apiFetch<NotificacionDTO[]>('/api/notificaciones/no-leidas');
+    } catch (error) {
+      console.error('[NotificacionAPI.getNoLeidas] Error:', error);
+      return {
+        success: false,
+        data: [],
+        message: error instanceof Error ? error.message : 'Error al obtener notificaciones',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
   },
 
   /**
    * Contar notificaciones no leídas
    */
-  count: () => {
-    return apiFetch<{ count: number }>('/api/notificaciones/count');
+  count: async () => {
+    try {
+      return await apiFetch<{ count: number }>('/api/notificaciones/count');
+    } catch (error) {
+      console.error('[NotificacionAPI.count] Error:', error);
+      return {
+        success: false,
+        data: { count: 0 } as any,
+        message: error instanceof Error ? error.message : 'Error al contar notificaciones',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
   },
 
   /**
    * Marcar notificación como leída
    */
-  marcarLeida: (id: string) => {
-    return apiFetch<NotificacionDTO>(`/api/notificaciones/${id}/leer`, {
-      method: 'PUT'
-    });
+  marcarLeida: async (id: string) => {
+    try {
+      return await apiFetch<NotificacionDTO>(`/api/notificaciones/${id}/leer`, {
+        method: 'PUT'
+      });
+    } catch (error) {
+      console.error('[NotificacionAPI.marcarLeida] Error:', error);
+      return {
+        success: false,
+        data: null as any,
+        message: error instanceof Error ? error.message : 'Error al marcar notificación',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
   },
 
   /**
    * Marcar todas las notificaciones como leídas
    */
-  marcarTodasLeidas: () => {
-    return apiFetch<{ count: number }>('/api/notificaciones/leer-todas', {
-      method: 'PUT'
-    });
+  marcarTodasLeidas: async () => {
+    try {
+      return await apiFetch<{ count: number }>('/api/notificaciones/leer-todas', {
+        method: 'PUT'
+      });
+    } catch (error) {
+      console.error('[NotificacionAPI.marcarTodasLeidas] Error:', error);
+      return {
+        success: false,
+        data: { count: 0 } as any,
+        message: error instanceof Error ? error.message : 'Error al marcar notificaciones',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
   },
 
   /**
    * Eliminar notificación
    */
-  eliminar: (id: string) => {
-    return apiFetch<void>(`/api/notificaciones/${id}`, {
-      method: 'DELETE'
-    });
+  eliminar: async (id: string) => {
+    try {
+      return await apiFetch<void>(`/api/notificaciones/${id}`, {
+        method: 'DELETE'
+      });
+    } catch (error) {
+      console.error('[NotificacionAPI.eliminar] Error:', error);
+      return {
+        success: false,
+        data: null as any,
+        message: error instanceof Error ? error.message : 'Error al eliminar notificación',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
   }
 };
 
@@ -1275,18 +1421,38 @@ export const NotificationPreferencesAPI = {
   /**
    * Obtener preferencias de notificación del usuario actual
    */
-  get: () => {
-    return apiFetch<NotificationPreferences>('/api/usuarios/me/notification-preferences');
+  get: async () => {
+    try {
+      return await apiFetch<NotificationPreferences>('/api/usuarios/me/notification-preferences');
+    } catch (error) {
+      console.error('[NotificationPreferencesAPI.get] Error:', error);
+      return {
+        success: false,
+        data: null as any,
+        message: error instanceof Error ? error.message : 'Error al obtener preferencias',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
   },
 
   /**
    * Actualizar preferencias de notificación
    */
-  update: (preferences: Partial<NotificationPreferences>) => {
-    return apiFetch<NotificationPreferences>('/api/usuarios/me/notification-preferences', {
-      method: 'PUT',
-      body: JSON.stringify(preferences)
-    });
+  update: async (preferences: Partial<NotificationPreferences>) => {
+    try {
+      return await apiFetch<NotificationPreferences>('/api/usuarios/me/notification-preferences', {
+        method: 'PUT',
+        body: JSON.stringify(preferences)
+      });
+    } catch (error) {
+      console.error('[NotificationPreferencesAPI.update] Error:', error);
+      return {
+        success: false,
+        data: null as any,
+        message: error instanceof Error ? error.message : 'Error al actualizar preferencias',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
   }
 };
 
@@ -1309,66 +1475,126 @@ export const AmistadAPI = {
    * Obtener lista de amigos del usuario actual (solo aceptados)
    */
   listarAmigos: async () => {
-    const response = await apiFetch<any[]>('/api/amistades');
-    return {
-      ...response,
-      data: response.data?.map((a: any) => ({
-        id: a.id,
-        usuario1Id: a.usuario1Id || a.usuario1_id,
-        usuario2Id: a.usuario2Id || a.usuario2_id,
-        estado: a.estado,
-        fechaSolicitud: a.fechaSolicitud || a.fecha_solicitud,
-        fechaAceptacion: a.fechaAceptacion || a.fecha_aceptacion,
-        amigo: a.amigo
-      })) || []
-    };
+    try {
+      const response = await apiFetch<any[]>('/api/amistades');
+      return {
+        ...response,
+        data: response.data?.map((a: any) => ({
+          id: a.id,
+          usuario1Id: a.usuario1Id || a.usuario1_id,
+          usuario2Id: a.usuario2Id || a.usuario2_id,
+          estado: a.estado,
+          fechaSolicitud: a.fechaSolicitud || a.fecha_solicitud,
+          fechaAceptacion: a.fechaAceptacion || a.fecha_aceptacion,
+          amigo: a.amigo
+        })) || []
+      };
+    } catch (error) {
+      console.error('[AmistadAPI.listarAmigos] Error:', error);
+      return {
+        success: false,
+        data: [],
+        message: error instanceof Error ? error.message : 'Error al listar amigos',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
   },
 
   /**
    * Obtener solicitudes de amistad pendientes (recibidas)
    */
   listarSolicitudesPendientes: async () => {
-    const response = await apiFetch<any[]>('/api/amistades/pendientes');
-    return {
-      ...response,
-      data: response.data || []
-    };
+    try {
+      const response = await apiFetch<any[]>('/api/amistades/pendientes');
+      return {
+        ...response,
+        data: response.data || []
+      };
+    } catch (error) {
+      console.error('[AmistadAPI.listarSolicitudesPendientes] Error:', error);
+      return {
+        success: false,
+        data: [],
+        message: error instanceof Error ? error.message : 'Error al listar solicitudes',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
   },
 
   /**
    * Enviar solicitud de amistad
    */
-  enviarSolicitud: (usuarioId: string) => {
-    return apiFetch<void>(`/api/amistades/${usuarioId}`, {
-      method: 'POST'
-    });
+  enviarSolicitud: async (usuarioId: string) => {
+    try {
+      return await apiFetch<void>(`/api/amistades/${usuarioId}`, {
+        method: 'POST'
+      });
+    } catch (error) {
+      console.error('[AmistadAPI.enviarSolicitud] Error:', error);
+      return {
+        success: false,
+        data: null as any,
+        message: error instanceof Error ? error.message : 'Error al enviar solicitud',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
   },
 
   /**
    * Aceptar solicitud de amistad
    */
-  aceptarSolicitud: (amistadId: string) => {
-    return apiFetch<void>(`/api/amistades/${amistadId}/aceptar`, {
-      method: 'POST'
-    });
+  aceptarSolicitud: async (amistadId: string) => {
+    try {
+      return await apiFetch<void>(`/api/amistades/${amistadId}/aceptar`, {
+        method: 'POST'
+      });
+    } catch (error) {
+      console.error('[AmistadAPI.aceptarSolicitud] Error:', error);
+      return {
+        success: false,
+        data: null as any,
+        message: error instanceof Error ? error.message : 'Error al aceptar solicitud',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
   },
 
   /**
    * Rechazar solicitud de amistad
    */
-  rechazarSolicitud: (amistadId: string) => {
-    return apiFetch<void>(`/api/amistades/${amistadId}/rechazar`, {
-      method: 'POST'
-    });
+  rechazarSolicitud: async (amistadId: string) => {
+    try {
+      return await apiFetch<void>(`/api/amistades/${amistadId}/rechazar`, {
+        method: 'POST'
+      });
+    } catch (error) {
+      console.error('[AmistadAPI.rechazarSolicitud] Error:', error);
+      return {
+        success: false,
+        data: null as any,
+        message: error instanceof Error ? error.message : 'Error al rechazar solicitud',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
   },
 
   /**
    * Eliminar amistad
    */
-  eliminarAmistad: (amistadId: string) => {
-    return apiFetch<void>(`/api/amistades/${amistadId}`, {
-      method: 'DELETE'
-    });
+  eliminarAmistad: async (amistadId: string) => {
+    try {
+      return await apiFetch<void>(`/api/amistades/${amistadId}`, {
+        method: 'DELETE'
+      });
+    } catch (error) {
+      console.error('[AmistadAPI.eliminarAmistad] Error:', error);
+      return {
+        success: false,
+        data: null as any,
+        message: error instanceof Error ? error.message : 'Error al eliminar amistad',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
   }
 };
 
