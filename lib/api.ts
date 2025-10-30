@@ -282,15 +282,22 @@ async function apiFetch<T>(
 
     // Manejo de 401 - Sesión expirada
     if (response.status === 401) {
-      // Sólo hacemos logout+redirect si la petición se envió con token y no se especificó skipAutoLogout.
-      // Evita que transitorios (p. ej. token aún no cargado en navegación) produzcan un logout global.
+      // CRÍTICO: Solo hacer logout si tenemos certeza de que el token es inválido
+      // NO hacer logout por errores de red o timing
       if (hadToken && !skipAutoLogout) {
-        console.warn('[API] 401 Unauthorized - Limpiando sesión');
-        AuthService.logout();
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login';
+        // Verificar si el token realmente está expirado antes de hacer logout
+        if (token && AuthService.isTokenExpired(token)) {
+          console.warn('[API] 401 Unauthorized - Token expirado, limpiando sesión');
+          AuthService.logout();
+          if (typeof window !== 'undefined') {
+            window.location.href = '/login';
+          }
+          throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.');
+        } else {
+          // Token válido pero backend dice 401 - podría ser error transitorio
+          console.warn('[API] 401 pero token aún válido - NO haciendo logout automático');
+          throw new Error('Error de autenticación. Por favor intenta nuevamente.');
         }
-        throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.');
       } else {
         console.warn('[API] 401 recibido - no se hace logout automático');
         throw new Error('No autorizado. Es posible que no tengas permisos para esta acción.');

@@ -6,6 +6,7 @@ import { ArrowLeft, Star } from "lucide-react"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { AuthService } from "@/lib/auth"
 import { API_BASE } from "@/lib/api"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 interface Review {
   id: string
@@ -71,10 +72,10 @@ export function ReviewsScreen() {
         </div>
       </div>
 
-      <div className="flex-1 px-6 py-6 pb-24">
+            <div className="flex-1 px-6 py-6 pb-24">
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full mx-auto"></div>
+            <LoadingSpinner size="lg" variant="green" />
           </div>
         ) : reviews.length === 0 ? (
           <div className="text-center py-12">

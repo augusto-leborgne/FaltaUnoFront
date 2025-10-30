@@ -11,6 +11,7 @@ import { CompressedMap } from "@/components/google-maps/compressed-map"
 import AuthService from "@/lib/auth"
 import { PartidoAPI, InscripcionAPI, PartidoDTO, PartidoEstado } from "@/lib/api"
 import { formatMatchType, formatLevel, formatDate, getSpotsLeftColor } from "@/lib/utils"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 interface MatchDetailProps {
   matchId: string
@@ -189,10 +190,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando partido...</p>
-        </div>
+        <LoadingSpinner size="lg" variant="green" text="Cargando partido..." />
       </div>
     )
   }
@@ -442,7 +440,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
               >
                 {isJoining ? (
                   <span className="flex items-center justify-center">
-                    <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                    <LoadingSpinner size="sm" variant="white" className="mr-2" />
                     Procesando...
                   </span>
                 ) : isMatchFull ? (

@@ -6,7 +6,8 @@ import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { UserAvatar } from "@/components/ui/user-avatar"
-import { Settings, Star, UserPlus, Phone, Users, LogOut, Loader2 } from "lucide-react"
+import { Settings, Star, UserPlus, Phone, Users, LogOut } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useRouter } from "next/navigation"
 import { calcularEdad } from "@/lib/utils"
 import { AuthService } from "@/lib/auth"
@@ -171,10 +172,7 @@ function ProfileScreenInner() {
   if (userLoading || loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-green-600 mx-auto mb-4" />
-          <p className="text-gray-600">Cargando perfil...</p>
-        </div>
+        <LoadingSpinner size="lg" variant="green" text="Cargando perfil..." />
       </div>
     )
   }

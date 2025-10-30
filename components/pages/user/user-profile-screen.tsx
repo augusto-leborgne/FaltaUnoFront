@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 import AuthService from "@/lib/auth"
 import { calcularEdad } from "@/lib/utils"
 import { API_BASE } from "@/lib/api"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 interface Review {
   id: string
@@ -142,10 +143,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando perfil...</p>
-        </div>
+        <LoadingSpinner size="lg" variant="green" text="Cargando perfil..." />
       </div>
     )
   }

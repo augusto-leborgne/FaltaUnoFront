@@ -9,6 +9,7 @@ import { ArrowLeft, Search, X, UserPlus } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { UsuarioAPI, AmistadAPI, Usuario } from "@/lib/api"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 export function ContactsScreen() {
   const router = useRouter()
@@ -178,10 +179,7 @@ export function ContactsScreen() {
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando contactos...</p>
-        </div>
+        <LoadingSpinner size="lg" variant="green" text="Cargando contactos..." />
       </div>
     )
   }
@@ -246,7 +244,7 @@ export function ContactsScreen() {
 
             {searching && (
               <div className="text-center py-8">
-                <div className="animate-spin w-6 h-6 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-2"></div>
+                <LoadingSpinner size="md" variant="green" />
               </div>
             )}
 

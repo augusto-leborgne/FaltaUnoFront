@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { AuthService } from "@/lib/auth"
+import { TokenPersistence } from "@/lib/token-persistence"
 import { logger } from "@/lib/logger"
-import { CheckCircle2, XCircle, Loader2 } from "lucide-react"
+import { CheckCircle2, XCircle } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 export default function OAuthSuccessPage() {
   const router = useRouter()
@@ -26,62 +28,86 @@ export default function OAuthSuccessPage() {
           return
         }
 
-        // Guardar token en localStorage
-        AuthService.setToken(token)
-        logger.info("[OAuthSuccess] Token guardado en localStorage")
+        // Decodificar el token para ver qué contiene (solo para debugging)
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]))
+          logger.info("[OAuthSuccess] Token payload:", payload)
+          logger.info("[OAuthSuccess] UserID en token:", payload.userId)
+          logger.info("[OAuthSuccess] Email en token:", payload.sub)
+          logger.info("[OAuthSuccess] Expira en:", new Date(payload.exp * 1000).toISOString())
+        } catch (e) {
+          logger.error("[OAuthSuccess] Error decodificando token:", e)
+        }
+
+        // Guardar token en localStorage INMEDIATAMENTE con redundancia
+        // Esto asegura que no perdemos el token si hay errores después
+        TokenPersistence.saveTokenWithBackup(token)
+        logger.info("[OAuthSuccess] ✅ Token guardado con redundancia en localStorage")
         
-        // Pequeña espera para asegurar que el backend haya procesado el usuario
-        await new Promise(resolve => setTimeout(resolve, 500))
+        // Verificar consistencia
+        const consistency = TokenPersistence.verifyTokenConsistency()
+        logger.info("[OAuthSuccess] Consistencia del token:", consistency)
         
-        // Intentar obtener información completa del usuario desde el backend
-        logger.info("[OAuthSuccess] Intentando obtener usuario...")
+        // Dar tiempo al backend para:
+        // 1. Confirmar la transacción de base de datos
+        // 2. Propagar el usuario a través del sistema
+        logger.info("[OAuthSuccess] Esperando 2 segundos para que el backend termine de procesar...")
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        
+        // Intentar obtener información del usuario desde el backend
+        // El método fetchCurrentUser ahora tiene reintentos automáticos (3 intentos)
+        logger.info("[OAuthSuccess] Intentando obtener usuario con reintentos automáticos...")
+        setMessage("Verificando tu cuenta...")
+        
         const user = await AuthService.fetchCurrentUser()
         
         if (!user) {
-          logger.warn("[OAuthSuccess] No se pudo obtener el usuario, probablemente necesita completar perfil")
+          logger.error("[OAuthSuccess] ❌ No se pudo obtener usuario después de todos los reintentos")
+          logger.error("[OAuthSuccess] Posibles causas:")
+          logger.error("[OAuthSuccess] 1. Usuario no creado en el backend")
+          logger.error("[OAuthSuccess] 2. Token no contiene userId correcto")
+          logger.error("[OAuthSuccess] 3. Problemas de latencia/sincronización con la BD")
           
-          // Si no se puede obtener el usuario, asumimos que necesita completar perfil
-          // El token es válido, solo falta información
-          setStatus("success")
-          setMessage("¡Bienvenido! Completemos tu perfil para comenzar")
+          setStatus("error")
+          setMessage("No pudimos verificar tu cuenta. Por favor, intentá iniciar sesión nuevamente.")
           
+          // NO limpiar el token - dejarlo por si el problema se resuelve
+          // El usuario puede intentar refrescar o navegar manualmente
           setTimeout(() => {
-            router.push("/profile-setup")
-          }, 1500)
+            router.push("/login")
+          }, 5000)
           return
         }
 
-        logger.info("[OAuthSuccess] Usuario obtenido:", user.email)
+        logger.info("[OAuthSuccess] ✅ Usuario obtenido exitosamente")
+        logger.info("[OAuthSuccess] Email:", user.email)
+        logger.info("[OAuthSuccess] Nombre:", user.nombre)
+        logger.info("[OAuthSuccess] ID:", (user as any).id)
+        logger.info("[OAuthSuccess] Perfil completo:", user.perfilCompleto)
+        logger.info("[OAuthSuccess] Cédula verificada:", user.cedulaVerificada)
+        
         setStatus("success")
         
-        // Mensaje personalizado según el estado del usuario
+        // Redirigir según el estado del usuario
         if (!user.perfilCompleto) {
           setMessage(`¡Bienvenido! Completemos tu perfil para comenzar`)
+          setTimeout(() => router.push("/profile-setup"), 1500)
         } else if (!user.cedulaVerificada) {
           setMessage(`¡Bienvenido! Verificá tu cédula para continuar`)
+          setTimeout(() => router.push("/verification"), 1500)
         } else {
           setMessage(`¡Bienvenido de nuevo, ${user.nombre || user.email}!`)
+          setTimeout(() => router.push("/home"), 1500)
         }
-
-        // Redirigir según el estado del perfil y verificación
-        setTimeout(() => {
-          if (!user.perfilCompleto) {
-            router.push("/profile-setup")
-          } else if (!user.cedulaVerificada) {
-            router.push("/verification")
-          } else {
-            router.push("/home")
-          }
-        }, 1500)
 
       } catch (error) {
         logger.error("[OAuthSuccess] Error procesando OAuth:", error)
         setStatus("error")
-        setMessage("Error al procesar la autenticación. Redirigiendo a completar perfil...")
+        setMessage("Error al procesar la autenticación")
         
-        // En caso de error, intentar ir a profile-setup
-        // El token podría ser válido pero faltar datos
-        setTimeout(() => router.push("/profile-setup"), 2000)
+        // Limpiar y volver a login
+        AuthService.logout()
+        setTimeout(() => router.push("/login"), 2000)
       }
     }
 
@@ -93,9 +119,7 @@ export default function OAuthSuccessPage() {
       <div className="max-w-md w-full text-center">
         {status === "loading" && (
           <>
-            <div className="mb-6">
-              <Loader2 className="w-16 h-16 text-[#159895] animate-spin mx-auto" />
-            </div>
+            <LoadingSpinner size="2xl" variant="primary" centered className="mb-6" />
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
               Autenticando...
             </h1>

@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { calcularEdad } from "@/lib/utils"
 import { API_BASE, normalizeUrl } from "@/lib/api"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 interface Review {
   id: string
@@ -120,10 +121,7 @@ function PlayerProfile({ playerId }: PlayerProfileProps) {
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando perfil...</p>
-        </div>
+        <LoadingSpinner size="xl" variant="green" text="Cargando perfil..." />
       </div>
     )
   }

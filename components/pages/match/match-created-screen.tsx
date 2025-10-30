@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Check, Users, Share2, Loader2, AlertCircle } from "lucide-react"
+import { Check, Users, Share2, AlertCircle } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { UsuarioAPI, PartidoAPI } from "@/lib/api"
@@ -174,7 +175,7 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
 
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+              <LoadingSpinner size="md" variant="gray" />
             </div>
           ) : amigos.length > 0 ? (
             <>
@@ -206,7 +207,7 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
                         className="bg-orange-50 border-orange-200 text-gray-700 hover:bg-orange-100 disabled:opacity-50"
                       >
                         {isInviting ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <LoadingSpinner size="sm" variant="gray" />
                         ) : (
                           "Invitar"
                         )}

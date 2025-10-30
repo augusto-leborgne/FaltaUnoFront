@@ -3,6 +3,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { AuthService } from "@/lib/auth";
+import { TokenPersistence } from "@/lib/token-persistence";
 import type { Usuario } from "@/lib/api";
 
 export type AuthCtx = {
@@ -110,6 +111,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const init = async () => {
       console.log("[AuthProvider] Inicializando...");
+      
+      // CRÍTICO: Intentar recuperar token desde backups si es necesario
+      const recoveredToken = TokenPersistence.recoverToken();
+      if (recoveredToken) {
+        console.log("[AuthProvider] Token recuperado exitosamente desde backup");
+      }
+      
+      // Verificar consistencia del token
+      const consistency = TokenPersistence.verifyTokenConsistency();
+      if (consistency.repaired) {
+        console.log("[AuthProvider] Token reparado durante inicialización");
+      }
       
       // Limpiar tokens expirados
       AuthService.validateAndCleanup();

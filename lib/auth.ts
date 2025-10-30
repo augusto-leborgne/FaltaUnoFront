@@ -192,37 +192,99 @@ export class AuthService {
   /**
    * Usa API_BASE normalizado. Si el backend responde 401 → logout.
    * Si responde 404/500 no se hace logout: se asume error transitorio.
+   * Incluye reintentos automáticos para manejar errores transitorios.
    */
-  static async fetchCurrentUser(): Promise<Usuario | null> {
-    try {
-      const token = await this.ensureToken()
-      if (!token) return null
-      if (this.isTokenExpired(token)) {
-        this.logout()
+  static async fetchCurrentUser(retries = 3): Promise<Usuario | null> {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        const token = await this.ensureToken()
+        if (!token) {
+          logger?.debug?.("[AuthService] No hay token, no se puede obtener usuario")
+          return null
+        }
+        
+        if (this.isTokenExpired(token)) {
+          logger?.warn?.("[AuthService] Token expirado, haciendo logout")
+          this.logout()
+          return null
+        }
+        
+        logger?.debug?.(`[AuthService] Fetching current user (intento ${attempt}/${retries})...`)
+        const url = normalizeUrl(`${API_BASE}/api/usuarios/me`)
+        const res = await fetch(url, { 
+          headers: this.getAuthHeaders(),
+          // Agregar timeout para evitar esperas infinitas
+          signal: AbortSignal.timeout(10000) // 10 segundos
+        })
+        
+        if (!res.ok) {
+          logger?.error?.("[AuthService] fetchCurrentUser status:", res.status)
+          
+          // 401 = token inválido o expirado → limpiar sesión
+          if (res.status === 401) {
+            logger?.error?.("[AuthService] 401 Unauthorized - Token inválido, limpiando sesión")
+            this.logout()
+            return null
+          }
+          
+          // 404 = usuario no encontrado
+          if (res.status === 404) {
+            logger?.error?.("[AuthService] 404 Usuario no encontrado")
+            // NO hacer logout inmediatamente - podría ser error transitorio
+            // Reintentar en caso de que sea un problema de timing
+            if (attempt < retries) {
+              const delay = attempt * 1000 // Espera incremental: 1s, 2s, 3s
+              logger?.warn?.(`[AuthService] Reintentando en ${delay}ms...`)
+              await new Promise(resolve => setTimeout(resolve, delay))
+              continue
+            }
+            // Después de todos los reintentos, retornar null pero SIN hacer logout
+            // para preservar el token por si el usuario fue creado pero hay latencia
+            logger?.error?.("[AuthService] Usuario no encontrado después de todos los reintentos")
+            return null
+          }
+          
+          // Otros errores (500, 503, etc) → reintentar
+          if (attempt < retries) {
+            const delay = attempt * 500
+            logger?.warn?.(`[AuthService] Error ${res.status}, reintentando en ${delay}ms...`)
+            await new Promise(resolve => setTimeout(resolve, delay))
+            continue
+          }
+          
+          return null
+        }
+        
+        const json = await res.json()
+        const data = json?.data ?? json
+        const normalized: any = {
+          ...data,
+          foto_perfil: data?.foto_perfil ?? data?.fotoPerfil ?? undefined,
+        }
+        delete normalized.fotoPerfil
+        this.setUser(normalized)
+        logger?.debug?.("[AuthService] ✅ Usuario actualizado desde servidor")
+        return normalized as Usuario
+        
+      } catch (e) {
+        logger?.error?.(`[AuthService] Error en fetchCurrentUser (intento ${attempt}/${retries}):`, e)
+        
+        // Si es error de timeout o red, reintentar
+        if (attempt < retries && (e instanceof TypeError || (e as any).name === 'AbortError')) {
+          const delay = attempt * 1000
+          logger?.warn?.(`[AuthService] Error de red/timeout, reintentando en ${delay}ms...`)
+          await new Promise(resolve => setTimeout(resolve, delay))
+          continue
+        }
+        
+        // Error final - NO hacer logout, preservar token
         return null
       }
-      logger?.debug?.("[AuthService] Fetching current user...")
-      const url = normalizeUrl(`${API_BASE}/api/usuarios/me`)
-      const res = await fetch(url, { headers: this.getAuthHeaders() })
-      if (!res.ok) {
-        logger?.error?.("[AuthService] fetchCurrentUser status:", res.status)
-        if (res.status === 401) this.logout()
-        return null
-      }
-      const json = await res.json()
-      const data = json?.data ?? json
-      const normalized: any = {
-        ...data,
-        foto_perfil: data?.foto_perfil ?? data?.fotoPerfil ?? undefined,
-      }
-      delete normalized.fotoPerfil
-      this.setUser(normalized)
-      logger?.debug?.("[AuthService] Usuario actualizado desde servidor")
-      return normalized as Usuario
-    } catch (e) {
-      logger?.error?.("[AuthService] Error en fetchCurrentUser:", e)
-      return null
     }
+    
+    // Si llegamos aquí, todos los reintentos fallaron
+    logger?.error?.("[AuthService] Todos los reintentos fallaron para fetchCurrentUser")
+    return null
   }
 
   static async updateProfilePhoto(file: File): Promise<boolean> {

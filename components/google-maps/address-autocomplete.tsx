@@ -3,7 +3,8 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { googleMapsLoader } from "@/lib/google-maps-loader";
-import { X, MapPin, Loader2 } from "lucide-react";
+import { X, MapPin } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 type Props = {
   value?: string;
@@ -250,7 +251,7 @@ export function AddressAutocomplete({
     return (
       <div className="relative">
         <div className="w-full py-3 px-4 rounded-xl border border-gray-300 bg-gray-50 flex items-center">
-          <Loader2 className="w-4 h-4 mr-2 animate-spin text-gray-400" />
+          <LoadingSpinner size="sm" variant="gray" className="mr-2" />
           <span className="text-gray-500 text-sm">Cargando mapa...</span>
         </div>
       </div>
@@ -297,7 +298,7 @@ export function AddressAutocomplete({
         {/* Indicador de búsqueda o botón limpiar */}
         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
           {isSearching ? (
-            <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+            <LoadingSpinner size="sm" variant="gray" />
           ) : query ? (
             <button
               type="button"

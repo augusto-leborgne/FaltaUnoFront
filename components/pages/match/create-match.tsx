@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation"
 import { AddressAutocomplete } from "@/components/google-maps/address-autocomplete"
 import { AuthService } from "@/lib/auth"
 import { PartidoAPI, mapFormDataToPartidoDTO, TipoPartido, NivelPartido } from "@/lib/api"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 type PlaceResult = google.maps.places.PlaceResult
 
@@ -656,7 +657,7 @@ export function CreateMatchScreen() {
           >
             {isLoading ? (
               <span className="flex items-center justify-center">
-                <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                <LoadingSpinner size="sm" variant="white" className="mr-2" />
                 Creando partido...
               </span>
             ) : success ? (

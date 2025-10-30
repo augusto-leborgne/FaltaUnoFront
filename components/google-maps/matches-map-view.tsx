@@ -6,6 +6,7 @@ import { useState, useEffect, useRef, useCallback } from "react"
 import { googleMapsLoader } from "@/lib/google-maps-loader"
 import { PartidoDTO } from "@/lib/api"
 import { MapPin, Navigation, AlertCircle } from "lucide-react"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 interface MatchesMapViewProps {
   matches: PartidoDTO[]
@@ -290,10 +291,7 @@ export function MatchesMapView({
       {/* Loading overlay */}
       {isLoading && (
         <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-3"></div>
-            <p className="text-gray-600 text-sm">Cargando mapa...</p>
-          </div>
+          <LoadingSpinner size="lg" variant="green" text="Cargando mapa..." />
         </div>
       )}
     </div>
