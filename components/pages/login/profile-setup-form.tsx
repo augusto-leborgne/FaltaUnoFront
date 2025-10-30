@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useRef, useState, useEffect } from "react"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -275,9 +276,16 @@ export function ProfileSetupForm() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="bg-gray-50 rounded-2xl p-6 flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Avatar className="w-16 h-16 bg-orange-100">
+              <Avatar className="w-16 h-16 bg-orange-100 relative overflow-hidden">
                 {formData.photoPreviewUrl ? (
-                  <img src={formData.photoPreviewUrl} alt="preview" className="w-16 h-16 object-cover rounded-md" />
+                  <Image 
+                    src={formData.photoPreviewUrl} 
+                    alt="Vista previa de foto de perfil" 
+                    width={64}
+                    height={64}
+                    className="object-cover rounded-md"
+                    unoptimized // Local blob URL
+                  />
                 ) : (
                   <AvatarFallback className="bg-orange-100">
                     <User className="w-8 h-8 text-gray-600" />

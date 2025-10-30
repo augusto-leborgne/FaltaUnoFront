@@ -3,6 +3,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { Search, MapPin, X, SlidersHorizontal, Clock, TrendingUp, Calendar, Users, Map } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -624,16 +625,19 @@ function ResultCard({
       >
         <div className="flex items-center justify-between w-full">
           <div className="flex items-center space-x-3 flex-1">
-            <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+            <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0 overflow-hidden relative">
               {result.foto_perfil && !result.imageError ? (
-                <img 
+                <Image 
                   src={`${API_BASE}/api/usuarios/${result.id}/foto`}
-                  className="w-12 h-12 rounded-full object-cover"
-                  alt={result.nombre}
+                  alt={result.nombre || 'Usuario'}
+                  width={48}
+                  height={48}
+                  className="rounded-full object-cover"
                   onError={() => {
                     // Call parent callback to update state safely
                     onImageError?.(result.id)
                   }}
+                  unoptimized // Backend serves dynamic images
                 />
               ) : (
                 <span className="text-gray-600 font-medium text-sm">

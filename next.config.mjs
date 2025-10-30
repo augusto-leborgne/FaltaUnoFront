@@ -7,6 +7,26 @@ const nextConfig = {
   // El frontend se comunica directamente con https://faltauno-backend-169771742214.us-central1.run.app
   // Sin Mixed Content errors porque ambos usan HTTPS
   
+  // Configure Next.js Image optimization
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'faltauno-backend-pg4rwegknq-uc.a.run.app',
+        pathname: '/api/usuarios/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '8080',
+        pathname: '/api/usuarios/**',
+      },
+    ],
+    formats: ['image/webp', 'image/avif'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+  },
+  
   // Use BUILD_ID from environment (set during Docker build with timestamp)
   // This ensures each deployment has a unique ID for version checking
   generateBuildId: async () => {
