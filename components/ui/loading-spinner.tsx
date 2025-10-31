@@ -1,8 +1,36 @@
 import { cn } from "@/lib/utils"
 
 /**
- * Simple circular spinner (thin border, no SVG)
- * This is the classic green spinner with thin borders
+ * Modern green circular spinner with gradient effect
+ * This is a sophisticated spinner with a thin border that thickens on one section
+ */
+const ModernGreenSpinner = ({ className, size }: { className?: string; size: string }) => (
+  <div className={cn("relative", className)}>
+    {/* Base circle (light green, very thin) */}
+    <div 
+      className={cn(
+        "rounded-full border border-green-200",
+        size
+      )} 
+    />
+    {/* Animated segment (thick green) */}
+    <div 
+      className={cn(
+        "absolute inset-0 rounded-full animate-spin",
+        "border-2 border-transparent border-t-green-600",
+        size
+      )}
+      style={{
+        background: 'conic-gradient(from 0deg, transparent 0%, transparent 75%, #16a34a 75%, #16a34a 100%)',
+        WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 2px), black calc(100% - 2px))',
+        mask: 'radial-gradient(farthest-side, transparent calc(100% - 2px), black calc(100% - 2px))'
+      }}
+    />
+  </div>
+)
+
+/**
+ * Simple thin-border circular spinner (fallback/alternative)
  */
 const CircleSpinner = ({ className }: { className?: string }) => (
   <div 
@@ -25,12 +53,12 @@ interface LoadingSpinnerProps {
   size?: "sm" | "md" | "lg" | "xl" | "2xl"
   /**
    * Color variant
+   * - green: Modern green spinner (DEFAULT - recommended)
    * - primary: App primary color (#159895)
    * - white: White spinner for dark backgrounds
    * - gray: Gray spinner
-   * - green: Green spinner (legacy support)
    */
-  variant?: "primary" | "white" | "gray" | "green"
+  variant?: "green" | "primary" | "white" | "gray"
   /**
    * Optional text to show below the spinner
    */
@@ -54,21 +82,21 @@ const sizeClasses = {
 }
 
 const variantClasses = {
-  primary: "text-[#159895]",
-  white: "text-white",
-  gray: "text-gray-400",
-  green: "text-green-600",
+  green: "text-green-600 border-green-600",
+  primary: "text-[#159895] border-[#159895]",
+  white: "text-white border-white",
+  gray: "text-gray-400 border-gray-400",
 }
 
 /**
- * Modern, consistent loading spinner component using Loader2 from lucide-react
+ * Modern, consistent loading spinner component with green gradient effect
  * 
  * @example
- * // Simple centered spinner
+ * // Simple centered spinner (green by default)
  * <LoadingSpinner />
  * 
  * @example
- * // Large primary spinner with text
+ * // Large green spinner with text
  * <LoadingSpinner size="xl" text="Cargando..." />
  * 
  * @example
@@ -78,24 +106,30 @@ const variantClasses = {
  * @example
  * // Full page loading state
  * <div className="flex flex-col items-center justify-center min-h-screen">
- *   <LoadingSpinner size="2xl" variant="primary" text="Cargando datos..." />
+ *   <LoadingSpinner size="2xl" text="Cargando datos..." />
  * </div>
  */
 export function LoadingSpinner({
   size = "lg",
-  variant = "primary",
+  variant = "green",
   text,
   className,
   centered = false,
 }: LoadingSpinnerProps) {
+  const sizeClass = sizeClasses[size]
+  
   return (
     <div className={cn("flex flex-col items-center gap-3", centered && "mx-auto", className)}>
-      <CircleSpinner 
-        className={cn(
-          sizeClasses[size],
-          variantClasses[variant]
-        )} 
-      />
+      {variant === "green" ? (
+        <ModernGreenSpinner size={sizeClass} className={sizeClass} />
+      ) : (
+        <CircleSpinner 
+          className={cn(
+            sizeClass,
+            variantClasses[variant]
+          )} 
+        />
+      )}
       {text && (
         <p className={cn(
           "text-sm font-medium",
@@ -117,7 +151,7 @@ export function LoadingSpinner({
 export function FullPageSpinner({ text }: { text?: string }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white p-6">
-      <LoadingSpinner size="2xl" variant="primary" text={text} />
+      <LoadingSpinner size="2xl" variant="green" text={text} />
     </div>
   )
 }
@@ -128,6 +162,6 @@ export function FullPageSpinner({ text }: { text?: string }) {
  * @example
  * {loading ? <InlineSpinner /> : "Cargar más"}
  */
-export function InlineSpinner({ variant = "gray" }: { variant?: LoadingSpinnerProps["variant"] }) {
+export function InlineSpinner({ variant = "green" }: { variant?: LoadingSpinnerProps["variant"] }) {
   return <LoadingSpinner size="sm" variant={variant} />
 }

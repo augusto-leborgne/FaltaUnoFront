@@ -145,7 +145,7 @@ export function HomeScreen() {
       }
 
       // Cargar estadísticas de la comunidad
-      const statsResponse = await fetch(`${API_BASE}/api/stats/community`, {
+      const statsResponse = await fetch(`${API_BASE}/api/usuarios/stats`, {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
@@ -154,11 +154,13 @@ export function HomeScreen() {
 
       if (statsResponse.ok) {
         const statsData = await statsResponse.json()
-        setCommunityStats(statsData.data || {
-          activeUsers: 0,
-          matchesThisWeek: 0,
-          newMembers: 0,
-        })
+        if (statsData.success && statsData.data) {
+          setCommunityStats({
+            activeUsers: statsData.data.usuariosActivos || 0,
+            matchesThisWeek: statsData.data.totalPartidos || 0,
+            newMembers: statsData.data.totalUsuarios || 0,
+          })
+        }
       }
 
     } catch (error) {
@@ -231,16 +233,16 @@ export function HomeScreen() {
 
         <div className="grid grid-cols-3 gap-4">
           <div className="bg-card rounded-xl p-3 text-center">
-            <div className="text-lg font-bold text-primary">{communityStats.activeUsers}</div>
-            <div className="text-xs text-muted-foreground">Usuarios activos</div>
+            <div className="text-lg font-bold text-green-600">{communityStats.activeUsers}</div>
+            <div className="text-xs text-muted-foreground">Activos ahora</div>
           </div>
           <div className="bg-card rounded-xl p-3 text-center">
             <div className="text-lg font-bold text-foreground">{communityStats.matchesThisWeek}</div>
-            <div className="text-xs text-muted-foreground">Partidos esta semana</div>
+            <div className="text-xs text-muted-foreground">Total partidos</div>
           </div>
           <div className="bg-card rounded-xl p-3 text-center">
             <div className="text-lg font-bold text-foreground">{communityStats.newMembers}</div>
-            <div className="text-xs text-muted-foreground">Nuevos miembros</div>
+            <div className="text-xs text-muted-foreground">Total usuarios</div>
           </div>
         </div>
       </div>
