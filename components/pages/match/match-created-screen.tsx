@@ -7,7 +7,7 @@ import { Check, Users, Share2, AlertCircle } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
-import { UsuarioAPI, PartidoAPI } from "@/lib/api"
+import { AmistadAPI, PartidoAPI } from "@/lib/api"
 
 interface MatchCreatedScreenProps {
   matchId?: string
@@ -37,21 +37,22 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
 
   const loadAmigos = async () => {
     try {
-      // Intentar cargar amigos del backend
-      // TODO: Implementar endpoint específico /api/usuarios/me/amigos cuando esté disponible
-      const response = await UsuarioAPI.list()
+      // Cargar amigos del usuario actual
+      const response = await AmistadAPI.listarAmigos()
       
       if (response.success && response.data) {
-        // Tomar los primeros 4 usuarios como sugerencias
-        // En el futuro, esto debería filtrar solo amigos confirmados
-        setAmigos(response.data.slice(0, 4).map((u: any) => ({
-          id: u.id,
-          nombre: u.nombre,
-          apellido: u.apellido,
-          foto_perfil: u.foto_perfil
-        })))
+        // Mapear los amigos del formato de AmistadDTO
+        setAmigos(response.data.map((amistad: any) => {
+          const amigo = amistad.amigo
+          return {
+            id: amigo.id,
+            nombre: amigo.nombre,
+            apellido: amigo.apellido,
+            foto_perfil: amigo.foto_perfil
+          }
+        }))
       } else {
-        // Si no hay usuarios, dejar vacío
+        // Si no hay amigos, dejar vacío
         setAmigos([])
       }
     } catch (error) {
