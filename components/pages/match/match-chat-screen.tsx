@@ -89,6 +89,44 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         return
       }
 
+      const currentUser = AuthService.getUser()
+      if (!currentUser?.id) {
+        router.push("/login")
+        return
+      }
+
+      // ✅ Verificar estado de inscripción
+      try {
+        const estadoResponse = await fetch(
+          `/api/inscripciones/estado?partidoId=${matchId}&usuarioId=${currentUser.id}`
+        )
+        
+        if (estadoResponse.ok) {
+          const estadoData = await estadoResponse.json()
+          
+          if (estadoData.success && estadoData.data) {
+            const { inscrito, estado } = estadoData.data
+            
+            // Solo permitir acceso si está inscrito y ACEPTADO
+            if (!inscrito || estado !== "ACEPTADO") {
+              console.warn("[MatchChat] Acceso denegado - inscrito:", inscrito, "estado:", estado)
+              setError("Debes estar inscrito y aceptado en el partido para acceder al chat")
+              setTimeout(() => {
+                router.push(`/matches/${matchId}`)
+              }, 2000)
+              return
+            }
+          }
+        }
+      } catch (err) {
+        console.error("[MatchChat] Error verificando inscripción:", err)
+        setError("Error al verificar permisos de acceso")
+        setTimeout(() => {
+          router.push(`/matches/${matchId}`)
+        }, 2000)
+        return
+      }
+
       // Cargar info del partido
       try {
         const matchResponse = await PartidoAPI.get(matchId)
