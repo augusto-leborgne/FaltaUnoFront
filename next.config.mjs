@@ -139,9 +139,6 @@ const nextConfig = {
       'recharts',
     ],
     
-    // ⚡ Enable CSS optimization
-    optimizeCss: true,
-    
     // ⚡ Optimize server components
     serverComponentsExternalPackages: ['@radix-ui'],
   },
