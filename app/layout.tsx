@@ -6,6 +6,10 @@ import "./globals.css"
 import { AuthProvider } from "@/components/auth/auth-provider"
 import { ErrorBoundary } from "@/components/error-boundary"
 
+// Force dynamic rendering for all pages to avoid lucide-react barrel export issues during static generation
+export const dynamic = 'force-dynamic'
+export const dynamicParams = true
+
 export const metadata: Metadata = {
   title: "Falta Uno",
   description: "Encuentra tu partido de fútbol",
