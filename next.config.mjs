@@ -28,16 +28,6 @@ const nextConfig = {
   // El frontend se comunica directamente con https://faltauno-backend-169771742214.us-central1.run.app
   // Sin Mixed Content errors porque ambos usan HTTPS
   
-  // ⚡ MODULARIZE IMPORTS - Tree-shaking for large libraries
-  modularizeImports: {
-    'lucide-react': {
-      transform: 'lucide-react/dist/esm/icons/{{kebabCase member}}',
-    },
-    '@radix-ui/react-icons': {
-      transform: '@radix-ui/react-icons/dist/{{member}}',
-    },
-  },
-  
   // Configure Next.js Image optimization
   images: {
     remotePatterns: [
