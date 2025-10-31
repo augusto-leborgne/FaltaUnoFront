@@ -21,6 +21,9 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "Falta Uno",
   },
+  other: {
+    'mobile-web-app-capable': 'yes', // ✅ Reemplazo del deprecado apple-mobile-web-app-capable
+  },
   formatDetection: {
     telephone: false,
   },

@@ -11,15 +11,22 @@ import { useEffect, useState } from 'react'
 export function UpdateBanner() {
   const { newVersionAvailable, reloadApp } = useVersionCheck()
   const [show, setShow] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  
+  // Prevenir hydration mismatch
+  useEffect(() => {
+    setMounted(true)
+  }, [])
   
   useEffect(() => {
-    if (newVersionAvailable) {
+    if (newVersionAvailable && mounted) {
       // Pequeño delay para que sea menos intrusivo
       setTimeout(() => setShow(true), 2000)
     }
-  }, [newVersionAvailable])
+  }, [newVersionAvailable, mounted])
   
-  if (!show) return null
+  // No renderizar en SSR
+  if (!mounted || !show) return null
   
   return (
     <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg animate-in slide-in-from-top duration-300">

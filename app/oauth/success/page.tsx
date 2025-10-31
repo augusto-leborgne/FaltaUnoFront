@@ -5,8 +5,20 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { TokenPersistence } from "@/lib/token-persistence"
 import { logger } from "@/lib/logger"
-import { CheckCircle2, XCircle } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+
+// Inline SVG icons
+const CheckIcon = () => (
+  <svg className="w-16 h-16 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+)
+
+const ErrorIcon = () => (
+  <svg className="w-16 h-16 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+  </svg>
+)
 
 export default function OAuthSuccessPage() {
   const router = useRouter()
@@ -19,139 +31,83 @@ export default function OAuthSuccessPage() {
       try {
         const token = searchParams.get("token")
         
-        logger.info("[OAuthSuccess] Token recibido:", token ? "SI (length: " + token.length + ")" : "NO")
+        logger.info("[OAuth] Token recibido:", token ? `SI (${token.length} chars)` : "NO")
         
         if (!token) {
           setStatus("error")
-          setMessage("No se recibió el token de autenticación")
-          setTimeout(() => router.push("/login"), 2000)
+          setMessage("❌ No se recibió el token de autenticación")
+          await new Promise(resolve => setTimeout(resolve, 3000))
+          router.push("/login")
           return
         }
 
-        // Decodificar el token para ver qué contiene (solo para debugging)
-        try {
-          const payload = JSON.parse(atob(token.split('.')[1]))
-          logger.info("[OAuthSuccess] Token payload:", payload)
-          logger.info("[OAuthSuccess] UserID en token:", payload.userId)
-          logger.info("[OAuthSuccess] Email en token:", payload.sub)
-          logger.info("[OAuthSuccess] Expira en:", new Date(payload.exp * 1000).toISOString())
-        } catch (e) {
-          logger.error("[OAuthSuccess] Error decodificando token:", e)
-        }
-
-        // Guardar token en localStorage INMEDIATAMENTE con redundancia
-        // Esto asegura que no perdemos el token si hay errores después
+        // Guardar token inmediatamente
         TokenPersistence.saveTokenWithBackup(token)
-        logger.info("[OAuthSuccess] ✅ Token guardado con redundancia en localStorage")
+        logger.info("[OAuth] ✅ Token guardado")
         
-        // Verificar consistencia
-        const consistency = TokenPersistence.verifyTokenConsistency()
-        logger.info("[OAuthSuccess] Consistencia del token:", consistency)
-        
-        // Intentar obtener información del usuario desde el backend
-        // El método fetchCurrentUser ahora tiene reintentos automáticos (3 intentos)
-        logger.info("[OAuthSuccess] Intentando obtener usuario con reintentos automáticos...")
+        // Obtener usuario con reintentos rápidos
         setMessage("Verificando tu cuenta...")
         
-        // Estrategia de reintentos inteligente:
-        // - Primer intento: inmediato
-        // - Si falla: esperar 1s y reintentar
-        // - Si falla: esperar 2s más y reintentar
         let user = null
-        let attempts = 0
-        const maxAttempts = 3
-        
-        while (!user && attempts < maxAttempts) {
-          attempts++
-          
-          if (attempts > 1) {
-            const waitTime = attempts === 2 ? 1000 : 2000
-            logger.info(`[OAuthSuccess] Intento ${attempts}/${maxAttempts} - esperando ${waitTime}ms...`)
-            setMessage(`Verificando tu cuenta (intento ${attempts}/${maxAttempts})...`)
-            await new Promise(resolve => setTimeout(resolve, waitTime))
-          } else {
-            logger.info(`[OAuthSuccess] Intento ${attempts}/${maxAttempts} - inmediato`)
-          }
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          logger.info(`[OAuth] Intento ${attempt}/3`)
           
           try {
             user = await AuthService.fetchCurrentUser()
             if (user) {
-              logger.info(`[OAuthSuccess] ✅ Usuario obtenido en intento ${attempts}`)
+              logger.info(`[OAuth] ✅ Usuario obtenido: ${user.email}`)
               break
             }
-          } catch (error) {
-            logger.warn(`[OAuthSuccess] Intento ${attempts} falló:`, error)
-            if (attempts === maxAttempts) {
-              throw error // Re-lanzar en último intento
+          } catch (err) {
+            logger.warn(`[OAuth] Intento ${attempt} falló:`, err)
+            if (attempt < 3) {
+              await new Promise(resolve => setTimeout(resolve, 500))
             }
           }
         }
         
         if (!user) {
-          logger.error("[OAuthSuccess] ❌ No se pudo obtener usuario después de todos los reintentos")
-          logger.error("[OAuthSuccess] Posibles causas:")
-          logger.error("[OAuthSuccess]   1. Usuario no existe en la base de datos")
-          logger.error("[OAuthSuccess]   2. Error de sincronización entre Google OAuth y backend")
-          logger.error("[OAuthSuccess]   3. Error de red/timeout")
-          
           setStatus("error")
-          setMessage("No pudimos verificar tu cuenta. Por favor, limpiá tu navegador e intentá de nuevo.")
+          setMessage("❌ No pudimos verificar tu cuenta. Limpiá el navegador.")
           
-          // Limpiar SOLO los tokens, no otros datos de la app
           TokenPersistence.clearAllTokens()
           AuthService.removeToken()
           AuthService.removeUser()
           
-          // Esperar 5 segundos para que el usuario pueda leer el error
-          logger.info("[OAuthSuccess] Esperando 5 segundos antes de redirigir...")
-          setTimeout(() => {
-            logger.info("[OAuthSuccess] Redirigiendo a /debug-clear para limpiar...")
-            router.replace("/debug-clear")
-          }, 5000)
+          await new Promise(resolve => setTimeout(resolve, 3000))
+          router.push("/debug-clear")
           return
         }
 
-        logger.info("[OAuthSuccess] ✅ Usuario obtenido exitosamente")
-        logger.info("[OAuthSuccess] Email:", user.email)
-        logger.info("[OAuthSuccess] Nombre:", user.nombre)
-        logger.info("[OAuthSuccess] ID:", (user as any).id)
-        logger.info("[OAuthSuccess] Perfil completo:", user.perfilCompleto)
-        logger.info("[OAuthSuccess] Cédula verificada:", user.cedulaVerificada)
-        
+        // Éxito!
         setStatus("success")
         
-        // Redirigir según el estado del usuario
         if (!user.perfilCompleto) {
-          setMessage(`¡Bienvenido! Completemos tu perfil para comenzar`)
-          setTimeout(() => router.push("/profile-setup"), 1500)
+          setMessage("✅ ¡Bienvenido! Completemos tu perfil")
+          await new Promise(resolve => setTimeout(resolve, 2000))
+          router.push("/profile-setup")
         } else if (!user.cedulaVerificada) {
-          setMessage(`¡Bienvenido! Verificá tu cédula para continuar`)
-          setTimeout(() => router.push("/verification"), 1500)
+          setMessage("✅ ¡Bienvenido! Verificá tu cédula")
+          await new Promise(resolve => setTimeout(resolve, 2000))
+          router.push("/verification")
         } else {
-          setMessage(`¡Bienvenido de nuevo, ${user.nombre || user.email}!`)
-          setTimeout(() => router.push("/home"), 1500)
+          setMessage(`✅ ¡Bienvenido, ${user.nombre || user.email}!`)
+          await new Promise(resolve => setTimeout(resolve, 2000))
+          router.push("/home")
         }
 
       } catch (error) {
-        logger.error("[OAuthSuccess] Error procesando OAuth:", error)
-        
-        // Extraer mensaje de error más específico
-        const errorMessage = error instanceof Error ? error.message : "Error desconocido"
+        logger.error("[OAuth] Error:", error)
         
         setStatus("error")
-        setMessage(`Error: ${errorMessage}. Limpiá tu navegador e intentá de nuevo.`)
+        setMessage(`❌ ${error instanceof Error ? error.message : "Error desconocido"}`)
         
-        // Limpiar tokens en caso de error
         TokenPersistence.clearAllTokens()
         AuthService.removeToken()
         AuthService.removeUser()
         
-        // Esperar 5 segundos para que el usuario pueda leer el error
-        logger.info("[OAuthSuccess] Esperando 5 segundos antes de redirigir...")
-        setTimeout(() => {
-          logger.info("[OAuthSuccess] Redirigiendo a /debug-clear...")
-          router.replace("/debug-clear")
-        }, 5000)
+        await new Promise(resolve => setTimeout(resolve, 3000))
+        router.push("/debug-clear")
       }
     }
 
@@ -177,7 +133,7 @@ export default function OAuthSuccessPage() {
           <>
             <div className="mb-6">
               <div className="bg-green-100 rounded-full p-4 inline-block">
-                <CheckCircle2 className="w-16 h-16 text-green-600" />
+                <CheckIcon />
               </div>
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
@@ -196,7 +152,7 @@ export default function OAuthSuccessPage() {
           <>
             <div className="mb-6">
               <div className="bg-red-100 rounded-full p-4 inline-block">
-                <XCircle className="w-16 h-16 text-red-600" />
+                <ErrorIcon />
               </div>
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
