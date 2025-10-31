@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button'
 import { API_URL } from '@/lib/api'
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle2, XCircle, Mail, ArrowLeft, Loader2 } from 'lucide-react';
+import { CheckCircle2, XCircle, Mail, ArrowLeft } from 'lucide-react';
+import { InlineSpinner } from '@/components/ui/loading-spinner';
 
 export default function VerifyEmailPage() {
   const router = useRouter();
@@ -301,10 +302,10 @@ export default function VerifyEmailPage() {
             size="lg"
           >
             {isVerifying ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Verificando...
-              </>
+              <div className="flex items-center">
+                <InlineSpinner variant="white" />
+                <span className="ml-2">Verificando...</span>
+              </div>
             ) : success ? (
               <>
                 <CheckCircle2 className="mr-2 h-4 w-4" />
@@ -327,10 +328,10 @@ export default function VerifyEmailPage() {
               size="sm"
             >
               {isResending ? (
-                <>
-                  <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                  Reenviando...
-                </>
+                <div className="flex items-center">
+                  <InlineSpinner />
+                  <span className="ml-2">Reenviando...</span>
+                </div>
               ) : resendCooldown > 0 ? (
                 <>Reenviar en {resendCooldown}s</>
               ) : (

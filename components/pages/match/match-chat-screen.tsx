@@ -8,6 +8,7 @@ import { ArrowLeft, Send, AlertCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { MensajeAPI, PartidoAPI, MensajeDTO } from '@/lib/api'
+import { LoadingSpinner, InlineSpinner } from "@/components/ui/loading-spinner"
 
 interface MatchChatScreenProps {
   matchId: string
@@ -310,10 +311,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   if (loading && !messages.length) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando chat...</p>
-        </div>
+        <LoadingSpinner size="xl" variant="green" text="Cargando chat..." />
       </div>
     )
   }
@@ -455,7 +453,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
             className="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-3 min-h-[44px] min-w-[44px] disabled:opacity-50"
           >
             {sending ? (
-              <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+              <InlineSpinner variant="white" />
             ) : (
               <Send className="w-4 h-4" />
             )}

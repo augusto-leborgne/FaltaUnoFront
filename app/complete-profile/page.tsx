@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DateSelector } from '@/components/ui/date-selector';
-import { CheckCircle2, XCircle, Loader2, User, Phone } from 'lucide-react';
+import { CheckCircle2, XCircle, User, Phone } from 'lucide-react';
 import { API_URL } from '@/lib/api';
+import { InlineSpinner } from '@/components/ui/loading-spinner';
 
 export default function CompleteProfilePage() {
   const router = useRouter();
@@ -278,10 +279,10 @@ export default function CompleteProfilePage() {
               size="lg"
             >
               {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creando cuenta...
-                </>
+                <div className="flex items-center">
+                  <InlineSpinner variant="white" />
+                  <span className="ml-2">Creando cuenta...</span>
+                </div>
               ) : (
                 'Completar registro'
               )}

@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast"
 import { InscripcionAPI } from "@/lib/api"
 import { AuthService } from "@/lib/auth"
 import { usePartido, useInscripcionEstado } from "@/lib/api-hooks"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 interface MatchConfirmationProps {
   matchId: string
@@ -88,7 +89,7 @@ export function MatchConfirmation({ matchId }: MatchConfirmationProps) {
   if (loading || loadingEstado) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full"></div>
+        <LoadingSpinner size="xl" variant="green" />
       </div>
     )
   }

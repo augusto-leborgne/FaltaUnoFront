@@ -4,11 +4,12 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Check, X, UserPlus, Loader2 } from "lucide-react"
+import { ArrowLeft, Check, X, UserPlus } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { AmistadAPI, API_BASE } from "@/lib/api"
 import { formatDateRegional } from "@/lib/utils"
+import { LoadingSpinner, InlineSpinner } from "@/components/ui/loading-spinner"
 
 interface FriendRequest {
   id: string
@@ -136,10 +137,7 @@ export function FriendRequestsListScreen() {
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-green-600 mx-auto mb-4" />
-          <p className="text-gray-600">Cargando solicitudes...</p>
-        </div>
+        <LoadingSpinner size="lg" variant="green" text="Cargando solicitudes..." />
       </div>
     )
   }
@@ -245,7 +243,7 @@ export function FriendRequestsListScreen() {
                       className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl disabled:opacity-50"
                     >
                       {isProcessing ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <InlineSpinner variant="white" />
                       ) : (
                         <>
                           <Check className="w-4 h-4 mr-2" />
@@ -261,7 +259,7 @@ export function FriendRequestsListScreen() {
                       className="flex-1 py-3 rounded-xl disabled:opacity-50"
                     >
                       {isProcessing ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <InlineSpinner />
                       ) : (
                         <>
                           <X className="w-4 h-4 mr-2" />
