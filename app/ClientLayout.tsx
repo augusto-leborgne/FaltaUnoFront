@@ -5,7 +5,7 @@ import type React from "react"
 import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
 import { Toaster } from "@/components/ui/toaster"
-import { useVersionCheck } from "@/hooks/use-version-check"
+import { UpdateBanner } from "@/components/ui/update-banner"
 import { ProtectedRoute } from "@/components/auth/protected-route"
 
 export default function ClientLayout({
@@ -13,11 +13,9 @@ export default function ClientLayout({
 }: {
   children: React.ReactNode
 }) {
-  // Detectar nuevas versiones y forzar recarga automática
-  useVersionCheck()
-  
   return (
     <ProtectedRoute>
+      <UpdateBanner />
       <Suspense fallback={<div>Loading...</div>}>
         {children}
         <Analytics />

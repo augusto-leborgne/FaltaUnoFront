@@ -5,9 +5,11 @@ import { NextResponse } from 'next/server'
  * Se usa para detectar cuando hay un nuevo deploy y forzar recarga
  */
 export async function GET() {
-  // El buildId se genera en next.config.mjs usando timestamp
-  // En producción, cada build tendrá un ID único
-  const buildId = process.env.BUILD_ID || `build-${Date.now()}`
+  // El buildId se genera usando BUILD_ID (timestamp del build en Docker)
+  // O NEXT_PUBLIC_BUILD_ID que está disponible en runtime
+  const buildId = process.env.BUILD_ID || 
+                  process.env.NEXT_PUBLIC_BUILD_ID ||
+                  `build-${Date.now()}`
   
   return NextResponse.json(
     {

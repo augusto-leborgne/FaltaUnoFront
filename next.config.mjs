@@ -118,12 +118,14 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
     NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
+    NEXT_PUBLIC_BUILD_ID: process.env.BUILD_ID || `build-${Date.now()}`,
   },
   
   // Make runtime config available to client
   publicRuntimeConfig: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
     NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
+    NEXT_PUBLIC_BUILD_ID: process.env.BUILD_ID || `build-${Date.now()}`,
   },
   
   // Disable static optimization for pages that need fresh data
