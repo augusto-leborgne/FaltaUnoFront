@@ -1,8 +1,7 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { useAuth } from "@/hooks/use-auth"
 import { AuthService } from "@/lib/auth"
 
 function isProfileIncomplete(u: any | null | undefined) {
@@ -29,31 +28,48 @@ function needsIdVerification(u: any | null | undefined) {
 
 export function RedirectIfAuthenticated({ children }: { children: React.ReactNode }) {
   const router = useRouter()
-  const { user, loading } = useAuth()
   const redirectedRef = useRef(false)
+  const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    if (loading || redirectedRef.current) return
+    // ⚡ OPTIMIZACIÓN: Check rápido SOLO de localStorage
+    // No hacer fetch al servidor, solo verificar si hay sesión válida
+    if (redirectedRef.current) return
 
-    const token = AuthService.getToken()
-    const validSession = !!token && !AuthService.isTokenExpired(token)
+    const checkAuth = () => {
+      const token = AuthService.getToken()
+      const user = AuthService.getUser()
+      
+      // Si no hay token o está expirado, mostrar login
+      if (!token || AuthService.isTokenExpired(token)) {
+        setChecking(false)
+        return
+      }
 
-    if (user && validSession) {
-      redirectedRef.current = true
-      if (isProfileIncomplete(user)) {
-        router.replace("/profile-setup")
-      } else if (needsIdVerification(user)) {
-        router.replace("/verification")
+      // Si hay token válido y usuario en localStorage, redirigir
+      if (user) {
+        redirectedRef.current = true
+        if (isProfileIncomplete(user)) {
+          router.replace("/profile-setup")
+        } else if (needsIdVerification(user)) {
+          router.replace("/verification")
+        } else {
+          router.replace("/home")
+        }
       } else {
-        router.replace("/home")
+        // Token pero no user - dejar que se muestre login
+        setChecking(false)
       }
     }
-  }, [user, loading, router])
 
-  if (loading) {
+    checkAuth()
+  }, [router])
+
+  // ⚡ Spinner más simple durante check rápido
+  if (checking) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600" />
+      <div className="flex items-center justify-center min-h-screen bg-white">
+        <div className="w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }

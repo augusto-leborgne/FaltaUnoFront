@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 
 /**
  * Hook para detectar nuevas versiones del frontend y forzar recarga automática
- * Revisa cada 2 minutos si hay una nueva versión desplegada
+ * ⚡ OPTIMIZADO: Revisa cada 5 minutos (reducido de 2 minutos para performance)
  */
 export function useVersionCheck() {
   useEffect(() => {
@@ -56,12 +56,16 @@ export function useVersionCheck() {
       }
     }
     
-    // Revisar inmediatamente
-    checkVersion()
+    // ⚡ Revisar después de 10 segundos (no inmediatamente al cargar)
+    const initialTimeoutId = setTimeout(checkVersion, 10000)
     
-    // Revisar cada 2 minutos (120000 ms) para detectar cambios más rápido
-    const interval = setInterval(checkVersion, 120000)
+    // ⚡ Revisar cada 5 minutos (300000 ms) en lugar de 2 minutos
+    // Menos requests = mejor performance
+    const interval = setInterval(checkVersion, 300000)
     
-    return () => clearInterval(interval)
+    return () => {
+      clearTimeout(initialTimeoutId)
+      clearInterval(interval)
+    }
   }, [])
 }

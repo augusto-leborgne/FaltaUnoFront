@@ -51,8 +51,9 @@ export default function OAuthSuccessPage() {
         // Dar tiempo al backend para:
         // 1. Confirmar la transacción de base de datos
         // 2. Propagar el usuario a través del sistema
-        logger.info("[OAuthSuccess] Esperando 2 segundos para que el backend termine de procesar...")
-        await new Promise(resolve => setTimeout(resolve, 2000))
+        // ⚡ AUMENTADO: 4 segundos para backend más lento
+        logger.info("[OAuthSuccess] Esperando 4 segundos para que el backend termine de procesar...")
+        await new Promise(resolve => setTimeout(resolve, 4000))
         
         // Intentar obtener información del usuario desde el backend
         // El método fetchCurrentUser ahora tiene reintentos automáticos (3 intentos)
@@ -62,33 +63,22 @@ export default function OAuthSuccessPage() {
         const user = await AuthService.fetchCurrentUser()
         
         if (!user) {
-          logger.error("[OAuthSuccess] ❌ No se pudo obtener usuario después de todos los reintentos")
-          logger.error("[OAuthSuccess] Posibles causas:")
-          logger.error("[OAuthSuccess] 1. Usuario no creado en el backend")
-          logger.error("[OAuthSuccess] 2. Token no contiene userId correcto")
-          logger.error("[OAuthSuccess] 3. Problemas de latencia/sincronización con la BD")
-          logger.error("[OAuthSuccess] 4. Backend respondió 401 pero token es válido (error transitorio)")
-          logger.error("[OAuthSuccess] 5. Backend respondió 404 - usuario no encontrado en BD")
-          
-          // Verificar si el token sigue ahí después del error
-          const tokenAfterError = TokenPersistence.recoverToken()
-          logger.info("[OAuthSuccess] Token después del error:", tokenAfterError ? "PRESENTE" : "AUSENTE")
-          
-          // Verificar si el token está expirado
-          if (tokenAfterError && AuthService.isTokenExpired(tokenAfterError)) {
-            logger.error("[OAuthSuccess] ⚠️ Token EXPIRADO - esto NO debería pasar en OAuth recién completado")
-          } else if (tokenAfterError) {
-            logger.info("[OAuthSuccess] ✅ Token aún VÁLIDO - el error fue transitorio del backend")
-          }
+          logger.error("[OAuthSuccess] ❌ No se pudo obtener usuario")
+          logger.error("[OAuthSuccess] Limpiando estado y redirigiendo a login...")
           
           setStatus("error")
-          setMessage("No pudimos verificar tu cuenta. Por favor, intentá iniciar sesión nuevamente.")
+          setMessage("No pudimos verificar tu cuenta.")
           
-          // NO limpiar el token - dejarlo por si el problema se resuelve
-          // El usuario puede intentar refrescar o navegar manualmente
+          // Limpiar SOLO los tokens, no otros datos de la app
+          TokenPersistence.clearAllTokens()
+          AuthService.removeToken()
+          AuthService.removeUser()
+          
+          // Redirigir a login después de 3 segundos
           setTimeout(() => {
-            router.push("/login")
-          }, 5000)
+            logger.info("[OAuthSuccess] Redirigiendo a login...")
+            router.replace("/login")
+          }, 3000)
           return
         }
 
@@ -115,12 +105,20 @@ export default function OAuthSuccessPage() {
 
       } catch (error) {
         logger.error("[OAuthSuccess] Error procesando OAuth:", error)
+        
         setStatus("error")
         setMessage("Error al procesar la autenticación")
         
-        // Limpiar y volver a login
-        AuthService.logout()
-        setTimeout(() => router.push("/login"), 2000)
+        // Limpiar tokens en caso de error
+        TokenPersistence.clearAllTokens()
+        AuthService.removeToken()
+        AuthService.removeUser()
+        
+        // Redirigir a login
+        setTimeout(() => {
+          logger.info("[OAuthSuccess] Redirigiendo a login...")
+          router.replace("/login")
+        }, 2000)
       }
     }
 

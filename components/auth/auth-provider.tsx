@@ -43,12 +43,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(true);
     
     try {
-      // Validar y limpiar token expirado primero
+      // ⚡ CRÍTICO: Validar y limpiar token corrupto ANTES de usarlo
       AuthService.validateAndCleanup();
 
       const token = AuthService.getToken();
       if (!token) {
         console.log("[AuthProvider] refreshUser: no hay token");
+        setUserState(null);
+        return;
+      }
+      
+      // ⚡ PROTECCIÓN: Verificar que el token no esté corrupto
+      if (AuthService.isTokenExpired(token)) {
+        console.warn("[AuthProvider] Token expirado detectado - limpiando");
+        AuthService.removeToken();
+        AuthService.removeUser();
         setUserState(null);
         return;
       }
@@ -69,13 +78,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log("[AuthProvider] Usando usuario desde localStorage");
         setUserState(localUser);
       } else {
-        console.log("[AuthProvider] No hay usuario válido");
-        AuthService.logout();
+        console.log("[AuthProvider] No hay usuario válido - limpiando sin hacer logout forzado");
+        // Solo limpiar el usuario, NO hacer logout completo
+        // Esto permite que el usuario pueda volver a intentar autenticarse
+        AuthService.removeUser();
         setUserState(null);
       }
     } catch (err) {
       console.error("[AuthProvider] refreshUser error:", err);
-      setUserState(null);
+      
+      // ⚡ RECUPERACIÓN INTELIGENTE: En caso de error, verificar si el token sigue siendo válido
+      try {
+        const token = AuthService.getToken();
+        if (token && !AuthService.isTokenExpired(token)) {
+          console.warn("[AuthProvider] Error temporal pero token válido - preservando sesión");
+          // Intentar cargar usuario desde localStorage como fallback
+          const localUser = AuthService.getUser();
+          if (localUser) {
+            console.log("[AuthProvider] Usando usuario desde cache local");
+            setUserState(localUser);
+          } else {
+            console.log("[AuthProvider] No hay usuario en cache - sin usuario pero token preservado");
+            setUserState(null);
+          }
+        } else {
+          console.log("[AuthProvider] Error y token inválido/expirado - limpiando sesión");
+          AuthService.removeToken();
+          AuthService.removeUser();
+          setUserState(null);
+        }
+      } catch (fallbackErr) {
+        console.error("[AuthProvider] Error en recuperación fallback:", fallbackErr);
+        setUserState(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -140,34 +175,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Si hay token y user local y token no expiró -> setear
+      // ⚡ OPTIMIZACIÓN: Si hay token y user local y token no expiró -> setear INMEDIATAMENTE
+      // No esperar validación del servidor para mostrar UI
       if (localUser && !AuthService.isTokenExpired(token)) {
         console.log("[AuthProvider] Restaurando sesión desde localStorage:", localUser.email);
         if (mounted) {
           setUserState(localUser);
-          setLoading(false);
+          setLoading(false); // ⚡ Desbloquear UI inmediatamente
         }
         
-        // Refrescar en background para obtener datos actualizados (sin bloquear UI)
-        // Solo si no estamos en proceso de logout
-        if (mounted && !isLoggingOut) {
-          // Usar un pequeño delay para no hacer request inmediato
-          const timeoutId = setTimeout(async () => {
-            if (mounted && !isLoggingOut && AuthService.isLoggedIn()) {
-              try {
-                await AuthService.fetchCurrentUser();
-              } catch (err) {
-                console.warn("[AuthProvider] Background refresh falló:", err);
-                // No hacer nada, mantener el usuario local
+        // ⚡ Refrescar en background sin bloquear UI
+        // Aumentar delay para evitar request inmediato innecesario
+        const timeoutId = setTimeout(async () => {
+          if (mounted && !isLoggingOut && AuthService.isLoggedIn()) {
+            try {
+              const refreshedUser = await AuthService.fetchCurrentUser();
+              if (refreshedUser && mounted) {
+                setUserState(refreshedUser);
               }
+            } catch (err) {
+              console.warn("[AuthProvider] Background refresh falló:", err);
+              // Mantener el usuario local, no afectar la UI
             }
-          }, 2000); // 2 segundos en lugar de 1
-          
-          // Cleanup si el componente se desmonta
-          return () => clearTimeout(timeoutId);
-        }
+          }
+        }, 5000); // ⚡ 5 segundos - refresh en background, no bloqueante
         
-        return;
+        return () => clearTimeout(timeoutId);
       }
 
       // Si hay token pero no user local, intentar validar con servidor

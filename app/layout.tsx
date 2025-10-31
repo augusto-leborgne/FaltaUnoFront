@@ -10,6 +10,16 @@ export const metadata: Metadata = {
   title: "Falta Uno",
   description: "Encuentra tu partido de fútbol",
   generator: "v0.app",
+  // ⚡ Performance optimizations
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Falta Uno",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 }
 
 export default function RootLayout({
@@ -20,11 +30,15 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}>
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        {/* ⚡ Preconnect to external domains for faster loading */}
+        <link rel="preconnect" href="https://faltauno-backend-169771742214.us-central1.run.app" />
+        <link rel="dns-prefetch" href="https://faltauno-backend-169771742214.us-central1.run.app" />
+        <link rel="preconnect" href="https://maps.googleapis.com" />
+        <link rel="dns-prefetch" href="https://maps.googleapis.com" />
+        
+        {/* Viewport and PWA meta tags */}
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
         <meta name="theme-color" content="#4caf50" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Falta Uno" />
       </head>
       <body className="font-sans">
         <ErrorBoundary>

@@ -38,10 +38,41 @@ export class AuthService {
     try {
       const token = localStorage.getItem(TOKEN_KEY)
       if (!token || token === "undefined" || token === "null") return null
+      
+      // ⚡ VALIDACIÓN: Verificar que el token no esté corrupto
+      if (this.isTokenCorrupted(token)) {
+        logger?.warn?.("[AuthService] Token corrupto detectado, limpiando...")
+        this.removeToken()
+        return null
+      }
+      
       return token
     } catch (error) {
       logger?.error?.("[AuthService] Error obteniendo token:", error)
       return null
+    }
+  }
+
+  /**
+   * Detecta si un token está corrupto (formato inválido, caracteres extraños, etc.)
+   */
+  static isTokenCorrupted(token: string): boolean {
+    try {
+      // Validar formato básico de JWT (3 partes separadas por .)
+      const parts = token.split(".")
+      if (parts.length !== 3) return true
+      
+      // Validar que cada parte sea base64 válido
+      for (const part of parts) {
+        if (!part || !/^[A-Za-z0-9_-]+$/.test(part)) return true
+      }
+      
+      // Intentar decodificar el payload
+      JSON.parse(atob(parts[1]))
+      
+      return false
+    } catch {
+      return true
     }
   }
 
@@ -213,8 +244,8 @@ export class AuthService {
         const url = normalizeUrl(`${API_BASE}/api/usuarios/me`)
         const res = await fetch(url, { 
           headers: this.getAuthHeaders(),
-          // Agregar timeout para evitar esperas infinitas
-          signal: AbortSignal.timeout(10000) // 10 segundos
+          // ⚡ AUMENTAR timeout a 30 segundos para evitar timeouts prematuros
+          signal: AbortSignal.timeout(30000) // 30 segundos
         })
         
         if (!res.ok) {

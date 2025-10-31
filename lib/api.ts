@@ -247,7 +247,7 @@ async function apiFetch<T>(
 ): Promise<ApiResponse<T>> {
   const { skipAuth = false, customToken, skipAutoLogout = false, ...fetchOptions } = options;
 
-  // Validar y limpiar tokens expirados
+  // ⚡ PROTECCIÓN: Validar y limpiar tokens corruptos/expirados
   if (!skipAuth) {
     AuthService.validateAndCleanup();
   }
@@ -255,6 +255,16 @@ async function apiFetch<T>(
   // Obtener token (no esperamos aquí para no añadir latencia a todas las peticiones)
   const token = customToken || (!skipAuth ? AuthService.getToken() : null);
   const hadToken = !!token // si al momento de construir la petición había token
+  
+  // ⚡ VALIDACIÓN CRÍTICA: Verificar que el token no esté corrupto antes de usarlo
+  if (token && !skipAuth) {
+    if (AuthService.isTokenExpired(token)) {
+      console.warn('[API] Token expirado detectado antes de hacer request - limpiando');
+      AuthService.removeToken();
+      AuthService.removeUser();
+      throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.');
+    }
+  }
   
   // Construir URL completa
   const fullUrl = normalizeUrl(`${API_BASE}${endpoint}`);

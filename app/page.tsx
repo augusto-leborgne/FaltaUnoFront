@@ -9,7 +9,13 @@ export default function RootPage() {
   const router = useRouter();
 
   useEffect(() => {
-  logger.debug("[RootPage v2.3] Decidiendo redirección...");
+    // ⚡ OPTIMIZACIÓN: Validar y redirigir lo más rápido posible
+    // No hacer logging excesivo en producción
+    const shouldLog = process.env.NODE_ENV !== 'production';
+    
+    if (shouldLog) {
+      logger.debug("[RootPage v2.4] Decidiendo redirección rápida...");
+    }
     
     // Limpiar tokens expirados
     AuthService.validateAndCleanup();
@@ -17,60 +23,48 @@ export default function RootPage() {
     const token = AuthService.getToken();
     const user = AuthService.getUser();
     
-    logger.debug("[RootPage] Token:", token ? "SÍ" : "NO");
-    logger.debug("[RootPage] User:", user ? "SÍ" : "NO");
+    if (shouldLog) {
+      logger.debug("[RootPage] Token:", token ? "SÍ" : "NO");
+      logger.debug("[RootPage] User:", user ? "SÍ" : "NO");
+    }
 
-    // Si no hay token o está expirado → login
+    // Si no hay token o está expirado → login (INMEDIATO)
     if (!token || AuthService.isTokenExpired(token)) {
-      logger.debug("[RootPage] No autenticado, redirigiendo a /login");
+      if (shouldLog) logger.debug("[RootPage] No autenticado → /login");
       router.replace("/login");
       return;
     }
 
     // Si hay token válido y user → decidir según estado del perfil
     if (user) {
-      logger.debug("[RootPage] Usuario completo:", {
-        email: user.email,
-        perfilCompleto: user.perfilCompleto,
-        cedulaVerificada: user.cedulaVerificada,
-        nombre: user.nombre,
-        apellido: user.apellido,
-        celular: user.celular,
-        fechaNacimiento: user.fechaNacimiento,
-        cedula: user.cedula
-      });
-      
-      // Si el perfil no está completo → profile-setup
-      if (user.perfilCompleto === false || !user.perfilCompleto) {
-        logger.debug("[RootPage] Perfil incompleto, redirigiendo a /profile-setup");
+      // ⚡ Validaciones rápidas sin logging excesivo
+      if (!user.perfilCompleto) {
+        if (shouldLog) logger.debug("[RootPage] Perfil incompleto → /profile-setup");
         router.replace("/profile-setup");
         return;
       }
 
-      // Si la cédula no está verificada → verification
-      if (user.cedulaVerificada === false || !user.cedulaVerificada) {
-        logger.debug("[RootPage] Cédula no verificada, redirigiendo a /verification");
+      if (!user.cedulaVerificada) {
+        if (shouldLog) logger.debug("[RootPage] Cédula no verificada → /verification");
         router.replace("/verification");
         return;
       }
 
       // Todo completo → home
-      logger.debug("[RootPage] Usuario completo, redirigiendo a /home");
+      if (shouldLog) logger.debug("[RootPage] Usuario completo → /home");
       router.replace("/home");
       return;
     }
 
-    // Fallback: si hay token pero no user → login (caso raro)
-    logger.debug("[RootPage] Token sin user, redirigiendo a /login");
+    // Fallback: si hay token pero no user → login
+    if (shouldLog) logger.debug("[RootPage] Token sin user → /login");
     router.replace("/login");
   }, [router]);
 
+  // ⚡ Spinner simplificado (menos DOM)
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="text-center">
-        <div className="animate-spin w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-        <p className="text-gray-600">Cargando...</p>
-      </div>
+      <div className="w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full animate-spin"></div>
     </div>
   );
 }

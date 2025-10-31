@@ -3,9 +3,40 @@ const nextConfig = {
   reactStrictMode: true,
   // Enable standalone output for Docker
   output: 'standalone',
+  
+  // ⚡ PERFORMANCE OPTIMIZATIONS
+  // Compile only essential packages (reduce bundle size)
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn']
+    } : false,
+  },
+  
+  // Enable SWC minification (faster than Terser)
+  swcMinify: true,
+  
+  // Optimize font loading
+  optimizeFonts: true,
+  
+  // Compress pages (gzip/brotli)
+  compress: true,
+  
+  // Optimize production builds
+  productionBrowserSourceMaps: false,
+  
   // ❌ NO SE NECESITA PROXY - Cloud Run backend tiene HTTPS
   // El frontend se comunica directamente con https://faltauno-backend-169771742214.us-central1.run.app
   // Sin Mixed Content errors porque ambos usan HTTPS
+  
+  // ⚡ MODULARIZE IMPORTS - Tree-shaking for large libraries
+  modularizeImports: {
+    'lucide-react': {
+      transform: 'lucide-react/dist/esm/icons/{{kebabCase member}}',
+    },
+    '@radix-ui/react-icons': {
+      transform: '@radix-ui/react-icons/dist/{{member}}',
+    },
+  },
   
   // Configure Next.js Image optimization
   images: {
@@ -22,9 +53,13 @@ const nextConfig = {
         pathname: '/api/usuarios/**',
       },
     ],
-    formats: ['image/webp', 'image/avif'],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    formats: ['image/avif', 'image/webp'], // AVIF first (better compression)
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256],
+    minimumCacheTTL: 60, // Cache images for 60 seconds minimum
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
   
   // Use BUILD_ID from environment (set during Docker build with timestamp)
@@ -105,6 +140,72 @@ const nextConfig = {
   experimental: {
     // Ensure pages are rendered on each request
     isrMemoryCacheSize: 0,
+    
+    // ⚡ PERFORMANCE: Optimize package imports
+    optimizePackageImports: [
+      'lucide-react',
+      '@radix-ui/react-icons',
+      'date-fns',
+      'recharts',
+    ],
+    
+    // ⚡ Enable CSS optimization
+    optimizeCss: true,
+    
+    // ⚡ Optimize server components
+    serverComponentsExternalPackages: ['@radix-ui'],
+  },
+  
+  // ⚡ Webpack optimizations for production
+  webpack: (config, { dev, isServer }) => {
+    // Production optimizations
+    if (!dev && !isServer) {
+      // Enable aggressive code splitting
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            default: false,
+            vendors: false,
+            // Vendor chunk for node_modules
+            vendor: {
+              name: 'vendor',
+              chunks: 'all',
+              test: /node_modules/,
+              priority: 20
+            },
+            // Separate chunk for common components
+            common: {
+              name: 'common',
+              minChunks: 2,
+              chunks: 'all',
+              priority: 10,
+              reuseExistingChunk: true,
+              enforce: true
+            },
+            // Radix UI separate chunk (large library)
+            radix: {
+              name: 'radix',
+              test: /[\\/]node_modules[\\/]@radix-ui[\\/]/,
+              chunks: 'all',
+              priority: 30,
+            },
+            // React & Next.js core
+            framework: {
+              name: 'framework',
+              test: /[\\/]node_modules[\\/](react|react-dom|next)[\\/]/,
+              chunks: 'all',
+              priority: 40,
+            },
+          },
+          maxInitialRequests: 25,
+          minSize: 20000,
+        },
+      }
+    }
+    
+    return config
   },
 }
 
