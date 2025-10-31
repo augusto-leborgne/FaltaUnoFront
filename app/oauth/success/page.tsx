@@ -64,21 +64,25 @@ export default function OAuthSuccessPage() {
         
         if (!user) {
           logger.error("[OAuthSuccess] ❌ No se pudo obtener usuario")
-          logger.error("[OAuthSuccess] Limpiando estado y redirigiendo a login...")
+          logger.error("[OAuthSuccess] Posibles causas:")
+          logger.error("[OAuthSuccess]   1. Usuario no existe en la base de datos")
+          logger.error("[OAuthSuccess]   2. Error de sincronización entre Google OAuth y backend")
+          logger.error("[OAuthSuccess]   3. Error de red/timeout")
           
           setStatus("error")
-          setMessage("No pudimos verificar tu cuenta.")
+          setMessage("No pudimos verificar tu cuenta. El usuario no fue encontrado en nuestro sistema. Por favor, intenta registrarte nuevamente.")
           
           // Limpiar SOLO los tokens, no otros datos de la app
           TokenPersistence.clearAllTokens()
           AuthService.removeToken()
           AuthService.removeUser()
           
-          // Redirigir a login después de 3 segundos
+          // ⚡ AUMENTADO: Esperar 8 segundos para que el usuario pueda leer el error
+          logger.info("[OAuthSuccess] Esperando 8 segundos antes de redirigir...")
           setTimeout(() => {
             logger.info("[OAuthSuccess] Redirigiendo a login...")
             router.replace("/login")
-          }, 3000)
+          }, 8000)
           return
         }
 
@@ -106,19 +110,23 @@ export default function OAuthSuccessPage() {
       } catch (error) {
         logger.error("[OAuthSuccess] Error procesando OAuth:", error)
         
+        // Extraer mensaje de error más específico
+        const errorMessage = error instanceof Error ? error.message : "Error desconocido"
+        
         setStatus("error")
-        setMessage("Error al procesar la autenticación")
+        setMessage(`Error al procesar la autenticación: ${errorMessage}. Por favor, intenta nuevamente.`)
         
         // Limpiar tokens en caso de error
         TokenPersistence.clearAllTokens()
         AuthService.removeToken()
         AuthService.removeUser()
         
-        // Redirigir a login
+        // ⚡ AUMENTADO: Esperar 8 segundos para que el usuario pueda leer el error
+        logger.info("[OAuthSuccess] Esperando 8 segundos antes de redirigir...")
         setTimeout(() => {
           logger.info("[OAuthSuccess] Redirigiendo a login...")
           router.replace("/login")
-        }, 2000)
+        }, 8000)
       }
     }
 
