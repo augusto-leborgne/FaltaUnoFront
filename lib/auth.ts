@@ -225,7 +225,7 @@ export class AuthService {
    * Si responde 404/500 no se hace logout: se asume error transitorio.
    * Incluye reintentos automáticos para manejar errores transitorios.
    */
-  static async fetchCurrentUser(retries = 3): Promise<Usuario | null> {
+  static async fetchCurrentUser(retries = 2): Promise<Usuario | null> {
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
         const token = await this.ensureToken()
@@ -244,8 +244,8 @@ export class AuthService {
         const url = normalizeUrl(`${API_BASE}/api/usuarios/me`)
         const res = await fetch(url, { 
           headers: this.getAuthHeaders(),
-          // ⚡ AUMENTAR timeout a 30 segundos para evitar timeouts prematuros
-          signal: AbortSignal.timeout(30000) // 30 segundos
+          // ⚡ Timeout reducido - si el backend tarda demasiado, hay un problema
+          signal: AbortSignal.timeout(10000) // 10 segundos
         })
         
         if (!res.ok) {
@@ -253,48 +253,24 @@ export class AuthService {
           
           // 401 = token inválido o expirado
           if (res.status === 401) {
-            // CRÍTICO: Solo hacer logout si el token realmente está expirado
-            // NO hacer logout por errores transitorios del backend
+            logger?.error?.("[AuthService] 401 Unauthorized - Token inválido")
+            // Solo hacer logout si estamos seguros
             if (this.isTokenExpired(token)) {
-              logger?.error?.("[AuthService] 401 Unauthorized - Token REALMENTE expirado")
-              logger?.error?.("[AuthService] 🚪 LOGOUT INMEDIATO - Redirigiendo a login...")
-              this.logout() // Esto hace window.location.replace("/login") inmediatamente
-              return null
-            } else {
-              logger?.warn?.("[AuthService] 401 pero token aún válido - Podría ser error transitorio")
-              // Reintentar en caso de error transitorio del backend
-              if (attempt < retries) {
-                const delay = attempt * 1000 // 1s, 2s, 3s
-                logger?.warn?.(`[AuthService] Reintentando en ${delay}ms...`)
-                await new Promise(resolve => setTimeout(resolve, delay))
-                continue
-              }
-              // No hacer logout - preservar token para recuperación
-              logger?.error?.("[AuthService] 401 persistente pero token válido - NO haciendo logout")
-              return null
+              logger?.error?.("[AuthService] 🚪 LOGOUT - Token expirado")
+              this.logout()
             }
-          }
-          
-          // 404 = usuario no encontrado
-          if (res.status === 404) {
-            logger?.error?.("[AuthService] 404 Usuario no encontrado")
-            // NO hacer logout inmediatamente - podría ser error transitorio
-            // Reintentar en caso de que sea un problema de timing
-            if (attempt < retries) {
-              const delay = attempt * 1000 // Espera incremental: 1s, 2s, 3s
-              logger?.warn?.(`[AuthService] Reintentando en ${delay}ms...`)
-              await new Promise(resolve => setTimeout(resolve, delay))
-              continue
-            }
-            // Después de todos los reintentos, retornar null pero SIN hacer logout
-            // para preservar el token por si el usuario fue creado pero hay latencia
-            logger?.error?.("[AuthService] Usuario no encontrado después de todos los reintentos")
             return null
           }
           
-          // Otros errores (500, 503, etc) → reintentar
-          if (attempt < retries) {
-            const delay = attempt * 500
+          // 404 = usuario no encontrado - NO reintentar, es definitivo
+          if (res.status === 404) {
+            logger?.error?.("[AuthService] 404 Usuario no encontrado")
+            return null
+          }
+          
+          // Otros errores (500, 503, etc) → solo 1 reintento
+          if (attempt < retries && res.status >= 500) {
+            const delay = 1000 // Solo 1 segundo de espera
             logger?.warn?.(`[AuthService] Error ${res.status}, reintentando en ${delay}ms...`)
             await new Promise(resolve => setTimeout(resolve, delay))
             continue
@@ -317,9 +293,9 @@ export class AuthService {
       } catch (e) {
         logger?.error?.(`[AuthService] Error en fetchCurrentUser (intento ${attempt}/${retries}):`, e)
         
-        // Si es error de timeout o red, reintentar
+        // Si es error de timeout o red, solo 1 reintento
         if (attempt < retries && (e instanceof TypeError || (e as any).name === 'AbortError')) {
-          const delay = attempt * 1000
+          const delay = 1000
           logger?.warn?.(`[AuthService] Error de red/timeout, reintentando en ${delay}ms...`)
           await new Promise(resolve => setTimeout(resolve, delay))
           continue

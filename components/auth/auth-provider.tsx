@@ -184,23 +184,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setLoading(false); // ⚡ Desbloquear UI inmediatamente
         }
         
-        // ⚡ Refrescar en background sin bloquear UI
-        // Aumentar delay para evitar request inmediato innecesario
-        const timeoutId = setTimeout(async () => {
-          if (mounted && !isLoggingOut && AuthService.isLoggedIn()) {
-            try {
-              const refreshedUser = await AuthService.fetchCurrentUser();
-              if (refreshedUser && mounted) {
-                setUserState(refreshedUser);
-              }
-            } catch (err) {
-              console.warn("[AuthProvider] Background refresh falló:", err);
-              // Mantener el usuario local, no afectar la UI
-            }
-          }
-        }, 5000); // ⚡ 5 segundos - refresh en background, no bloqueante
-        
-        return () => clearTimeout(timeoutId);
+        // ⚡ NO hacer refresh en background si acabamos de cargar
+        // Esto previene loops infinitos de requests
+        return;
       }
 
       // Si hay token pero no user local, intentar validar con servidor

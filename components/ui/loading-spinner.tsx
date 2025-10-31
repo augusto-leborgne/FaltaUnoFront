@@ -6,10 +6,10 @@ import { cn } from "@/lib/utils"
  */
 const ModernGreenSpinner = ({ className, size }: { className?: string; size: string }) => (
   <div className={cn("relative", className)}>
-    {/* Base circle (light green, very thin) */}
+    {/* Base circle (light green, more visible) */}
     <div 
       className={cn(
-        "rounded-full border border-green-200",
+        "rounded-full border-2 border-green-300",
         size
       )} 
     />
@@ -17,13 +17,13 @@ const ModernGreenSpinner = ({ className, size }: { className?: string; size: str
     <div 
       className={cn(
         "absolute inset-0 rounded-full animate-spin",
-        "border-2 border-transparent border-t-green-600",
+        "border-[3px] border-transparent border-t-green-600",
         size
       )}
       style={{
-        background: 'conic-gradient(from 0deg, transparent 0%, transparent 75%, #16a34a 75%, #16a34a 100%)',
-        WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 2px), black calc(100% - 2px))',
-        mask: 'radial-gradient(farthest-side, transparent calc(100% - 2px), black calc(100% - 2px))'
+        background: 'conic-gradient(from 0deg, transparent 0%, transparent 70%, #16a34a 70%, #16a34a 100%)',
+        WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 3px), black calc(100% - 3px))',
+        mask: 'radial-gradient(farthest-side, transparent calc(100% - 3px), black calc(100% - 3px))'
       }}
     />
   </div>
