@@ -189,7 +189,14 @@ export function LoginScreen() {
             disabled={isLoading || !!fieldErrors.email || !!fieldErrors.password || !email || !password}
             className="w-full py-4 rounded-2xl"
           >
-            {isLoading ? "Entrando..." : "Entrar"}
+            {isLoading ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Entrando...</span>
+              </div>
+            ) : (
+              "Entrar"
+            )}
           </Button>
         </form>
 
