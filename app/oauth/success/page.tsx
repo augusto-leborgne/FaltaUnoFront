@@ -48,41 +48,66 @@ export default function OAuthSuccessPage() {
         const consistency = TokenPersistence.verifyTokenConsistency()
         logger.info("[OAuthSuccess] Consistencia del token:", consistency)
         
-        // Dar tiempo al backend para:
-        // 1. Confirmar la transacción de base de datos
-        // 2. Propagar el usuario a través del sistema
-        // ⚡ AUMENTADO: 4 segundos para backend más lento
-        logger.info("[OAuthSuccess] Esperando 4 segundos para que el backend termine de procesar...")
-        await new Promise(resolve => setTimeout(resolve, 4000))
-        
         // Intentar obtener información del usuario desde el backend
         // El método fetchCurrentUser ahora tiene reintentos automáticos (3 intentos)
         logger.info("[OAuthSuccess] Intentando obtener usuario con reintentos automáticos...")
         setMessage("Verificando tu cuenta...")
         
-        const user = await AuthService.fetchCurrentUser()
+        // Estrategia de reintentos inteligente:
+        // - Primer intento: inmediato
+        // - Si falla: esperar 1s y reintentar
+        // - Si falla: esperar 2s más y reintentar
+        let user = null
+        let attempts = 0
+        const maxAttempts = 3
+        
+        while (!user && attempts < maxAttempts) {
+          attempts++
+          
+          if (attempts > 1) {
+            const waitTime = attempts === 2 ? 1000 : 2000
+            logger.info(`[OAuthSuccess] Intento ${attempts}/${maxAttempts} - esperando ${waitTime}ms...`)
+            setMessage(`Verificando tu cuenta (intento ${attempts}/${maxAttempts})...`)
+            await new Promise(resolve => setTimeout(resolve, waitTime))
+          } else {
+            logger.info(`[OAuthSuccess] Intento ${attempts}/${maxAttempts} - inmediato`)
+          }
+          
+          try {
+            user = await AuthService.fetchCurrentUser()
+            if (user) {
+              logger.info(`[OAuthSuccess] ✅ Usuario obtenido en intento ${attempts}`)
+              break
+            }
+          } catch (error) {
+            logger.warn(`[OAuthSuccess] Intento ${attempts} falló:`, error)
+            if (attempts === maxAttempts) {
+              throw error // Re-lanzar en último intento
+            }
+          }
+        }
         
         if (!user) {
-          logger.error("[OAuthSuccess] ❌ No se pudo obtener usuario")
+          logger.error("[OAuthSuccess] ❌ No se pudo obtener usuario después de todos los reintentos")
           logger.error("[OAuthSuccess] Posibles causas:")
           logger.error("[OAuthSuccess]   1. Usuario no existe en la base de datos")
           logger.error("[OAuthSuccess]   2. Error de sincronización entre Google OAuth y backend")
           logger.error("[OAuthSuccess]   3. Error de red/timeout")
           
           setStatus("error")
-          setMessage("No pudimos verificar tu cuenta. El usuario no fue encontrado en nuestro sistema. Por favor, intenta registrarte nuevamente.")
+          setMessage("No pudimos verificar tu cuenta. Por favor, limpiá tu navegador e intentá de nuevo.")
           
           // Limpiar SOLO los tokens, no otros datos de la app
           TokenPersistence.clearAllTokens()
           AuthService.removeToken()
           AuthService.removeUser()
           
-          // ⚡ AUMENTADO: Esperar 8 segundos para que el usuario pueda leer el error
-          logger.info("[OAuthSuccess] Esperando 8 segundos antes de redirigir...")
+          // Esperar 5 segundos para que el usuario pueda leer el error
+          logger.info("[OAuthSuccess] Esperando 5 segundos antes de redirigir...")
           setTimeout(() => {
-            logger.info("[OAuthSuccess] Redirigiendo a login...")
-            router.replace("/login")
-          }, 8000)
+            logger.info("[OAuthSuccess] Redirigiendo a /debug-clear para limpiar...")
+            router.replace("/debug-clear")
+          }, 5000)
           return
         }
 
@@ -114,19 +139,19 @@ export default function OAuthSuccessPage() {
         const errorMessage = error instanceof Error ? error.message : "Error desconocido"
         
         setStatus("error")
-        setMessage(`Error al procesar la autenticación: ${errorMessage}. Por favor, intenta nuevamente.`)
+        setMessage(`Error: ${errorMessage}. Limpiá tu navegador e intentá de nuevo.`)
         
         // Limpiar tokens en caso de error
         TokenPersistence.clearAllTokens()
         AuthService.removeToken()
         AuthService.removeUser()
         
-        // ⚡ AUMENTADO: Esperar 8 segundos para que el usuario pueda leer el error
-        logger.info("[OAuthSuccess] Esperando 8 segundos antes de redirigir...")
+        // Esperar 5 segundos para que el usuario pueda leer el error
+        logger.info("[OAuthSuccess] Esperando 5 segundos antes de redirigir...")
         setTimeout(() => {
-          logger.info("[OAuthSuccess] Redirigiendo a login...")
-          router.replace("/login")
-        }, 8000)
+          logger.info("[OAuthSuccess] Redirigiendo a /debug-clear...")
+          router.replace("/debug-clear")
+        }, 5000)
       }
     }
 
