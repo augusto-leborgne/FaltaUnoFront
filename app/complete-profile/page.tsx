@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CheckCircle2, XCircle, Loader2, User, Phone, Calendar } from 'lucide-react';
+import { DateSelector } from '@/components/ui/date-selector';
+import { CheckCircle2, XCircle, Loader2, User, Phone } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 
@@ -251,20 +252,12 @@ export default function CompleteProfilePage() {
               <Label htmlFor="fechaNacimiento">
                 Fecha de Nacimiento <span className="text-red-500">*</span>
               </Label>
-              <div className="mt-1 relative">
-                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  id="fechaNacimiento"
-                  name="fechaNacimiento"
-                  type="date"
-                  value={formData.fechaNacimiento}
-                  onChange={handleChange}
-                  max={new Date(Date.now() - 13 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
-                  className="pl-10"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
+              <DateSelector
+                value={formData.fechaNacimiento}
+                onChange={(date) => setFormData(prev => ({ ...prev, fechaNacimiento: date }))}
+                minAge={13}
+                required
+              />
               <p className="mt-1 text-xs text-gray-500">
                 Debes tener al menos 13 años
               </p>

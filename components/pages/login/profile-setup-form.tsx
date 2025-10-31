@@ -5,6 +5,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { DateSelector } from "@/components/ui/date-selector"
 import { useRouter } from "next/navigation"
 import { User, ChevronDown, AlertCircle } from "lucide-react"
 import AddressAutocomplete from "@/components/google-maps/address-autocomplete"
@@ -398,29 +399,16 @@ export function ProfileSetupForm() {
           </div>
 
           <div>
-            <label htmlFor="profile-birthdate" className="sr-only">Fecha de nacimiento</label>
-            <Input
-              id="profile-birthdate"
-              name="birthdate"
-              placeholder="Fecha de nacimiento"
+            <label htmlFor="profile-birthdate" className="text-sm font-medium text-gray-700 mb-1 block">
+              Fecha de nacimiento
+            </label>
+            <DateSelector
               value={formData.fechaNacimiento}
-              onChange={(e) => handleFieldChange('fechaNacimiento', e.target.value)}
-              className={fieldErrors.fechaNacimiento ? 'border-red-500' : ''}
-              type="date"
-              autoComplete="bday"
-              max={(() => {
-                const yesterday = new Date()
-                yesterday.setDate(yesterday.getDate() - 1)
-                return yesterday.toISOString().split('T')[0]
-              })()}
+              onChange={(date) => handleFieldChange('fechaNacimiento', date)}
+              error={fieldErrors.fechaNacimiento}
+              minAge={13}
               required
             />
-            {fieldErrors.fechaNacimiento && (
-              <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
-                <AlertCircle className="w-4 h-4" />
-                {fieldErrors.fechaNacimiento}
-              </p>
-            )}
           </div>
 
           <div className="relative">

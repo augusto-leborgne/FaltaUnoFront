@@ -352,7 +352,11 @@ export function SettingsScreen() {
           <div className="relative inline-block">
             <Avatar className="w-24 h-24">
               {avatar ? (
-                <AvatarImage src={avatar} alt="Foto de perfil" />
+                <AvatarImage 
+                  src={avatar} 
+                  alt="Foto de perfil"
+                  className="object-cover w-full h-full"
+                />
               ) : (
                 <AvatarFallback className="bg-orange-100 text-2xl">{initials}</AvatarFallback>
               )}
