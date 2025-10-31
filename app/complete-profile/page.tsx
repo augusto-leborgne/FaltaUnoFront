@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DateSelector } from '@/components/ui/date-selector';
 import { CheckCircle2, XCircle, Loader2, User, Phone } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-pg4rwegknq-uc.a.run.app/api';
 
 export default function CompleteProfilePage() {
   const router = useRouter();

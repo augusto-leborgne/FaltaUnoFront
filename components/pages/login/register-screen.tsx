@@ -108,7 +108,7 @@ export function RegisterScreen() {
       console.log("[RegisterScreen] Iniciando pre-registro para:", formData.email)
 
       // ✅ NUEVO FLUJO: Pre-registro con verificación de email
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-pg4rwegknq-uc.a.run.app/api'
       
       const response = await fetch(`${API_URL}/auth/pre-register`, {
         method: 'POST',

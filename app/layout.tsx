@@ -38,8 +38,8 @@ export default function RootLayout({
     <html lang="es" className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}>
       <head>
         {/* ⚡ Preconnect to external domains for faster loading */}
-        <link rel="preconnect" href="https://faltauno-backend-169771742214.us-central1.run.app" />
-        <link rel="dns-prefetch" href="https://faltauno-backend-169771742214.us-central1.run.app" />
+        <link rel="preconnect" href="https://faltauno-backend-pg4rwegknq-uc.a.run.app" />
+        <link rel="dns-prefetch" href="https://faltauno-backend-pg4rwegknq-uc.a.run.app" />
         <link rel="preconnect" href="https://maps.googleapis.com" />
         <link rel="dns-prefetch" href="https://maps.googleapis.com" />
         

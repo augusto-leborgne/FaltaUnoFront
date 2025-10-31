@@ -108,7 +108,7 @@ export function SettingsScreen() {
 
       // Construir URL de foto de perfil si existe
       if (user.id && user.foto_perfil) {
-        const photoUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'}/api/usuarios/${user.id}/foto`
+        const photoUrl = `${process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-pg4rwegknq-uc.a.run.app'}/api/usuarios/${user.id}/foto`
         setAvatar(photoUrl)
       }
 

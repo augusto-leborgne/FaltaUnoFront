@@ -67,7 +67,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
         return
       }
 
-      const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-pg4rwegknq-uc.a.run.app'
 
       // Usuario
       const userRes = await fetch(`${API_BASE}/api/usuarios/${userId}`, {
