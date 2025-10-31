@@ -5,6 +5,7 @@ import { useEffect } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { AuthService } from "@/lib/auth"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 type Props = {
   children: React.ReactNode
@@ -75,7 +76,7 @@ export default function RequireAuth({
   if (loading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+        <LoadingSpinner size="xl" variant="green" />
       </div>
     )
   }

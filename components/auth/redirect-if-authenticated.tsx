@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 function isProfileIncomplete(u: any | null | undefined) {
   if (!u) return true
@@ -65,11 +66,11 @@ export function RedirectIfAuthenticated({ children }: { children: React.ReactNod
     checkAuth()
   }, [router])
 
-  // ⚡ Spinner más simple durante check rápido
+  // ⚡ Spinner consistente durante check rápido
   if (checking) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white">
-        <div className="w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full animate-spin" />
+        <LoadingSpinner size="xl" variant="green" />
       </div>
     )
   }

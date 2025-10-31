@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AuthService } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export default function RootPage() {
   const router = useRouter();
@@ -61,10 +62,9 @@ export default function RootPage() {
     router.replace("/login");
   }, [router]);
 
-  // ⚡ Spinner simplificado (menos DOM)
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full animate-spin"></div>
+      <LoadingSpinner size="xl" variant="green" />
     </div>
   );
 }

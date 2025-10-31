@@ -2,14 +2,14 @@ import { cn } from "@/lib/utils"
 
 /**
  * Modern green circular spinner with gradient effect
- * This is a sophisticated spinner with a thin border that thickens on one section
+ * This is a sophisticated spinner with a thicker, more visible border
  */
 const ModernGreenSpinner = ({ className, size }: { className?: string; size: string }) => (
   <div className={cn("relative", className)}>
     {/* Base circle (light green, more visible) */}
     <div 
       className={cn(
-        "rounded-full border-2 border-green-300",
+        "rounded-full border-[3px] border-green-300",
         size
       )} 
     />
@@ -17,13 +17,13 @@ const ModernGreenSpinner = ({ className, size }: { className?: string; size: str
     <div 
       className={cn(
         "absolute inset-0 rounded-full animate-spin",
-        "border-[3px] border-transparent border-t-green-600",
+        "border-[4px] border-transparent border-t-green-600",
         size
       )}
       style={{
         background: 'conic-gradient(from 0deg, transparent 0%, transparent 70%, #16a34a 70%, #16a34a 100%)',
-        WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 3px), black calc(100% - 3px))',
-        mask: 'radial-gradient(farthest-side, transparent calc(100% - 3px), black calc(100% - 3px))'
+        WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 4px), black calc(100% - 4px))',
+        mask: 'radial-gradient(farthest-side, transparent calc(100% - 4px), black calc(100% - 4px))'
       }}
     />
   </div>
@@ -74,11 +74,11 @@ interface LoadingSpinnerProps {
 }
 
 const sizeClasses = {
-  sm: "w-4 h-4",
-  md: "w-6 h-6",
-  lg: "w-8 h-8",
-  xl: "w-12 h-12",
-  "2xl": "w-16 h-16",
+  sm: "w-6 h-6",
+  md: "w-8 h-8",
+  lg: "w-12 h-12",
+  xl: "w-16 h-16",
+  "2xl": "w-20 h-20",
 }
 
 const variantClasses = {
@@ -151,7 +151,7 @@ export function LoadingSpinner({
 export function FullPageSpinner({ text }: { text?: string }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white p-6">
-      <LoadingSpinner size="2xl" variant="green" text={text} />
+      <LoadingSpinner size="xl" variant="green" text={text} />
     </div>
   )
 }
