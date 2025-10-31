@@ -132,8 +132,8 @@ const nextConfig = {
     isrMemoryCacheSize: 0,
     
     // ⚡ PERFORMANCE: Optimize package imports
+    // REMOVED 'lucide-react' due to barrel export issues in Docker production builds
     optimizePackageImports: [
-      'lucide-react',
       '@radix-ui/react-icons',
       'date-fns',
       'recharts',
@@ -142,6 +142,9 @@ const nextConfig = {
     // ⚡ Optimize server components
     serverComponentsExternalPackages: ['@radix-ui'],
   },
+  
+  // Ensure lucide-react is properly transpiled in all environments
+  transpilePackages: ['lucide-react'],
   
   // ⚡ Webpack optimizations for production
   webpack: (config, { dev, isServer }) => {
