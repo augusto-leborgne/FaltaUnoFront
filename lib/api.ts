@@ -1293,7 +1293,7 @@ export const ReviewAPI = {
    */
   listByUser: (usuarioCalificadoId: string) => {
     return apiFetch<ReviewDTO[]>(
-      `/api/reviews?usuarioCalificadoId=${usuarioCalificadoId}`
+      `/api/reviews/usuario/${usuarioCalificadoId}`
     );
   },
 
@@ -1301,7 +1301,7 @@ export const ReviewAPI = {
    * Listar reviews de un partido
    */
   listByPartido: (partidoId: string) => {
-    return apiFetch<ReviewDTO[]>(`/api/reviews?partidoId=${partidoId}`);
+    return apiFetch<ReviewDTO[]>(`/api/reviews/partido/${partidoId}`);
   }
 };
 

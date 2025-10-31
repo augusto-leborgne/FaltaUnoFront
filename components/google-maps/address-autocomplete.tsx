@@ -108,6 +108,7 @@ export function AddressAutocomplete({
     const request: google.maps.places.AutocompletionRequest = {
       input: input.trim(),
       componentRestrictions: { country: "uy" },
+      types: ['address', 'establishment'], // ✅ SOLO direcciones y establecimientos, NO ciudades/regiones
       sessionToken: sessionTokenRef.current || undefined,
     };
 
