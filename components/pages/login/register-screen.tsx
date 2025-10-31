@@ -45,7 +45,7 @@ export function RegisterScreen() {
       
       case 'password':
         if (!value) return "La contraseña es requerida"
-        if (value.length < 6) return "Mínimo 6 caracteres"
+        if (value.length < 8) return "Mínimo 8 caracteres"
         // Validaciones de mayúscula y número removidas para simplificar
         return null
       
@@ -96,8 +96,8 @@ export function RegisterScreen() {
       return
     }
 
-    if (formData.password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres")
+    if (formData.password.length < 8) {
+      setError("La contraseña debe tener al menos 8 caracteres")
       return
     }
 
@@ -105,96 +105,37 @@ export function RegisterScreen() {
     setError("")
 
     try {
-      const payload = {
-        email: formData.email,
-        password: formData.password,
-      }
+      console.log("[RegisterScreen] Iniciando pre-registro para:", formData.email)
 
-      console.log("[RegisterScreen] Creando usuario con email:", formData.email)
+      // ✅ NUEVO FLUJO: Pre-registro con verificación de email
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'
+      
+      const response = await fetch(`${API_URL}/auth/pre-register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+        }),
+      })
 
-      // ✅ CORRECCIÓN: Tipar correctamente la respuesta
-      const response = await UsuarioAPI.crear(payload)
+      const data = await response.json()
 
-      console.log("[RegisterScreen] Respuesta crear usuario:", response);
-
-      if (response && response.success) {
-        // ✅ CORRECCIÓN: Manejar formato de respuesta del backend
-        const responseData = response.data
-        const user = responseData?.user
-        const token = responseData?.token
-
-        console.log("[RegisterScreen] Usuario creado:", user?.email)
-        console.log("[RegisterScreen] Token en respuesta:", token ? "SÍ" : "NO")
-
-        // Si viene token en el registro, guardarlo (lo más común)
-        if (token) {
-          AuthService.setToken(token)
-          console.log("[RegisterScreen] ✅ Token guardado desde registro")
-          
-          // Guardar usuario
-          if (user) {
-            AuthService.setUser(user)
-            setUser(user)
-            console.log("[RegisterScreen] ✅ Usuario guardado en contexto")
-          }
-        } else {
-          // ✅ Fallback: Si no viene token, hacer login automático
-          console.log("[RegisterScreen] No hay token, haciendo login automático...")
-          
-          try {
-            const loginRes = await UsuarioAPI.login(formData.email, formData.password)
-            console.log("[RegisterScreen] Login automático:", loginRes.success ? "✅" : "❌")
-            
-            if (loginRes.success && loginRes.data?.token) {
-              AuthService.setToken(loginRes.data.token)
-              AuthService.setUser(loginRes.data.user)
-              setUser(loginRes.data.user)
-              console.log("[RegisterScreen] ✅ Token y usuario guardados desde login")
-            } else {
-              throw new Error("No se pudo obtener token en login automático")
-            }
-          } catch (loginErr) {
-            console.error("[RegisterScreen] ❌ Error en login automático:", loginErr)
-            // Si falló el login automático, redirigir a login manual
-            setError("Cuenta creada exitosamente. Por favor, inicia sesión.")
-            setTimeout(() => router.push("/login"), 2000)
-            return
-          }
-        }
-
-        // ✅ Verificar estado final antes de redirigir
-        const finalToken = AuthService.getToken()
-        const finalUser = AuthService.getUser()
+      if (data.success) {
+        console.log("[RegisterScreen] ✅ Pre-registro exitoso, redirigiendo a verificación")
         
-        console.log("[RegisterScreen] Estado final:")
-        console.log("  - Token:", finalToken ? "✅" : "❌")
-        console.log("  - Usuario:", finalUser ? "✅" : "❌")
-        console.log("  - Email:", finalUser?.email)
-        console.log("  - Perfil completo:", finalUser?.perfilCompleto)
-        console.log("  - Cédula verificada:", finalUser?.cedulaVerificada)
-
-        if (!finalToken || !finalUser) {
-          console.error("[RegisterScreen] ⚠️ Estado inválido después del registro")
-          setError("Error al completar el registro. Por favor, inicia sesión.")
-          setTimeout(() => router.push("/login"), 2000)
-          return
-        }
-
-        // ✅ REDIRECCIÓN SEGÚN PERFIL
-        // Siempre redirigir a profile-setup después del registro
-        // (El usuario recién creado NUNCA tiene perfil completo)
-        console.log("[RegisterScreen] 🔄 Redirigiendo a /profile-setup")
-        router.push("/profile-setup")
-        
+        // Redirigir a página de verificación con el email
+        router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`)
       } else {
-        const errorMsg = response?.message || "Error al crear la cuenta"
+        const errorMsg = data.message || "Error al crear la cuenta"
         console.error("[RegisterScreen] ❌ Error en respuesta:", errorMsg)
         setError(errorMsg)
       }
     } catch (err: any) {
       console.error("[RegisterScreen] ❌ Error en registro:", err)
       
-      // ✅ CORRECCIÓN: Mensajes de error más específicos
       let errorMessage = "Error al crear la cuenta"
       
       if (err.message?.includes("Failed to fetch")) {
@@ -253,13 +194,13 @@ export function RegisterScreen() {
               id="register-password"
               name="password"
               type="password"
-              placeholder="Mínimo 6 caracteres"
+              placeholder="Mínimo 8 caracteres"
               value={formData.password}
               onChange={(e) => handleFieldChange('password', e.target.value)}
               required
               disabled={isLoading}
               autoComplete="new-password"
-              minLength={6}
+              minLength={8}
               className={`rounded-2xl py-3 ${fieldErrors.password ? 'border-red-500' : ''}`}
             />
             {fieldErrors.password && (
@@ -279,7 +220,7 @@ export function RegisterScreen() {
               required
               disabled={isLoading}
               autoComplete="new-password"
-              minLength={6}
+              minLength={8}
               className={`rounded-2xl py-3 ${fieldErrors.confirmPassword ? 'border-red-500' : ''}`}
             />
             {fieldErrors.confirmPassword && (
