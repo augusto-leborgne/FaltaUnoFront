@@ -34,6 +34,7 @@ export default function OAuthSuccessPage() {
         logger.info("[OAuth] Token recibido:", token ? `SI (${token.length} chars)` : "NO")
         
         if (!token) {
+          logger.error("[OAuth] ❌ No token received")
           setStatus("error")
           setMessage("❌ No se recibió el token de autenticación")
           await new Promise(resolve => setTimeout(resolve, 3000))
@@ -43,43 +44,54 @@ export default function OAuthSuccessPage() {
 
         // Guardar token inmediatamente
         TokenPersistence.saveTokenWithBackup(token)
-        logger.info("[OAuth] ✅ Token guardado")
+        logger.info("[OAuth] ✅ Token guardado en localStorage")
         
-        // Obtener usuario con reintentos rápidos
+        // Esperar un poco para que el token se propague
+        await new Promise(resolve => setTimeout(resolve, 100))
+        
+        // Obtener usuario con reintentos
         setMessage("Verificando tu cuenta...")
         
         let user = null
+        let lastError = null
+        
         for (let attempt = 1; attempt <= 3; attempt++) {
-          logger.info(`[OAuth] Intento ${attempt}/3`)
+          logger.info(`[OAuth] Intento ${attempt}/3 de fetchCurrentUser`)
           
           try {
             user = await AuthService.fetchCurrentUser()
             if (user) {
               logger.info(`[OAuth] ✅ Usuario obtenido: ${user.email}`)
               break
+            } else {
+              logger.warn(`[OAuth] Intento ${attempt}: fetchCurrentUser retornó null/undefined`)
             }
           } catch (err) {
-            logger.warn(`[OAuth] Intento ${attempt} falló:`, err)
+            lastError = err
+            logger.error(`[OAuth] Intento ${attempt} falló:`, err)
             if (attempt < 3) {
-              await new Promise(resolve => setTimeout(resolve, 500))
+              logger.info(`[OAuth] Esperando 1s antes del siguiente intento...`)
+              await new Promise(resolve => setTimeout(resolve, 1000))
             }
           }
         }
         
         if (!user) {
+          const errorMsg = lastError instanceof Error ? lastError.message : "Error desconocido"
+          logger.error("[OAuth] ❌ No se pudo obtener usuario después de 3 intentos. Último error:", errorMsg)
+          
           setStatus("error")
-          setMessage("❌ No pudimos verificar tu cuenta. Limpiá el navegador.")
+          setMessage(`❌ Error al verificar cuenta: ${errorMsg}`)
           
+          // Limpiar y redirigir
+          await new Promise(resolve => setTimeout(resolve, 5000)) // Mostrar error más tiempo
           TokenPersistence.clearAllTokens()
-          AuthService.removeToken()
-          AuthService.removeUser()
-          
-          await new Promise(resolve => setTimeout(resolve, 3000))
-          router.push("/debug-clear")
+          router.push("/login?error=oauth_failed")
           return
         }
 
         // Éxito!
+        logger.info("[OAuth] ✅ Autenticación completa exitosamente")
         setStatus("success")
         
         if (!user.perfilCompleto) {
@@ -97,17 +109,17 @@ export default function OAuthSuccessPage() {
         }
 
       } catch (error) {
-        logger.error("[OAuth] Error:", error)
+        logger.error("[OAuth] ❌ Error crítico en processOAuth:", error)
         
         setStatus("error")
-        setMessage(`❌ ${error instanceof Error ? error.message : "Error desconocido"}`)
+        const errorMsg = error instanceof Error ? error.message : "Error desconocido"
+        setMessage(`❌ Error: ${errorMsg}`)
+        
+        // Mostrar error más tiempo antes de redirigir
+        await new Promise(resolve => setTimeout(resolve, 5000))
         
         TokenPersistence.clearAllTokens()
-        AuthService.removeToken()
-        AuthService.removeUser()
-        
-        await new Promise(resolve => setTimeout(resolve, 3000))
-        router.push("/debug-clear")
+        router.push("/login?error=oauth_error")
       }
     }
 
