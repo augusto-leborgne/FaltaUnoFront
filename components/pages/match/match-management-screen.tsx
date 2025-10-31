@@ -249,6 +249,13 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
         description: "El jugador se ha unido al partido",
       })
 
+      // Actualización optimística: incrementar jugadores actuales
+      setMatch(prev => prev ? {
+        ...prev,
+        jugadoresActuales: (prev.jugadoresActuales || 0) + 1
+      } : prev)
+
+      // Recargar datos completos del servidor
       await loadMatchData()
 
     } catch (err) {
@@ -259,6 +266,8 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
         description: errorMessage,
         variant: "destructive",
       })
+      // Revertir cambio optimista en caso de error
+      await loadMatchData()
     }
   }
 
