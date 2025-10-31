@@ -47,7 +47,7 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
         <meta name="theme-color" content="#4caf50" />
       </head>
-      <body className="font-sans">
+      <body className="font-sans" suppressHydrationWarning>
         <ErrorBoundary>
           <AuthProvider>
             {children}

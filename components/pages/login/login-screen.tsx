@@ -145,12 +145,15 @@ export function LoginScreen() {
         {/* Formulario */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <Input
+              id="login-email"
+              name="email"
               type="email"
               value={email}
               onChange={(e) => handleEmailChange(e.target.value)}
               placeholder="tu@email.com"
+              autoComplete="email"
               required
               className={`rounded-2xl py-3 ${fieldErrors.email ? 'border-red-500' : ''}`}
             />
@@ -160,12 +163,15 @@ export function LoginScreen() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+            <label htmlFor="login-password" className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
             <Input
+              id="login-password"
+              name="password"
               type="password"
               value={password}
               onChange={(e) => handlePasswordChange(e.target.value)}
               placeholder="********"
+              autoComplete="current-password"
               required
               className={`rounded-2xl py-3 ${fieldErrors.password ? 'border-red-500' : ''}`}
             />

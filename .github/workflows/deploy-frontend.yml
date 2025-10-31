@@ -38,22 +38,28 @@ jobs:
           
           # Generate unique build timestamp for version tracking
           BUILD_TIMESTAMP=$(date +%s)
+          COMMIT_SHA=${{ github.sha }}
+          SHORT_SHA=$(echo $COMMIT_SHA | cut -c1-7)
           echo "Build timestamp: $BUILD_TIMESTAMP"
+          echo "Commit SHA: $SHORT_SHA"
 
-          # Build Docker image usando Dockerfile.prod y pasar NEXT_PUBLIC_API_URL y GOOGLE_MAPS_API_KEY
+          # Build Docker image with NO CACHE to ensure fresh build
           docker build \
+            --no-cache \
             --build-arg NEXT_PUBLIC_API_URL="$BACKEND_URL" \
             --build-arg NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}" \
             --build-arg BUILD_TIMESTAMP="$BUILD_TIMESTAMP" \
             -f Dockerfile.prod \
+            -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/faltauno/${{ env.SERVICE_NAME }}:$SHORT_SHA \
             -t ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/faltauno/${{ env.SERVICE_NAME }}:latest .
           
-          # Push image to Artifact Registry
+          # Push both tags (SHA and latest)
+          docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/faltauno/${{ env.SERVICE_NAME }}:$SHORT_SHA
           docker push ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/faltauno/${{ env.SERVICE_NAME }}:latest
           
-          # Deploy to Cloud Run y setear variables de entorno
+          # Deploy to Cloud Run using SHA tag (not latest) to force new revision
           gcloud run deploy ${{ env.SERVICE_NAME }} \
-            --image ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/faltauno/${{ env.SERVICE_NAME }}:latest \
+            --image ${{ env.GCP_REGION }}-docker.pkg.dev/${{ env.GCP_PROJECT_ID }}/faltauno/${{ env.SERVICE_NAME }}:$SHORT_SHA \
             --platform managed \
             --region ${{ env.GCP_REGION }} \
             --allow-unauthenticated \
@@ -62,10 +68,32 @@ jobs:
             --min-instances 0 \
             --max-instances 10 \
             --port 8080 \
+            --no-traffic \
+            --tag "sha-$SHORT_SHA" \
             --set-env-vars NEXT_PUBLIC_API_URL="$BACKEND_URL" \
             --set-env-vars NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}" \
             --set-env-vars BUILD_ID="build-$BUILD_TIMESTAMP" \
+            --set-env-vars COMMIT_SHA="$SHORT_SHA" \
             --project ${{ env.GCP_PROJECT_ID }}
+          
+          # Get the new revision name
+          NEW_REVISION=$(gcloud run revisions list \
+            --service ${{ env.SERVICE_NAME }} \
+            --platform managed \
+            --region ${{ env.GCP_REGION }} \
+            --format 'value(name)' \
+            --limit 1)
+          
+          echo "New revision: $NEW_REVISION"
+          
+          # Route 100% traffic to new revision (zero downtime cutover)
+          gcloud run services update-traffic ${{ env.SERVICE_NAME }} \
+            --to-revisions=$NEW_REVISION=100 \
+            --region ${{ env.GCP_REGION }} \
+            --platform managed \
+            --project ${{ env.GCP_PROJECT_ID }}
+          
+          echo "✅ Traffic routed to new revision"
       
       - name: Get Service URL
         id: get-url

@@ -320,18 +320,31 @@ export function ProfileSetupForm() {
                 {formData.photo ? "Cambiar" : "Agregar"}
               </Button>
 
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
+              <input 
+                ref={fileInputRef} 
+                id="profile-photo"
+                name="photo"
+                type="file" 
+                accept="image/*" 
+                onChange={handlePhotoChange} 
+                className="hidden"
+                aria-label="Subir foto de perfil"
+              />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
+              <label htmlFor="profile-name" className="sr-only">Nombre</label>
               <Input
+                id="profile-name"
+                name="name"
                 placeholder="Nombre"
                 value={formData.name}
                 onChange={(e) => handleFieldChange('name', e.target.value)}
                 className={fieldErrors.name ? 'border-red-500' : ''}
                 maxLength={50}
+                autoComplete="given-name"
                 required
               />
               {fieldErrors.name && (
@@ -342,12 +355,16 @@ export function ProfileSetupForm() {
               )}
             </div>
             <div>
+              <label htmlFor="profile-surname" className="sr-only">Apellido</label>
               <Input
+                id="profile-surname"
+                name="surname"
                 placeholder="Apellido"
                 value={formData.surname}
                 onChange={(e) => handleFieldChange('surname', e.target.value)}
                 className={fieldErrors.surname ? 'border-red-500' : ''}
                 maxLength={50}
+                autoComplete="family-name"
                 required
               />
               {fieldErrors.surname && (
@@ -360,11 +377,16 @@ export function ProfileSetupForm() {
           </div>
 
           <div>
+            <label htmlFor="profile-phone" className="sr-only">Celular</label>
             <Input
+              id="profile-phone"
+              name="phone"
               placeholder="Celular"
               value={formData.phone}
               onChange={(e) => handleFieldChange('phone', e.target.value)}
               className={fieldErrors.phone ? 'border-red-500' : ''}
+              type="tel"
+              autoComplete="tel"
               required
             />
             {fieldErrors.phone && (
@@ -376,12 +398,16 @@ export function ProfileSetupForm() {
           </div>
 
           <div>
+            <label htmlFor="profile-birthdate" className="sr-only">Fecha de nacimiento</label>
             <Input
+              id="profile-birthdate"
+              name="birthdate"
               placeholder="Fecha de nacimiento"
               value={formData.fechaNacimiento}
               onChange={(e) => handleFieldChange('fechaNacimiento', e.target.value)}
               className={fieldErrors.fechaNacimiento ? 'border-red-500' : ''}
               type="date"
+              autoComplete="bday"
               max={(() => {
                 const yesterday = new Date()
                 yesterday.setDate(yesterday.getDate() - 1)
@@ -432,12 +458,17 @@ export function ProfileSetupForm() {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
+              <label htmlFor="profile-height" className="sr-only">Altura (cm)</label>
               <Input
+                id="profile-height"
+                name="height"
                 placeholder="Altura (cm) *"
                 type="number"
                 value={formData.height}
                 onChange={(e) => handleFieldChange('height', e.target.value)}
                 className={fieldErrors.height ? 'border-red-500' : ''}
+                min="1"
+                max="300"
                 required
               />
               {fieldErrors.height && (
@@ -448,12 +479,17 @@ export function ProfileSetupForm() {
               )}
             </div>
             <div>
+              <label htmlFor="profile-weight" className="sr-only">Peso (kg)</label>
               <Input
+                id="profile-weight"
+                name="weight"
                 placeholder="Peso (kg) *"
                 type="number"
                 value={formData.weight}
                 onChange={(e) => handleFieldChange('weight', e.target.value)}
                 className={fieldErrors.weight ? 'border-red-500' : ''}
+                min="1"
+                max="300"
                 required
               />
               {fieldErrors.weight && (

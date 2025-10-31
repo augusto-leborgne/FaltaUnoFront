@@ -229,8 +229,10 @@ export function RegisterScreen() {
         {/* Formulario */}
         <form onSubmit={handleEmailRegistration} className="space-y-4 mb-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label htmlFor="register-email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <Input
+              id="register-email"
+              name="email"
               type="email"
               placeholder="tu@email.com"
               value={formData.email}
@@ -246,8 +248,10 @@ export function RegisterScreen() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+            <label htmlFor="register-password" className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
             <Input
+              id="register-password"
+              name="password"
               type="password"
               placeholder="Mínimo 6 caracteres"
               value={formData.password}
@@ -264,8 +268,10 @@ export function RegisterScreen() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Confirmar contraseña</label>
+            <label htmlFor="register-confirm-password" className="block text-sm font-medium text-gray-700 mb-1">Confirmar contraseña</label>
             <Input
+              id="register-confirm-password"
+              name="confirmPassword"
               type="password"
               placeholder="Repite tu contraseña"
               value={formData.confirmPassword}
