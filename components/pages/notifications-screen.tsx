@@ -8,6 +8,7 @@ import { TipoNotificacion, NotificacionDTO } from "@/lib/api"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 const tiposFiltro = [
   { label: "Todas", value: "todas" as const },
@@ -141,7 +142,7 @@ export function NotificationsScreen() {
 
         {isLoading ? (
           <div className="flex justify-center items-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+            <LoadingSpinner size="lg" variant="green" />
           </div>
         ) : notificacionesFiltradas.length === 0 ? (
           <div className="bg-gray-50 rounded-2xl border border-gray-200 p-12 text-center">

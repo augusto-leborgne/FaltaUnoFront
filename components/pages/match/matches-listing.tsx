@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { AuthService } from "@/lib/auth"
 import { MatchesMapView } from "@/components/google-maps/matches-map-view"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { 
   PartidoAPI, 
   PartidoDTO, 
@@ -397,8 +398,7 @@ export function MatchesListing() {
         <div className="space-y-4 pb-24">
           {loading ? (
             <div className="text-center py-8">
-              <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-              <p className="text-gray-600">Cargando partidos...</p>
+              <LoadingSpinner size="lg" variant="green" text="Cargando partidos..." />
             </div>
           ) : matches.length === 0 ? (
             <div className="text-center py-12">

@@ -9,6 +9,7 @@ import { Clock, Calendar, Star, Bell, Newspaper, TrendingUp, Award } from "lucid
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { API_BASE } from "@/lib/api"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useNotifications } from "@/hooks/use-notifications"
 
 interface NewsUpdate {
@@ -191,7 +192,7 @@ export function HomeScreen() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full"></div>
+        <LoadingSpinner size="xl" variant="green" />
       </div>
     )
   }
