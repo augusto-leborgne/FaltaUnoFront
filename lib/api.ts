@@ -1537,6 +1537,27 @@ export const AmistadAPI = {
   },
 
   /**
+   * Obtener solicitudes de amistad enviadas
+   */
+  listarSolicitudesEnviadas: async () => {
+    try {
+      const response = await apiFetch<any[]>('/api/amistades/enviadas');
+      return {
+        ...response,
+        data: response.data || []
+      };
+    } catch (error) {
+      console.error('[AmistadAPI.listarSolicitudesEnviadas] Error:', error);
+      return {
+        success: false,
+        data: [],
+        message: error instanceof Error ? error.message : 'Error al listar solicitudes enviadas',
+        error: error instanceof Error ? error.message : 'Error desconocido'
+      };
+    }
+  },
+
+  /**
    * Enviar solicitud de amistad
    */
   enviarSolicitud: async (usuarioId: string) => {

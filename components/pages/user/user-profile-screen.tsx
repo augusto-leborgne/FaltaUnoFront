@@ -8,7 +8,7 @@ import { Star, ArrowLeft, UserPlus } from "lucide-react"
 import { useRouter } from "next/navigation"
 import AuthService from "@/lib/auth"
 import { calcularEdad } from "@/lib/utils"
-import { API_BASE } from "@/lib/api"
+import { API_BASE, AmistadAPI } from "@/lib/api"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 interface Review {
@@ -48,7 +48,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
   const router = useRouter()
   const [user, setUser] = useState<Usuario | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
-  const [friendRequestSent, setFriendRequestSent] = useState(false)
+  const [friendStatus, setFriendStatus] = useState<'none' | 'friends' | 'pending-sent' | 'pending-received'>('none')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -58,6 +58,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       setError(null)
       setUser(null)
       setReviews([])
+      setFriendStatus('none')
 
       // Esperar un tick para evitar condiciones de carrera con la lectura del token
       const token = await AuthService.ensureToken()
@@ -86,6 +87,45 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       if (revRes.ok) {
         const revJson = await revRes.json()
         setReviews(revJson?.data || [])
+      }
+
+      // Verificar estado de amistad
+      const amigosResponse = await AmistadAPI.listarAmigos()
+      const pendientesEnviadasResponse = await AmistadAPI.listarSolicitudesEnviadas()
+      const pendientesRecibidasResponse = await AmistadAPI.listarSolicitudesPendientes()
+
+      // Verificar si ya son amigos
+      if (amigosResponse.success && amigosResponse.data) {
+        const esAmigo = amigosResponse.data.some((amistad: any) => 
+          amistad.amigo?.id === userId
+        )
+        if (esAmigo) {
+          setFriendStatus('friends')
+          setLoading(false)
+          return
+        }
+      }
+
+      // Verificar si hay solicitud enviada
+      if (pendientesEnviadasResponse.success && pendientesEnviadasResponse.data) {
+        const solicitudEnviada = pendientesEnviadasResponse.data.some((solicitud: any) =>
+          solicitud.amigoId === userId || solicitud.amigo?.id === userId
+        )
+        if (solicitudEnviada) {
+          setFriendStatus('pending-sent')
+          setLoading(false)
+          return
+        }
+      }
+
+      // Verificar si hay solicitud recibida
+      if (pendientesRecibidasResponse.success && pendientesRecibidasResponse.data) {
+        const solicitudRecibida = pendientesRecibidasResponse.data.some((solicitud: any) =>
+          solicitud.usuarioId === userId || solicitud.usuario?.id === userId
+        )
+        if (solicitudRecibida) {
+          setFriendStatus('pending-received')
+        }
       }
     } catch (err: any) {
       if (err?.name !== "AbortError") {
@@ -117,20 +157,12 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
 
   const handleSendFriendRequest = async () => {
     try {
-      const token = AuthService.getToken()
-      if (!token) {
-        router.push("/login")
-        return
-      }
-      const res = await fetch(`${API_BASE}/api/amistades/${userId}`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      })
-      if (res.ok) {
-        setFriendRequestSent(true)
+      const response = await AmistadAPI.enviarSolicitud(userId)
+      
+      if (response.success) {
+        setFriendStatus('pending-sent')
       } else {
-        const err = await res.json().catch(() => null)
-        alert(err?.message || "Error al enviar solicitud")
+        alert(response.message || "Error al enviar solicitud")
       }
     } catch (error) {
       console.error("Error sending friend request:", error)
@@ -243,16 +275,41 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
 
           {/* Friend Request Button */}
           <div className="space-y-3">
-            <Button
-              onClick={handleSendFriendRequest}
-              disabled={friendRequestSent}
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 rounded-xl"
-            >
-              <UserPlus className="w-4 h-4 mr-2" />
-              {friendRequestSent ? "Solicitud enviada" : "Enviar solicitud de amistad"}
-            </Button>
-            {friendRequestSent && (
-              <p className="text-sm text-primary font-medium text-center">✓ Solicitud enviada correctamente</p>
+            {friendStatus === 'friends' ? (
+              <Button
+                disabled
+                className="w-full bg-green-100 text-green-700 py-3 rounded-xl cursor-not-allowed"
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                Ya son amigos
+              </Button>
+            ) : friendStatus === 'pending-sent' ? (
+              <Button
+                disabled
+                className="w-full bg-orange-100 text-orange-700 py-3 rounded-xl cursor-not-allowed"
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                Solicitud enviada
+              </Button>
+            ) : friendStatus === 'pending-received' ? (
+              <Button
+                onClick={() => router.push('/friend-requests')}
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 rounded-xl"
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                Ver solicitud recibida
+              </Button>
+            ) : (
+              <Button
+                onClick={handleSendFriendRequest}
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 rounded-xl"
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                Enviar solicitud de amistad
+              </Button>
+            )}
+            {friendStatus === 'pending-sent' && (
+              <p className="text-sm text-orange-600 font-medium text-center">✓ Solicitud enviada correctamente</p>
             )}
           </div>
         </div>
