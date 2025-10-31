@@ -128,11 +128,8 @@ const nextConfig = {
     NEXT_PUBLIC_BUILD_ID: process.env.BUILD_ID || `build-${Date.now()}`,
   },
   
-  // Disable static optimization for pages that need fresh data
+  // Experimental features
   experimental: {
-    // Ensure pages are rendered on each request
-    isrMemoryCacheSize: 0,
-    
     // ⚡ PERFORMANCE: Optimize package imports
     // REMOVED 'lucide-react' due to barrel export issues in Docker production builds
     optimizePackageImports: [
