@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { useAuth } from "@/hooks/use-auth"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { getUserPhotoUrl } from "@/lib/api"
 
 const positions = ["Arquero", "Zaguero", "Lateral", "Mediocampista", "Volante", "Delantero"]
 const levels = ["Principiante", "Intermedio", "Avanzado", "Profesional"]
@@ -106,9 +107,9 @@ export function SettingsScreen() {
         return
       }
 
-      // Construir URL de foto de perfil si existe
+      // Construir URL de foto de perfil si existe (usa helper centralizado)
       if (user.id && user.foto_perfil) {
-        const photoUrl = `${process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-pg4rwegknq-uc.a.run.app'}/api/usuarios/${user.id}/foto`
+        const photoUrl = getUserPhotoUrl(user.id)
         setAvatar(photoUrl)
       }
 

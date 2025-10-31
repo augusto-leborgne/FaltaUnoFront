@@ -8,8 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { DateSelector } from '@/components/ui/date-selector';
 import { CheckCircle2, XCircle, Loader2, User, Phone } from 'lucide-react';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-pg4rwegknq-uc.a.run.app/api';
+import { API_URL } from '@/lib/api';
 
 export default function CompleteProfilePage() {
   const router = useRouter();

@@ -67,8 +67,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
         return
       }
 
-      const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-pg4rwegknq-uc.a.run.app'
-
+      // Usar API_BASE centralizado desde api.ts
       // Usuario
       const userRes = await fetch(`${API_BASE}/api/usuarios/${userId}`, {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },

@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
-import { UsuarioAPI } from "@/lib/api"
+import { UsuarioAPI, API_BASE, API_URL } from "@/lib/api"
 import { AuthService } from "@/lib/auth"
 import { usePostAuthRedirect } from "@/lib/navigation"
 import { useAuth } from "@/hooks/use-auth"
@@ -76,9 +76,8 @@ export function RegisterScreen() {
   // Social OAuth - Registro con Google
   const handleSocialAuth = (provider: "google" | "facebook" | "apple") => {
     try {
-      // URL completa del backend en Cloud Run
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-pg4rwegknq-uc.a.run.app'
-      const redirectUrl = `${backendUrl}/oauth2/authorization/${provider}`
+      // URL completa del backend en Cloud Run (centralizada desde api.ts)
+      const redirectUrl = `${API_BASE}/oauth2/authorization/${provider}`
       console.log("[RegisterScreen] Redirigiendo a OAuth:", redirectUrl)
       window.location.href = redirectUrl
     } catch (err) {
@@ -107,9 +106,7 @@ export function RegisterScreen() {
     try {
       console.log("[RegisterScreen] Iniciando pre-registro para:", formData.email)
 
-      // ✅ NUEVO FLUJO: Pre-registro con verificación de email
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-pg4rwegknq-uc.a.run.app/api'
-      
+      // ✅ NUEVO FLUJO: Pre-registro con verificación de email (usa API_URL centralizado)
       const response = await fetch(`${API_URL}/auth/pre-register`, {
         method: 'POST',
         headers: {

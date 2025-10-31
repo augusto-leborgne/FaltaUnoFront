@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { UsuarioAPI, Usuario } from "@/lib/api"
+import { UsuarioAPI, Usuario, API_BASE } from "@/lib/api"
 import { AuthService } from "@/lib/auth"
 import { useAuth } from "@/hooks/use-auth"
 import { usePostAuthRedirect } from "@/lib/navigation" // ← decide /profile-setup o /home
@@ -121,9 +121,8 @@ export function LoginScreen() {
         return
       }
 
-      // URL completa del backend en Cloud Run
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-pg4rwegknq-uc.a.run.app'
-      const oauthUrl = `${backendUrl}/oauth2/authorization/${provider}`
+      // URL completa del backend en Cloud Run (centralizada desde api.ts)
+      const oauthUrl = `${API_BASE}/oauth2/authorization/${provider}`
       
       console.log(`[LoginScreen] Redirigiendo a OAuth ${provider}:`, oauthUrl)
       window.location.href = oauthUrl

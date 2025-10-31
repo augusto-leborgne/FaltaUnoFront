@@ -3,9 +3,13 @@ import { keysToCamelCase, keysToSnakeCase, dualCaseKeys } from "./case-converter
 import { logger } from "./logger";
 
 // ============================================
-// CONFIGURACIÓN
+// CONFIGURACIÓN CENTRALIZADA
 // ============================================
 
+/**
+ * URL base del backend (sin /api al final)
+ * Usa NEXT_PUBLIC_API_URL del .env o fallback a producción
+ */
 const getApiBase = (): string => {
   // ✅ Backend en Cloud Run con HTTPS - Comunicación directa sin proxy
   const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-pg4rwegknq-uc.a.run.app';
@@ -16,12 +20,30 @@ const getApiBase = (): string => {
   return backendUrl;
 };
 
+/**
+ * URL base del backend (sin /api)
+ * Usar para endpoints OAuth y endpoints raíz
+ */
 export const API_BASE = getApiBase();
 
-// Normalizar URLs (eliminar barras duplicadas)
+/**
+ * URL para endpoints de API (/api/*)
+ * Usar para la mayoría de llamadas REST
+ */
+export const API_URL = `${API_BASE}/api`;
+
+/**
+ * Normalizar URLs (eliminar barras duplicadas)
+ */
 export const normalizeUrl = (url: string) => url.replace(/([^:]\/)\/+/g, '$1');
 
+/**
+ * Obtener URL de foto de usuario
+ */
+export const getUserPhotoUrl = (userId: string) => `${API_BASE}/api/usuarios/${userId}/foto`;
+
 logger.debug('[API Config] Final API_BASE:', API_BASE);
+logger.debug('[API Config] Final API_URL:', API_URL);
 logger.debug('[API Config] Environment:', typeof window === 'undefined' ? 'SERVER (SSR)' : 'BROWSER');
 
 // ============================================
