@@ -128,7 +128,7 @@ export function CreateMatchScreen() {
         return null
 
       case "location":
-        if (!value || value.trim().length < 3) return "Ingresa una ubicación válida (mín. 3 caracteres)"
+        // Validación manejada por AddressAutocomplete component
         return null
 
       case "totalPlayers":
@@ -180,9 +180,9 @@ export function CreateMatchScreen() {
       return "Fecha u hora inválidas"
     }
 
-    // Ubicación
-    if (!formData.location || formData.location.trim().length < 3) {
-      return "Debes ingresar una ubicación válida"
+    // Ubicación - validación manejada por AddressAutocomplete
+    if (!formData.location) {
+      return "Debes ingresar una ubicación"
     }
 
     // Jugadores
