@@ -8,7 +8,7 @@ import { UsuarioAPI, Usuario, API_BASE } from "@/lib/api"
 import { AuthService } from "@/lib/auth"
 import { useAuth } from "@/hooks/use-auth"
 import { usePostAuthRedirect } from "@/lib/navigation" // ← decide /profile-setup o /home
-import { InlineSpinner } from "@/components/ui/loading-spinner"
+import { InlineSpinner, LoadingSpinner } from "@/components/ui/loading-spinner"
 
 export function LoginScreen() {
   const router = useRouter()
@@ -21,6 +21,7 @@ export function LoginScreen() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [isOAuthLoading, setIsOAuthLoading] = useState(false)
   const [error, setError] = useState("")
   
   // ✅ NUEVO: Validación en tiempo real
@@ -122,19 +123,41 @@ export function LoginScreen() {
         return
       }
 
+      // Mostrar spinner antes de redirigir
+      setIsOAuthLoading(true)
+      setError("")
+
       // URL completa del backend en Cloud Run (centralizada desde api.ts)
       const oauthUrl = `${API_BASE}/oauth2/authorization/${provider}`
       
       console.log(`[LoginScreen] Redirigiendo a OAuth ${provider}:`, oauthUrl)
-      window.location.href = oauthUrl
+      
+      // Pequeño delay para que el spinner sea visible
+      setTimeout(() => {
+        window.location.href = oauthUrl
+      }, 300)
     } catch (e) {
       console.error("[LoginScreen] OAuth error:", e)
       setError(`Error al iniciar sesión con ${provider}. Por favor intenta nuevamente.`)
+      setIsOAuthLoading(false)
     }
   }
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-white">
+      {/* ✅ Overlay de loading para OAuth */}
+      {isOAuthLoading && (
+        <div className="fixed inset-0 bg-white/90 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="mb-4">
+              <LoadingSpinner size="xl" variant="green" />
+            </div>
+            <p className="text-lg font-medium text-gray-900">Redirigiendo a Google...</p>
+            <p className="text-sm text-gray-500 mt-1">Por favor espera</p>
+          </div>
+        </div>
+      )}
+      
       <div className="w-full max-w-md px-6">
         {/* Encabezado */}
         <div className="text-center mb-8">
