@@ -11,8 +11,8 @@ export const dynamic = 'force-dynamic'
 export const dynamicParams = true
 
 export const metadata: Metadata = {
-  title: "Falta Uno",
-  description: "Encuentra tu partido de fútbol",
+  title: "Falta Uno - Encuentra tu partido de fútbol",
+  description: "Conecta con jugadores, organiza partidos y juega fútbol en tu ciudad. La plataforma que une a la comunidad futbolera.",
   generator: "v0.app",
   // ⚡ Performance optimizations
   manifest: "/manifest.json",
@@ -26,6 +26,30 @@ export const metadata: Metadata = {
   },
   formatDetection: {
     telephone: false,
+  },
+  // Open Graph metadata for social sharing
+  openGraph: {
+    type: "website",
+    locale: "es_UY",
+    url: "https://faltauno-frontend-169771742214.us-central1.run.app",
+    siteName: "Falta Uno",
+    title: "Falta Uno - Encuentra tu partido de fútbol",
+    description: "Conecta con jugadores, organiza partidos y juega fútbol en tu ciudad. La plataforma que une a la comunidad futbolera.",
+    images: [
+      {
+        url: "/images/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Falta Uno - Encuentra tu partido de fútbol",
+      },
+    ],
+  },
+  // Twitter Card metadata
+  twitter: {
+    card: "summary_large_image",
+    title: "Falta Uno - Encuentra tu partido de fútbol",
+    description: "Conecta con jugadores, organiza partidos y juega fútbol en tu ciudad.",
+    images: ["/images/og-image.png"],
   },
 }
 
