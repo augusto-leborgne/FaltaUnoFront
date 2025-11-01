@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { TokenPersistence } from "@/lib/token-persistence"
@@ -20,7 +20,7 @@ const ErrorIcon = () => (
   </svg>
 )
 
-export default function OAuthSuccessPage() {
+function OAuthSuccessContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading")
@@ -180,5 +180,17 @@ export default function OAuthSuccessPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function OAuthSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <LoadingSpinner size="2xl" variant="primary" centered />
+      </div>
+    }>
+      <OAuthSuccessContent />
+    </Suspense>
   )
 }
