@@ -1,0 +1,20 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-f'
+      - 'Dockerfile.prod'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/master-might-274420/cloud-run-source-deploy/faltauno-frontend:${SHORT_SHA}-prod'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_API_URL=${_NEXT_PUBLIC_API_URL}'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${_NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}'
+      - '--build-arg'
+      - 'BUILD_TIMESTAMP=${BUILD_ID}'
+      - '.'
+images:
+  - 'us-central1-docker.pkg.dev/master-might-274420/cloud-run-source-deploy/faltauno-frontend:${SHORT_SHA}-prod'
+timeout: 1200s
+options:
+  machineType: 'E2_HIGHCPU_8'
