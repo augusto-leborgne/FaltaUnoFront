@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     title: "Falta Uno",
   },
   other: {
-    'mobile-web-app-capable': 'yes', // ✅ Reemplazo del deprecado apple-mobile-web-app-capable
+    'mobile-web-app-capable': 'yes',
   },
   formatDetection: {
     telephone: false,
@@ -35,12 +35,21 @@ export const metadata: Metadata = {
     siteName: "Falta Uno",
     title: "Falta Uno - Encuentra tu partido de fútbol",
     description: "Conecta con jugadores, organiza partidos y juega fútbol en tu ciudad. La plataforma que une a la comunidad futbolera.",
+    images: [
+      {
+        url: "/api/og?title=Falta Uno&description=Encuentra tu partido de fútbol",
+        width: 1200,
+        height: 630,
+        alt: "Falta Uno - Encuentra tu partido de fútbol",
+      },
+    ],
   },
   // Twitter Card metadata
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Falta Uno - Encuentra tu partido de fútbol",
     description: "Conecta con jugadores, organiza partidos y juega fútbol en tu ciudad.",
+    images: ["/api/og?title=Falta Uno&description=Encuentra tu partido de fútbol"],
   },
 }
 
@@ -61,6 +70,12 @@ export default function RootLayout({
         {/* Viewport and PWA meta tags */}
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
         <meta name="theme-color" content="#4caf50" />
+        
+        {/* Additional SEO meta tags */}
+        <meta name="author" content="Falta Uno" />
+        <meta name="keywords" content="fútbol, partidos, jugadores, deporte, Uruguay, cancha, fútbol 5, fútbol 7, fútbol 11" />
+        <meta name="robots" content="index, follow" />
+        <link rel="canonical" href="https://faltauno-frontend-169771742214.us-central1.run.app" />
       </head>
       <body className="font-sans" suppressHydrationWarning>
         <ErrorBoundary>
