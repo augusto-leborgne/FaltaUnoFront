@@ -36,6 +36,7 @@ export function AddressAutocomplete({
   const sessionTokenRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const isSelectingRef = useRef(false); // Prevenir handleBlur durante selección
 
   // Sincronizar valor externo
   useEffect(() => {
@@ -185,7 +186,7 @@ export function AddressAutocomplete({
     }
 
     // Debounce de 300ms
-    if (newValue.trim().length >= 2) {
+    if (newValue.trim().length >= 1) {
       debounceTimerRef.current = setTimeout(() => {
         fetchPredictions(newValue);
       }, 300);
@@ -199,6 +200,11 @@ export function AddressAutocomplete({
   const handleBlur = () => {
     // Delay para permitir que el click en sugerencia se procese primero
     setTimeout(() => {
+      // Si está en proceso de selección, no validar
+      if (isSelectingRef.current) {
+        return;
+      }
+      
       if (query && !hasSelectedAddress) {
         setValidationError("Debes seleccionar una dirección de las sugerencias");
         setQuery("");
@@ -274,6 +280,8 @@ export function AddressAutocomplete({
 
   // ✅ MODERNO: Seleccionar una predicción y obtener detalles con Place.fetchFields()
   const selectPrediction = async (prediction: google.maps.places.AutocompletePrediction) => {
+    isSelectingRef.current = true; // Marcar que estamos seleccionando
+    
     setQuery(prediction.description);
     setSuggestions([]);
     setIsSearching(false);
@@ -316,6 +324,7 @@ export function AddressAutocomplete({
         setQuery("");
         setHasSelectedAddress(false);
         onChange("", null);
+        isSelectingRef.current = false; // Limpiar flag
         return;
       }
       
@@ -328,6 +337,8 @@ export function AddressAutocomplete({
     } catch (error) {
       console.warn("[AddressAutocomplete] Error obteniendo detalles:", error);
       onChange(prediction.description, null);
+    } finally {
+      isSelectingRef.current = false; // Siempre limpiar el flag
     }
   };
 
@@ -449,7 +460,7 @@ export function AddressAutocomplete({
       )}
 
       {/* Mensaje de no resultados */}
-      {query.length >= 2 && suggestions.length === 0 && !isSearching && !hasSelectedAddress && (
+      {query.length >= 1 && suggestions.length === 0 && !isSearching && !hasSelectedAddress && (
         <div className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-xl shadow-lg p-3">
           <p className="text-sm text-gray-500 text-center">
             No se encontraron ubicaciones

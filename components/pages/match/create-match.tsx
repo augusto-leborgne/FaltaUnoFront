@@ -556,11 +556,6 @@ export function CreateMatchScreen() {
               Ubicación aproximada (sin coordenadas exactas)
             </p>
           )}
-          {formData.location && locationCoordinates && (
-            <p className="text-xs text-green-600 mt-2 flex items-center">
-              ✓ Ubicación con coordenadas precisas
-            </p>
-          )}
         </div>
 
         {/* Precio */}
