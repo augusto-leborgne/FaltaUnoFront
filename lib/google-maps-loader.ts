@@ -3,10 +3,10 @@ import { useEffect, useState } from "react"
 import { logger } from "./logger"
 
 type LoadOptions = {
-  libraries?: Array<"places" | "geometry" | "visualization"> // módulos clásicos via ?libraries=
+  libraries?: Array<"places" | "geometry" | "visualization"> // Librerías a cargar con importLibrary()
   language?: string
   region?: string
-  v?: string // ej: "weekly"
+  v?: string // Versión de Google Maps (ej: "beta", "quarterly", "weekly")
   channel?: string
   nonce?: string
   forceRetry?: boolean // si hubo error previo, vuelve a intentar
@@ -82,15 +82,13 @@ class GoogleMapsLoader {
       return this.pendingPromise
     }
 
-    // ⚡ HÍBRIDO: Incluir libraries= en URL como FALLBACK para versiones antiguas
-    // Si importLibrary() existe, se usará el método moderno
-    // Si no existe, las libraries ya estarán cargadas por el parámetro URL
-    const libsParam = libraries.length > 0 ? `&libraries=${libraries.join(",")}` : ""
+    // ✅ 100% MODERNO: Solo loading=async, SIN libraries= en URL
+    // Las libraries se cargan con importLibrary() después
     const params = `key=${encodeURIComponent(apiKey)}&loading=async&v=${encodeURIComponent(
       v
     )}&language=${encodeURIComponent(language)}&region=${encodeURIComponent(
       region
-    )}&channel=${encodeURIComponent(channel)}${libsParam}`
+    )}&channel=${encodeURIComponent(channel)}`
     const src = `https://maps.googleapis.com/maps/api/js?${params}`
 
     const script = document.createElement("script")
@@ -145,37 +143,24 @@ class GoogleMapsLoader {
     })
   }
 
-  // ✅ Carga libraries - con FALLBACK a método legacy si importLibrary no existe
+  // ✅ 100% MODERNO: Carga libraries con importLibrary() (requiere Google Maps v3.50+)
   private async postLoadImports(libraries: string[]): Promise<void> {
     const anyMaps: any = (window as any).google?.maps
     
-    // ⚡ FALLBACK: Si importLibrary no existe, usar método legacy
     if (!anyMaps?.importLibrary) {
-      logger.warn?.(
-        "[GoogleMapsLoader] ⚠️ importLibrary no disponible - usando método LEGACY"
+      const err = new Error(
+        "importLibrary no disponible - la API Key puede tener restricciones que fuerzan una versión antigua de Google Maps. " +
+        "Verifica en Google Cloud Console que la API Key NO tenga restricciones de versión."
       )
-      logger.warn?.(
-        "[GoogleMapsLoader] ⚠️ Esto significa que la versión de Google Maps es antigua (<3.50)"
-      )
-      
-      // En el método legacy, las libraries se cargan con el parámetro &libraries= en la URL
-      // Así que simplemente esperamos a que Places aparezca
-      if (libraries.includes("places")) {
-        try {
-          await this.waitForPlaces(15000) // 15s de timeout
-          logger.info?.("[GoogleMapsLoader] ✅ Places API cargada via método LEGACY")
-          return
-        } catch (e) {
-          logger.error?.("[GoogleMapsLoader] ❌ Places API no disponible ni con método legacy")
-          throw e
-        }
-      }
-      return // Sin places, simplemente continuar
+      logger.error?.("[GoogleMapsLoader] ❌ importLibrary no existe")
+      logger.error?.("[GoogleMapsLoader] ❌ Versión actual:", (window as any).google?.maps?.version)
+      logger.error?.("[GoogleMapsLoader] ❌ Versión requerida: 3.50+")
+      throw err
     }
 
-    // ✅ MÉTODO MODERNO: importLibrary() disponible
     try {
       logger.debug?.("[GoogleMapsLoader] 🔄 Cargando libraries modernas:", libraries)
+      logger.debug?.("[GoogleMapsLoader] � Versión de Google Maps:", anyMaps.version)
       
       // ✅ SIEMPRE cargar 'maps' primero (base)
       await anyMaps.importLibrary("maps")
@@ -205,7 +190,7 @@ class GoogleMapsLoader {
     } catch (e) {
       const err = e instanceof Error ? e : new Error("Error desconocido cargando libraries")
       logger.error?.("[GoogleMapsLoader] ❌ Error cargando libraries:", err)
-      throw err // ❌ FATAL: si falla Places, todo el loader falla
+      throw err
     }
   }
 

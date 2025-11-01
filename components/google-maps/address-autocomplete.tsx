@@ -31,7 +31,7 @@ export function AddressAutocomplete({
   const [isSearching, setIsSearching] = useState(false);
   const [hasSelectedAddress, setHasSelectedAddress] = useState(false);
   
-  const autocompleteServiceRef = useRef<google.maps.places.AutocompleteService | null>(null);
+  // ✅ MODERNO: Usar AutocompleteSuggestion en lugar de AutocompleteService
   const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
   const sessionTokenRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -68,9 +68,7 @@ export function AddressAutocomplete({
         if (window.google?.maps?.places) {
           console.log("[AddressAutocomplete] ✅ Places API detectada, inicializando servicios...");
           
-          autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
-          
-          // Para PlacesService necesitamos un elemento del DOM
+          // ✅ MODERNO: Solo PlacesService (AutocompleteSuggestion no necesita inicialización)
           const dummyDiv = document.createElement("div");
           placesServiceRef.current = new window.google.maps.places.PlacesService(dummyDiv);
           
@@ -110,9 +108,9 @@ export function AddressAutocomplete({
     };
   }, []);
 
-  // Buscar predicciones
-  const fetchPredictions = (input: string) => {
-    if (!autocompleteServiceRef.current || !input.trim()) {
+  // ✅ MODERNO: Buscar predicciones con AutocompleteSuggestion
+  const fetchPredictions = async (input: string) => {
+    if (!window.google?.maps?.places?.AutocompleteSuggestion || !input.trim()) {
       setSuggestions([]);
       setIsSearching(false);
       return;
@@ -120,28 +118,44 @@ export function AddressAutocomplete({
 
     setIsSearching(true);
 
-    const request: google.maps.places.AutocompletionRequest = {
-      input: input.trim(),
-      componentRestrictions: { country: "uy" },
-      types: ['address', 'establishment'], // ✅ SOLO direcciones y establecimientos, NO ciudades/regiones
-      sessionToken: sessionTokenRef.current || undefined,
-    };
+    try {
+      const request: any = {
+        input: input.trim(),
+        includedPrimaryTypes: ['street_address', 'premise', 'subpremise', 'establishment'], // Direcciones y lugares específicos
+        locationRestriction: {
+          country: 'uy', // Restringir a Uruguay
+        },
+        sessionToken: sessionTokenRef.current || undefined,
+      };
 
-    autocompleteServiceRef.current.getPlacePredictions(
-      request,
-      (predictions, status) => {
-        setIsSearching(false);
+      // ✅ NUEVA API: fetchAutocompleteSuggestions (retorna Promise)
+      const response: any = 
+        await (window.google.maps.places.AutocompleteSuggestion as any).fetchAutocompleteSuggestions(request);
 
-        if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
-          setSuggestions(predictions);
-        } else if (status === window.google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
-          setSuggestions([]);
-        } else {
-          console.warn("[AddressAutocomplete] Error en predicciones:", status);
-          setSuggestions([]);
-        }
-      }
-    );
+      const autocompleteSuggestions = response.suggestions || [];
+
+      // Convertir AutocompleteSuggestion[] a AutocompletePrediction[] para compatibilidad
+      const predictions: any[] = autocompleteSuggestions.map((suggestion: any) => ({
+        description: suggestion.placePrediction?.text?.text || '',
+        place_id: suggestion.placePrediction?.placeId || '',
+        matched_substrings: suggestion.placePrediction?.text?.matches || [],
+        structured_formatting: {
+          main_text: suggestion.placePrediction?.structuredFormat?.mainText?.text || '',
+          main_text_matched_substrings: suggestion.placePrediction?.structuredFormat?.mainText?.matches || [],
+          secondary_text: suggestion.placePrediction?.structuredFormat?.secondaryText?.text || '',
+        },
+        terms: [],
+        types: suggestion.placePrediction?.types || [],
+        reference: '', // Campo requerido por el tipo legacy
+      }));
+
+      setSuggestions(predictions);
+      setIsSearching(false);
+    } catch (error) {
+      console.warn("[AddressAutocomplete] Error en predicciones:", error);
+      setSuggestions([]);
+      setIsSearching(false);
+    }
   };
 
   // Manejar cambio de input
