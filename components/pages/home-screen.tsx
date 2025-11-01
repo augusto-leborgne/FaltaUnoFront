@@ -13,7 +13,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useNotifications } from "@/hooks/use-notifications"
 
 interface NewsUpdate {
-  id: number
+  id: string
   type: "update" | "announcement" | "feature" | "community"
   title: string
   description: string
@@ -24,42 +24,6 @@ interface NewsUpdate {
   readTime?: string
   tags?: string[]
 }
-
-const newsUpdates: NewsUpdate[] = [
-  {
-    id: 1,
-    type: "update",
-    title: "Nueva funcionalidad: Sistema de reseñas mejorado",
-    description: "Ahora puedes calificar a tus compañeros en 3 categorías: nivel técnico, deportividad y compañerismo.",
-    date: "Hace 2 horas",
-    category: "Funcionalidad",
-    author: "Equipo Falta Uno",
-    readTime: "2 min",
-    tags: ["Reseñas", "Calificaciones", "Comunidad"],
-  },
-  {
-    id: 2,
-    type: "announcement",
-    title: "Mantenimiento programado del servidor",
-    description: "Realizaremos mejoras en la infraestructura para optimizar el rendimiento.",
-    date: "Hace 1 día",
-    category: "Anuncio",
-    author: "Equipo Técnico",
-    readTime: "1 min",
-    tags: ["Mantenimiento", "Servidor"],
-  },
-  {
-    id: 3,
-    type: "feature",
-    title: "Nuevas canchas premium en Carrasco",
-    description: "Agregamos 3 canchas de última generación con césped sintético e iluminación LED.",
-    date: "Hace 3 días",
-    category: "Novedad",
-    author: "Equipo de Expansión",
-    readTime: "3 min",
-    tags: ["Canchas", "Carrasco", "Premium"],
-  },
-]
 
 interface Partido {
   id: string
@@ -85,6 +49,7 @@ export function HomeScreen() {
   const { count: notificationCount } = useNotifications()
   const [upcomingMatches, setUpcomingMatches] = useState<Partido[]>([])
   const [pendingReviews, setPendingReviews] = useState<PendingReview[]>([])
+  const [newsUpdates, setNewsUpdates] = useState<NewsUpdate[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [communityStats, setCommunityStats] = useState({
     activeUsers: 0,
@@ -161,6 +126,21 @@ export function HomeScreen() {
             matchesThisWeek: statsData.data.totalPartidos || 0,
             newMembers: statsData.data.totalUsuarios || 0,
           })
+        }
+      }
+
+      // Cargar novedades desde GitHub commits con deploy exitoso
+      const novedadesResponse = await fetch(`${API_BASE}/api/novedades?limit=5`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      })
+
+      if (novedadesResponse.ok) {
+        const novedadesData = await novedadesResponse.json()
+        if (novedadesData.success && novedadesData.data) {
+          setNewsUpdates(novedadesData.data)
         }
       }
 
