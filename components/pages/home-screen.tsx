@@ -130,18 +130,44 @@ export function HomeScreen() {
       }
 
       // Cargar novedades desde GitHub commits con deploy exitoso
-      const novedadesResponse = await fetch(`${API_BASE}/api/novedades?limit=5`, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      })
+      try {
+        const novedadesResponse = await fetch(`${API_BASE}/api/novedades?limit=5`, {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        })
 
-      if (novedadesResponse.ok) {
-        const novedadesData = await novedadesResponse.json()
-        if (novedadesData.success && novedadesData.data) {
-          setNewsUpdates(novedadesData.data)
+        if (novedadesResponse.ok) {
+          const novedadesData = await novedadesResponse.json()
+          if (novedadesData.success && novedadesData.data) {
+            setNewsUpdates(novedadesData.data)
+          }
+        } else {
+          console.warn(`Novedades endpoint retornó ${novedadesResponse.status}, usando datos por defecto`)
+          // Usar novedades por defecto si el endpoint falla
+          setNewsUpdates([{
+            id: "default1",
+            type: "feature",
+            title: "¡Bienvenido a Falta Uno!",
+            description: "La plataforma para organizar partidos de fútbol entre amigos.",
+            date: "Recientemente",
+            author: "Equipo Falta Uno",
+            tags: ["Bienvenida"]
+          }])
         }
+      } catch (novedadesError) {
+        console.error("Error cargando novedades:", novedadesError)
+        // En caso de error, usar novedades por defecto
+        setNewsUpdates([{
+          id: "default1",
+          type: "feature",
+          title: "¡Bienvenido a Falta Uno!",
+          description: "La plataforma para organizar partidos de fútbol entre amigos.",
+          date: "Recientemente",
+          author: "Equipo Falta Uno",
+          tags: ["Bienvenida"]
+        }])
       }
 
     } catch (error) {
