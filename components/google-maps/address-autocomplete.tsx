@@ -30,6 +30,7 @@ export function AddressAutocomplete({
   const [mapsError, setMapsError] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [hasSelectedAddress, setHasSelectedAddress] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
   
   // ✅ MODERNO: Solo necesitamos sessionToken (no más PlacesService)
   const sessionTokenRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
@@ -175,6 +176,7 @@ export function AddressAutocomplete({
   const handleInputChange = (newValue: string) => {
     setQuery(newValue);
     setHasSelectedAddress(false); // Usuario está escribiendo manualmente
+    setValidationError(null); // Limpiar error al escribir
     // ❌ NO llamar onChange aquí - solo cuando se seleccione una sugerencia
 
     // Limpiar timer anterior
@@ -198,7 +200,7 @@ export function AddressAutocomplete({
     // Delay para permitir que el click en sugerencia se procese primero
     setTimeout(() => {
       if (query && !hasSelectedAddress) {
-        alert("⚠️ Debes seleccionar una dirección de las sugerencias.\n\nNo se permiten direcciones escritas manualmente.");
+        setValidationError("Debes seleccionar una dirección de las sugerencias");
         setQuery("");
         onChange("", null);
       }
@@ -276,6 +278,7 @@ export function AddressAutocomplete({
     setSuggestions([]);
     setIsSearching(false);
     setHasSelectedAddress(true); // Usuario ha seleccionado una dirección válida
+    setValidationError(null); // Limpiar error al seleccionar
 
     try {
       // ✅ NUEVA API: Place.fetchFields() en vez de PlacesService.getDetails()
@@ -309,17 +312,7 @@ export function AddressAutocomplete({
       // Validar que sea una dirección específica
       if (!isAddressSpecific(placeResult)) {
         console.warn("[AddressAutocomplete] ❌ Dirección rechazada - no es específica");
-        alert(
-          "❌ Dirección no válida\n\n" +
-          "Solo se permiten:\n" +
-          "✅ Direcciones completas con número de calle (ej: Av. 18 de Julio 1234)\n" +
-          "✅ Lugares específicos de Google Maps (ej: restaurantes, edificios, etc.)\n\n" +
-          "❌ NO se permiten:\n" +
-          "• Calles sin número\n" +
-          "• Barrios\n" +
-          "• Ciudades\n" +
-          "• Países"
-        );
+        setValidationError("Debes seleccionar una dirección completa con número de calle o un lugar específico de Google Maps");
         setQuery("");
         setHasSelectedAddress(false);
         onChange("", null);
@@ -343,6 +336,7 @@ export function AddressAutocomplete({
     setQuery("");
     setSuggestions([]);
     setHasSelectedAddress(false); // Resetear estado de selección
+    setValidationError(null); // Limpiar error
     onChange("", null);
   };
 
@@ -422,6 +416,13 @@ export function AddressAutocomplete({
           ) : null}
         </div>
       </div>
+
+      {/* Mensaje de error de validación */}
+      {validationError && (
+        <div className="mt-1 text-xs text-red-600">
+          {validationError}
+        </div>
+      )}
 
       {/* Sugerencias */}
       {suggestions.length > 0 && (
