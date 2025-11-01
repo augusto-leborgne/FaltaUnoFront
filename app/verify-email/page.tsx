@@ -1,17 +1,15 @@
 "use client"
 
-'use client'
-
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { API_URL } from '@/lib/api'
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle2, XCircle, Mail, ArrowLeft } from 'lucide-react';
-import { InlineSpinner } from '@/components/ui/loading-spinner';
+import { InlineSpinner, LoadingSpinner } from '@/components/ui/loading-spinner';
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get('email');
@@ -368,4 +366,16 @@ export default function VerifyEmailPage() {
       </div>
     </div>
   );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50 flex items-center justify-center">
+        <LoadingSpinner size="xl" variant="green" />
+      </div>
+    }>
+      <VerifyEmailContent />
+    </Suspense>
+  )
 }

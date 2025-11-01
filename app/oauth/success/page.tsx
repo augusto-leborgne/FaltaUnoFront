@@ -196,15 +196,6 @@ function OAuthSuccessPage() {
   )
 }
 
-// ✅ CRÍTICO: Deshabilitar SSR para evitar error 500
-// useSearchParams() requiere client-side rendering
-const OAuthSuccessPageNoSSR = dynamic(() => Promise.resolve(OAuthSuccessPage), {
-  ssr: false,
-  loading: () => (
-    <div className="min-h-screen bg-white flex items-center justify-center">
-      <LoadingSpinner size="xl" variant="green" />
-    </div>
-  ),
-})
-
-export default OAuthSuccessPageNoSSR
+// ✅ CRÍTICO: Exportar directamente sin dynamic() wrapper
+// La página ya tiene "use client" y Suspense, que es suficiente
+export default OAuthSuccessPage
