@@ -4,39 +4,39 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #ffffff;
-  --foreground: #4b5563;
-  --card: #f9f9f9;
-  --card-foreground: #4b5563;
+  --background: #fafafa;
+  --foreground: #1f2937;
+  --card: #ffffff;
+  --card-foreground: #1f2937;
   --popover: #ffffff;
-  --popover-foreground: #4b5563;
-  --primary: #4caf50; /* Main brand color */
-  --primary-foreground: #ffffff; /* Text on primary buttons */
-  --secondary: #f57c00; /* Changed from yellow to orange for better contrast */
-  --secondary-foreground: #ffffff; /* White text on secondary buttons */
-  --muted: #f9f9f9; /* Background for cards */
-  --muted-foreground: #4b5563; /* Text on muted backgrounds */
-  --accent: #f57c00; /* Changed from yellow to orange for better contrast */
-  --accent-foreground: #ffffff; /* White text on accent elements */
-  --destructive: #d9534f; /* Color for any destructive actions */
-  --destructive-foreground: #ffffff; /* Text on destructive buttons */
-  --border: #e0e0e0; /* Light border color */
-  --input: #f9f9f9; /* Input field background */
-  --ring: rgba(76, 175, 80, 0.5); /* Ring color for focused elements */
-  --chart-1: #4caf50; /* Charts color */
-  --chart-2: #f57c00; /* Additional chart color */
-  --chart-3: #d9534f; /* Error chart color */
-  --chart-4: #f59e0b; /* Warning chart color */
-  --chart-5: #a16207; /* Info chart color */
-  --radius: 0.5rem; /* Rounded corners */
-  --sidebar: #ffffff; /* Sidebar background */
-  --sidebar-foreground: #4b5563; /* Sidebar text color */
-  --sidebar-primary: #4caf50; /* Sidebar primary color */
-  --sidebar-primary-foreground: #ffffff; /* Text on sidebar primary */
-  --sidebar-accent: #f57c00; /* Sidebar accent color */
-  --sidebar-accent-foreground: #ffffff; /* Text on sidebar accent */
-  --sidebar-border: #e0e0e0; /* Sidebar border color */
-  --sidebar-ring: rgba(76, 175, 80, 0.5); /* Sidebar ring color */
+  --popover-foreground: #1f2937;
+  --primary: #4caf50;
+  --primary-foreground: #ffffff;
+  --secondary: #f57c00;
+  --secondary-foreground: #ffffff;
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;
+  --accent: #f57c00;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #e5e7eb;
+  --input: #ffffff;
+  --ring: rgba(76, 175, 80, 0.3);
+  --chart-1: #4caf50;
+  --chart-2: #f57c00;
+  --chart-3: #ef4444;
+  --chart-4: #f59e0b;
+  --chart-5: #a16207;
+  --radius: 0.75rem;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1f2937;
+  --sidebar-primary: #4caf50;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f57c00;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #e5e7eb;
+  --sidebar-ring: rgba(76, 175, 80, 0.3);
 }
 
 @theme inline {
@@ -85,7 +85,22 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+  }
+  
+  /* Modern card styles */
+  .card-modern {
+    @apply bg-card border border-border rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+  
+  /* Glassmorphism effect */
+  .glass {
+    @apply bg-white/80 backdrop-blur-sm border border-white/20;
+  }
+  
+  /* Smooth transitions */
+  * {
+    @apply transition-colors duration-200;
   }
 }
 
