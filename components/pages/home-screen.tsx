@@ -279,7 +279,7 @@ export function HomeScreen() {
           {newsUpdates.map((news) => (
             <div
               key={news.id}
-              className="bg-card rounded-2xl overflow-hidden cursor-pointer hover:shadow-lg transition-all duration-300 touch-manipulation active:scale-[0.98] border border-border/50"
+              className="bg-card rounded-2xl overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 touch-manipulation active:scale-[0.98] border border-border/50"
             >
               <div className="p-5">
                 <div className="flex items-start justify-between mb-3">
@@ -292,7 +292,7 @@ export function HomeScreen() {
                 {news.tags && (
                   <div className="flex flex-wrap gap-2 mb-4">
                     {news.tags.map((tag) => (
-                      <span key={tag} className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded-md">
+                      <span key={tag} className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded-lg">
                         #{tag}
                       </span>
                     ))}

@@ -39,7 +39,7 @@ export function BottomNavigation() {
   ]
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 pb-safe-area-inset-bottom z-40">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 pb-safe-area-inset-bottom z-40 shadow-lg">
       <div className="flex justify-center items-center py-2 px-2">
         {navItems.map((item) => {
           const Icon = item.icon
@@ -50,8 +50,8 @@ export function BottomNavigation() {
               className="flex flex-col items-center min-h-[60px] flex-1 justify-center touch-manipulation active:scale-95 transition-transform"
             >
               <div
-                className={`w-8 h-8 flex items-center justify-center mb-1 rounded-lg transition-colors ${
-                  item.isActive ? "bg-orange-200" : "hover:bg-gray-100"
+                className={`w-8 h-8 flex items-center justify-center mb-1 rounded-xl transition-colors ${
+                  item.isActive ? "bg-secondary/20" : "hover:bg-gray-100"
                 }`}
               >
                 <Icon className={`w-5 h-5 ${item.isActive ? "text-gray-800" : "text-gray-400"}`} />

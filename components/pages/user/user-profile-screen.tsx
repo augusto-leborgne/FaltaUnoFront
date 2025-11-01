@@ -333,7 +333,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                 return (
                   <div
                     key={review.id}
-                    className="border-b border-border last:border-b-0 pb-4 last:pb-0 cursor-pointer hover:bg-muted -mx-2 px-2 py-2 rounded-lg transition-colors"
+                    className="border-b border-border last:border-b-0 pb-4 last:pb-0 cursor-pointer hover:bg-muted -mx-2 px-2 py-2 rounded-xl transition-colors"
                     onClick={() => handleUserClick(review.usuario_que_califica_id)}
                   >
                     <div className="flex items-center justify-between mb-2">

@@ -187,7 +187,7 @@ export function NotificationsScreen() {
                         e.stopPropagation()
                         eliminarNotificacion(notif.id)
                       }}
-                      className="ml-2 p-2 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+                      className="ml-2 p-2 hover:bg-gray-100 rounded-xl transition-colors flex-shrink-0"
                     >
                       <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-600" />
                     </button>

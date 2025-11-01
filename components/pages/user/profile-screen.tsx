@@ -311,7 +311,7 @@ function ProfileScreenInner() {
                   <div
                     key={review.id}
                     onClick={() => handleReviewClick(review.id)}
-                    className="border-b border-gray-100 last:border-b-0 pb-4 last:pb-0 cursor-pointer hover:bg-gray-50 -mx-2 px-2 py-2 rounded-lg transition-colors"
+                    className="border-b border-gray-100 last:border-b-0 pb-4 last:pb-0 cursor-pointer hover:bg-gray-50 -mx-2 px-2 py-2 rounded-xl transition-colors"
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className="font-medium text-gray-900">

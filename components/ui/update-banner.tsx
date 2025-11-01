@@ -29,7 +29,7 @@ export function UpdateBanner() {
   if (!mounted || !show) return null
   
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg animate-in slide-in-from-top duration-300">
+    <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-primary to-primary/90 text-white shadow-lg animate-in slide-in-from-top duration-300">
       <div className="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
@@ -46,13 +46,13 @@ export function UpdateBanner() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShow(false)}
-              className="px-3 py-1.5 text-sm text-white hover:text-blue-100 transition-colors"
+              className="px-3 py-1.5 text-sm text-white hover:text-white/80 transition-colors rounded-lg"
             >
               Ahora no
             </button>
             <button
               onClick={reloadApp}
-              className="px-4 py-1.5 bg-white text-blue-600 rounded-md text-sm font-medium hover:bg-blue-50 transition-colors shadow-sm"
+              className="px-4 py-1.5 bg-white text-primary rounded-xl text-sm font-medium hover:bg-white/90 transition-colors shadow-sm"
             >
               Actualizar ahora
             </button>

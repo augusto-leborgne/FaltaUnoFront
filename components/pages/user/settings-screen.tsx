@@ -317,15 +317,15 @@ export function SettingsScreen() {
       <div className="flex-1 px-6 py-6 overflow-y-auto">
         {/* Success Message */}
         {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-2xl flex items-start space-x-3">
-            <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+          <div className="mb-6 p-4 bg-primary/10 border border-primary/30 rounded-2xl flex items-start space-x-3">
+            <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
               <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
               </svg>
             </div>
             <div>
-              <p className="text-green-600 text-sm font-medium">¡Cambios guardados!</p>
-              <p className="text-green-600 text-sm">Redirigiendo...</p>
+              <p className="text-primary text-sm font-medium">¡Cambios guardados!</p>
+              <p className="text-primary/80 text-sm">Redirigiendo...</p>
             </div>
           </div>
         )}
@@ -356,7 +356,7 @@ export function SettingsScreen() {
               surname={formData.surname}
               className="w-24 h-24"
             />
-            <label className="absolute -bottom-2 -right-2 bg-green-600 text-white rounded-full p-2 shadow-lg cursor-pointer hover:bg-green-700 transition-colors">
+            <label className="absolute -bottom-2 -right-2 bg-primary text-white rounded-full p-2 shadow-lg cursor-pointer hover:bg-primary/90 transition-colors">
               <Camera className="w-4 h-4" />
               <input 
                 type="file" 
@@ -369,7 +369,7 @@ export function SettingsScreen() {
           </div>
           <p className="text-sm text-gray-500 mt-2">Toca para cambiar foto</p>
           {photoFile && (
-            <p className="text-sm text-green-600 mt-1">Nueva foto seleccionada</p>
+            <p className="text-sm text-primary mt-1">Nueva foto seleccionada</p>
           )}
         </div>
 
@@ -448,9 +448,9 @@ export function SettingsScreen() {
                   type="button"
                   onClick={() => handleInputChange("position", position)}
                   disabled={isSaving}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50 ${
+                  className={`px-3 py-2 rounded-xl text-sm font-medium border transition-colors disabled:opacity-50 ${
                     formData.position === position
-                      ? "bg-green-100 text-green-800 border-green-300"
+                      ? "bg-primary/10 text-primary border-primary/30"
                       : "bg-gray-50 text-gray-700 border-gray-300 hover:border-gray-400"
                   }`}
                 >

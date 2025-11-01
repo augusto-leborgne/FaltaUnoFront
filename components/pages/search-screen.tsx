@@ -408,9 +408,9 @@ export function SearchScreen() {
                   <button
                     key={g}
                     onClick={() => setFilters(prev => ({ ...prev, genero: g as any }))}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${
                       filters.genero === g
-                        ? "bg-green-600 text-white"
+                        ? "bg-primary text-white shadow-sm"
                         : "bg-white text-gray-700 border border-gray-200 hover:border-gray-300"
                     }`}
                   >
@@ -428,9 +428,9 @@ export function SearchScreen() {
                   <button
                     key={n}
                     onClick={() => setFilters(prev => ({ ...prev, nivel: n as any }))}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${
                       filters.nivel === n
-                        ? "bg-green-600 text-white"
+                        ? "bg-primary text-white shadow-sm"
                         : "bg-white text-gray-700 border border-gray-200 hover:border-gray-300"
                     }`}
                   >
@@ -449,9 +449,9 @@ export function SearchScreen() {
                     <button
                       key={t}
                       onClick={() => setFilters(prev => ({ ...prev, tipoPartido: t as any }))}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                      className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-colors ${
                         filters.tipoPartido === t
-                          ? "bg-green-600 text-white"
+                          ? "bg-primary text-white shadow-sm"
                           : "bg-white text-gray-700 border border-gray-200 hover:border-gray-300"
                       }`}
                     >
@@ -541,7 +541,7 @@ export function SearchScreen() {
                     <button
                       key={idx}
                       onClick={() => setSearchQuery(search)}
-                      className="w-full flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors text-left"
+                      className="w-full flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors text-left"
                     >
                       <Clock className="w-4 h-4 text-gray-400 flex-shrink-0" />
                       <span className="text-sm text-gray-700 flex-1">{search}</span>

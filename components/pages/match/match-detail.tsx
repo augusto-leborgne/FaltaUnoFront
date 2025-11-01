@@ -242,7 +242,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
           <div className="flex items-center space-x-4">
             <button
               onClick={handleBack}
-              className="p-2 -ml-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 -ml-2 hover:bg-gray-100 rounded-xl transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
@@ -250,7 +250,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
           </div>
           <button
             onClick={handleShareMatch}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
           >
             <Share2 className="w-5 h-5 text-gray-600" />
           </button>

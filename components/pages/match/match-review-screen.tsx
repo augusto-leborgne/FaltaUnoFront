@@ -233,7 +233,7 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
                     </button>
                     {isComplete && (
                       <div className="ml-auto">
-                        <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                        <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
                           <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path
                               fillRule="evenodd"

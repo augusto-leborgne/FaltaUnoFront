@@ -120,7 +120,7 @@ export function DateSelector({
           <select
             value={day}
             onChange={(e) => handleDayChange(e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+            className={`w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors ${
               error ? "border-red-500" : "border-gray-300"
             }`}
             required={required}
@@ -139,7 +139,7 @@ export function DateSelector({
           <select
             value={month}
             onChange={(e) => handleMonthChange(e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+            className={`w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors ${
               error ? "border-red-500" : "border-gray-300"
             }`}
             required={required}
@@ -158,7 +158,7 @@ export function DateSelector({
           <select
             value={year}
             onChange={(e) => handleYearChange(e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 ${
+            className={`w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors ${
               error ? "border-red-500" : "border-gray-300"
             }`}
             required={required}
