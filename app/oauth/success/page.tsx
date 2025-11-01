@@ -131,7 +131,7 @@ function OAuthSuccessContent() {
       <div className="max-w-md w-full text-center">
         {status === "loading" && (
           <>
-            <LoadingSpinner size="2xl" variant="primary" centered className="mb-6" />
+            <LoadingSpinner size="xl" variant="green" className="mb-6" />
             <h1 className="text-2xl font-bold text-gray-900 mb-2">
               Autenticando...
             </h1>
@@ -187,7 +187,7 @@ export default function OAuthSuccessPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <LoadingSpinner size="2xl" variant="primary" centered />
+        <LoadingSpinner size="xl" variant="green" />
       </div>
     }>
       <OAuthSuccessContent />
