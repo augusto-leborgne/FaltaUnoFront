@@ -130,20 +130,37 @@ export function AddressAutocomplete({
 
       const autocompleteSuggestions = response.suggestions || [];
 
+      console.log("[AddressAutocomplete] 🔍 Suggestions raw:", autocompleteSuggestions);
+
       // Convertir AutocompleteSuggestion[] a AutocompletePrediction[] para compatibilidad
-      const predictions: any[] = autocompleteSuggestions.map((suggestion: any) => ({
-        description: suggestion.placePrediction?.text?.text || '',
-        place_id: suggestion.placePrediction?.placeId || '',
-        matched_substrings: suggestion.placePrediction?.text?.matches || [],
-        structured_formatting: {
-          main_text: suggestion.placePrediction?.structuredFormat?.mainText?.text || '',
-          main_text_matched_substrings: suggestion.placePrediction?.structuredFormat?.mainText?.matches || [],
-          secondary_text: suggestion.placePrediction?.structuredFormat?.secondaryText?.text || '',
-        },
-        terms: [],
-        types: suggestion.placePrediction?.types || [],
-        reference: '', // Campo requerido por el tipo legacy
-      }));
+      const predictions: any[] = autocompleteSuggestions.map((suggestion: any) => {
+        const placePred = suggestion.placePrediction;
+        const mainText = placePred?.structuredFormat?.mainText?.text || placePred?.text?.text || '';
+        const secondaryText = placePred?.structuredFormat?.secondaryText?.text || '';
+        
+        console.log("[AddressAutocomplete] 📍", {
+          mainText,
+          secondaryText,
+          placeId: placePred?.placeId,
+          fullText: placePred?.text?.text,
+        });
+
+        return {
+          description: placePred?.text?.text || '',
+          place_id: placePred?.placeId || '',
+          matched_substrings: placePred?.text?.matches || [],
+          structured_formatting: {
+            main_text: mainText,
+            main_text_matched_substrings: placePred?.structuredFormat?.mainText?.matches || [],
+            secondary_text: secondaryText,
+          },
+          terms: [],
+          types: placePred?.types || [],
+          reference: '',
+        };
+      });
+
+      console.log("[AddressAutocomplete] ✅ Predictions procesadas:", predictions);
 
       setSuggestions(predictions);
       setIsSearching(false);
@@ -176,35 +193,61 @@ export function AddressAutocomplete({
     }
   };
 
-  // Validar al perder el foco
+  // ⚠️ VALIDACIÓN ESTRICTA: Solo direcciones de la lista
   const handleBlur = () => {
-    // Si hay texto pero no se seleccionó de la lista, advertir
-    if (query && !hasSelectedAddress) {
-      console.warn("[AddressAutocomplete] Dirección no seleccionada de la lista");
-      // Mostrar mensaje de advertencia después de un pequeño delay para que el clic en sugerencia funcione
-      setTimeout(() => {
-        if (query && !hasSelectedAddress) {
-          alert("Por favor selecciona una dirección de las sugerencias para asegurar la ubicación exacta");
-          setQuery("");
-          onChange("", null);
-        }
-      }, 200);
-    }
+    // Delay para permitir que el click en sugerencia se procese primero
+    setTimeout(() => {
+      if (query && !hasSelectedAddress) {
+        alert("⚠️ Debes seleccionar una dirección de las sugerencias.\n\nNo se permiten direcciones escritas manualmente.");
+        setQuery("");
+        onChange("", null);
+      }
+    }, 200);
   };
 
-  // Validar que la dirección sea específica (no solo ciudad/país/zona)
-  const isAddressSpecific = (place: google.maps.places.PlaceResult): boolean => {
+  // ✅ VALIDACIÓN ESTRICTA: Solo direcciones específicas con número de calle o lugares con nombre
+  const isAddressSpecific = (place: any): boolean => {
     const addressComponents = place.address_components || [];
     
-    // Verificar si tiene número de calle (street_number)
+    console.log("[AddressAutocomplete] 🔍 Validando dirección:", {
+      name: place.name,
+      formatted_address: place.formatted_address,
+      types: place.types,
+      components: addressComponents.map((c: any) => ({ types: c.types, name: c.long_name })),
+    });
+    
+    // ✅ Verificar si tiene número de calle (street_number)
     const hasStreetNumber = addressComponents.some(
-      component => component.types.includes('street_number')
+      (component: any) => component.types.includes('street_number')
     );
     
-    // O si es un lugar específico con nombre (establecimiento, complejo, etc.)
-    const isNamedPlace = !!(place.name && place.name !== place.formatted_address);
+    // ✅ Verificar si es un lugar específico con nombre (establecimiento, punto de interés)
+    const hasEstablishmentType = place.types?.some((type: string) => 
+      ['establishment', 'point_of_interest', 'premise', 'subpremise'].includes(type)
+    );
     
-    // La dirección es válida si tiene número de calle O es un lugar con nombre
+    const hasDisplayName = !!(place.name && place.name !== place.formatted_address);
+    const isNamedPlace = hasEstablishmentType && hasDisplayName;
+    
+    console.log("[AddressAutocomplete] ✅ Validación:", {
+      hasStreetNumber,
+      isNamedPlace,
+      hasEstablishmentType,
+      hasDisplayName,
+    });
+    
+    // ❌ Rechazar si es solo calle, barrio, ciudad, país, etc.
+    const invalidTypes = ['locality', 'administrative_area_level_1', 'administrative_area_level_2', 'country', 'route', 'neighborhood'];
+    const isInvalidType = place.types?.every((type: string) => invalidTypes.includes(type));
+    
+    if (isInvalidType) {
+      console.warn("[AddressAutocomplete] ❌ Tipo inválido (solo ciudad/barrio/país/calle)");
+      return false;
+    }
+    
+    // ✅ ACEPTAR SI:
+    // 1. Tiene número de calle (direccion completa)
+    // 2. Es un lugar con nombre (establecimiento, complejo, etc)
     return hasStreetNumber || isNamedPlace;
   };
 
@@ -246,8 +289,18 @@ export function AddressAutocomplete({
 
       // Validar que sea una dirección específica
       if (!isAddressSpecific(placeResult)) {
-        console.warn("[AddressAutocomplete] Dirección no específica, rechazando");
-        alert("Por favor selecciona una dirección exacta con número de calle o un lugar específico (no solo ciudad/barrio/zona)");
+        console.warn("[AddressAutocomplete] ❌ Dirección rechazada - no es específica");
+        alert(
+          "❌ Dirección no válida\n\n" +
+          "Solo se permiten:\n" +
+          "✅ Direcciones completas con número de calle (ej: Av. 18 de Julio 1234)\n" +
+          "✅ Lugares específicos de Google Maps (ej: restaurantes, edificios, etc.)\n\n" +
+          "❌ NO se permiten:\n" +
+          "• Calles sin número\n" +
+          "• Barrios\n" +
+          "• Ciudades\n" +
+          "• Países"
+        );
         setQuery("");
         setHasSelectedAddress(false);
         onChange("", null);
