@@ -103,8 +103,18 @@ class GoogleMapsLoader {
     this.pendingPromise = new Promise<void>((resolve, reject) => {
       script.onload = async () => {
         try {
+          logger.info?.("[GoogleMapsLoader] 📍 Script cargado, URL:", script.src)
+          
           // ✅ Más tiempo para esperar google.maps
           await this.waitForGoogle(10000) // 10s en vez de 5s
+          
+          // 🔍 DEBUG: Verificar qué objetos existen en window.google
+          const g = (window as any).google
+          logger.info?.("[GoogleMapsLoader] 🔍 window.google existe:", !!g)
+          logger.info?.("[GoogleMapsLoader] 🔍 window.google.maps existe:", !!g?.maps)
+          logger.info?.("[GoogleMapsLoader] 🔍 window.google.maps.version:", g?.maps?.version)
+          logger.info?.("[GoogleMapsLoader] 🔍 window.google.maps.importLibrary existe:", !!g?.maps?.importLibrary)
+          logger.info?.("[GoogleMapsLoader] 🔍 Tipo de importLibrary:", typeof g?.maps?.importLibrary)
           
           // ✅ CRÍTICO: Cargar libraries de forma moderna
           await this.postLoadImports(libraries)
