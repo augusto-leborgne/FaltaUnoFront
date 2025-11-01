@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     description: "Conecta con jugadores, organiza partidos y juega fútbol en tu ciudad. La plataforma que une a la comunidad futbolera.",
     images: [
       {
-        url: "https://faltauno-frontend-169771742214.us-central1.run.app/api/og?title=Falta%20Uno&description=Encuentra%20tu%20partido%20de%20f%C3%BAtbol",
+        url: "https://faltauno-frontend-169771742214.us-central1.run.app/og-image.png",
         width: 1200,
         height: 630,
         alt: "Falta Uno - Encuentra tu partido de fútbol",
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Falta Uno - Encuentra tu partido de fútbol",
     description: "Conecta con jugadores, organiza partidos y juega fútbol en tu ciudad.",
-    images: ["https://faltauno-frontend-169771742214.us-central1.run.app/api/og?title=Falta%20Uno&description=Encuentra%20tu%20partido%20de%20f%C3%BAtbol"],
+    images: ["https://faltauno-frontend-169771742214.us-central1.run.app/og-image.png"],
   },
 }
 

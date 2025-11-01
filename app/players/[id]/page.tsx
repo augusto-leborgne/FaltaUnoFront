@@ -22,7 +22,6 @@ export async function generateMetadata({ params }: PlayerProfilePageProps): Prom
       const title = `${name} - Falta Uno`
       const description = `Perfil de ${name} en Falta Uno. ${player.descripcion || 'Jugador de fútbol'}`
       const url = `https://faltauno-frontend-169771742214.us-central1.run.app/players/${id}`
-      const ogImage = `https://faltauno-frontend-169771742214.us-central1.run.app/api/og?title=${encodeURIComponent(name)}&description=${encodeURIComponent('Jugador en Falta Uno')}`
       
       return {
         title,
@@ -36,7 +35,7 @@ export async function generateMetadata({ params }: PlayerProfilePageProps): Prom
           type: "profile",
           images: [
             {
-              url: ogImage,
+              url: "https://faltauno-frontend-169771742214.us-central1.run.app/og-image.png",
               width: 1200,
               height: 630,
               alt: name,
@@ -47,7 +46,7 @@ export async function generateMetadata({ params }: PlayerProfilePageProps): Prom
           card: "summary_large_image",
           title,
           description,
-          images: [ogImage],
+          images: ["https://faltauno-frontend-169771742214.us-central1.run.app/og-image.png"],
         },
       }
     }
@@ -56,7 +55,6 @@ export async function generateMetadata({ params }: PlayerProfilePageProps): Prom
   }
   
   // Fallback metadata
-  const ogImage = `https://faltauno-frontend-169771742214.us-central1.run.app/api/og?title=${encodeURIComponent('Jugador')}&description=${encodeURIComponent('Perfil en Falta Uno')}`
   return {
     title: "Jugador - Falta Uno",
     description: "Perfil de jugador en Falta Uno",
@@ -69,7 +67,7 @@ export async function generateMetadata({ params }: PlayerProfilePageProps): Prom
       type: "profile",
       images: [
         {
-          url: ogImage,
+          url: "https://faltauno-frontend-169771742214.us-central1.run.app/og-image.png",
           width: 1200,
           height: 630,
           alt: "Falta Uno",
@@ -80,7 +78,7 @@ export async function generateMetadata({ params }: PlayerProfilePageProps): Prom
       card: "summary_large_image",
       title: "Jugador - Falta Uno",
       description: "Perfil de jugador en Falta Uno",
-      images: [ogImage],
+      images: ["https://faltauno-frontend-169771742214.us-central1.run.app/og-image.png"],
     },
   }
 }
