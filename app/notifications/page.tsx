@@ -1,3 +1,5 @@
+"use client"
+
 import { NotificationsScreen } from "@/components/pages/notifications-screen"
 
 export default function NotificationsPage() {
