@@ -31,8 +31,7 @@ export function AddressAutocomplete({
   const [isSearching, setIsSearching] = useState(false);
   const [hasSelectedAddress, setHasSelectedAddress] = useState(false);
   
-  // ✅ MODERNO: Usar AutocompleteSuggestion en lugar de AutocompleteService
-  const placesServiceRef = useRef<google.maps.places.PlacesService | null>(null);
+  // ✅ MODERNO: Solo necesitamos sessionToken (no más PlacesService)
   const sessionTokenRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -68,11 +67,7 @@ export function AddressAutocomplete({
         if (window.google?.maps?.places) {
           console.log("[AddressAutocomplete] ✅ Places API detectada, inicializando servicios...");
           
-          // ✅ MODERNO: Solo PlacesService (AutocompleteSuggestion no necesita inicialización)
-          const dummyDiv = document.createElement("div");
-          placesServiceRef.current = new window.google.maps.places.PlacesService(dummyDiv);
-          
-          // Crear session token para optimizar requests
+          // ✅ MODERNO: Solo crear session token (no necesitamos PlacesService)
           sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
           
           console.log("✅ [AddressAutocomplete] Servicios de Google Maps inicializados correctamente");
@@ -212,48 +207,62 @@ export function AddressAutocomplete({
     return hasStreetNumber || isNamedPlace;
   };
 
-  // Seleccionar una predicción
-  const selectPrediction = (prediction: google.maps.places.AutocompletePrediction) => {
+  // ✅ MODERNO: Seleccionar una predicción y obtener detalles con Place.fetchFields()
+  const selectPrediction = async (prediction: google.maps.places.AutocompletePrediction) => {
     setQuery(prediction.description);
     setSuggestions([]);
     setIsSearching(false);
     setHasSelectedAddress(true); // Usuario ha seleccionado una dirección válida
 
-    if (!placesServiceRef.current) {
-      onChange(prediction.description, null);
-      return;
-    }
+    try {
+      // ✅ NUEVA API: Place.fetchFields() en vez de PlacesService.getDetails()
+      const { Place } = await window.google.maps.importLibrary("places") as any;
+      
+      const place = new Place({
+        id: prediction.place_id,
+      });
 
-    // Obtener detalles del lugar
-    const request: google.maps.places.PlaceDetailsRequest = {
-      placeId: prediction.place_id,
-      fields: ['geometry', 'formatted_address', 'name', 'address_components', 'types'],
-      sessionToken: sessionTokenRef.current || undefined,
-    };
+      // Fetch los campos que necesitamos
+      await place.fetchFields({
+        fields: ['location', 'formattedAddress', 'displayName', 'addressComponents', 'types'],
+      });
 
-    placesServiceRef.current.getDetails(request, (place, status) => {
-      if (status === window.google.maps.places.PlacesServiceStatus.OK && place) {
-        // Validar que sea una dirección específica
-        if (!isAddressSpecific(place)) {
-          console.warn("[AddressAutocomplete] Dirección no específica, rechazando");
-          alert("Por favor selecciona una dirección exacta con número de calle o un lugar específico (no solo ciudad/barrio/zona)");
-          setQuery("");
-          setHasSelectedAddress(false);
-          onChange("", null);
-          return;
-        }
-        
-        onChange(prediction.description, place);
-        
-        // Renovar session token después de obtener detalles
-        if (window.google?.maps?.places) {
-          sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
-        }
-      } else {
-        console.warn("[AddressAutocomplete] Error obteniendo detalles:", status);
-        onChange(prediction.description, null);
+      // Convertir a formato compatible con PlaceResult
+      const placeResult: any = {
+        place_id: prediction.place_id,
+        formatted_address: place.formattedAddress,
+        name: place.displayName,
+        geometry: {
+          location: place.location,
+        },
+        address_components: place.addressComponents?.map((comp: any) => ({
+          long_name: comp.longText,
+          short_name: comp.shortText,
+          types: comp.types,
+        })) || [],
+        types: place.types || [],
+      };
+
+      // Validar que sea una dirección específica
+      if (!isAddressSpecific(placeResult)) {
+        console.warn("[AddressAutocomplete] Dirección no específica, rechazando");
+        alert("Por favor selecciona una dirección exacta con número de calle o un lugar específico (no solo ciudad/barrio/zona)");
+        setQuery("");
+        setHasSelectedAddress(false);
+        onChange("", null);
+        return;
       }
-    });
+      
+      onChange(prediction.description, placeResult);
+      
+      // Renovar session token después de obtener detalles
+      if (window.google?.maps?.places) {
+        sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
+      }
+    } catch (error) {
+      console.warn("[AddressAutocomplete] Error obteniendo detalles:", error);
+      onChange(prediction.description, null);
+    }
   };
 
   // Limpiar búsqueda
