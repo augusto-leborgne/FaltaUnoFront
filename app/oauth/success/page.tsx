@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, Suspense } from "react"
+import dynamic from "next/dynamic"
 import { useRouter, useSearchParams } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { TokenPersistence } from "@/lib/token-persistence"
@@ -183,7 +184,7 @@ function OAuthSuccessContent() {
   )
 }
 
-export default function OAuthSuccessPage() {
+function OAuthSuccessPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -194,3 +195,16 @@ export default function OAuthSuccessPage() {
     </Suspense>
   )
 }
+
+// ✅ CRÍTICO: Deshabilitar SSR para evitar error 500
+// useSearchParams() requiere client-side rendering
+const OAuthSuccessPageNoSSR = dynamic(() => Promise.resolve(OAuthSuccessPage), {
+  ssr: false,
+  loading: () => (
+    <div className="min-h-screen bg-white flex items-center justify-center">
+      <LoadingSpinner size="xl" variant="green" />
+    </div>
+  ),
+})
+
+export default OAuthSuccessPageNoSSR
