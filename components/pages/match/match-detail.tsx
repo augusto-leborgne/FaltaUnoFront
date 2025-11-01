@@ -227,7 +227,8 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
   const isMatchFull = spotsLeft === 0
   const isMatchCancelled = match.estado === PartidoEstado.CANCELADO
   const isMatchCompleted = match.estado === PartidoEstado.COMPLETADO
-  const canJoin = !isOrganizer && !isMatchFull && !isMatchCancelled && !isMatchCompleted
+  const isMatchConfirmed = match.estado === PartidoEstado.CONFIRMADO
+  const canJoin = !isOrganizer && !isMatchFull && !isMatchCancelled && !isMatchCompleted && !isMatchConfirmed
 
   const hora = (match as any).hora ? String((match as any).hora).slice(0, 5) : ""
   const nombreUbicacion = getNombreUbicacion(match)
@@ -449,6 +450,8 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
                   "Partido cancelado"
                 ) : isMatchCompleted ? (
                   "Partido finalizado"
+                ) : isMatchConfirmed ? (
+                  "Partido confirmado"
                 ) : (
                   "Solicitar unirme"
                 )}

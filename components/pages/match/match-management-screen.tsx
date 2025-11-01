@@ -295,6 +295,52 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
   }
 
   // ============================================
+  // HANDLERS - CONFIRMACIÓN DE PARTIDO
+  // ============================================
+
+  const handleConfirmarPartido = async () => {
+    if (!match) return
+
+    if (match.estado !== PartidoEstado.PENDIENTE) {
+      toast({
+        title: "No se puede confirmar",
+        description: "Solo se pueden confirmar partidos pendientes",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Confirmar acción
+    if (!confirm("¿Estás seguro de que quieres confirmar el partido? Una vez confirmado, no podrás cancelarlo.")) {
+      return
+    }
+
+    try {
+      const response = await PartidoAPI.confirmar(matchId)
+
+      if (!response.success) {
+        throw new Error(response.message || "Error al confirmar")
+      }
+
+      toast({
+        title: "¡Partido confirmado!",
+        description: "El partido ha sido confirmado. Se notificó a todos los inscritos.",
+      })
+
+      await loadMatchData()
+
+    } catch (err) {
+      console.error("[MatchManagement] Error confirmando:", err)
+      const errorMessage = err instanceof Error ? err.message : "Error al confirmar partido"
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      })
+    }
+  }
+
+  // ============================================
   // HANDLERS - JUGADORES
   // ============================================
 
@@ -466,7 +512,11 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
   // ============================================
 
   const canRemovePlayers = match.estado === PartidoEstado.PENDIENTE
+  const canEdit = match.estado === PartidoEstado.PENDIENTE
+  const canCancel = match.estado === PartidoEstado.PENDIENTE
+  const canConfirm = match.estado === PartidoEstado.PENDIENTE
   const spotsLeft = (match.cantidadJugadores || 10) - (match.jugadoresActuales || 0)
+  const partidoLleno = spotsLeft === 0
 
   // ============================================
   // RENDER - MAIN
@@ -495,12 +545,13 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
             >
               <Share className="w-4 h-4" />
             </Button>
-            {!isEditing && match.estado === PartidoEstado.PENDIENTE && (
+            {!isEditing && canEdit && (
               <Button
                 onClick={() => setIsEditing(true)}
                 variant="outline"
                 size="sm"
                 className="bg-orange-50 border-orange-200"
+                disabled={!canEdit}
               >
                 <Edit3 className="w-4 h-4" />
               </Button>
@@ -510,6 +561,25 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
       </div>
 
       <div className="flex-1 px-6 py-6 overflow-y-auto pb-24">
+        {/* Alerta de partido listo para confirmar */}
+        {match.estado === PartidoEstado.PENDIENTE && partidoLleno && (
+          <div className="bg-green-50 border border-green-200 rounded-2xl p-4 mb-6 flex items-center space-x-3">
+            <Check className="w-6 h-6 text-green-600 flex-shrink-0" />
+            <div className="flex-1">
+              <p className="text-green-800 font-medium">¡Partido completo!</p>
+              <p className="text-green-600 text-sm">
+                Todos los cupos están llenos. Confirma el partido para que se concrete.
+              </p>
+            </div>
+            <Button
+              onClick={handleConfirmarPartido}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              Confirmar
+            </Button>
+          </div>
+        )}
+
         {/* Match Details */}
         <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
@@ -545,25 +615,61 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
           </div>
 
           {/* Alertas de estado */}
+          {match.estado === PartidoEstado.CONFIRMADO && (
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4 flex items-center space-x-3">
+              <Check className="w-5 h-5 text-green-600 flex-shrink-0" />
+              <div>
+                <p className="text-green-800 font-medium">Partido confirmado</p>
+                <p className="text-green-600 text-sm">
+                  El partido está confirmado y se concretará en la fecha/hora programada
+                </p>
+              </div>
+            </div>
+          )}
+
+          {match.estado === PartidoEstado.COMPLETADO && (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4 flex items-center space-x-3">
+              <Check className="w-5 h-5 text-blue-600 flex-shrink-0" />
+              <div>
+                <p className="text-blue-800 font-medium">Partido completado</p>
+                <p className="text-blue-600 text-sm">
+                  Este partido ya finalizó. ¡Gracias por participar!
+                </p>
+              </div>
+            </div>
+          )}
+
           {match.estado === PartidoEstado.CANCELADO && (
             <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4 flex items-center space-x-3">
               <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
               <div>
                 <p className="text-red-800 font-medium">Partido cancelado</p>
                 <p className="text-red-600 text-sm">
-                  No se alcanzó la cantidad mínima de jugadores
+                  El partido fue cancelado (no se llenaron los cupos o no fue confirmado a tiempo)
                 </p>
               </div>
             </div>
           )}
 
-          {match.estado === PartidoEstado.PENDIENTE && spotsLeft > 0 && (
+          {match.estado === PartidoEstado.PENDIENTE && spotsLeft > 0 && !partidoLleno && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4 flex items-center space-x-3">
               <Clock className="w-5 h-5 text-yellow-600 flex-shrink-0" />
               <div>
-                <p className="text-yellow-800 font-medium">Cancelación automática</p>
+                <p className="text-yellow-800 font-medium">Esperando confirmación</p>
                 <p className="text-yellow-600 text-sm">
-                  El partido se cancelará si no está completo al momento del inicio
+                  El partido se cancelará automáticamente si no se llena y confirma antes de la fecha/hora
+                </p>
+              </div>
+            </div>
+          )}
+
+          {match.estado === PartidoEstado.PENDIENTE && partidoLleno && (
+            <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-4 flex items-center space-x-3">
+              <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+              <div>
+                <p className="text-orange-800 font-medium">⚠️ Acción requerida</p>
+                <p className="text-orange-600 text-sm">
+                  Los cupos están llenos. Debes confirmar el partido o se cancelará automáticamente al llegar la fecha/hora.
                 </p>
               </div>
             </div>

@@ -981,6 +981,12 @@ export const PartidoAPI = {
     });
   },
 
+  confirmar: (id: string) => {
+    return apiFetch<void>(`/api/partidos/${id}/confirmar`, {
+      method: 'POST'
+    });
+  },
+
   completar: (id: string) => {
     return apiFetch<void>(`/api/partidos/${id}/completar`, {
       method: 'POST'
