@@ -1,3 +1,5 @@
+"use client"
+
 import RequireAuth from "@/components/auth/require-auth"
 import { FriendRequestsListScreen } from "@/components/pages/user/friend-requests-list-screen"
 

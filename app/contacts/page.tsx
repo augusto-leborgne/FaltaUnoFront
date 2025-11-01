@@ -1,3 +1,5 @@
+"use client"
+
 import RequireAuth from "@/components/auth/require-auth"
 import { ContactsScreen } from "@/components/pages/user/contacts-screen"
 
