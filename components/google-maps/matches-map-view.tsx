@@ -62,7 +62,7 @@ export function MatchesMapView({
         if (!mounted) return
         if (timeoutId) window.clearTimeout(timeoutId)
 
-        if (!window.google?.maps) {
+        if (!window.google?.maps?.ControlPosition) {
           throw new Error("Google Maps no está disponible después de cargar")
         }
 

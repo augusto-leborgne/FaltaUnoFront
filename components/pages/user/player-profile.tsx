@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Star, ArrowLeft, MapPin, UserPlus } from "lucide-react"
+import { Star, ArrowLeft, MapPin, UserPlus, UserMinus, UserX } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { calcularEdad } from "@/lib/utils"
@@ -36,6 +36,12 @@ function PlayerProfile({ playerId }: PlayerProfileProps) {
   const [error, setError] = useState<string | null>(null)
   const [sendingRequest, setSendingRequest] = useState(false)
   const [requestSent, setRequestSent] = useState(false)
+  const [friendshipStatus, setFriendshipStatus] = useState<{
+    exists: boolean
+    estado?: "PENDIENTE" | "ACEPTADA"
+    amistadId?: string
+  } | null>(null)
+  const [removingFriend, setRemovingFriend] = useState(false)
 
   useEffect(() => {
     let abort = new AbortController()
@@ -70,6 +76,17 @@ function PlayerProfile({ playerId }: PlayerProfileProps) {
         if (reviewsResponse.ok) {
           const reviewsData = await reviewsResponse.json()
           setReviews(reviewsData.data || [])
+        }
+
+        // Friendship Status
+        const fUrl = normalizeUrl(`${API_BASE}/api/amistades/estado/${playerId}`)
+        const friendshipResponse = await fetch(fUrl, {
+          headers: AuthService.getAuthHeaders(),
+          signal: abort.signal,
+        })
+        if (friendshipResponse.ok) {
+          const friendshipData = await friendshipResponse.json()
+          setFriendshipStatus(friendshipData.data || null)
         }
       } catch (err: any) {
         if (err?.name !== "AbortError") {
@@ -106,6 +123,13 @@ function PlayerProfile({ playerId }: PlayerProfileProps) {
 
       if (response.ok) {
         setRequestSent(true)
+        // Actualizar estado de amistad
+        const friendshipData = await response.json()
+        setFriendshipStatus({
+          exists: true,
+          estado: "PENDIENTE",
+          amistadId: friendshipData.data?.id
+        })
       } else {
         const errorData = await response.json().catch(() => ({}))
         alert(errorData?.message || "Error al enviar solicitud")
@@ -115,6 +139,41 @@ function PlayerProfile({ playerId }: PlayerProfileProps) {
       alert("Error al enviar solicitud")
     } finally {
       setSendingRequest(false)
+    }
+  }
+
+  const handleRemoveFriend = async () => {
+    if (!confirm("¿Estás seguro de que deseas dejar de ser amigo de esta persona?")) {
+      return
+    }
+
+    setRemovingFriend(true)
+    try {
+      const token = AuthService.getToken()
+      if (!token) {
+        router.push("/login")
+        return
+      }
+
+      // DELETE /api/amistades/{playerId}
+      const url = normalizeUrl(`${API_BASE}/api/amistades/${playerId}`)
+      const response = await fetch(url, {
+        method: "DELETE",
+        headers: AuthService.getAuthHeaders(),
+      })
+
+      if (response.ok) {
+        setFriendshipStatus(null)
+        alert("Amistad eliminada correctamente")
+      } else {
+        const errorData = await response.json().catch(() => ({}))
+        alert(errorData?.message || "Error al eliminar amistad")
+      }
+    } catch (err) {
+      console.error("Error eliminando amistad:", err)
+      alert("Error al eliminar amistad")
+    } finally {
+      setRemovingFriend(false)
     }
   }
 
@@ -203,18 +262,47 @@ function PlayerProfile({ playerId }: PlayerProfileProps) {
 
         {/* Friend Request Button */}
         <div className="mb-8">
-          <Button
-            onClick={handleSendFriendRequest}
-            disabled={sendingRequest || requestSent}
-            className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl disabled:opacity-50"
-          >
-            <UserPlus className="w-4 h-4 mr-2" />
-            {requestSent ? "Solicitud enviada" : sendingRequest ? "Enviando..." : "Enviar solicitud de amistad"}
-          </Button>
-          {requestSent && (
-            <p className="text-sm text-green-600 text-center mt-2">
-              ✓ Solicitud enviada correctamente
-            </p>
+          {friendshipStatus?.estado === "ACEPTADA" ? (
+            <Button
+              onClick={handleRemoveFriend}
+              disabled={removingFriend}
+              className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl disabled:opacity-50"
+            >
+              <UserMinus className="w-4 h-4 mr-2" />
+              {removingFriend ? "Eliminando..." : "Dejar de ser amigo"}
+            </Button>
+          ) : friendshipStatus?.estado === "PENDIENTE" ? (
+            <div className="text-center">
+              <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                <UserX className="w-6 h-6 text-yellow-600 mx-auto mb-2" />
+                <p className="text-yellow-700 font-medium">Solicitud pendiente</p>
+                <p className="text-sm text-yellow-600 mt-1">Esta persona aún no ha aceptado tu solicitud</p>
+              </div>
+            </div>
+          ) : friendshipStatus?.exists ? (
+            <div className="text-center">
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <UserX className="w-6 h-6 text-blue-600 mx-auto mb-2" />
+                <p className="text-blue-700 font-medium">Solicitud recibida</p>
+                <p className="text-sm text-blue-600 mt-1">Esta persona te ha enviado una solicitud</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              <Button
+                onClick={handleSendFriendRequest}
+                disabled={sendingRequest || requestSent}
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl disabled:opacity-50"
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                {requestSent ? "Solicitud enviada" : sendingRequest ? "Enviando..." : "Enviar solicitud de amistad"}
+              </Button>
+              {requestSent && (
+                <p className="text-sm text-green-600 text-center mt-2">
+                  ✓ Solicitud enviada correctamente
+                </p>
+              )}
+            </>
           )}
         </div>
 

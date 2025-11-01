@@ -359,16 +359,14 @@ export function SettingsScreen() {
         {/* Profile Photo */}
         <div className="text-center mb-8">
           <div className="relative inline-block">
-            <Avatar className="w-24 h-24" key={avatar || 'no-photo'}>
-              {avatar ? (
-                <AvatarImage 
-                  src={avatar} 
-                  alt="Foto de perfil"
-                  className="object-cover w-full h-full"
-                />
-              ) : (
-                <AvatarFallback className="bg-orange-100 text-2xl">{initials}</AvatarFallback>
-              )}
+            <Avatar className="w-24 h-24">
+              <AvatarImage 
+                src={avatar || undefined} 
+                alt="Foto de perfil"
+              />
+              <AvatarFallback className="bg-orange-100 text-orange-600 text-2xl font-semibold">
+                {initials || '?'}
+              </AvatarFallback>
             </Avatar>
             <label className="absolute -bottom-2 -right-2 bg-green-600 text-white rounded-full p-2 shadow-lg cursor-pointer hover:bg-green-700 transition-colors">
               <Camera className="w-4 h-4" />
