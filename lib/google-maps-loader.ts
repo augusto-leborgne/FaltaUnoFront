@@ -105,18 +105,20 @@ class GoogleMapsLoader {
         try {
           logger.info?.("[GoogleMapsLoader] 📍 Script cargado, URL:", script.src)
           
-          // ✅ Más tiempo para esperar google.maps
-          await this.waitForGoogle(10000) // 10s en vez de 5s
+          // ✅ Paso 1: Esperar google.maps (10s)
+          await this.waitForGoogle(10000)
           
-          // 🔍 DEBUG: Verificar qué objetos existen en window.google
+          // 🔍 DEBUG: Estado inicial
           const g = (window as any).google
-          logger.info?.("[GoogleMapsLoader] 🔍 window.google existe:", !!g)
-          logger.info?.("[GoogleMapsLoader] 🔍 window.google.maps existe:", !!g?.maps)
           logger.info?.("[GoogleMapsLoader] 🔍 window.google.maps.version:", g?.maps?.version)
-          logger.info?.("[GoogleMapsLoader] 🔍 window.google.maps.importLibrary existe:", !!g?.maps?.importLibrary)
-          logger.info?.("[GoogleMapsLoader] 🔍 Tipo de importLibrary:", typeof g?.maps?.importLibrary)
+          logger.info?.("[GoogleMapsLoader] 🔍 window.google.maps.importLibrary existe (inicial):", !!g?.maps?.importLibrary)
           
-          // ✅ CRÍTICO: Cargar libraries de forma moderna
+          // ✅ Paso 2: Esperar importLibrary (con loading=async puede tardar más)
+          await this.waitForImportLibrary(15000) // 15s para importLibrary
+          
+          logger.info?.("[GoogleMapsLoader] ✅ importLibrary disponible, cargando libraries...")
+          
+          // ✅ Paso 3: Cargar libraries de forma moderna
           await this.postLoadImports(libraries)
           
           this.setLoaded()
@@ -153,55 +155,63 @@ class GoogleMapsLoader {
     })
   }
 
+  // ✅ NUEVO: Esperar a que importLibrary esté disponible (con loading=async puede tardar)
+  private waitForImportLibrary(timeoutMs: number): Promise<void> {
+    const started = performance.now()
+    return new Promise<void>((resolve, reject) => {
+      const tick = () => {
+        const anyMaps = (window as any).google?.maps
+        
+        // Verificar si importLibrary está disponible
+        if (anyMaps?.importLibrary && typeof anyMaps.importLibrary === 'function') {
+          logger.debug?.("[GoogleMapsLoader] ✅ importLibrary disponible")
+          return resolve()
+        }
+        
+        if (performance.now() - started > timeoutMs) {
+          const err = new Error(
+            `Timeout esperando importLibrary después de ${timeoutMs}ms. ` +
+            `Versión: ${anyMaps?.version || 'unknown'}. ` +
+            `Keys disponibles: ${Object.keys(anyMaps || {}).join(', ')}`
+          )
+          logger.error?.("[GoogleMapsLoader] ❌ Timeout importLibrary")
+          return reject(err)
+        }
+        
+        requestAnimationFrame(tick)
+      }
+      tick()
+    })
+  }
+
   // ✅ 100% MODERNO: Carga libraries con importLibrary() (requiere Google Maps v3.50+)
   private async postLoadImports(libraries: string[]): Promise<void> {
-    const g = (window as any).google
-    const anyMaps: any = g?.maps
+    const anyMaps: any = (window as any).google?.maps
     
-    // 🔍 Buscar importLibrary en diferentes ubicaciones posibles
-    const importLib = 
-      anyMaps?.importLibrary ||           // Ubicación estándar
-      g?.maps?.importLibrary ||           // Alternativa
-      (window as any).importLibrary ||    // Global
-      anyMaps?.loader?.importLibrary      // En loader object
+    // En este punto, waitForImportLibrary() ya garantizó que existe
+    const importLib = anyMaps.importLibrary
     
-    logger.info?.("[GoogleMapsLoader] 🔍 Buscando importLibrary...")
-    logger.info?.("[GoogleMapsLoader] 🔍 google.maps.importLibrary:", !!anyMaps?.importLibrary)
-    logger.info?.("[GoogleMapsLoader] 🔍 window.google.maps.importLibrary:", !!g?.maps?.importLibrary)
-    logger.info?.("[GoogleMapsLoader] 🔍 window.importLibrary:", !!(window as any).importLibrary)
-    logger.info?.("[GoogleMapsLoader] 🔍 google.maps.loader:", !!anyMaps?.loader)
-    logger.info?.("[GoogleMapsLoader] 🔍 Todas las keys de google.maps:", Object.keys(anyMaps || {}))
-    
-    if (!importLib) {
+    if (!importLib || typeof importLib !== 'function') {
+      // Esto no debería pasar si waitForImportLibrary() funcionó
       const err = new Error(
-        `importLibrary no disponible en ninguna ubicación conocida.\n` +
-        `Versión: ${anyMaps?.version || 'unknown'}\n` +
-        `La API Key puede tener restricciones. Verifica en Google Cloud Console que NO tenga restricciones de versión.\n` +
-        `Propiedades disponibles en google.maps: ${Object.keys(anyMaps || {}).join(', ')}`
+        `importLibrary no es una función. Versión: ${anyMaps?.version || 'unknown'}`
       )
-      logger.error?.("[GoogleMapsLoader] ❌ importLibrary no existe")
-      logger.error?.("[GoogleMapsLoader] ❌ Versión actual:", anyMaps?.version)
-      logger.error?.("[GoogleMapsLoader] ❌ Versión requerida: 3.50+")
+      logger.error?.("[GoogleMapsLoader] ❌ importLibrary inválido")
       throw err
     }
 
     try {
       logger.debug?.("[GoogleMapsLoader] 🔄 Cargando libraries modernas:", libraries)
       logger.debug?.("[GoogleMapsLoader] 📍 Versión de Google Maps:", anyMaps.version)
-      logger.debug?.("[GoogleMapsLoader] 🔧 Usando importLibrary desde:", 
-        anyMaps?.importLibrary ? 'google.maps.importLibrary' :
-        (window as any).importLibrary ? 'window.importLibrary' :
-        anyMaps?.loader?.importLibrary ? 'google.maps.loader.importLibrary' : 'unknown'
-      )
       
       // ✅ SIEMPRE cargar 'maps' primero (base)
-      await importLib("maps")
+      await importLib.call(anyMaps, "maps")
       logger.debug?.("[GoogleMapsLoader] ✅ Library 'maps' cargada")
       
       // ✅ Cargar cada library solicitada
       for (const lib of libraries) {
         if (lib === "places") {
-          await importLib("places")
+          await importLib.call(anyMaps, "places")
           logger.debug?.("[GoogleMapsLoader] ✅ Library 'places' cargada")
           
           // ✅ VERIFICAR que Places esté disponible
@@ -212,7 +222,7 @@ class GoogleMapsLoader {
       
       // ✅ Marker moderno (opcional pero recomendado)
       try {
-        await importLib("marker")
+        await importLib.call(anyMaps, "marker")
         logger.debug?.("[GoogleMapsLoader] ✅ Library 'marker' cargada")
       } catch {
         logger.warn?.("[GoogleMapsLoader] ⚠️ Library 'marker' no disponible (opcional)")
