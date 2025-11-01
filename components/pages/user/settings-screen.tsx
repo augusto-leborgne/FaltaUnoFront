@@ -105,8 +105,9 @@ export function SettingsScreen() {
         return
       }
 
-      // Construir URL de foto de perfil si existe (usa helper centralizado)
-      if (user.id && user.foto_perfil) {
+      // Construir URL de foto de perfil (siempre intentar cargar si hay userId)
+      // El endpoint devuelve 404 si no hay foto, y el navegador mostrará el fallback
+      if (user.id) {
         const photoUrl = getUserPhotoUrl(user.id)
         setAvatar(photoUrl)
       }
@@ -210,6 +211,17 @@ export function SettingsScreen() {
 
       // 4. Refrescar contexto
       await refreshUser()
+
+      // 5. Actualizar avatar con la nueva foto si se subió
+      if (photoFile) {
+        const currentUser = AuthService.getUser()
+        if (currentUser?.id) {
+          // Forzar recarga de la foto agregando timestamp para evitar cache
+          const photoUrl = getUserPhotoUrl(currentUser.id) + `?t=${Date.now()}`
+          setAvatar(photoUrl)
+          setPhotoFile(null)
+        }
+      }
 
       setSuccess(true)
       
@@ -347,7 +359,7 @@ export function SettingsScreen() {
         {/* Profile Photo */}
         <div className="text-center mb-8">
           <div className="relative inline-block">
-            <Avatar className="w-24 h-24">
+            <Avatar className="w-24 h-24" key={avatar || 'no-photo'}>
               {avatar ? (
                 <AvatarImage 
                   src={avatar} 
