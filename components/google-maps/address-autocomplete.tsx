@@ -15,6 +15,7 @@ type Props = {
   placeholder?: string;
   required?: boolean;
   disabled?: boolean;
+  hasError?: boolean;
 };
 
 export function AddressAutocomplete({
@@ -23,6 +24,7 @@ export function AddressAutocomplete({
   placeholder = "Ubicación",
   required = false,
   disabled = false,
+  hasError = false,
 }: Props) {
   const [query, setQuery] = useState(value);
   const [suggestions, setSuggestions] = useState<google.maps.places.AutocompletePrediction[]>([]);
@@ -394,14 +396,20 @@ export function AddressAutocomplete({
       {/* Input */}
       <div className="relative">
         <MapPin className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none ${
-          hasSelectedAddress ? 'text-green-600' : 'text-gray-400'
+          hasSelectedAddress 
+            ? 'text-green-600' 
+            : hasError || (required && query && !hasSelectedAddress)
+            ? 'text-red-500'
+            : 'text-gray-400'
         }`} />
         
         <input
-          className={`w-full py-3 pl-10 pr-10 rounded-xl border bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed ${
+          className={`w-full py-3 pl-10 pr-10 rounded-xl border bg-white focus:outline-none focus:ring-2 disabled:bg-gray-100 disabled:cursor-not-allowed ${
             hasSelectedAddress 
-              ? 'border-green-500 bg-green-50' 
-              : 'border-gray-300'
+              ? 'border-green-500 bg-green-50 focus:ring-green-500 focus:border-transparent' 
+              : hasError || (required && query && !hasSelectedAddress)
+              ? 'border-red-500 focus:ring-red-500 focus:border-transparent'
+              : 'border-gray-300 focus:ring-green-500 focus:border-transparent'
           }`}
           placeholder={placeholder}
           value={query}

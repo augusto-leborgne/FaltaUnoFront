@@ -538,6 +538,7 @@ export function CreateMatchScreen() {
             placeholder="Ej: Polideportivo Norte, Montevideo"
             required
             disabled={isLoading}
+            hasError={!!fieldErrors.location}
           />
           {fieldErrors.location && (
             <p className="text-xs text-red-600 mt-2 flex items-center">

@@ -494,6 +494,7 @@ export function ProfileSetupForm() {
               value={formData.address}
               onChange={(address, placeDetails) => handleAddressChangeFromAutocomplete(address, placeDetails)}
               placeholder="Ubicación *"
+              hasError={!!fieldErrors.address}
             />
             {fieldErrors.address && (
               <p className="text-sm text-red-500 mt-2 flex items-center gap-1">
