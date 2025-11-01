@@ -71,7 +71,16 @@ export function AddressAutocomplete({
             console.log("✅ [AddressAutocomplete] Servicios de Google Maps inicializados");
             setIsLoadingMaps(false);
           } else {
-            throw new Error("Google Maps Places API no disponible");
+            // ⚠️ Places API no está disponible - podría ser por:
+            // 1. API key inválida o sin permisos para Places API
+            // 2. Script de Google Maps no cargó completamente
+            // 3. Bloqueador de contenido/ad-blocker
+            console.warn("⚠️ [AddressAutocomplete] Google Maps cargado pero Places API no disponible");
+            console.warn("Verificar: API key tiene Places API habilitado, script cargó correctamente");
+            
+            // No lanzar error - permitir que el componente funcione sin autocompletado
+            setMapsError("Places API no disponible. El autocompletado puede no funcionar.");
+            setIsLoadingMaps(false);
           }
         } catch (error) {
           console.error("❌ [AddressAutocomplete] Error inicializando servicios:", error);
