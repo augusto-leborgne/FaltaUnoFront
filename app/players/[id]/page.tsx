@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: PlayerProfilePageProps): Prom
       const title = `${name} - Falta Uno`
       const description = `Perfil de ${name} en Falta Uno. ${player.descripcion || 'Jugador de fútbol'}`
       const url = `https://faltauno-frontend-169771742214.us-central1.run.app/players/${id}`
-      const ogImage = `/api/og?title=${encodeURIComponent(name)}&description=${encodeURIComponent('Jugador en Falta Uno')}`
+      const ogImage = `https://faltauno-frontend-169771742214.us-central1.run.app/api/og?title=${encodeURIComponent(name)}&description=${encodeURIComponent('Jugador en Falta Uno')}`
       
       return {
         title,
@@ -56,7 +56,7 @@ export async function generateMetadata({ params }: PlayerProfilePageProps): Prom
   }
   
   // Fallback metadata
-  const ogImage = `/api/og?title=Jugador&description=Perfil en Falta Uno`
+  const ogImage = `https://faltauno-frontend-169771742214.us-central1.run.app/api/og?title=${encodeURIComponent('Jugador')}&description=${encodeURIComponent('Perfil en Falta Uno')}`
   return {
     title: "Jugador - Falta Uno",
     description: "Perfil de jugador en Falta Uno",

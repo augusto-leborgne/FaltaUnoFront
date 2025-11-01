@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: MatchDetailPageProps): Promis
       const title = `${match.nombre || 'Partido'} - Falta Uno`
       const description = `${match.descripcion || 'Únete a este partido'} - ${match.ubicacion?.direccion || 'Ubicación por definir'}`
       const url = `https://faltauno-frontend-169771742214.us-central1.run.app/matches/${id}`
-      const ogImage = `/api/og?title=${encodeURIComponent(match.nombre || 'Partido')}&description=${encodeURIComponent(match.ubicacion?.direccion || 'Únete a este partido')}`
+      const ogImage = `https://faltauno-frontend-169771742214.us-central1.run.app/api/og?title=${encodeURIComponent(match.nombre || 'Partido')}&description=${encodeURIComponent(match.ubicacion?.direccion || 'Únete a este partido')}`
       
       return {
         title,
@@ -55,7 +55,7 @@ export async function generateMetadata({ params }: MatchDetailPageProps): Promis
   }
   
   // Fallback metadata
-  const ogImage = `/api/og?title=Partido&description=Únete a este partido de fútbol`
+  const ogImage = `https://faltauno-frontend-169771742214.us-central1.run.app/api/og?title=${encodeURIComponent('Partido')}&description=${encodeURIComponent('Únete a este partido de fútbol')}`
   return {
     title: "Partido - Falta Uno",
     description: "Únete a este partido de fútbol",
