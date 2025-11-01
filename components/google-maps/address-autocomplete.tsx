@@ -175,7 +175,7 @@ export function AddressAutocomplete({
   const handleInputChange = (newValue: string) => {
     setQuery(newValue);
     setHasSelectedAddress(false); // Usuario está escribiendo manualmente
-    onChange(newValue, null);
+    // ❌ NO llamar onChange aquí - solo cuando se seleccione una sugerencia
 
     // Limpiar timer anterior
     if (debounceTimerRef.current) {
@@ -205,7 +205,7 @@ export function AddressAutocomplete({
     }, 200);
   };
 
-  // ✅ VALIDACIÓN ESTRICTA: Solo direcciones específicas con número de calle o lugares con nombre
+  // ✅ VALIDACIÓN MUY ESTRICTA: Solo direcciones completas o lugares con nombre
   const isAddressSpecific = (place: any): boolean => {
     const addressComponents = place.address_components || [];
     
@@ -216,39 +216,58 @@ export function AddressAutocomplete({
       components: addressComponents.map((c: any) => ({ types: c.types, name: c.long_name })),
     });
     
-    // ✅ Verificar si tiene número de calle (street_number)
+    // ✅ REGLA 1: Verificar si tiene número de calle (street_number)
     const hasStreetNumber = addressComponents.some(
       (component: any) => component.types.includes('street_number')
     );
     
-    // ✅ Verificar si es un lugar específico con nombre (establecimiento, punto de interés)
+    // ✅ REGLA 2: Verificar si es un lugar específico con nombre
+    // Debe tener tipo de establecimiento Y un nombre diferente a la dirección formateada
     const hasEstablishmentType = place.types?.some((type: string) => 
-      ['establishment', 'point_of_interest', 'premise', 'subpremise'].includes(type)
+      ['establishment', 'point_of_interest', 'premise', 'subpremise', 'store', 'restaurant', 'cafe', 'school', 'hospital'].includes(type)
     );
     
     const hasDisplayName = !!(place.name && place.name !== place.formatted_address);
     const isNamedPlace = hasEstablishmentType && hasDisplayName;
+    
+    // ❌ REGLA 3: Rechazar explícitamente ciertos tipos
+    // route = solo nombre de calle sin número
+    // locality = ciudad
+    // administrative_area = departamento/estado/país
+    // neighborhood = barrio
+    const hasInvalidType = place.types?.some((type: string) => 
+      ['route', 'locality', 'administrative_area_level_1', 'administrative_area_level_2', 'country', 'neighborhood', 'political'].includes(type)
+    );
+    
+    // Si TODOS los types son inválidos, rechazar
+    const allTypesInvalid = place.types?.length > 0 && place.types.every((type: string) => 
+      ['route', 'locality', 'administrative_area_level_1', 'administrative_area_level_2', 'country', 'neighborhood', 'political'].includes(type)
+    );
     
     console.log("[AddressAutocomplete] ✅ Validación:", {
       hasStreetNumber,
       isNamedPlace,
       hasEstablishmentType,
       hasDisplayName,
+      hasInvalidType,
+      allTypesInvalid,
     });
     
-    // ❌ Rechazar si es solo calle, barrio, ciudad, país, etc.
-    const invalidTypes = ['locality', 'administrative_area_level_1', 'administrative_area_level_2', 'country', 'route', 'neighborhood'];
-    const isInvalidType = place.types?.every((type: string) => invalidTypes.includes(type));
-    
-    if (isInvalidType) {
-      console.warn("[AddressAutocomplete] ❌ Tipo inválido (solo ciudad/barrio/país/calle)");
+    if (allTypesInvalid) {
+      console.warn("[AddressAutocomplete] ❌ RECHAZADO: Todos los tipos son inválidos (calle/barrio/ciudad)");
       return false;
     }
     
-    // ✅ ACEPTAR SI:
-    // 1. Tiene número de calle (direccion completa)
-    // 2. Es un lugar con nombre (establecimiento, complejo, etc)
-    return hasStreetNumber || isNamedPlace;
+    // ✅ ACEPTAR SOLO SI:
+    // 1. Tiene número de calle (dirección completa), O
+    // 2. Es un lugar con nombre (establecimiento, punto de interés)
+    const isValid = hasStreetNumber || isNamedPlace;
+    
+    if (!isValid) {
+      console.warn("[AddressAutocomplete] ❌ RECHAZADO: No tiene número de calle ni es lugar con nombre");
+    }
+    
+    return isValid;
   };
 
   // ✅ MODERNO: Seleccionar una predicción y obtener detalles con Place.fetchFields()
