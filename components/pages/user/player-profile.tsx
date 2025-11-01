@@ -62,7 +62,7 @@ function PlayerProfile({ playerId }: PlayerProfileProps) {
         setPlayer(playerData.data)
 
         // Reviews
-        const rUrl = normalizeUrl(`${API_BASE}/api/reviews?usuarioCalificadoId=${playerId}`)
+        const rUrl = normalizeUrl(`${API_BASE}/api/reviews/usuario/${playerId}`)
         const reviewsResponse = await fetch(rUrl, {
           headers: AuthService.getAuthHeaders(),
           signal: abort.signal,

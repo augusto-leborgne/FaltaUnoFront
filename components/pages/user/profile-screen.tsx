@@ -71,7 +71,7 @@ function ProfileScreenInner() {
       // Reviews
       try {
         const reviewsResponse = await fetch(
-          normalizeUrl(`${API_BASE}/api/reviews?usuarioCalificadoId=${user.id}`),
+          normalizeUrl(`${API_BASE}/api/reviews/usuario/${user.id}`),
           { headers: authHeaders }
         )
         if (reviewsResponse.ok) {
@@ -85,7 +85,7 @@ function ProfileScreenInner() {
       // Friend requests
       try {
         const frResponse = await fetch(
-          normalizeUrl(`${API_BASE}/api/usuarios/${user.id}/friend-requests`),
+          normalizeUrl(`${API_BASE}/api/amistades/pendientes`),
           { headers: authHeaders }
         )
         if (frResponse.ok) {

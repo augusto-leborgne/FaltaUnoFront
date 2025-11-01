@@ -37,7 +37,7 @@ export function ReviewsScreen() {
         return
       }
 
-      const response = await fetch(`${API_BASE}/api/reviews?usuarioCalificadoId=${user.id}`, {
+      const response = await fetch(`${API_BASE}/api/reviews/usuario/${user.id}`, {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"

@@ -80,7 +80,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       setUser(userJson.data)
 
       // Reviews
-      const revRes = await fetch(`${API_BASE}/api/reviews?usuarioCalificadoId=${userId}`, {
+      const revRes = await fetch(`${API_BASE}/api/reviews/usuario/${userId}`, {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       })
       if (revRes.ok) {
