@@ -24,7 +24,7 @@ class GoogleMapsLoader {
       libraries = ["places"],
       language = "es",
       region = "UY",
-      v = "quarterly", // ✅ Versión estable en vez de weekly
+      v = "beta", // ⚡ BETA para asegurar importLibrary() disponible
       channel = "faltauno",
       nonce,
       forceRetry = false,
@@ -82,13 +82,15 @@ class GoogleMapsLoader {
       return this.pendingPromise
     }
 
-    // ✅ MODERNO: Solo loading=async, SIN libraries= en URL
-    // Las libraries se cargan con importLibrary() después
+    // ⚡ HÍBRIDO: Incluir libraries= en URL como FALLBACK para versiones antiguas
+    // Si importLibrary() existe, se usará el método moderno
+    // Si no existe, las libraries ya estarán cargadas por el parámetro URL
+    const libsParam = libraries.length > 0 ? `&libraries=${libraries.join(",")}` : ""
     const params = `key=${encodeURIComponent(apiKey)}&loading=async&v=${encodeURIComponent(
       v
     )}&language=${encodeURIComponent(language)}&region=${encodeURIComponent(
       region
-    )}&channel=${encodeURIComponent(channel)}`
+    )}&channel=${encodeURIComponent(channel)}${libsParam}`
     const src = `https://maps.googleapis.com/maps/api/js?${params}`
 
     const script = document.createElement("script")
@@ -143,16 +145,35 @@ class GoogleMapsLoader {
     })
   }
 
-  // ✅ MODERNO: Carga libraries con importLibrary() (Google Maps v3.49+)
+  // ✅ Carga libraries - con FALLBACK a método legacy si importLibrary no existe
   private async postLoadImports(libraries: string[]): Promise<void> {
     const anyMaps: any = (window as any).google?.maps
     
+    // ⚡ FALLBACK: Si importLibrary no existe, usar método legacy
     if (!anyMaps?.importLibrary) {
-      const err = new Error("importLibrary no disponible - versión de Google Maps muy antigua")
-      logger.error?.("[GoogleMapsLoader] importLibrary no existe", err)
-      throw err // ❌ FATAL: sin importLibrary no podemos cargar Places
+      logger.warn?.(
+        "[GoogleMapsLoader] ⚠️ importLibrary no disponible - usando método LEGACY"
+      )
+      logger.warn?.(
+        "[GoogleMapsLoader] ⚠️ Esto significa que la versión de Google Maps es antigua (<3.50)"
+      )
+      
+      // En el método legacy, las libraries se cargan con el parámetro &libraries= en la URL
+      // Así que simplemente esperamos a que Places aparezca
+      if (libraries.includes("places")) {
+        try {
+          await this.waitForPlaces(15000) // 15s de timeout
+          logger.info?.("[GoogleMapsLoader] ✅ Places API cargada via método LEGACY")
+          return
+        } catch (e) {
+          logger.error?.("[GoogleMapsLoader] ❌ Places API no disponible ni con método legacy")
+          throw e
+        }
+      }
+      return // Sin places, simplemente continuar
     }
 
+    // ✅ MÉTODO MODERNO: importLibrary() disponible
     try {
       logger.debug?.("[GoogleMapsLoader] 🔄 Cargando libraries modernas:", libraries)
       
