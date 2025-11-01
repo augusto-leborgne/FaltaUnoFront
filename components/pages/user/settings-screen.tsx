@@ -5,13 +5,12 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { UserAvatar } from "@/components/ui/user-avatar"
 import { ArrowLeft, Camera, Save, Bell, AlertCircle, Trash2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { useAuth } from "@/hooks/use-auth"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import { getUserPhotoUrl } from "@/lib/api"
 
 const positions = ["Portero", "Defensa", "Mediocampista", "Delantero"]
 
@@ -105,12 +104,10 @@ export function SettingsScreen() {
         return
       }
 
-      // Construir URL de foto de perfil (siempre intentar cargar si hay userId)
-      // El endpoint devuelve 404 si no hay foto, y el navegador mostrará el fallback
-      // ✅ AGREGAR TIMESTAMP para evitar cache y asegurar foto más reciente
-      if (user.id) {
-        const photoUrl = getUserPhotoUrl(user.id) + `?t=${Date.now()}`
-        setAvatar(photoUrl)
+      // Construir URL de foto de perfil desde el objeto user
+      // user.foto_perfil viene en base64 desde el backend
+      if (user.foto_perfil) {
+        setAvatar(user.foto_perfil)
       }
 
       setFormData({
@@ -216,10 +213,9 @@ export function SettingsScreen() {
       // 5. Actualizar avatar con la nueva foto si se subió
       if (photoFile) {
         const currentUser = AuthService.getUser()
-        if (currentUser?.id) {
-          // Forzar recarga de la foto agregando timestamp para evitar cache
-          const photoUrl = getUserPhotoUrl(currentUser.id) + `?t=${Date.now()}`
-          setAvatar(photoUrl)
+        if (currentUser?.foto_perfil) {
+          // El refreshUser() ya trajo la nueva foto en base64
+          setAvatar(currentUser.foto_perfil)
           setPhotoFile(null)
         }
       }
@@ -306,12 +302,6 @@ export function SettingsScreen() {
     )
   }
 
-  const initials = `${formData.name} ${formData.surname}`.trim()
-    .split(" ")
-    .map(n => n[0])
-    .join("")
-    .toUpperCase()
-
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
@@ -360,15 +350,12 @@ export function SettingsScreen() {
         {/* Profile Photo */}
         <div className="text-center mb-8">
           <div className="relative inline-block">
-            <Avatar className="w-24 h-24">
-              <AvatarImage 
-                src={avatar || undefined} 
-                alt="Foto de perfil"
-              />
-              <AvatarFallback className="bg-orange-100 text-orange-600 text-2xl font-semibold">
-                {initials || '?'}
-              </AvatarFallback>
-            </Avatar>
+            <UserAvatar 
+              photo={avatar || null}
+              name={formData.name}
+              surname={formData.surname}
+              className="w-24 h-24"
+            />
             <label className="absolute -bottom-2 -right-2 bg-green-600 text-white rounded-full p-2 shadow-lg cursor-pointer hover:bg-green-700 transition-colors">
               <Camera className="w-4 h-4" />
               <input 
