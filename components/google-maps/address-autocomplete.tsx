@@ -430,7 +430,7 @@ export function AddressAutocomplete({
 
       {/* Mensaje de error de validación */}
       {validationError && (
-        <div className="mt-1 text-xs text-red-600">
+        <div className="mt-2 text-xs text-red-600">
           {validationError}
         </div>
       )}

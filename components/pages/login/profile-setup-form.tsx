@@ -496,7 +496,7 @@ export function ProfileSetupForm() {
               placeholder="Ubicación *"
             />
             {fieldErrors.address && (
-              <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
+              <p className="text-sm text-red-500 mt-2 flex items-center gap-1">
                 <AlertCircle className="w-4 h-4" />
                 {fieldErrors.address}
               </p>

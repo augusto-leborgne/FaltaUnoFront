@@ -532,20 +532,15 @@ export function CreateMatchScreen() {
           <label className="block text-sm font-medium text-gray-900 mb-2">
             Ubicación <span className="text-red-500">*</span>
           </label>
-          <div className="relative">
-            <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 z-10 pointer-events-none" />
-            <div className="pl-10">
-              <AddressAutocomplete
-                value={formData.location}
-                onChange={handleLocationChange}
-                placeholder="Ej: Polideportivo Norte, Montevideo"
-                required
-                disabled={isLoading}
-              />
-            </div>
-          </div>
+          <AddressAutocomplete
+            value={formData.location}
+            onChange={handleLocationChange}
+            placeholder="Ej: Polideportivo Norte, Montevideo"
+            required
+            disabled={isLoading}
+          />
           {fieldErrors.location && (
-            <p className="text-xs text-red-600 mt-1 flex items-center">
+            <p className="text-xs text-red-600 mt-2 flex items-center">
               <AlertCircle className="w-3 h-3 mr-1" />
               {fieldErrors.location}
             </p>
