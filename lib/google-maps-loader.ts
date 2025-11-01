@@ -155,31 +155,53 @@ class GoogleMapsLoader {
 
   // ✅ 100% MODERNO: Carga libraries con importLibrary() (requiere Google Maps v3.50+)
   private async postLoadImports(libraries: string[]): Promise<void> {
-    const anyMaps: any = (window as any).google?.maps
+    const g = (window as any).google
+    const anyMaps: any = g?.maps
     
-    if (!anyMaps?.importLibrary) {
+    // 🔍 Buscar importLibrary en diferentes ubicaciones posibles
+    const importLib = 
+      anyMaps?.importLibrary ||           // Ubicación estándar
+      g?.maps?.importLibrary ||           // Alternativa
+      (window as any).importLibrary ||    // Global
+      anyMaps?.loader?.importLibrary      // En loader object
+    
+    logger.info?.("[GoogleMapsLoader] 🔍 Buscando importLibrary...")
+    logger.info?.("[GoogleMapsLoader] 🔍 google.maps.importLibrary:", !!anyMaps?.importLibrary)
+    logger.info?.("[GoogleMapsLoader] 🔍 window.google.maps.importLibrary:", !!g?.maps?.importLibrary)
+    logger.info?.("[GoogleMapsLoader] 🔍 window.importLibrary:", !!(window as any).importLibrary)
+    logger.info?.("[GoogleMapsLoader] 🔍 google.maps.loader:", !!anyMaps?.loader)
+    logger.info?.("[GoogleMapsLoader] 🔍 Todas las keys de google.maps:", Object.keys(anyMaps || {}))
+    
+    if (!importLib) {
       const err = new Error(
-        "importLibrary no disponible - la API Key puede tener restricciones que fuerzan una versión antigua de Google Maps. " +
-        "Verifica en Google Cloud Console que la API Key NO tenga restricciones de versión."
+        `importLibrary no disponible en ninguna ubicación conocida.\n` +
+        `Versión: ${anyMaps?.version || 'unknown'}\n` +
+        `La API Key puede tener restricciones. Verifica en Google Cloud Console que NO tenga restricciones de versión.\n` +
+        `Propiedades disponibles en google.maps: ${Object.keys(anyMaps || {}).join(', ')}`
       )
       logger.error?.("[GoogleMapsLoader] ❌ importLibrary no existe")
-      logger.error?.("[GoogleMapsLoader] ❌ Versión actual:", (window as any).google?.maps?.version)
+      logger.error?.("[GoogleMapsLoader] ❌ Versión actual:", anyMaps?.version)
       logger.error?.("[GoogleMapsLoader] ❌ Versión requerida: 3.50+")
       throw err
     }
 
     try {
       logger.debug?.("[GoogleMapsLoader] 🔄 Cargando libraries modernas:", libraries)
-      logger.debug?.("[GoogleMapsLoader] � Versión de Google Maps:", anyMaps.version)
+      logger.debug?.("[GoogleMapsLoader] 📍 Versión de Google Maps:", anyMaps.version)
+      logger.debug?.("[GoogleMapsLoader] 🔧 Usando importLibrary desde:", 
+        anyMaps?.importLibrary ? 'google.maps.importLibrary' :
+        (window as any).importLibrary ? 'window.importLibrary' :
+        anyMaps?.loader?.importLibrary ? 'google.maps.loader.importLibrary' : 'unknown'
+      )
       
       // ✅ SIEMPRE cargar 'maps' primero (base)
-      await anyMaps.importLibrary("maps")
+      await importLib("maps")
       logger.debug?.("[GoogleMapsLoader] ✅ Library 'maps' cargada")
       
       // ✅ Cargar cada library solicitada
       for (const lib of libraries) {
         if (lib === "places") {
-          await anyMaps.importLibrary("places")
+          await importLib("places")
           logger.debug?.("[GoogleMapsLoader] ✅ Library 'places' cargada")
           
           // ✅ VERIFICAR que Places esté disponible
@@ -190,7 +212,7 @@ class GoogleMapsLoader {
       
       // ✅ Marker moderno (opcional pero recomendado)
       try {
-        await anyMaps.importLibrary("marker")
+        await importLib("marker")
         logger.debug?.("[GoogleMapsLoader] ✅ Library 'marker' cargada")
       } catch {
         logger.warn?.("[GoogleMapsLoader] ⚠️ Library 'marker' no disponible (opcional)")
