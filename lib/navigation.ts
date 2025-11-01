@@ -69,9 +69,9 @@ function needsIdVerification(user?: Usuario | null): boolean {
   if (isApprovedStatus(estado)) return false
   if (isPendingOrFailedStatus(estado)) return true
 
-  // ✅ CORRECCIÓN: Si no hay información de verificación, requiere verificación
-  // (asumimos que usuarios nuevos necesitan verificar su cédula)
-  return true
+  // ✅ FIX: Si no hay información explícita de verificación, NO requerimos verificación
+  // (cedulaVerificada es opcional - si está undefined, asumimos que está OK)
+  return false
 }
 
 // API pública ---------------------------------------------------------
