@@ -117,9 +117,15 @@ export function AddressAutocomplete({
       const request: any = {
         input: input.trim(),
         includedPrimaryTypes: ['street_address', 'premise', 'subpremise', 'establishment'], // Direcciones y lugares específicos
-        locationRestriction: {
-          country: 'uy', // Restringir a Uruguay
+        // ✅ CORRECTO: locationRestriction debe ser un objeto con circle o rectangle
+        locationBias: {
+          circle: {
+            center: { lat: -34.9011, lng: -56.1645 }, // Montevideo, Uruguay
+            radius: 500000, // 500km (cubre todo Uruguay)
+          }
         },
+        // ✅ CORRECTO: includedRegionCodes en vez de locationRestriction.country
+        includedRegionCodes: ['UY'], // ISO 3166-1 alpha-2 code
         sessionToken: sessionTokenRef.current || undefined,
       };
 
