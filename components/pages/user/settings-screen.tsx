@@ -107,8 +107,9 @@ export function SettingsScreen() {
 
       // Construir URL de foto de perfil (siempre intentar cargar si hay userId)
       // El endpoint devuelve 404 si no hay foto, y el navegador mostrará el fallback
+      // ✅ AGREGAR TIMESTAMP para evitar cache y asegurar foto más reciente
       if (user.id) {
-        const photoUrl = getUserPhotoUrl(user.id)
+        const photoUrl = getUserPhotoUrl(user.id) + `?t=${Date.now()}`
         setAvatar(photoUrl)
       }
 
