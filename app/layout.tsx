@@ -35,21 +35,12 @@ export const metadata: Metadata = {
     siteName: "Falta Uno",
     title: "Falta Uno - Encuentra tu partido de fútbol",
     description: "Conecta con jugadores, organiza partidos y juega fútbol en tu ciudad. La plataforma que une a la comunidad futbolera.",
-    images: [
-      {
-        url: "/images/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Falta Uno - Encuentra tu partido de fútbol",
-      },
-    ],
   },
   // Twitter Card metadata
   twitter: {
-    card: "summary_large_image",
+    card: "summary",
     title: "Falta Uno - Encuentra tu partido de fútbol",
     description: "Conecta con jugadores, organiza partidos y juega fútbol en tu ciudad.",
-    images: ["/images/og-image.png"],
   },
 }
 
