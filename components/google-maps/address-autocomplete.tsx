@@ -50,8 +50,9 @@ export function AddressAutocomplete({
   useEffect(() => {
     let mounted = true;
 
+    // ✅ Explícitamente solicitar Places API
     googleMapsLoader
-      .load()
+      .load({ libraries: ["places"] })
       .then(() => {
         if (!mounted) return;
 
