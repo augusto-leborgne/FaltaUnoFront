@@ -24,7 +24,7 @@ class GoogleMapsLoader {
       libraries = ["places"],
       language = "es",
       region = "UY",
-      v = "weekly",
+      v = "quarterly", // ✅ Versión estable en vez de weekly
       channel = "faltauno",
       nonce,
       forceRetry = false,
@@ -71,22 +71,22 @@ class GoogleMapsLoader {
       throw err
     }
 
-    // Si el script ya existe, esperar a que “aparezca” google.maps
+    // Si el script ya existe, esperar a que "aparezca" google.maps
     const existing = document.getElementById(this.scriptId) as HTMLScriptElement | null
     if (existing) {
       this.loading = true
-      this.pendingPromise = this.waitForGoogle(10000)
+      this.pendingPromise = this.waitForGoogle(15000) // ✅ Más tiempo: 15s
         .then(() => this.postLoadImports(libraries))
         .then(() => this.setLoaded())
         .catch((e) => this.setError(e))
       return this.pendingPromise
     }
 
-    // Inyección del script una sola vez
-    const libsParam = libraries.length ? `&libraries=${libraries.join(",")}` : ""
+    // ✅ MODERNO: Solo loading=async, SIN libraries= en URL
+    // Las libraries se cargan con importLibrary() después
     const params = `key=${encodeURIComponent(apiKey)}&loading=async&v=${encodeURIComponent(
       v
-    )}${libsParam}&language=${encodeURIComponent(language)}&region=${encodeURIComponent(
+    )}&language=${encodeURIComponent(language)}&region=${encodeURIComponent(
       region
     )}&channel=${encodeURIComponent(channel)}`
     const src = `https://maps.googleapis.com/maps/api/js?${params}`
@@ -103,8 +103,12 @@ class GoogleMapsLoader {
     this.pendingPromise = new Promise<void>((resolve, reject) => {
       script.onload = async () => {
         try {
-          await this.waitForGoogle(5000)
-          await this.postLoadImports(libraries) // carga moderna de módulos si está disponible
+          // ✅ Más tiempo para esperar google.maps
+          await this.waitForGoogle(10000) // 10s en vez de 5s
+          
+          // ✅ CRÍTICO: Cargar libraries de forma moderna
+          await this.postLoadImports(libraries)
+          
           this.setLoaded()
           resolve()
         } catch (e) {
@@ -114,7 +118,6 @@ class GoogleMapsLoader {
       }
       script.onerror = (event) => {
         const err = new Error("Error al cargar el script de Google Maps")
-        // Log extendido pero NUNCA la API key
         logger.error?.("[GoogleMapsLoader] onerror", event)
         this.setError(err)
         reject(err)
@@ -140,30 +143,74 @@ class GoogleMapsLoader {
     })
   }
 
-  // Importa módulos modernos si existe google.maps.importLibrary (v3.49+)
-  private async postLoadImports(libraries: string[]) {
+  // ✅ MODERNO: Carga libraries con importLibrary() (Google Maps v3.49+)
+  private async postLoadImports(libraries: string[]): Promise<void> {
+    const anyMaps: any = (window as any).google?.maps
+    
+    if (!anyMaps?.importLibrary) {
+      const err = new Error("importLibrary no disponible - versión de Google Maps muy antigua")
+      logger.error?.("[GoogleMapsLoader] importLibrary no existe", err)
+      throw err // ❌ FATAL: sin importLibrary no podemos cargar Places
+    }
+
     try {
-      const anyMaps: any = (window as any).google?.maps
-      if (!anyMaps?.importLibrary) return
-      // Siempre asegurar 'maps' base
+      logger.debug?.("[GoogleMapsLoader] 🔄 Cargando libraries modernas:", libraries)
+      
+      // ✅ SIEMPRE cargar 'maps' primero (base)
       await anyMaps.importLibrary("maps")
-      // Módulos equivalentes a los clásicos libraries
-      // places -> importLibrary('places'); marker se usa para Marker avanzado
+      logger.debug?.("[GoogleMapsLoader] ✅ Library 'maps' cargada")
+      
+      // ✅ Cargar cada library solicitada
       for (const lib of libraries) {
         if (lib === "places") {
           await anyMaps.importLibrary("places")
+          logger.debug?.("[GoogleMapsLoader] ✅ Library 'places' cargada")
+          
+          // ✅ VERIFICAR que Places esté disponible
+          await this.waitForPlaces(10000) // Esperar hasta 10s
         }
+        // Otros libraries si se agregan en el futuro
       }
-      // Marker moderno (si lo usás)
+      
+      // ✅ Marker moderno (opcional pero recomendado)
       try {
         await anyMaps.importLibrary("marker")
+        logger.debug?.("[GoogleMapsLoader] ✅ Library 'marker' cargada")
       } catch {
-        /* opcional */
+        logger.warn?.("[GoogleMapsLoader] ⚠️ Library 'marker' no disponible (opcional)")
       }
+      
+      logger.info?.("[GoogleMapsLoader] 🎉 Todas las libraries cargadas exitosamente")
     } catch (e) {
-      // No es fatal: si falla importLibrary, aún podemos usar la API clásica
-      logger.warn?.("[GoogleMapsLoader] importLibrary falló (no bloqueante)", e)
+      const err = e instanceof Error ? e : new Error("Error desconocido cargando libraries")
+      logger.error?.("[GoogleMapsLoader] ❌ Error cargando libraries:", err)
+      throw err // ❌ FATAL: si falla Places, todo el loader falla
     }
+  }
+
+  // ✅ NUEVO: Esperar específicamente a que Places API esté disponible
+  private waitForPlaces(timeoutMs: number): Promise<void> {
+    const started = performance.now()
+    return new Promise<void>((resolve, reject) => {
+      const tick = () => {
+        const maps = (window as any).google?.maps
+        
+        // ✅ Verificar que window.google.maps.places exista
+        if (maps?.places) {
+          logger.debug?.("[GoogleMapsLoader] ✅ Places API disponible")
+          return resolve()
+        }
+        
+        if (performance.now() - started > timeoutMs) {
+          const err = new Error(`Timeout esperando Places API después de ${timeoutMs}ms`)
+          logger.error?.("[GoogleMapsLoader] ❌ Timeout Places API")
+          return reject(err)
+        }
+        
+        requestAnimationFrame(tick)
+      }
+      tick()
+    })
   }
 
   private setLoaded() {

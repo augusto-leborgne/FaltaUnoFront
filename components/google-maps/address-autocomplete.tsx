@@ -50,52 +50,57 @@ export function AddressAutocomplete({
   useEffect(() => {
     let mounted = true;
 
-    // ✅ Explícitamente solicitar Places API
-    googleMapsLoader
-      .load({ libraries: ["places"] })
-      .then(() => {
+    const loadMaps = async () => {
+      try {
+        console.log("[AddressAutocomplete] 🔄 Iniciando carga de Google Maps...");
+        
+        // ✅ Explícitamente solicitar Places API con timeout generoso
+        await googleMapsLoader.load({ 
+          libraries: ["places"],
+          forceRetry: false 
+        });
+        
         if (!mounted) return;
 
-        try {
-          // Inicializar servicios
-          if (window.google?.maps?.places) {
-            autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
-            
-            // Para PlacesService necesitamos un elemento del DOM
-            // Usamos un div oculto
-            const dummyDiv = document.createElement("div");
-            placesServiceRef.current = new window.google.maps.places.PlacesService(dummyDiv);
-            
-            // Crear session token para optimizar requests
-            sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
-            
-            console.log("✅ [AddressAutocomplete] Servicios de Google Maps inicializados");
-            setIsLoadingMaps(false);
-          } else {
-            // ⚠️ Places API no está disponible - podría ser por:
-            // 1. API key inválida o sin permisos para Places API
-            // 2. Script de Google Maps no cargó completamente
-            // 3. Bloqueador de contenido/ad-blocker
-            console.warn("⚠️ [AddressAutocomplete] Google Maps cargado pero Places API no disponible");
-            console.warn("Verificar: API key tiene Places API habilitado, script cargó correctamente");
-            
-            // No lanzar error - permitir que el componente funcione sin autocompletado
-            setMapsError("Places API no disponible. El autocompletado puede no funcionar.");
-            setIsLoadingMaps(false);
-          }
-        } catch (error) {
-          console.error("❌ [AddressAutocomplete] Error inicializando servicios:", error);
-          setMapsError("Error al inicializar Google Maps");
+        console.log("[AddressAutocomplete] ✅ Google Maps loader completado");
+
+        // ✅ Verificar que Places esté disponible
+        if (window.google?.maps?.places) {
+          console.log("[AddressAutocomplete] ✅ Places API detectada, inicializando servicios...");
+          
+          autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
+          
+          // Para PlacesService necesitamos un elemento del DOM
+          const dummyDiv = document.createElement("div");
+          placesServiceRef.current = new window.google.maps.places.PlacesService(dummyDiv);
+          
+          // Crear session token para optimizar requests
+          sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
+          
+          console.log("✅ [AddressAutocomplete] Servicios de Google Maps inicializados correctamente");
+          setIsLoadingMaps(false);
+        } else {
+          // ❌ Places API no está disponible después de esperar
+          console.error("❌ [AddressAutocomplete] Places API NO disponible después de cargar");
+          console.error("Verificar:");
+          console.error("- API key en NEXT_PUBLIC_GOOGLE_MAPS_API_KEY");
+          console.error("- Places API habilitada en Google Cloud Console");
+          console.error("- Restricciones de API key permiten el dominio");
+          
+          setMapsError("Places API no disponible. Verifica la configuración de la API key.");
           setIsLoadingMaps(false);
         }
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("❌ [AddressAutocomplete] Error cargando Google Maps:", error);
         if (mounted) {
-          setMapsError(error.message || "Error al cargar Google Maps");
+          const errorMsg = error instanceof Error ? error.message : "Error desconocido";
+          setMapsError(`Error al cargar Google Maps: ${errorMsg}`);
           setIsLoadingMaps(false);
         }
-      });
+      }
+    };
+
+    loadMaps();
 
     return () => {
       mounted = false;
