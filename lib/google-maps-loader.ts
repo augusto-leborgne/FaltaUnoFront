@@ -84,7 +84,7 @@ class GoogleMapsLoader {
 
     // Inyección del script una sola vez
     const libsParam = libraries.length ? `&libraries=${libraries.join(",")}` : ""
-    const params = `key=${encodeURIComponent(apiKey)}&v=${encodeURIComponent(
+    const params = `key=${encodeURIComponent(apiKey)}&loading=async&v=${encodeURIComponent(
       v
     )}${libsParam}&language=${encodeURIComponent(language)}&region=${encodeURIComponent(
       region
