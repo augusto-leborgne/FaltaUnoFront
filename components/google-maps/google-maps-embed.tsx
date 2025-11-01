@@ -3,7 +3,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { googleMapsLoader } from "@/lib/google-maps-loader";
-import { MapPin, Loader2, AlertCircle } from "lucide-react";
+import { MapPin, AlertCircle } from "lucide-react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface Marker {
   lat: number;
@@ -172,10 +173,7 @@ export function GoogleMapsEmbed({
         style={{ width, height }}
       >
         <div className="w-full h-full bg-gradient-to-br from-green-100 to-blue-100 flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="w-8 h-8 text-green-600 animate-spin mx-auto mb-2" />
-            <p className="text-sm text-gray-600">Cargando mapa...</p>
-          </div>
+          <LoadingSpinner size="md" variant="green" text="Cargando mapa..." />
         </div>
       </div>
     );

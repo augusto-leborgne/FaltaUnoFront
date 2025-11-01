@@ -8,6 +8,7 @@ import { Shield, CheckCircle, AlertCircle } from "lucide-react";
 import { UsuarioAPI } from "@/lib/api";
 import { AuthService } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export function VerificationScreen() {
   const router = useRouter();
@@ -163,8 +164,7 @@ export function VerificationScreen() {
         </form>
         {isVerifying && (
           <div className="mt-8 text-center">
-            <div className="animate-spin w-8 h-8 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-            <p className="text-gray-600">Consultando registro uruguayo...</p>
+            <LoadingSpinner size="xl" variant="green" text="Consultando registro uruguayo..." />
           </div>
         )}
       </div>

@@ -7,6 +7,7 @@ import { ArrowLeft, Check } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { API_BASE } from "@/lib/api"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 interface FriendRequestScreenProps {
   userId: string
@@ -97,10 +98,7 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
   if (loadingData) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin w-12 h-12 border-4 border-green-600 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando...</p>
-        </div>
+        <LoadingSpinner size="xl" variant="green" text="Cargando..." />
       </div>
     )
   }

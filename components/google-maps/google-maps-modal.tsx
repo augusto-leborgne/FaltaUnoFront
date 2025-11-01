@@ -3,6 +3,7 @@ import React, { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { X, ExternalLink } from "lucide-react";
 import { useGoogleMaps } from "@/lib/google-maps-loader"; // adjust path
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 interface GoogleMapsModalProps {
   isOpen: boolean;
@@ -98,10 +99,7 @@ export function GoogleMapsModal({ isOpen, onClose, location, lat, lng }: GoogleM
           <div ref={mapRef} className="absolute inset-0 w-full h-full">
             {!isLoaded && (
               <div className="absolute inset-0 bg-gradient-to-br from-green-100 to-blue-100 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-8 h-8 border-2 border-green-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                  <p className="text-sm text-gray-600">Cargando Google Maps...</p>
-                </div>
+                <LoadingSpinner size="md" variant="green" text="Cargando Google Maps..." />
               </div>
             )}
             {error && (

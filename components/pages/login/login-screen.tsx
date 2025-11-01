@@ -8,6 +8,7 @@ import { UsuarioAPI, Usuario, API_BASE } from "@/lib/api"
 import { AuthService } from "@/lib/auth"
 import { useAuth } from "@/hooks/use-auth"
 import { usePostAuthRedirect } from "@/lib/navigation" // ← decide /profile-setup o /home
+import { InlineSpinner } from "@/components/ui/loading-spinner"
 
 export function LoginScreen() {
   const router = useRouter()
@@ -190,7 +191,7 @@ export function LoginScreen() {
           >
             {isLoading ? (
               <div className="flex items-center justify-center gap-2">
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <InlineSpinner variant="white" />
                 <span>Entrando...</span>
               </div>
             ) : (

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { MapPin, X, Calendar, Users, Navigation } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useGoogleMaps } from "@/lib/google-maps-loader"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 interface PartidoMapData {
   id: string
@@ -213,11 +214,7 @@ export function SearchMapView({ partidos, onClose, onPartidoClick }: SearchMapVi
         >
           {!isLoaded && (
             <div className="absolute inset-0 bg-gradient-to-br from-green-100 to-blue-100 flex items-center justify-center">
-              <div className="text-center">
-                <MapPin className="w-12 h-12 text-gray-600 mx-auto mb-4 animate-pulse" />
-                <p className="text-gray-600 mb-2">Cargando mapa...</p>
-                <div className="animate-spin w-6 h-6 border-4 border-green-600 border-t-transparent rounded-full mx-auto"></div>
-              </div>
+              <LoadingSpinner size="md" variant="green" text="Cargando mapa..." />
             </div>
           )}
           {error && (
