@@ -8,7 +8,7 @@ import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { Clock, Calendar, Star, Bell, Newspaper, TrendingUp, Award } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
-import { API_BASE } from "@/lib/api"
+import { API_BASE, InscripcionAPI, InscripcionEstado } from "@/lib/api"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useNotifications } from "@/hooks/use-notifications"
 
@@ -177,7 +177,22 @@ export function HomeScreen() {
     }
   }
 
-  const handleMatchClick = (matchId: string) => router.push(`/matches/${matchId}`)
+  const handleMatchClick = async (matchId: string) => {
+    // Verificar si el usuario está inscrito y aceptado
+    const user = AuthService.getUser()
+    if (user) {
+      try {
+        const estadoResponse = await InscripcionAPI.getEstado(matchId, user.id)
+        if (estadoResponse.success && estadoResponse.data?.estado === InscripcionEstado.ACEPTADO) {
+          router.push(`/my-matches/${matchId}`)
+          return
+        }
+      } catch (err) {
+        console.error("[HomeScreen] Error verificando inscripción:", err)
+      }
+    }
+    router.push(`/matches/${matchId}`)
+  }
   const handleReviewMatch = (matchId: string) => router.push(`/matches/${matchId}/review`)
   const handleViewAllMatches = () => router.push("/matches")
   const handleNotifications = () => router.push("/notifications")

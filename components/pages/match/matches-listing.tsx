@@ -15,7 +15,9 @@ import {
   PartidoDTO, 
   PartidoEstado,
   TipoPartido, 
-  NivelPartido 
+  NivelPartido,
+  InscripcionAPI,
+  InscripcionEstado
 } from "@/lib/api"
 
 export function MatchesListing() {
@@ -29,6 +31,7 @@ export function MatchesListing() {
   const [searchQuery, setSearchQuery] = useState("")
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
   const [selectedMatchId, setSelectedMatchId] = useState<string | undefined>()
+  const [userInscriptions, setUserInscriptions] = useState<Map<string, { estado: InscripcionEstado | null }>>(new Map())
 
   // Filtros rápidos
   const quickFilters = [
@@ -131,6 +134,30 @@ export function MatchesListing() {
 
       setMatches(partidos)
 
+      // Cargar estados de inscripción del usuario para cada partido
+      const user = AuthService.getUser()
+      if (user && partidos.length > 0) {
+        const inscriptionsMap = new Map<string, { estado: InscripcionEstado | null }>()
+        
+        // Cargar estado de inscripción en paralelo
+        await Promise.all(
+          partidos.map(async (partido) => {
+            try {
+              const estadoResponse = await InscripcionAPI.getEstado(partido.id!, user.id)
+              if (estadoResponse.success && estadoResponse.data) {
+                inscriptionsMap.set(partido.id!, {
+                  estado: estadoResponse.data.estado
+                })
+              }
+            } catch (err) {
+              console.error(`[MatchesListing] Error cargando estado para partido ${partido.id}:`, err)
+            }
+          })
+        )
+        
+        setUserInscriptions(inscriptionsMap)
+      }
+
     } catch (err) {
       console.error("[MatchesListing] Error cargando partidos:", err)
       const errorMessage = err instanceof Error ? err.message : "Error al cargar partidos"
@@ -158,7 +185,16 @@ export function MatchesListing() {
   }
 
   const handleMatchClick = (matchId: string) => {
-    router.push(`/matches/${matchId}`)
+    // Verificar si el usuario está inscrito y aceptado
+    const inscripcion = userInscriptions.get(matchId)
+    
+    if (inscripcion?.estado === InscripcionEstado.ACEPTADO) {
+      // Usuario es miembro del partido → vista de miembro
+      router.push(`/my-matches/${matchId}`)
+    } else {
+      // Usuario no es miembro → vista externa
+      router.push(`/matches/${matchId}`)
+    }
   }
 
   const handleCreateMatch = () => {

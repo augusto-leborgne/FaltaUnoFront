@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { AuthService } from "@/lib/auth"
-import { API_BASE } from "@/lib/api"
+import { API_BASE, InscripcionAPI, InscripcionEstado } from "@/lib/api"
 import { SearchMapView } from "./search-map-view"
 
 interface SearchResult {
@@ -276,10 +276,25 @@ export function SearchScreen() {
     return true
   })
 
-  const handleResultClick = (result: SearchResult) => {
+  const handleResultClick = async (result: SearchResult) => {
     if (result.tipo === "usuario") {
       router.push(`/users/${result.id}`)
     } else {
+      // Para partidos, verificar si el usuario está inscrito y aceptado
+      const user = AuthService.getUser()
+      if (user) {
+        try {
+          const estadoResponse = await InscripcionAPI.getEstado(result.id, user.id)
+          if (estadoResponse.success && estadoResponse.data?.estado === InscripcionEstado.ACEPTADO) {
+            // Usuario es miembro → ir a vista de miembro
+            router.push(`/my-matches/${result.id}`)
+            return
+          }
+        } catch (err) {
+          console.error("[SearchScreen] Error verificando inscripción:", err)
+        }
+      }
+      // Usuario no es miembro o error → ir a vista externa
       router.push(`/matches/${result.id}`)
     }
   }
@@ -317,8 +332,23 @@ export function SearchScreen() {
       <SearchMapView
         partidos={partidosParaMapa}
         onClose={() => setShowMapView(false)}
-        onPartidoClick={(id) => {
+        onPartidoClick={async (id) => {
           setShowMapView(false)
+          
+          // Verificar inscripción del usuario
+          const user = AuthService.getUser()
+          if (user) {
+            try {
+              const estadoResponse = await InscripcionAPI.getEstado(id, user.id)
+              if (estadoResponse.success && estadoResponse.data?.estado === InscripcionEstado.ACEPTADO) {
+                router.push(`/my-matches/${id}`)
+                return
+              }
+            } catch (err) {
+              console.error("[SearchScreen] Error verificando inscripción:", err)
+            }
+          }
+          
           router.push(`/matches/${id}`)
         }}
       />

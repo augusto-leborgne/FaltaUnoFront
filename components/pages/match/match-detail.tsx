@@ -9,7 +9,7 @@ import { Star, ArrowLeft, Share2, MapPin, Users, DollarSign, Clock, AlertCircle 
 import { useRouter } from "next/navigation"
 import { CompressedMap } from "@/components/google-maps/compressed-map"
 import AuthService from "@/lib/auth"
-import { PartidoAPI, InscripcionAPI, PartidoDTO, PartidoEstado } from "@/lib/api"
+import { PartidoAPI, InscripcionAPI, PartidoDTO, PartidoEstado, InscripcionEstado } from "@/lib/api"
 import { formatMatchType, formatLevel, formatDate, getSpotsLeftColor } from "@/lib/utils"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
@@ -45,6 +45,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
   // Estado
   const [match, setMatch] = useState<PartidoDTO | null>(null)
   const [jugadores, setJugadores] = useState<any[]>([]) // ✅ NUEVO: Lista de jugadores inscritos
+  const [userInscriptionStatus, setUserInscriptionStatus] = useState<string | null>(null) // ✅ NUEVO: Estado de inscripción del usuario
   const [isJoining, setIsJoining] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string>("")
@@ -87,6 +88,19 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
       } catch (err) {
         console.error("[MatchDetail] Error cargando jugadores:", err)
         // No fallar si no se pueden cargar jugadores
+      }
+
+      // ✅ NUEVO: Cargar estado de inscripción del usuario
+      const user = AuthService.getUser()
+      if (user) {
+        try {
+          const estadoResponse = await InscripcionAPI.getEstado(matchId, user.id)
+          if (estadoResponse.success && estadoResponse.data) {
+            setUserInscriptionStatus(estadoResponse.data.estado)
+          }
+        } catch (err) {
+          console.error("[MatchDetail] Error cargando estado de inscripción:", err)
+        }
       }
     } catch (err: any) {
       if (err?.name !== "AbortError") {
@@ -443,6 +457,22 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 text-lg font-semibold rounded-2xl"
             >
               Gestionar partido
+            </Button>
+          ) : userInscriptionStatus === InscripcionEstado.ACEPTADO ? (
+            // ✅ Usuario ya está aceptado → botón para ver chat
+            <Button
+              onClick={() => router.push(`/my-matches/${matchId}`)}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 text-lg font-semibold rounded-2xl"
+            >
+              Ver chat del partido
+            </Button>
+          ) : userInscriptionStatus === InscripcionEstado.PENDIENTE ? (
+            // ✅ Usuario tiene solicitud pendiente
+            <Button
+              disabled
+              className="w-full bg-gray-400 text-white py-4 text-lg font-semibold rounded-2xl cursor-not-allowed"
+            >
+              Solicitud pendiente
             </Button>
           ) : (
             <>

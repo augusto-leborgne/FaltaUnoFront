@@ -4,11 +4,12 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Bell, CheckCheck, Trash2, Calendar, Users, UserPlus, MessageSquare, Star, TrendingUp, AlertCircle, ArrowLeft } from "lucide-react"
 import { useNotifications } from "@/hooks/use-notifications"
-import { TipoNotificacion, NotificacionDTO } from "@/lib/api"
+import { TipoNotificacion, NotificacionDTO, InscripcionAPI, InscripcionEstado } from "@/lib/api"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { AuthService } from "@/lib/auth"
 
 const tiposFiltro = [
   { label: "Todas", value: "todas" as const },
@@ -78,6 +79,19 @@ export function NotificationsScreen() {
     if (notif.url_accion) {
       router.push(notif.url_accion)
     } else if (notif.entidad_id && notif.entidad_tipo === "PARTIDO") {
+      // Verificar si el usuario está inscrito y aceptado
+      const user = AuthService.getUser()
+      if (user) {
+        try {
+          const estadoResponse = await InscripcionAPI.getEstado(notif.entidad_id, user.id)
+          if (estadoResponse.success && estadoResponse.data?.estado === InscripcionEstado.ACEPTADO) {
+            router.push(`/my-matches/${notif.entidad_id}`)
+            return
+          }
+        } catch (err) {
+          console.error("[Notifications] Error verificando inscripción:", err)
+        }
+      }
       router.push(`/matches/${notif.entidad_id}`)
     } else if (notif.entidad_id && notif.entidad_tipo === "USUARIO") {
       router.push(`/users/${notif.entidad_id}`)
