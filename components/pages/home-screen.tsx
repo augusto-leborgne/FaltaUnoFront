@@ -69,6 +69,19 @@ export function HomeScreen() {
   })
 
   useEffect(() => {
+    // ⚡ CRITICAL: Check auth before loading any data
+    const token = AuthService.getToken()
+    if (!token || AuthService.isTokenExpired(token)) {
+      router.replace("/login")
+      return
+    }
+
+    const user = AuthService.getUser()
+    if (!user?.id) {
+      router.replace("/login")
+      return
+    }
+
     loadData()
   }, [])
 
@@ -81,15 +94,16 @@ export function HomeScreen() {
 
   const loadData = async () => {
     try {
+      // Double-check auth before making requests
       const token = AuthService.getToken()
-      if (!token) {
-        router.push("/login")
+      if (!token || AuthService.isTokenExpired(token)) {
+        router.replace("/login")
         return
       }
 
       const user = AuthService.getUser()
       if (!user?.id) {
-        router.push("/login")
+        router.replace("/login")
         return
       }
 
