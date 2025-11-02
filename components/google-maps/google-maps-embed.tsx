@@ -36,7 +36,7 @@ export function GoogleMapsEmbed({
 }: GoogleMapsEmbedProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
-  const markersRef = useRef<google.maps.Marker[]>([]);
+  const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
   
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +46,7 @@ export function GoogleMapsEmbed({
 
     // Limpiar marcadores existentes
     const cleanupMarkers = () => {
-      markersRef.current.forEach(marker => marker.setMap(null));
+      markersRef.current.forEach(marker => marker.map = null);
       markersRef.current = [];
     };
 
@@ -79,36 +79,37 @@ export function GoogleMapsEmbed({
           streetViewControl: false,
           rotateControl: false,
           fullscreenControl: false,
-          styles: [
-            {
-              featureType: "poi",
-              elementType: "labels",
-              stylers: [{ visibility: "off" }],
-            },
-          ],
+          mapId: "google-maps-embed", // Requerido para AdvancedMarkerElement
         });
 
         mapInstanceRef.current = map;
 
         // Agregar marcadores
-        const newMarkers: google.maps.Marker[] = [];
+        const newMarkers: google.maps.marker.AdvancedMarkerElement[] = [];
 
         // Si no hay marcadores custom, agregar uno en el centro
         const markersList = markers.length > 0 ? markers : [{ lat, lng, title: "Ubicación" }];
 
         markersList.forEach((markerData) => {
-          const marker = new window.google.maps.Marker({
+          // Crear contenido HTML del marker
+          const markerContent = document.createElement("div")
+          markerContent.innerHTML = `
+            <div style="
+              background-color: #16a34a;
+              width: 16px;
+              height: 16px;
+              border-radius: 50%;
+              border: 2px solid white;
+              box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+              cursor: pointer;
+            "></div>
+          `
+
+          const marker = new window.google.maps.marker.AdvancedMarkerElement({
             position: { lat: markerData.lat, lng: markerData.lng },
             map,
+            content: markerContent,
             title: markerData.title || "",
-            icon: {
-              path: window.google.maps.SymbolPath.CIRCLE,
-              scale: 8,
-              fillColor: "#16a34a",
-              fillOpacity: 1,
-              strokeColor: "#ffffff",
-              strokeWeight: 2,
-            },
           });
 
           // Info window si hay info
@@ -134,7 +135,7 @@ export function GoogleMapsEmbed({
         if (newMarkers.length > 1) {
           const bounds = new window.google.maps.LatLngBounds();
           newMarkers.forEach(marker => {
-            const position = marker.getPosition();
+            const position = marker.position as google.maps.LatLngLiteral;
             if (position) bounds.extend(position);
           });
           map.fitBounds(bounds);

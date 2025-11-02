@@ -30,7 +30,7 @@ export function MatchesMapView({
   }, [])
 
   const googleMapRef = useRef<google.maps.Map | null>(null)
-  const markersRef = useRef<google.maps.Marker[]>([])
+  const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([])
   const [isMapReady, setIsMapReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -73,7 +73,6 @@ export function MatchesMapView({
         const map = new window.google.maps.Map(mapDivRef.current!, {
           center,
           zoom: matches.length > 0 ? 13 : 12, // Zoom 12-13 = ciudad, 13-15 = barrio
-          styles: [{ featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] }],
           mapTypeControl: false,
           streetViewControl: false,
           fullscreenControl: false,
@@ -81,6 +80,7 @@ export function MatchesMapView({
           zoomControlOptions: { position: window.google.maps.ControlPosition.RIGHT_CENTER },
           minZoom: 10, // Evitar zoom muy alejado (país/continente)
           maxZoom: 18,
+          mapId: "matches-map-view", // Requerido para AdvancedMarkerElement
         })
 
         googleMapRef.current = map
@@ -103,7 +103,7 @@ export function MatchesMapView({
       // Limpiar marcadores
       markersRef.current.forEach((marker) => {
         try {
-          marker.setMap(null)
+          marker.map = null
         } catch {
           /* noop */
         }
@@ -119,7 +119,7 @@ export function MatchesMapView({
     if (!isMapReady || !googleMapRef.current) return
 
     // Limpiar marcadores
-    markersRef.current.forEach((m) => m.setMap(null))
+    markersRef.current.forEach((m) => m.map = null)
     markersRef.current = []
 
     if (matches.length === 0) return
@@ -141,19 +141,40 @@ export function MatchesMapView({
       if (spotsLeft === 0) pinColor = "#ef4444" // rojo
       else if (spotsLeft <= 3) pinColor = "#f59e0b" // ámbar
 
-      const marker = new window.google.maps.Marker({
+      // Crear contenido HTML del marker
+      const markerContent = document.createElement("div")
+      markerContent.innerHTML = `
+        <div style="
+          background-color: ${pinColor};
+          width: ${isSelected ? '24px' : '20px'};
+          height: ${isSelected ? '24px' : '20px'};
+          border-radius: 50%;
+          border: ${isSelected ? '3px' : '2px'} solid white;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-size: 10px;
+          font-weight: bold;
+          cursor: pointer;
+          ${isSelected ? 'animation: bounce 0.75s;' : ''}
+        ">
+          ${spotsLeft > 0 ? spotsLeft : ''}
+        </div>
+        <style>
+          @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+          }
+        </style>
+      `
+
+      const marker = new window.google.maps.marker.AdvancedMarkerElement({
         position: { lat, lng },
         map: googleMapRef.current!,
-        icon: {
-          path: window.google.maps.SymbolPath.CIRCLE,
-          scale: isSelected ? 12 : 10,
-          fillColor: pinColor,
-          fillOpacity: 1,
-          strokeColor: "white",
-          strokeWeight: isSelected ? 3 : 2,
-        },
+        content: markerContent,
         title: match.nombreUbicacion || "Partido",
-        animation: isSelected ? window.google.maps.Animation.BOUNCE : undefined,
       })
 
       const infoWindow = new window.google.maps.InfoWindow({
@@ -163,11 +184,6 @@ export function MatchesMapView({
       marker.addListener("click", () => {
         if (onMarkerClick && match.id) onMarkerClick(match.id)
         infoWindow.open(googleMapRef.current!, marker)
-      })
-
-      marker.addListener("mouseover", () => {
-        marker.setAnimation(window.google.maps.Animation.BOUNCE)
-        window.setTimeout(() => marker.setAnimation(null), 750)
       })
 
       markersRef.current.push(marker)
