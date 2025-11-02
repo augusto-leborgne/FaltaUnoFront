@@ -158,8 +158,8 @@ const nextConfig = {
       },
     },
     
-    // ⚡ Optimize CSS
-    optimizeCss: true,
+    // ⚡ Optimize CSS - DISABLED: requires critters package
+    // optimizeCss: true,
     
     // ⚡ Use SWC for faster compilation
     swcPlugins: [],

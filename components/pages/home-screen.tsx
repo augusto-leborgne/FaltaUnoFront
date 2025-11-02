@@ -5,13 +5,20 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
-import { Clock, Calendar, Star, Bell, Newspaper, TrendingUp, Award } from "lucide-react"
+import { Clock, Calendar, Star, Bell, Newspaper, TrendingUp, Award, X } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { API_BASE, InscripcionAPI, InscripcionEstado, getUserPhotoUrl } from "@/lib/api"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useNotifications } from "@/hooks/use-notifications"
 import { useCurrentUser } from "@/hooks/use-current-user"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 interface NewsUpdate {
   id: string
@@ -54,6 +61,8 @@ export function HomeScreen() {
   const [newsUpdates, setNewsUpdates] = useState<NewsUpdate[]>([])
   const [isLoading, setIsLoading] = useState(false) // Cambiar a false para mostrar UI rápido
   const [userPhotoUrl, setUserPhotoUrl] = useState<string | null>(null)
+  const [selectedNews, setSelectedNews] = useState<NewsUpdate | null>(null)
+  const [isNewsDialogOpen, setIsNewsDialogOpen] = useState(false)
   const [communityStats, setCommunityStats] = useState({
     activeUsers: 0,
     matchesThisWeek: 0,
@@ -202,6 +211,11 @@ export function HomeScreen() {
   const handleReviewMatch = (matchId: string) => router.push(`/matches/${matchId}/review`)
   const handleViewAllMatches = () => router.push("/matches")
   const handleNotifications = () => router.push("/notifications")
+  
+  const handleNewsClick = (news: NewsUpdate) => {
+    setSelectedNews(news)
+    setIsNewsDialogOpen(true)
+  }
 
   const getNewsIcon = (type: string) => {
     switch (type) {
@@ -330,6 +344,7 @@ export function HomeScreen() {
           {newsUpdates.map((news) => (
             <div
               key={news.id}
+              onClick={() => handleNewsClick(news)}
               className="bg-card rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 touch-manipulation active:scale-[0.98] border border-border/50"
             >
               <div className="p-3 sm:p-5">
@@ -429,6 +444,39 @@ export function HomeScreen() {
           </div>
         )}
       </div>
+
+      {/* News Detail Dialog */}
+      <Dialog open={isNewsDialogOpen} onOpenChange={setIsNewsDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              {selectedNews && getNewsIcon(selectedNews.type)}
+              <DialogTitle className="text-xl sm:text-2xl">
+                {selectedNews?.title}
+              </DialogTitle>
+            </div>
+            {selectedNews?.tags && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {selectedNews.tags.map((tag) => (
+                  <Badge key={tag} variant="secondary" className="text-xs">
+                    #{tag}
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </DialogHeader>
+          <div className="mt-4">
+            <p className="text-sm sm:text-base text-foreground leading-relaxed whitespace-pre-wrap">
+              {selectedNews?.description}
+            </p>
+            <div className="mt-6 pt-4 border-t border-border">
+              <p className="text-sm text-muted-foreground">
+                {selectedNews?.date}
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <BottomNavigation />
     </div>
