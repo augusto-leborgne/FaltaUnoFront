@@ -103,16 +103,46 @@ export class AuthService {
   static setUser(user: Usuario): void {
     if (typeof window === "undefined") return
     try {
-      const normalized: any = {
-        ...user,
-        foto_perfil: (user as any).foto_perfil || (user as any).fotoPerfil || undefined,
+      // ⚡ CRÍTICO: NO guardar foto_perfil en localStorage (puede exceder quota)
+      // La foto se carga desde el servidor cuando se necesita
+      const { foto_perfil, fotoPerfil, ...userWithoutPhoto } = user as any
+      
+      const normalized = {
+        ...userWithoutPhoto,
+        // Guardar solo un flag indicando si tiene foto
+        hasFotoPerfil: !!(foto_perfil || fotoPerfil)
       }
-      delete normalized.fotoPerfil
+      
       localStorage.setItem(USER_KEY, JSON.stringify(normalized))
-      logger?.debug?.("[AuthService] Usuario guardado:", normalized?.email)
-      window.dispatchEvent(new CustomEvent("userUpdated", { detail: normalized }))
+      logger?.debug?.("[AuthService] Usuario guardado (sin foto):", normalized?.email)
+      
+      // ⚡ OPCIONAL: Guardar foto en IndexedDB si existe (mejor para datos grandes)
+      // Por ahora simplemente no la guardamos - se cargará del servidor cuando se necesite
+      
+      window.dispatchEvent(new CustomEvent("userUpdated", { detail: user })) // Dispatch con foto completa
     } catch (error) {
       logger?.error?.("[AuthService] Error guardando usuario:", error)
+      
+      // ⚡ RECUPERACIÓN: Si falla por quota, intentar limpiar y reintentar
+      if (error instanceof Error && error.name === 'QuotaExceededError') {
+        logger?.warn?.("[AuthService] localStorage lleno, limpiando datos antiguos...")
+        try {
+          // Limpiar datos de cache antiguos
+          const keys = Object.keys(localStorage)
+          for (const k of keys) {
+            if (k.startsWith("match_") || k.startsWith("cache_") || k.startsWith("old_")) {
+              localStorage.removeItem(k)
+            }
+          }
+          
+          // Reintentar sin foto
+          const { foto_perfil, fotoPerfil, ...userWithoutPhoto } = user as any
+          localStorage.setItem(USER_KEY, JSON.stringify(userWithoutPhoto))
+          logger?.debug?.("[AuthService] Usuario guardado después de limpieza")
+        } catch (retryError) {
+          logger?.error?.("[AuthService] Error en reintento:", retryError)
+        }
+      }
     }
   }
 
@@ -122,10 +152,10 @@ export class AuthService {
       const stored = localStorage.getItem(USER_KEY)
       const user = safeJSONParse<any>(stored)
       if (!user) return null
-      return {
-        ...user,
-        foto_perfil: user.foto_perfil || user.fotoPerfil || undefined,
-      }
+      
+      // El usuario del localStorage NO tiene foto_perfil
+      // La foto se carga desde el servidor con fetchCurrentUser()
+      return user
     } catch (error) {
       logger?.error?.("[AuthService] Error parseando usuario:", error)
       return null
@@ -206,6 +236,69 @@ export class AuthService {
     if (this.isTokenExpired(token)) {
       logger?.debug?.("[AuthService] Token expirado, limpiando")
       this.logout()
+      return
+    }
+    
+    // ⚡ NUEVO: Limpiar localStorage si está cerca del límite
+    try {
+      // Intentar detectar si localStorage está lleno
+      const usage = this.estimateLocalStorageUsage()
+      if (usage > 0.8) { // Si está al 80% o más
+        logger?.warn?.("[AuthService] localStorage al", Math.round(usage * 100) + "%, limpiando cache...")
+        this.cleanupOldCache()
+      }
+    } catch (error) {
+      logger?.error?.("[AuthService] Error verificando localStorage:", error)
+    }
+  }
+  
+  /**
+   * Estima el porcentaje de uso de localStorage (0.0 a 1.0)
+   */
+  private static estimateLocalStorageUsage(): number {
+    try {
+      let total = 0
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key) {
+          const value = localStorage.getItem(key) || ""
+          total += key.length + value.length
+        }
+      }
+      // Estimar límite de 5MB (5 * 1024 * 1024 chars)
+      const limit = 5 * 1024 * 1024
+      return total / limit
+    } catch {
+      return 0
+    }
+  }
+  
+  /**
+   * Limpia cache antiguo de localStorage
+   */
+  private static cleanupOldCache(): void {
+    try {
+      const keys = Object.keys(localStorage)
+      let cleaned = 0
+      
+      for (const key of keys) {
+        // Limpiar datos de cache, matches viejos, etc
+        if (
+          key.startsWith("match_") ||
+          key.startsWith("cache_") ||
+          key.startsWith("old_") ||
+          key.startsWith("temp_") ||
+          key === "chakra-ui-color-mode" || // Si usaste Chakra antes
+          key.includes("debug")
+        ) {
+          localStorage.removeItem(key)
+          cleaned++
+        }
+      }
+      
+      logger?.debug?.(`[AuthService] Limpieza completada: ${cleaned} items eliminados`)
+    } catch (error) {
+      logger?.error?.("[AuthService] Error en cleanupOldCache:", error)
     }
   }
 
