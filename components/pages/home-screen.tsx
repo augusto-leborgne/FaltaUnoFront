@@ -15,6 +15,7 @@ import { useCurrentUser } from "@/hooks/use-current-user"
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -468,6 +469,9 @@ export function HomeScreen() {
                 {selectedNews?.title}
               </DialogTitle>
             </div>
+            <DialogDescription className="sr-only">
+              Detalles de la novedad: {selectedNews?.title}
+            </DialogDescription>
             {selectedNews?.tags && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {selectedNews.tags.map((tag) => (
