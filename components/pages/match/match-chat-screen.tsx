@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowLeft, Send, AlertCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
-import { MensajeAPI, PartidoAPI, MensajeDTO } from '@/lib/api'
+import { MensajeAPI, PartidoAPI, InscripcionAPI, MensajeDTO } from '@/lib/api'
 import { LoadingSpinner, InlineSpinner } from "@/components/ui/loading-spinner"
 
 interface MatchChatScreenProps {
@@ -98,25 +98,19 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
 
       // ✅ Verificar estado de inscripción
       try {
-        const estadoResponse = await fetch(
-          `/api/inscripciones/estado?partidoId=${matchId}&usuarioId=${currentUser.id}`
-        )
+        const estadoData = await InscripcionAPI.getEstado(matchId, currentUser.id)
         
-        if (estadoResponse.ok) {
-          const estadoData = await estadoResponse.json()
+        if (estadoData.success && estadoData.data) {
+          const { inscrito, estado } = estadoData.data
           
-          if (estadoData.success && estadoData.data) {
-            const { inscrito, estado } = estadoData.data
-            
-            // Solo permitir acceso si está inscrito y ACEPTADO
-            if (!inscrito || estado !== "ACEPTADO") {
-              console.warn("[MatchChat] Acceso denegado - inscrito:", inscrito, "estado:", estado)
-              setError("Debes estar inscrito y aceptado en el partido para acceder al chat")
-              setTimeout(() => {
-                router.push(`/matches/${matchId}`)
-              }, 2000)
-              return
-            }
+          // Solo permitir acceso si está inscrito y ACEPTADO
+          if (!inscrito || estado !== "ACEPTADO") {
+            console.warn("[MatchChat] Acceso denegado - inscrito:", inscrito, "estado:", estado)
+            setError("Debes estar inscrito y aceptado en el partido para acceder al chat")
+            setTimeout(() => {
+              router.push(`/matches/${matchId}`)
+            }, 2000)
+            return
           }
         }
       } catch (err) {

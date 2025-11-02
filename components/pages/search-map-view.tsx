@@ -36,8 +36,8 @@ export function SearchMapView({ partidos, onClose, onPartidoClick }: SearchMapVi
   const { isLoaded, error, google } = useGoogleMaps()
   const mapRef = useRef<HTMLDivElement | null>(null)
   const mapInstanceRef = useRef<google.maps.Map | null>(null)
-  const markersRef = useRef<google.maps.Marker[]>([])
-  const userMarkerRef = useRef<google.maps.Marker | null>(null)
+  const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([])
+  const userMarkerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null)
 
   // Solicitar geolocalización del usuario
   useEffect(() => {
@@ -85,33 +85,37 @@ export function SearchMapView({ partidos, onClose, onPartidoClick }: SearchMapVi
     const map = new google.maps.Map(mapRef.current, {
       center,
       zoom: 13,
-      styles: [
-        { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
-      ],
       disableDefaultUI: false,
       zoomControl: true,
       mapTypeControl: false,
       streetViewControl: false,
       fullscreenControl: false,
+      mapId: "search-map-view", // Requerido para AdvancedMarkerElement
     })
     mapInstanceRef.current = map
 
     // Agregar marcador del usuario
     if (userMarkerRef.current) {
-      userMarkerRef.current.setMap(null)
+      userMarkerRef.current.map = null
     }
-    userMarkerRef.current = new google.maps.Marker({
+    
+    const userMarkerContent = document.createElement("div");
+    userMarkerContent.innerHTML = `
+      <div style="
+        width: 16px;
+        height: 16px;
+        background-color: #3b82f6;
+        border: 3px solid white;
+        border-radius: 50%;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      "></div>
+    `;
+    
+    userMarkerRef.current = new google.maps.marker.AdvancedMarkerElement({
       position: userLocation,
       map,
       title: "Tu ubicación",
-      icon: {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 8,
-        fillColor: "#3b82f6", // Azul
-        fillOpacity: 1,
-        strokeColor: "#ffffff",
-        strokeWeight: 3,
-      },
+      content: userMarkerContent,
       zIndex: 1000,
     })
 
@@ -120,24 +124,29 @@ export function SearchMapView({ partidos, onClose, onPartidoClick }: SearchMapVi
       const disponibles = (partido.capacidad || 0) - (partido.inscritos || 0)
       const isLleno = disponibles <= 0
 
-      const marker = new google.maps.Marker({
+      const markerContent = document.createElement("div");
+      markerContent.innerHTML = `
+        <div style="
+          width: 28px;
+          height: 28px;
+          background-color: ${isLleno ? '#ef4444' : '#16a34a'};
+          border: 2px solid white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-size: 11px;
+          font-weight: bold;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        ">${disponibles}</div>
+      `;
+
+      const marker = new google.maps.marker.AdvancedMarkerElement({
         position: { lat: partido.latitud!, lng: partido.longitud! },
         map,
         title: partido.nombre_ubicacion,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 14,
-          fillColor: isLleno ? "#ef4444" : "#16a34a", // Rojo si lleno, verde si disponible
-          fillOpacity: 1,
-          strokeColor: "#ffffff",
-          strokeWeight: 2,
-        },
-        label: {
-          text: String(disponibles),
-          color: "white",
-          fontSize: "11px",
-          fontWeight: "bold",
-        } as unknown as google.maps.MarkerLabel,
+        content: markerContent,
       })
 
       marker.addListener("click", () => {
@@ -167,10 +176,10 @@ export function SearchMapView({ partidos, onClose, onPartidoClick }: SearchMapVi
     }
 
     return () => {
-      markersRef.current.forEach((mk) => mk.setMap(null))
+      markersRef.current.forEach((mk) => mk.map = null)
       markersRef.current = []
       if (userMarkerRef.current) {
-        userMarkerRef.current.setMap(null)
+        userMarkerRef.current.map = null
         userMarkerRef.current = null
       }
       mapInstanceRef.current = null

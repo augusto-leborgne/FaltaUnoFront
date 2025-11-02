@@ -41,7 +41,6 @@ export function MatchesMapModal({ isOpen, onClose }: MatchesMapModalProps) {
     const map = new google.maps.Map(mapRef.current, {
       center: { lat: -34.9011, lng: -56.1645 },
       zoom: 13,
-      styles: [{ featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] }],
       disableDefaultUI: true,
       mapId: "falta-uno-map-modal", // Requerido para AdvancedMarkerElement
     });

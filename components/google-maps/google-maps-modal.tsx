@@ -35,9 +35,6 @@ export function GoogleMapsModal({ isOpen, onClose, location, lat, lng }: GoogleM
     const map = new google.maps.Map(mapRef.current, {
       center: { lat, lng },
       zoom: 16,
-      styles: [
-        { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
-      ],
       disableDefaultUI: true,
       mapId: "falta-uno-location-modal", // Requerido para AdvancedMarkerElement
     });
