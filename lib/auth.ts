@@ -36,8 +36,19 @@ export class AuthService {
   static getToken(): string | null {
     if (typeof window === "undefined") return null
     try {
-      const token = localStorage.getItem(TOKEN_KEY)
-      if (!token || token === "undefined" || token === "null") return null
+      // ⚡ PRIORIDAD 1: Leer de localStorage
+      let token = localStorage.getItem(TOKEN_KEY)
+      if (!token || token === "undefined" || token === "null") {
+        // ⚡ FALLBACK: Leer de cookie si localStorage está vacío
+        token = this.getTokenFromCookie()
+        if (token) {
+          // Sincronizar cookie → localStorage
+          localStorage.setItem(TOKEN_KEY, token)
+          logger?.debug?.("[AuthService] Token restaurado desde cookie")
+        }
+      }
+      
+      if (!token) return null
       
       // ⚡ VALIDACIÓN: Verificar que el token no esté corrupto
       if (this.isTokenCorrupted(token)) {
@@ -49,6 +60,26 @@ export class AuthService {
       return token
     } catch (error) {
       logger?.error?.("[AuthService] Error obteniendo token:", error)
+      return null
+    }
+  }
+
+  /**
+   * Lee el token desde la cookie authToken (fallback si localStorage falla)
+   */
+  private static getTokenFromCookie(): string | null {
+    if (typeof document === "undefined") return null
+    try {
+      const cookies = document.cookie.split(";")
+      for (const cookie of cookies) {
+        const [key, value] = cookie.trim().split("=")
+        if (key === TOKEN_KEY && value && value !== "undefined" && value !== "null") {
+          return value
+        }
+      }
+      return null
+    } catch (error) {
+      logger?.error?.("[AuthService] Error leyendo cookie:", error)
       return null
     }
   }
