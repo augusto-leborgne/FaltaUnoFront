@@ -72,9 +72,18 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       const userRes = await fetch(`${API_BASE}/api/usuarios/${userId}`, {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       })
+      
       if (!userRes.ok) {
+        // Manejar usuario eliminado (HTTP 410 Gone) o no encontrado (HTTP 404)
+        if (userRes.status === 410) {
+          throw new Error("Este usuario ya no está disponible")
+        }
+        if (userRes.status === 404) {
+          throw new Error("Usuario no encontrado")
+        }
         throw new Error(`Error ${userRes.status}: No se pudo cargar el perfil`)
       }
+      
       const userJson = await userRes.json()
       if (!userJson?.data) throw new Error("Usuario no encontrado")
       setUser(userJson.data)

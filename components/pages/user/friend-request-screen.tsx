@@ -45,6 +45,8 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
       if (response.ok) {
         const result = await response.json()
         setUser(result.data)
+      } else if (response.status === 410) {
+        setError("Este usuario ya no está disponible")
       } else {
         setError("Usuario no encontrado")
       }

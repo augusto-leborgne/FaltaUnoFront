@@ -61,9 +61,18 @@ function PlayerProfile({ playerId }: PlayerProfileProps) {
           headers: AuthService.getAuthHeaders(),
           signal: abort.signal,
         })
+        
         if (!playerResponse.ok) {
+          // Manejar usuario eliminado (HTTP 410) o no encontrado (HTTP 404)
+          if (playerResponse.status === 410) {
+            throw new Error("Este jugador ya no está disponible")
+          }
+          if (playerResponse.status === 404) {
+            throw new Error("Jugador no encontrado")
+          }
           throw new Error("No se pudo cargar el perfil del jugador")
         }
+        
         const playerData = await playerResponse.json()
         setPlayer(playerData.data)
 
