@@ -4,7 +4,7 @@
    ENUMS Y TIPOS BASE
 =========================== */
 export type Nivel = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
-export type EstadoPartido = 'PENDIENTE' | 'CONFIRMADO' | 'CANCELADO' | 'FINALIZADO';
+export type EstadoPartido = 'DISPONIBLE' | 'CONFIRMADO' | 'CANCELADO' | 'FINALIZADO';
 export type TipoPartido = 'F5' | 'F7' | 'F8' | 'F9' | 'F11';
 export type Genero = 'Mixto' | 'Hombres' | 'Mujeres';
 

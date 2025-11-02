@@ -15,7 +15,6 @@ import {
   PartidoDTO, 
   PartidoEstado,
   TipoPartido, 
-  NivelPartido,
   InscripcionAPI,
   InscripcionEstado
 } from "@/lib/api"
@@ -80,24 +79,13 @@ export function MatchesListing() {
         }
       })
 
-      // Filtros de nivel
-      if (selectedFilters.includes("Principiante")) {
-        filtros.nivel = NivelPartido.PRINCIPIANTE
-      }
-      if (selectedFilters.includes("Intermedio")) {
-        filtros.nivel = NivelPartido.INTERMEDIO
-      }
-      if (selectedFilters.includes("Avanzado")) {
-        filtros.nivel = NivelPartido.AVANZADO
-      }
-
       // Búsqueda por texto
       if (searchQuery.trim()) {
         filtros.search = searchQuery.trim()
       }
 
-      // Solo partidos activos y futuros
-      filtros.estado = PartidoEstado.PENDIENTE
+      // Solo partidos disponibles y futuros
+      filtros.estado = PartidoEstado.DISPONIBLE
 
       console.log("[MatchesListing] Cargando con filtros:", filtros)
 
@@ -208,18 +196,6 @@ export function MatchesListing() {
   const formatMatchType = (type?: string) => {
     if (!type) return "Fútbol"
     return type.replace("FUTBOL_", "F")
-  }
-
-  const formatLevel = (level?: string) => {
-    if (!level) return "Intermedio"
-    
-    const levelMap: Record<string, string> = {
-      [NivelPartido.PRINCIPIANTE]: "Principiante",
-      [NivelPartido.INTERMEDIO]: "Intermedio",
-      [NivelPartido.AVANZADO]: "Avanzado",
-      [NivelPartido.PROFESIONAL]: "Profesional"
-    }
-    return levelMap[level] || level
   }
 
   const formatDate = (dateString: string, timeString: string) => {
@@ -406,25 +382,6 @@ export function MatchesListing() {
                     ))}
                   </div>
                 </div>
-                {/* Nivel */}
-                <div>
-                  <h4 className="text-xs font-medium text-gray-600 mb-2">Nivel</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {["Principiante", "Intermedio", "Avanzado"].map((level) => (
-                      <button
-                        key={level}
-                        onClick={() => toggleFilter(level)}
-                        className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                          selectedFilters.includes(level)
-                            ? "bg-orange-200 text-gray-900"
-                            : "bg-white text-gray-700 hover:bg-orange-50"
-                        }`}
-                      >
-                        {level}
-                      </button>
-                    ))}
-                  </div>
-                </div>
               </div>
             </div>
           )}
@@ -476,9 +433,6 @@ export function MatchesListing() {
                     <div className="flex gap-2 flex-wrap">
                       <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
                         {formatMatchType(match.tipoPartido)}
-                      </Badge>
-                      <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
-                        {formatLevel(match.nivel)}
                       </Badge>
                     </div>
                     <Badge className={`${getSpotsLeftColor(spotsLeft)} hover:bg-current`}>

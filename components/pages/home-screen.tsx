@@ -391,7 +391,7 @@ export function HomeScreen() {
                           : "bg-secondary/20 text-secondary-foreground"
                       }`}
                     >
-                      {match.estado === "CONFIRMADO" ? "Confirmado" : "Pendiente"}
+                      {match.estado === "CONFIRMADO" ? "Confirmado" : "Disponible"}
                     </Badge>
                   </div>
                   <Clock className="w-4 h-4 text-muted-foreground" />

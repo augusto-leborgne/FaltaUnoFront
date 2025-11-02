@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation"
 import { CompressedMap } from "@/components/google-maps/compressed-map"
 import AuthService from "@/lib/auth"
 import { PartidoAPI, InscripcionAPI, PartidoDTO, PartidoEstado, InscripcionEstado } from "@/lib/api"
-import { formatMatchType, formatLevel, formatDate, getSpotsLeftColor } from "@/lib/utils"
+import { formatMatchType, formatDate, getSpotsLeftColor } from "@/lib/utils"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 interface MatchDetailProps {
@@ -19,9 +19,6 @@ interface MatchDetailProps {
 
 function getTipoPartido(match: PartidoDTO) {
   return (match as any).tipoPartido ?? (match as any).tipo_partido ?? "FUTBOL_5"
-}
-function getNivel(match: PartidoDTO) {
-  return (match as any).nivel ?? "INTERMEDIO"
 }
 function getJugadoresActuales(match: PartidoDTO) {
   return (match as any).jugadoresActuales ?? (match as any).jugadores_actuales ?? 0
@@ -306,9 +303,6 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
             <div className="flex gap-2 flex-wrap">
               <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
                 {formatMatchType(getTipoPartido(match))}
-              </Badge>
-              <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
-                {formatLevel(getNivel(match))}
               </Badge>
               {Boolean((match as any).genero) && (
                 <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">

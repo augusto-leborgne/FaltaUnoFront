@@ -301,7 +301,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
   const handleConfirmarPartido = async () => {
     if (!match) return
 
-    if (match.estado !== PartidoEstado.PENDIENTE) {
+    if (match.estado !== PartidoEstado.DISPONIBLE) {
       toast({
         title: "No se puede confirmar",
         description: "Solo se pueden confirmar partidos pendientes",
@@ -347,7 +347,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
   const handleRemovePlayer = async (jugadorId: string) => {
     if (!match) return
 
-    if (match.estado !== PartidoEstado.PENDIENTE) {
+    if (match.estado !== PartidoEstado.DISPONIBLE) {
       toast({
         title: "No se puede remover",
         description: "No se pueden remover jugadores de un partido confirmado",
@@ -457,13 +457,13 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
         label: "Completado", 
         className: "bg-blue-100 text-blue-800" 
       },
-      [PartidoEstado.PENDIENTE]: { 
-        label: "Pendiente", 
-        className: "bg-yellow-100 text-yellow-800" 
+      [PartidoEstado.DISPONIBLE]: { 
+        label: "Disponible", 
+        className: "bg-green-100 text-green-800" 
       },
     }
 
-    const status = statusMap[match.estado as PartidoEstado] || statusMap[PartidoEstado.PENDIENTE]
+    const status = statusMap[match.estado as PartidoEstado] || statusMap[PartidoEstado.DISPONIBLE]
 
     return (
       <Badge className={`${status.className} hover:${status.className}`}>
@@ -511,10 +511,10 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
   // CÁLCULOS
   // ============================================
 
-  const canRemovePlayers = match.estado === PartidoEstado.PENDIENTE
-  const canEdit = match.estado === PartidoEstado.PENDIENTE
-  const canCancel = match.estado === PartidoEstado.PENDIENTE
-  const canConfirm = match.estado === PartidoEstado.PENDIENTE
+  const canRemovePlayers = match.estado === PartidoEstado.DISPONIBLE
+  const canEdit = match.estado === PartidoEstado.DISPONIBLE
+  const canCancel = match.estado === PartidoEstado.DISPONIBLE
+  const canConfirm = match.estado === PartidoEstado.DISPONIBLE
   const spotsLeft = (match.cantidadJugadores || 10) - (match.jugadoresActuales || 0)
   const partidoLleno = spotsLeft === 0
 
@@ -562,7 +562,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
 
       <div className="flex-1 px-6 py-6 overflow-y-auto pb-24">
         {/* Alerta de partido listo para confirmar */}
-        {match.estado === PartidoEstado.PENDIENTE && partidoLleno && (
+        {match.estado === PartidoEstado.DISPONIBLE && partidoLleno && (
           <div className="bg-green-50 border border-green-200 rounded-2xl p-4 mb-6 flex items-center space-x-3">
             <Check className="w-6 h-6 text-green-600 flex-shrink-0" />
             <div className="flex-1">
@@ -651,7 +651,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
             </div>
           )}
 
-          {match.estado === PartidoEstado.PENDIENTE && spotsLeft > 0 && !partidoLleno && (
+          {match.estado === PartidoEstado.DISPONIBLE && spotsLeft > 0 && !partidoLleno && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4 flex items-center space-x-3">
               <Clock className="w-5 h-5 text-yellow-600 flex-shrink-0" />
               <div>
@@ -663,7 +663,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
             </div>
           )}
 
-          {match.estado === PartidoEstado.PENDIENTE && partidoLleno && (
+          {match.estado === PartidoEstado.DISPONIBLE && partidoLleno && (
             <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-4 flex items-center space-x-3">
               <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0" />
               <div>

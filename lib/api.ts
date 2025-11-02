@@ -142,7 +142,7 @@ export interface PartidoDTO {
 }
 
 export enum PartidoEstado {
-  PENDIENTE = "PENDIENTE",
+  DISPONIBLE = "DISPONIBLE",
   CONFIRMADO = "CONFIRMADO",
   CANCELADO = "CANCELADO",
   COMPLETADO = "COMPLETADO"
@@ -460,7 +460,7 @@ function normalizePartido(raw: any): PartidoDTO {
     precio_por_jugador: Math.round(precioPorJugador * 100) / 100,
     precioPorJugador: Math.round(precioPorJugador * 100) / 100,
     descripcion: raw.descripcion,
-    estado: raw.estado ?? 'PENDIENTE',
+    estado: raw.estado ?? 'DISPONIBLE',
     organizador_id: raw.organizador_id ?? raw.organizadorId,
     organizadorId: raw.organizadorId ?? raw.organizador_id,
     created_at: raw.created_at ?? raw.createdAt,

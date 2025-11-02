@@ -144,10 +144,10 @@ export function MyMatchesScreen() {
       "CONFIRMADO": { label: "Confirmado", className: "bg-green-100 text-green-800" },
       "CANCELADO": { label: "Cancelado", className: "bg-red-100 text-red-800" },
       "COMPLETADO": { label: "Completado", className: "bg-blue-100 text-blue-800" },
-      "PENDIENTE": { label: "Pendiente", className: "bg-yellow-100 text-yellow-800" },
+      "DISPONIBLE": { label: "Disponible", className: "bg-green-100 text-green-800" },
     }
 
-    const status = statusMap[estado] || statusMap["PENDIENTE"]
+    const status = statusMap[estado] || statusMap["DISPONIBLE"]
 
     return (
       <Badge className={`${status.className} hover:${status.className}`}>
@@ -266,9 +266,6 @@ export function MyMatchesScreen() {
                     <div className="flex gap-2 flex-wrap">
                       <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
                         {formatMatchType(match.tipoPartido || 'FUTBOL_5')}
-                      </Badge>
-                      <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
-                        {formatLevel(match.nivel || 'INTERMEDIO')}
                       </Badge>
                       {getStatusBadge(match.estado)}
                     </div>
