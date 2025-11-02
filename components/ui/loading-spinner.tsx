@@ -13,19 +13,26 @@ const ModernGreenSpinner = ({ className, size }: { className?: string; size: str
         size
       )} 
     />
-    {/* Animated segment (thick green) */}
+    {/* Animated segment (thick green) - INLINE ANIMATION */}
     <div 
       className={cn(
-        "absolute inset-0 rounded-full animate-spin",
-        "border-[4px] border-transparent border-t-green-600",
+        "absolute inset-0 rounded-full border-[4px] border-transparent border-t-green-600",
         size
       )}
       style={{
         background: 'conic-gradient(from 0deg, transparent 0%, transparent 70%, #16a34a 70%, #16a34a 100%)',
         WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 4px), black calc(100% - 4px))',
-        mask: 'radial-gradient(farthest-side, transparent calc(100% - 4px), black calc(100% - 4px))'
+        mask: 'radial-gradient(farthest-side, transparent calc(100% - 4px), black calc(100% - 4px))',
+        animation: 'spin 1s linear infinite'
       }}
     />
+    {/* INLINE KEYFRAMES */}
+    <style jsx>{`
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+    `}</style>
   </div>
 )
 
@@ -33,12 +40,24 @@ const ModernGreenSpinner = ({ className, size }: { className?: string; size: str
  * Simple thin-border circular spinner (fallback/alternative)
  */
 const CircleSpinner = ({ className }: { className?: string }) => (
-  <div 
-    className={cn(
-      "rounded-full border-2 border-t-transparent animate-spin",
-      className
-    )} 
-  />
+  <>
+    <div 
+      className={cn(
+        "rounded-full border-2 border-t-transparent",
+        className
+      )}
+      style={{
+        animation: 'spin 1s linear infinite'
+      }}
+    />
+    {/* INLINE KEYFRAMES */}
+    <style jsx>{`
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+    `}</style>
+  </>
 )
 
 interface LoadingSpinnerProps {
