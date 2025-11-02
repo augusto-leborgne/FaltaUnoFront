@@ -335,10 +335,11 @@ export class AuthService {
         
         logger?.debug?.(`[AuthService] Fetching current user (intento ${attempt}/${retries})...`)
         const url = normalizeUrl(`${API_BASE}/api/usuarios/me`)
+        
+        // ⚡ NO timeout - Cloud Run puede tener cold starts
+        // El retry logic ya maneja requests lentos
         const res = await fetch(url, { 
-          headers: this.getAuthHeaders(),
-          // ⚡ Timeout reducido - si el backend tarda demasiado, hay un problema
-          signal: AbortSignal.timeout(10000) // 10 segundos
+          headers: this.getAuthHeaders()
         })
         
         if (!res.ok) {
