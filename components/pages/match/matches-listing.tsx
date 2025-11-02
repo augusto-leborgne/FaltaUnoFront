@@ -241,20 +241,20 @@ export function MatchesListing() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
-      <div className="pt-12 pb-4 px-6 border-b border-gray-100">
+      <div className="pt-12 pb-4 px-4 sm:px-6 border-b border-gray-100">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900">Partidos</h1>
+          <h1 className="text-lg sm:text-xl font-bold text-gray-900">Partidos</h1>
           <Button
             onClick={handleCreateMatch}
             size="sm"
-            className="bg-green-600 hover:bg-green-700 text-white rounded-full p-2 min-h-[40px] min-w-[40px] touch-manipulation"
+            className="bg-green-600 hover:bg-green-700 text-white rounded-full p-2 min-h-[44px] min-w-[44px] touch-manipulation"
           >
             <Plus className="w-5 h-5" />
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 px-6 overflow-y-auto">
+      <div className="flex-1 px-4 sm:px-6 overflow-y-auto pb-24">
         {/* Error Message */}
         {error && (
           <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start space-x-3">

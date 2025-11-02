@@ -260,12 +260,12 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
-      <div className="pt-16 pb-6 px-6 border-b border-gray-100">
+      <div className="pt-12 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6 border-b border-gray-100">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3 sm:space-x-4">
             <button
               onClick={handleBack}
-              className="p-2 -ml-2 hover:bg-gray-100 rounded-xl transition-colors"
+              className="p-2 -ml-2 hover:bg-gray-100 rounded-xl transition-colors touch-manipulation"
             >
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
@@ -280,19 +280,19 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
         </div>
       </div>
 
-      <div className="flex-1 px-6 py-6 overflow-y-auto">
+      <div className="flex-1 px-4 sm:px-6 py-4 sm:py-6 overflow-y-auto pb-24">
         {/* Estado cancelado/completado */}
         {isMatchCancelled && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl">
-            <p className="text-red-800 font-medium">⚠️ Partido cancelado</p>
-            <p className="text-red-600 text-sm mt-1">Este partido ha sido cancelado por el organizador</p>
+          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-xl sm:rounded-2xl">
+            <p className="text-red-800 font-medium text-sm sm:text-base">⚠️ Partido cancelado</p>
+            <p className="text-red-600 text-xs sm:text-sm mt-1">Este partido ha sido cancelado por el organizador</p>
           </div>
         )}
 
         {isMatchCompleted && (
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-2xl">
-            <p className="text-blue-800 font-medium">✓ Partido completado</p>
-            <p className="text-blue-600 text-sm mt-1">Este partido ya se ha jugado</p>
+          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-xl sm:rounded-2xl">
+            <p className="text-blue-800 font-medium text-sm sm:text-base">✓ Partido completado</p>
+            <p className="text-blue-600 text-xs sm:text-sm mt-1">Este partido ya se ha jugado</p>
           </div>
         )}
 
@@ -316,12 +316,12 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
           </div>
 
           {/* Match Time */}
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
             {formatDate(match.fecha)} {hora}
           </h2>
 
           {/* Match Details */}
-          <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm mb-4">
             <div className="flex items-center space-x-2 text-gray-600">
               <MapPin className="w-4 h-4 flex-shrink-0" />
               <span className="truncate">{nombreUbicacion}</span>

@@ -223,25 +223,25 @@ export function HomeScreen() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* HEADER + STATS */}
-      <div className="pt-16 pb-6 px-6 bg-gradient-to-r from-primary/5 to-secondary/5">
+      <div className="pt-12 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6 bg-gradient-to-r from-primary/5 to-secondary/5">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">¡Bienvenido!</h1>
-            <p className="text-muted-foreground">Descubre lo que está pasando</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">¡Bienvenido!</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Descubre lo que está pasando</p>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3">
             <button
               onClick={handleNotifications}
-              className="relative p-2 rounded-full hover:bg-white/20 transition-colors"
+              className="relative p-2 rounded-full hover:bg-white/20 transition-colors touch-manipulation"
             >
-              <Bell className="w-6 h-6 text-foreground" />
+              <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-foreground" />
               {notificationCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1">
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] sm:min-w-[20px] sm:h-5 bg-red-500 text-white text-[10px] sm:text-xs font-bold rounded-full flex items-center justify-center px-1">
                   {notificationCount > 99 ? '99+' : notificationCount}
                 </span>
               )}
             </button>
-            <Avatar className="w-12 h-12 cursor-pointer" onClick={() => router.push("/profile")}>
+            <Avatar className="w-10 h-10 sm:w-12 sm:h-12 cursor-pointer" onClick={() => router.push("/profile")}>
               {user?.foto_perfil ? (
                 <AvatarImage src={`data:image/jpeg;base64,${user.foto_perfil}`} />
               ) : (
