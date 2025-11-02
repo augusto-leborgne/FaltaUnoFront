@@ -313,8 +313,9 @@ export function HomeScreen() {
                     {getNewsIcon(news.type)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-foreground text-base leading-snug line-clamp-2">
-                      {news.title}
+                    {/* Reduce tamaño y aplica truncado por seguridad (JS) además de line-clamp */}
+                    <h3 className="font-medium text-foreground text-sm leading-snug line-clamp-2">
+                      {news.title && news.title.length > 100 ? `${news.title.slice(0, 97)}...` : news.title}
                     </h3>
                   </div>
                 </div>
