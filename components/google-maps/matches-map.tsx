@@ -29,23 +29,36 @@ export function MatchesMap() {
       zoom: 13,
       styles: [{ featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] }],
       disableDefaultUI: true,
+      mapId: "falta-uno-map", // Requerido para AdvancedMarkerElement
     });
     mapInstanceRef.current = map;
 
     markersRef.current = mapMatches.map((m) => {
-      const marker = new google.maps.Marker({
+      // Crear contenido del marker
+      const markerContent = document.createElement("div");
+      markerContent.className = "advanced-marker";
+      markerContent.innerHTML = `
+        <div style="
+          width: 32px;
+          height: 32px;
+          background-color: #16a34a;
+          border: 2px solid white;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-size: 12px;
+          font-weight: bold;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        ">${m.spotsLeft}</div>
+      `;
+
+      const marker = new google.maps.marker.AdvancedMarkerElement({
         position: { lat: m.lat, lng: m.lng },
         map,
         title: m.location,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 12,
-          fillColor: "#16a34a",
-          fillOpacity: 1,
-          strokeColor: "#ffffff",
-          strokeWeight: 2,
-        },
-        label: { text: String(m.spotsLeft), color: "white", fontSize: "12px" } as unknown as google.maps.MarkerLabel,
+        content: markerContent,
       });
 
       marker.addListener("click", () => {

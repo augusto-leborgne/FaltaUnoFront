@@ -39,21 +39,29 @@ export function GoogleMapsModal({ isOpen, onClose, location, lat, lng }: GoogleM
         { featureType: "poi", elementType: "labels", stylers: [{ visibility: "off" }] },
       ],
       disableDefaultUI: true,
+      mapId: "falta-uno-location-modal", // Requerido para AdvancedMarkerElement
     });
     mapInstanceRef.current = map;
 
-    const marker = new google.maps.Marker({
+    // Crear contenido del marker
+    const markerContent = document.createElement("div");
+    markerContent.className = "advanced-marker-location";
+    markerContent.innerHTML = `
+      <div style="
+        width: 24px;
+        height: 24px;
+        background-color: #16a34a;
+        border: 3px solid white;
+        border-radius: 50%;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      "></div>
+    `;
+
+    const marker = new google.maps.marker.AdvancedMarkerElement({
       position: { lat, lng },
       map,
       title: location,
-      icon: {
-        path: google.maps.SymbolPath.CIRCLE,
-        scale: 12,
-        fillColor: "#16a34a",
-        fillOpacity: 1,
-        strokeColor: "#ffffff",
-        strokeWeight: 3,
-      },
+      content: markerContent,
     });
     markerRef.current = marker;
 

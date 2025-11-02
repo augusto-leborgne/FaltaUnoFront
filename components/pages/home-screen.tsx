@@ -346,8 +346,6 @@ export function HomeScreen() {
                 )}
                 <div className="flex items-center justify-between pt-3 border-t border-border/50">
                   <div className="flex items-center space-x-3">
-                    <span className="text-xs text-muted-foreground">{news.author}</span>
-                    <span className="text-xs text-muted-foreground">•</span>
                     <span className="text-xs text-muted-foreground">{news.date}</span>
                   </div>
                 </div>

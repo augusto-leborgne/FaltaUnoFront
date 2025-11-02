@@ -451,6 +451,9 @@ export function MatchesListing() {
                       <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
                         {formatMatchType(match.tipoPartido)}
                       </Badge>
+                      <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">
+                        {match.genero || 'Mixto'}
+                      </Badge>
                     </div>
                     <Badge className={`${getSpotsLeftColor(spotsLeft)} hover:bg-current`}>
                       {spotsLeft === 0 ? "Completo" : `Quedan ${spotsLeft}`}
