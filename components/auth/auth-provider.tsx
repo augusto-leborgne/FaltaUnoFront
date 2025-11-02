@@ -1,7 +1,7 @@
 // components/auth/auth-provider.tsx - VERSIÓN MEJORADA
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useRef } from "react";
 import { AuthService } from "@/lib/auth";
 import { TokenPersistence } from "@/lib/token-persistence";
 import type { Usuario } from "@/lib/api";
@@ -20,6 +20,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUserState] = useState<Usuario | null>(null);
   const [loading, setLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const mountedRef = useRef(true);
 
   // Wrapper para setUser que preserva firma del contexto
   const setUser = (u: Usuario | null) => {
@@ -148,7 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Inicialización: validar token y restaurar user si procede
   useEffect(() => {
-    let mounted = true;
+    mountedRef.current = true;
 
     const init = async () => {
       console.log("[AuthProvider] Inicializando...");
@@ -174,7 +175,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (!token) {
         console.log("[AuthProvider] No hay token en localStorage");
-        if (mounted) {
+        if (mountedRef.current) {
           setUserState(null);
           setLoading(false);
         }
@@ -185,7 +186,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // No esperar validación del servidor para mostrar UI
       if (localUser && !AuthService.isTokenExpired(token)) {
         console.log("[AuthProvider] Restaurando sesión desde localStorage:", localUser.email);
-        if (mounted) {
+        if (mountedRef.current) {
           setUserState(localUser);
           setLoading(false); // ⚡ Desbloquear UI inmediatamente
         }
@@ -195,7 +196,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.log("[AuthProvider] Revalidando usuario desde servidor en background...");
         try {
           const serverUser = await AuthService.fetchCurrentUser();
-          if (serverUser && mounted) {
+          if (serverUser && mountedRef.current) {
             console.log("[AuthProvider] ✅ Usuario actualizado desde servidor:", serverUser.email);
             setUserState(serverUser);
           }
@@ -212,18 +213,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const serverUser = await AuthService.fetchCurrentUser();
         if (serverUser) {
           console.log("[AuthProvider] Usuario restaurado desde servidor:", serverUser.email);
-          if (mounted) setUserState(serverUser);
+          if (mountedRef.current) setUserState(serverUser);
         } else {
           console.log("[AuthProvider] Token no validado por servidor, limpiando");
           AuthService.logout();
-          if (mounted) setUserState(null);
+          if (mountedRef.current) setUserState(null);
         }
       } catch (err) {
         console.warn("[AuthProvider] Error al validar token con servidor:", err);
         AuthService.logout();
-        if (mounted) setUserState(null);
+        if (mountedRef.current) setUserState(null);
       } finally {
-        if (mounted) setLoading(false);
+        if (mountedRef.current) setLoading(false);
       }
     };
 
@@ -274,13 +275,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // ⚡ NUEVO: Revalidación periódica cada 5 minutos
     // Esto asegura que el perfil esté siempre sincronizado
     const revalidationInterval = setInterval(async () => {
+      if (!mountedRef.current) return; // ⚡ FIX: Verificar si el componente está montado
+      
       const token = AuthService.getToken();
       if (!token || isLoggingOut) return;
       
       console.log("[AuthProvider] Revalidación periódica del usuario...");
       try {
         const serverUser = await AuthService.fetchCurrentUser();
-        if (serverUser && mounted) {
+        if (serverUser && mountedRef.current) {
           console.log("[AuthProvider] Usuario revalidado exitosamente");
           setUserState(serverUser);
         }
@@ -290,7 +293,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, 5 * 60 * 1000); // 5 minutos
 
     return () => {
-      mounted = false;
+      mountedRef.current = false;
       clearInterval(revalidationInterval);
       window.removeEventListener("storage", onStorage);
       window.removeEventListener('userUpdated', handleUserUpdated);
