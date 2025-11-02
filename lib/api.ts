@@ -1283,9 +1283,9 @@ export const MensajeAPI = {
   },
 
   /**
-   * Crear mensaje
+   * Crear mensaje (usuarioId se obtiene automáticamente del token)
    */
-  crear: async (partidoId: string, data: { contenido: string; usuarioId: string }) => {
+  crear: async (partidoId: string, data: { contenido: string }) => {
     const response = await apiFetch<MensajeDTO>(
       `/api/partidos/${partidoId}/mensajes`,
       {

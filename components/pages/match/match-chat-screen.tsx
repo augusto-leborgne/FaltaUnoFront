@@ -209,10 +209,9 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
     setError("")
 
     try {
-      // Enviar mensaje
+      // Enviar mensaje (usuarioId viene del token de autenticación)
       const response = await MensajeAPI.crear(matchId, {
-        contenido: message.trim(),
-        usuarioId: currentUser.id
+        contenido: message.trim()
       })
 
       if (!response.success) {
