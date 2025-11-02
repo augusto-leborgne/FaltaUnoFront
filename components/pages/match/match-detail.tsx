@@ -44,6 +44,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
 
   // Estado
   const [match, setMatch] = useState<PartidoDTO | null>(null)
+  const [jugadores, setJugadores] = useState<any[]>([]) // ✅ NUEVO: Lista de jugadores inscritos
   const [isJoining, setIsJoining] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string>("")
@@ -76,6 +77,17 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
       }
 
       setMatch(response.data)
+      
+      // ✅ NUEVO: Cargar jugadores inscritos (ACEPTADOS)
+      try {
+        const jugadoresResponse = await PartidoAPI.getJugadores(matchId)
+        if (jugadoresResponse.success && jugadoresResponse.data) {
+          setJugadores(jugadoresResponse.data)
+        }
+      } catch (err) {
+        console.error("[MatchDetail] Error cargando jugadores:", err)
+        // No fallar si no se pueden cargar jugadores
+      }
     } catch (err: any) {
       if (err?.name !== "AbortError") {
         setError(err instanceof Error ? err.message : "Error al cargar el partido")
@@ -365,14 +377,14 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
         )}
 
         {/* Players Section */}
-        {Array.isArray((match as any).jugadores) && (match as any).jugadores.length > 0 && (
+        {jugadores.length > 0 && (
           <div className="mb-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4">
-              Jugadores ({getJugadoresActuales(match)}/{getCantidadJugadores(match)})
+              Jugadores ({jugadores.length}/{getCantidadJugadores(match)})
             </h3>
 
             <div className="space-y-3">
-              {(match as any).jugadores.map((player: any) => (
+              {jugadores.map((player: any) => (
                 <div
                   key={player.id}
                   onClick={() => handlePlayerClick(player.id)}
