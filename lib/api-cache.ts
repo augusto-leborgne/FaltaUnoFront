@@ -17,8 +17,9 @@ interface PendingRequest {
 class ApiCache {
   private cache = new Map<string, CacheEntry>();
   private pendingRequests = new Map<string, PendingRequest>();
-  private readonly DEFAULT_TTL = 60000; // 60 seconds (aumentado para mejor performance)
+  private readonly DEFAULT_TTL = 120000; // 2 minutes (aumentado para mejor performance)
   private readonly MAX_PENDING_TIME = 10000; // 10 seconds
+  private readonly MAX_CACHE_SIZE = 100; // Limit cache size to prevent memory issues
 
   /**
    * Generate cache key from URL and options
@@ -52,6 +53,15 @@ class ApiCache {
    */
   set(url: string, data: any, options?: RequestInit, ttl: number = this.DEFAULT_TTL): void {
     const key = this.getCacheKey(url, options);
+    
+    // Implement LRU cache: remove oldest entry if cache is full
+    if (this.cache.size >= this.MAX_CACHE_SIZE) {
+      const firstKey = this.cache.keys().next().value;
+      if (firstKey) {
+        this.cache.delete(firstKey);
+      }
+    }
+    
     this.cache.set(key, {
       data,
       timestamp: Date.now(),

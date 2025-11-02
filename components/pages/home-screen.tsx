@@ -8,7 +8,7 @@ import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { Clock, Calendar, Star, Bell, Newspaper, TrendingUp, Award } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
-import { API_BASE, InscripcionAPI, InscripcionEstado } from "@/lib/api"
+import { API_BASE, InscripcionAPI, InscripcionEstado, getUserPhotoUrl } from "@/lib/api"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useNotifications } from "@/hooks/use-notifications"
 import { useCurrentUser } from "@/hooks/use-current-user"
@@ -53,6 +53,7 @@ export function HomeScreen() {
   const [pendingReviews, setPendingReviews] = useState<PendingReview[]>([])
   const [newsUpdates, setNewsUpdates] = useState<NewsUpdate[]>([])
   const [isLoading, setIsLoading] = useState(false) // Cambiar a false para mostrar UI rápido
+  const [userPhotoUrl, setUserPhotoUrl] = useState<string | null>(null)
   const [communityStats, setCommunityStats] = useState({
     activeUsers: 0,
     matchesThisWeek: 0,
@@ -62,6 +63,13 @@ export function HomeScreen() {
   useEffect(() => {
     loadData()
   }, [])
+
+  // Cargar foto del usuario desde el servidor
+  useEffect(() => {
+    if (currentUser?.id) {
+      setUserPhotoUrl(getUserPhotoUrl(currentUser.id))
+    }
+  }, [currentUser?.id])
 
   const loadData = async () => {
     try {
@@ -77,16 +85,44 @@ export function HomeScreen() {
         return
       }
 
-      // Cargar partidos del usuario
-      const matchesResponse = await fetch(`${API_BASE}/api/partidos/usuario/${user.id}`, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      })
+      // ⚡ OPTIMIZACIÓN: Cargar datos en paralelo para reducir tiempo de carga
+      const [matchesResult, reviewsResult, statsResult, novedadesResult] = await Promise.allSettled([
+        // Cargar partidos del usuario
+        fetch(`${API_BASE}/api/partidos/usuario/${user.id}`, {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        }).then(res => res.ok ? res.json() : null),
+        
+        // Cargar reseñas pendientes
+        fetch(`${API_BASE}/api/usuarios/${user.id}/pending-reviews`, {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        }).then(res => res.ok ? res.json() : null),
+        
+        // Cargar estadísticas de la comunidad
+        fetch(`${API_BASE}/api/usuarios/stats`, {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        }).then(res => res.ok ? res.json() : null),
+        
+        // Cargar novedades
+        fetch(`${API_BASE}/api/novedades?limit=5`, {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          }
+        }).then(res => res.ok ? res.json() : null)
+      ])
 
-      if (matchesResponse.ok) {
-        const matchesData = await matchesResponse.json()
+      // Procesar partidos
+      if (matchesResult.status === 'fulfilled' && matchesResult.value) {
+        const matchesData = matchesResult.value
         const partidos = matchesData.data || []
         
         // Filtrar solo próximos partidos
@@ -99,29 +135,14 @@ export function HomeScreen() {
         setUpcomingMatches(proximos)
       }
 
-      // Cargar reseñas pendientes
-      const reviewsResponse = await fetch(`${API_BASE}/api/usuarios/${user.id}/pending-reviews`, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      })
-
-      if (reviewsResponse.ok) {
-        const reviewsData = await reviewsResponse.json()
-        setPendingReviews(reviewsData.data || [])
+      // Procesar reseñas pendientes
+      if (reviewsResult.status === 'fulfilled' && reviewsResult.value) {
+        setPendingReviews(reviewsResult.value.data || [])
       }
 
-      // Cargar estadísticas de la comunidad
-      const statsResponse = await fetch(`${API_BASE}/api/usuarios/stats`, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      })
-
-      if (statsResponse.ok) {
-        const statsData = await statsResponse.json()
+      // Procesar estadísticas
+      if (statsResult.status === 'fulfilled' && statsResult.value) {
+        const statsData = statsResult.value
         if (statsData.success && statsData.data) {
           setCommunityStats({
             activeUsers: statsData.data.usuariosActivos || 0,
@@ -131,53 +152,36 @@ export function HomeScreen() {
         }
       }
 
-      // Cargar novedades desde GitHub commits con deploy exitoso
-      try {
-        const novedadesResponse = await fetch(`${API_BASE}/api/novedades?limit=5`, {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
-        })
-
-        if (novedadesResponse.ok) {
-          const novedadesData = await novedadesResponse.json()
-          if (novedadesData.success && novedadesData.data) {
-            setNewsUpdates(novedadesData.data)
-          }
+      // Procesar novedades
+      if (novedadesResult.status === 'fulfilled' && novedadesResult.value) {
+        const novedadesData = novedadesResult.value
+        if (novedadesData.success && novedadesData.data) {
+          setNewsUpdates(novedadesData.data)
         } else {
-          console.warn(`Novedades endpoint retornó ${novedadesResponse.status}, usando datos por defecto`)
-          // Usar novedades por defecto si el endpoint falla
-          setNewsUpdates([{
-            id: "default1",
-            type: "feature",
-            title: "¡Bienvenido a Falta Uno!",
-            description: "La plataforma para organizar partidos de fútbol entre amigos.",
-            date: "Recientemente",
-            author: "Equipo Falta Uno",
-            tags: ["Bienvenida"]
-          }])
+          setNewsUpdates(getDefaultNews())
         }
-      } catch (novedadesError) {
-        console.error("Error cargando novedades:", novedadesError)
-        // En caso de error, usar novedades por defecto
-        setNewsUpdates([{
-          id: "default1",
-          type: "feature",
-          title: "¡Bienvenido a Falta Uno!",
-          description: "La plataforma para organizar partidos de fútbol entre amigos.",
-          date: "Recientemente",
-          author: "Equipo Falta Uno",
-          tags: ["Bienvenida"]
-        }])
+      } else {
+        setNewsUpdates(getDefaultNews())
       }
 
     } catch (error) {
       console.error("Error cargando datos:", error)
+      setNewsUpdates(getDefaultNews())
     } finally {
       setIsLoading(false)
     }
   }
+
+  // Helper para noticias por defecto
+  const getDefaultNews = () => [{
+    id: "default1",
+    type: "feature" as const,
+    title: "¡Bienvenido a Falta Uno!",
+    description: "La plataforma para organizar partidos de fútbol entre amigos.",
+    date: "Recientemente",
+    author: "Equipo Falta Uno",
+    tags: ["Bienvenida"]
+  }]
 
   const handleMatchClick = async (matchId: string) => {
     // Verificar si el usuario está inscrito y aceptado
@@ -225,13 +229,13 @@ export function HomeScreen() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* HEADER + STATS */}
-      <div className="pt-12 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6 bg-gradient-to-r from-primary/5 to-secondary/5">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground">¡Bienvenido!</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">Descubre lo que está pasando</p>
+      <div className="pt-12 sm:pt-16 pb-3 sm:pb-6 px-3 sm:px-6 bg-gradient-to-r from-primary/5 to-secondary/5">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground truncate">¡Bienvenido!</h1>
+            <p className="text-xs sm:text-sm md:text-base text-muted-foreground truncate">Descubre lo que está pasando</p>
           </div>
-          <div className="flex items-center space-x-2 sm:space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
             <button
               onClick={handleNotifications}
               className="relative p-2 rounded-full hover:bg-white/20 transition-colors touch-manipulation"
@@ -243,64 +247,68 @@ export function HomeScreen() {
                 </span>
               )}
             </button>
-            <Avatar className="w-10 h-10 sm:w-12 sm:h-12 cursor-pointer" onClick={() => router.push("/profile")}>
-              {currentUser?.foto_perfil ? (
-                <AvatarImage src={currentUser.foto_perfil} alt={currentUser?.nombre || "Usuario"} />
+            <Avatar className="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 cursor-pointer" onClick={() => router.push("/profile")}>
+              {userPhotoUrl ? (
+                <AvatarImage 
+                  src={userPhotoUrl} 
+                  alt={currentUser?.nombre || "Usuario"}
+                  onError={() => setUserPhotoUrl(null)}
+                />
               ) : (
-                <AvatarFallback className="bg-primary/10 text-primary">
-                  {currentUser?.nombre?.[0] || "U"}
+                <AvatarFallback className="bg-primary/10 text-primary text-sm sm:text-base">
+                  {currentUser?.nombre?.[0]?.toUpperCase() || "U"}
                 </AvatarFallback>
               )}
             </Avatar>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
-          <div className="bg-card rounded-xl p-3 text-center">
-            <div className="text-lg font-bold text-green-600">{communityStats.activeUsers}</div>
-            <div className="text-xs text-muted-foreground">Activos ahora</div>
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
+          <div className="bg-card rounded-lg sm:rounded-xl p-2 sm:p-3 text-center">
+            <div className="text-base sm:text-lg md:text-xl font-bold text-green-600">{communityStats.activeUsers}</div>
+            <div className="text-[10px] sm:text-xs text-muted-foreground">Activos ahora</div>
           </div>
-          <div className="bg-card rounded-xl p-3 text-center">
-            <div className="text-lg font-bold text-foreground">{communityStats.matchesThisWeek}</div>
-            <div className="text-xs text-muted-foreground">Total partidos</div>
+          <div className="bg-card rounded-lg sm:rounded-xl p-2 sm:p-3 text-center">
+            <div className="text-base sm:text-lg md:text-xl font-bold text-foreground">{communityStats.matchesThisWeek}</div>
+            <div className="text-[10px] sm:text-xs text-muted-foreground">Total partidos</div>
           </div>
-          <div className="bg-card rounded-xl p-3 text-center">
-            <div className="text-lg font-bold text-foreground">{communityStats.newMembers}</div>
-            <div className="text-xs text-muted-foreground">Total usuarios</div>
+          <div className="bg-card rounded-lg sm:rounded-xl p-2 sm:p-3 text-center">
+            <div className="text-base sm:text-lg md:text-xl font-bold text-foreground">{communityStats.newMembers}</div>
+            <div className="text-[10px] sm:text-xs text-muted-foreground">Total usuarios</div>
           </div>
         </div>
       </div>
 
       {/* PENDING REVIEWS */}
       {pendingReviews.length > 0 && (
-        <div className="px-6 py-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-foreground">Partidos por calificar</h2>
-            <Badge className="bg-orange-100 text-orange-800">{pendingReviews.length}</Badge>
+        <div className="px-3 sm:px-6 py-4 sm:py-6">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h2 className="text-base sm:text-lg font-bold text-foreground">Partidos por calificar</h2>
+            <Badge className="bg-orange-100 text-orange-800 text-xs">{pendingReviews.length}</Badge>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {pendingReviews.map((review) => (
               <div
                 key={review.partido_id}
                 onClick={() => handleReviewMatch(review.partido_id)}
-                className="bg-gradient-to-r from-orange-50 to-yellow-50 border border-orange-200 rounded-2xl p-4 cursor-pointer hover:shadow-md transition-all duration-200 touch-manipulation active:scale-[0.98]"
+                className="bg-gradient-to-r from-orange-50 to-yellow-50 border border-orange-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 cursor-pointer hover:shadow-md transition-all duration-200 touch-manipulation active:scale-[0.98]"
               >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-2">
-                    <Badge className="bg-orange-100 text-orange-800">{review.tipo_partido}</Badge>
-                    <Badge className="bg-red-100 text-red-800">Reseña pendiente</Badge>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center space-x-1 sm:space-x-2 flex-wrap gap-1">
+                    <Badge className="bg-orange-100 text-orange-800 text-[10px] sm:text-xs">{review.tipo_partido}</Badge>
+                    <Badge className="bg-red-100 text-red-800 text-[10px] sm:text-xs">Reseña pendiente</Badge>
                   </div>
-                  <Star className="w-5 h-5 text-orange-600" />
+                  <Star className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600 flex-shrink-0" />
                 </div>
-                <h3 className="font-semibold text-foreground mb-1">{review.fecha}</h3>
-                <p className="text-sm text-muted-foreground mb-2">{review.nombre_ubicacion}</p>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">
+                <h3 className="font-semibold text-foreground mb-1 text-sm sm:text-base truncate">{review.fecha}</h3>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-2 truncate">{review.nombre_ubicacion}</p>
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <span className="text-xs sm:text-sm text-muted-foreground">
                     {review.jugadores_pendientes?.length || 0} jugadores por calificar
                   </span>
                   <div className="flex items-center text-orange-600">
-                    <Star className="w-4 h-4 mr-1" />
-                    <span className="text-sm font-medium">Toca para calificar</span>
+                    <Star className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                    <span className="text-xs sm:text-sm font-medium">Toca para calificar</span>
                   </div>
                 </div>
               </div>
@@ -310,45 +318,44 @@ export function HomeScreen() {
       )}
 
       {/* NOTICIAS */}
-      <div className="px-6 py-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="px-3 sm:px-6 py-4 sm:py-6">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
           <div>
-            <h2 className="text-xl font-bold text-foreground">Novedades</h2>
-            <p className="text-sm text-muted-foreground">Últimas actualizaciones</p>
+            <h2 className="text-lg sm:text-xl font-bold text-foreground">Novedades</h2>
+            <p className="text-xs sm:text-sm text-muted-foreground">Últimas actualizaciones</p>
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-3 sm:space-y-6">
           {newsUpdates.map((news) => (
             <div
               key={news.id}
-              className="bg-card rounded-2xl overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 touch-manipulation active:scale-[0.98] border border-border/50"
+              className="bg-card rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 touch-manipulation active:scale-[0.98] border border-border/50"
             >
-              <div className="p-5">
-                <div className="flex items-start gap-3 mb-3">
+              <div className="p-3 sm:p-5">
+                <div className="flex items-start gap-2 sm:gap-3 mb-2 sm:mb-3">
                   <div className="flex-shrink-0 mt-0.5">
                     {getNewsIcon(news.type)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    {/* Reduce tamaño y aplica truncado por seguridad (JS) además de line-clamp */}
-                    <h3 className="font-medium text-foreground text-sm leading-snug line-clamp-2">
+                    <h3 className="font-medium text-foreground text-xs sm:text-sm leading-snug line-clamp-2">
                       {news.title && news.title.length > 100 ? `${news.title.slice(0, 97)}...` : news.title}
                     </h3>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground mb-4 leading-relaxed line-clamp-3">{news.description}</p>
+                <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 leading-relaxed line-clamp-3">{news.description}</p>
                 {news.tags && (
-                  <div className="flex flex-wrap gap-2 mb-4">
+                  <div className="flex flex-wrap gap-1 sm:gap-2 mb-3 sm:mb-4">
                     {news.tags.map((tag) => (
-                      <span key={tag} className="px-2 py-1 bg-muted text-muted-foreground text-xs rounded-lg">
+                      <span key={tag} className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-muted text-muted-foreground text-[10px] sm:text-xs rounded-lg">
                         #{tag}
                       </span>
                     ))}
                   </div>
                 )}
-                <div className="flex items-center justify-between pt-3 border-t border-border/50">
-                  <div className="flex items-center space-x-3">
-                    <span className="text-xs text-muted-foreground">{news.date}</span>
+                <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-border/50">
+                  <div className="flex items-center space-x-2 sm:space-x-3">
+                    <span className="text-[10px] sm:text-xs text-muted-foreground">{news.date}</span>
                   </div>
                 </div>
               </div>

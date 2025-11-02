@@ -261,13 +261,14 @@ interface ApiFetchOptions extends RequestInit {
   skipAuth?: boolean;
   customToken?: string;
   skipAutoLogout?: boolean; // New option to prevent automatic logout on 401
+  signal?: AbortSignal; // Support for request cancellation
 }
 
 async function apiFetch<T>(
   endpoint: string,
   options: ApiFetchOptions = {}
 ): Promise<ApiResponse<T>> {
-  const { skipAuth = false, customToken, skipAutoLogout = false, ...fetchOptions } = options;
+  const { skipAuth = false, customToken, skipAutoLogout = false, signal, ...fetchOptions } = options;
 
   // ⚡ PROTECCIÓN: Validar y limpiar tokens corruptos/expirados
   if (!skipAuth) {
@@ -310,6 +311,7 @@ async function apiFetch<T>(
     const response = await fetch(fullUrl, {
       ...fetchOptions,
       headers,
+      signal, // Add abort signal support
     });
 
     // Manejo de 401 - Sesión expirada
@@ -376,6 +378,20 @@ async function apiFetch<T>(
 
   } catch (error) {
     console.error(`[API] Error en ${endpoint}:`, error);
+    
+    // Handle abort errors (timeouts)
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('La solicitud tardó demasiado tiempo. Por favor intenta nuevamente.');
+    }
+    
+    // Handle network errors
+    if (error instanceof Error && (
+      error.message.includes('Failed to fetch') || 
+      error.message.includes('NetworkError') ||
+      error.message.includes('ERR_CONNECTION')
+    )) {
+      throw new Error('Error de conexión. Verifica tu conexión a internet o intenta nuevamente.');
+    }
     
     if (error instanceof Error) {
       throw error;
@@ -1377,8 +1393,27 @@ export const NotificacionAPI = {
    */
   count: async () => {
     try {
-      return await apiFetch<{ count: number }>('/api/notificaciones/count');
+      // Agregar timeout de 8 segundos para evitar conexiones colgadas
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 8000)
+      
+      const response = await apiFetch<{ count: number }>('/api/notificaciones/count', {
+        signal: controller.signal
+      })
+      
+      clearTimeout(timeoutId)
+      return response
     } catch (error) {
+      // Si es error de abort (timeout), retornar 0 sin error
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.debug('[NotificacionAPI.count] Timeout - retornando 0')
+        return {
+          success: true,
+          data: { count: 0 } as any,
+          message: 'Timeout al contar notificaciones'
+        }
+      }
+      
       console.error('[NotificacionAPI.count] Error:', error);
       return {
         success: false,

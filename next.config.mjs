@@ -24,6 +24,14 @@ const nextConfig = {
   // Optimize production builds
   productionBrowserSourceMaps: false,
   
+  // ⚡ Enable modularized imports to reduce bundle size
+  modularizeImports: {
+    'lucide-react': {
+      transform: 'lucide-react/dist/esm/icons/{{kebabCase member}}',
+      skipDefaultConversion: true,
+    },
+  },
+  
   // ❌ NO SE NECESITA PROXY - Cloud Run backend tiene HTTPS
   // El frontend se comunica directamente con https://faltauno-backend-169771742214.us-central1.run.app
   // Sin Mixed Content errors porque ambos usan HTTPS
@@ -131,7 +139,6 @@ const nextConfig = {
   // Experimental features
   experimental: {
     // ⚡ PERFORMANCE: Optimize package imports
-    // REMOVED 'lucide-react' due to barrel export issues in Docker production builds
     optimizePackageImports: [
       '@radix-ui/react-icons',
       'date-fns',
@@ -140,6 +147,22 @@ const nextConfig = {
     
     // ⚡ Optimize server components
     serverComponentsExternalPackages: ['@radix-ui'],
+    
+    // ⚡ Enable turbo mode for faster builds
+    turbo: {
+      rules: {
+        '*.svg': {
+          loaders: ['@svgr/webpack'],
+          as: '*.js',
+        },
+      },
+    },
+    
+    // ⚡ Optimize CSS
+    optimizeCss: true,
+    
+    // ⚡ Use SWC for faster compilation
+    swcPlugins: [],
   },
   
   // Ensure lucide-react is properly transpiled in all environments
@@ -152,46 +175,73 @@ const nextConfig = {
       // Enable aggressive code splitting
       config.optimization = {
         ...config.optimization,
+        moduleIds: 'deterministic',
+        runtimeChunk: 'single',
         splitChunks: {
           chunks: 'all',
           cacheGroups: {
             default: false,
             vendors: false,
-            // Vendor chunk for node_modules
-            vendor: {
-              name: 'vendor',
+            // React & Next.js core (highest priority)
+            framework: {
+              name: 'framework',
+              test: /[\\/]node_modules[\\/](react|react-dom|next|scheduler)[\\/]/,
               chunks: 'all',
-              test: /node_modules/,
-              priority: 20
-            },
-            // Separate chunk for common components
-            common: {
-              name: 'common',
-              minChunks: 2,
-              chunks: 'all',
-              priority: 10,
-              reuseExistingChunk: true,
-              enforce: true
+              priority: 50,
+              enforce: true,
             },
             // Radix UI separate chunk (large library)
             radix: {
               name: 'radix',
               test: /[\\/]node_modules[\\/]@radix-ui[\\/]/,
               chunks: 'all',
+              priority: 40,
+              enforce: true,
+            },
+            // Lucide icons
+            icons: {
+              name: 'icons',
+              test: /[\\/]node_modules[\\/]lucide-react[\\/]/,
+              chunks: 'all',
+              priority: 35,
+              enforce: true,
+            },
+            // Third-party libraries
+            lib: {
+              test: /[\\/]node_modules[\\/]/,
+              name(module) {
+                const packageName = module.context.match(
+                  /[\\/]node_modules[\\/](.*?)([\\/]|$)/
+                )?.[1];
+                return `lib.${packageName?.replace('@', '')}`;
+              },
+              chunks: 'all',
               priority: 30,
             },
-            // React & Next.js core
-            framework: {
-              name: 'framework',
-              test: /[\\/]node_modules[\\/](react|react-dom|next)[\\/]/,
+            // Common components used across pages
+            common: {
+              name: 'common',
+              minChunks: 2,
               chunks: 'all',
-              priority: 40,
+              priority: 20,
+              reuseExistingChunk: true,
+              enforce: true,
             },
           },
-          maxInitialRequests: 25,
+          maxInitialRequests: 30,
+          maxAsyncRequests: 30,
           minSize: 20000,
+          maxSize: 244000,
         },
+        minimize: true,
       }
+    }
+    
+    // Add performance hints
+    config.performance = {
+      hints: dev ? false : 'warning',
+      maxEntrypointSize: 512000,
+      maxAssetSize: 512000,
     }
     
     return config

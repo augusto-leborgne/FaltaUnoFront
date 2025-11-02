@@ -29,9 +29,18 @@ export function useNotifications() {
       const response = await NotificacionAPI.count()
       if (response.success) {
         setCount(response.data.count)
+      } else {
+        // Si falla, no actualizar el contador para mantener el último valor válido
+        console.warn("[useNotifications] Error en respuesta del contador:", response.message)
       }
     } catch (error) {
-      console.error("[useNotifications] Error cargando contador:", error)
+      // Silenciar errores de red para evitar spam en consola
+      // El contador mantendrá el último valor válido
+      if (error instanceof Error && error.message.includes('Failed to fetch')) {
+        console.debug("[useNotifications] Error de red al cargar contador (silenciado):", error.message)
+      } else {
+        console.error("[useNotifications] Error cargando contador:", error)
+      }
     }
   }, [])
 
@@ -137,13 +146,29 @@ export function useNotifications() {
     }, 100)
   }, [])
 
-  // Polling cada 30 segundos para actualizar contador
+  // Polling cada 2 minutos para actualizar contador (optimizado para reducir carga)
   useEffect(() => {
     const interval = setInterval(() => {
-      cargarContador()
-    }, 30000) // 30 segundos
+      // Solo hacer polling si el usuario está autenticado y la ventana está activa
+      if (document.visibilityState === 'visible') {
+        cargarContador()
+      }
+    }, 120000) // 2 minutos (aumentado desde 60 segundos)
 
-    return () => clearInterval(interval)
+    // Listener para visibilidad de página
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Refrescar cuando la página vuelve a estar visible
+        cargarContador()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
   }, [cargarContador])
 
   return {

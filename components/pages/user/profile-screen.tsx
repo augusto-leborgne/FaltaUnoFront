@@ -58,7 +58,8 @@ function ProfileScreenInner() {
     refreshUser().catch(err => {
       console.error("[ProfileScreen] Error revalidando usuario:", err)
     })
-  }, [refreshUser]) // Agregar refreshUser a dependencias
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // ✅ Array vacío para ejecutar solo una vez al montar
 
   const loadProfileData = useCallback(async () => {
     try {
@@ -76,64 +77,54 @@ function ProfileScreenInner() {
         "Content-Type": "application/json",
       }
 
-      // Reviews
-      try {
-        const reviewsResponse = await fetch(
-          normalizeUrl(`${API_BASE}/api/reviews/usuario/${user.id}`),
-          { headers: authHeaders }
-        )
-        if (reviewsResponse.ok) {
-          const reviewsData = await reviewsResponse.json()
-          setReviews(reviewsData.data || [])
-        }
-      } catch (e) {
-        console.error("[ProfileScreen] Error cargando reviews:", e)
+      // ⚡ OPTIMIZACIÓN: Cargar todos los datos en paralelo
+      const [reviewsResult, frResult, contactsResult] = await Promise.allSettled([
+        // Reviews
+        fetch(normalizeUrl(`${API_BASE}/api/reviews/usuario/${user.id}`), { headers: authHeaders })
+          .then(res => res.ok ? res.json() : null),
+        
+        // Friend requests
+        fetch(normalizeUrl(`${API_BASE}/api/amistades/pendientes`), { headers: authHeaders })
+          .then(res => res.ok ? res.json() : null),
+        
+        // Contacts
+        fetch(normalizeUrl(`${API_BASE}/api/usuarios`), { headers: authHeaders })
+          .then(res => res.ok ? res.json() : null)
+      ])
+
+      // Procesar reviews
+      if (reviewsResult.status === 'fulfilled' && reviewsResult.value) {
+        setReviews(reviewsResult.value.data || [])
       }
 
-      // Friend requests
-      try {
-        const frResponse = await fetch(
-          normalizeUrl(`${API_BASE}/api/amistades/pendientes`),
-          { headers: authHeaders }
-        )
-        if (frResponse.ok) {
-          const frData = await frResponse.json()
-          setFriendRequests(frData.data || [])
-        }
-      } catch (e) {
-        console.error("[ProfileScreen] Error cargando friend requests:", e)
+      // Procesar friend requests
+      if (frResult.status === 'fulfilled' && frResult.value) {
+        setFriendRequests(frResult.value.data || [])
       }
 
-      // Contacts (listado de otros usuarios)
-      try {
-        const contactsResponse = await fetch(normalizeUrl(`${API_BASE}/api/usuarios`), {
-          headers: authHeaders,
-        })
-        if (contactsResponse.ok) {
-          const contactsData = await contactsResponse.json()
-          const allUsers = contactsData.data || []
+      // Procesar contacts
+      if (contactsResult.status === 'fulfilled' && contactsResult.value) {
+        const contactsData = contactsResult.value
+        const allUsers = contactsData.data || []
 
-          const filteredContacts: Contact[] = allUsers
-            .filter((u: any) => 
-              u && 
-              u.id && 
-              u.id !== user.id &&
-              u.nombre &&
-              u.apellido
-            ) // ✅ Filter out null/undefined/invalid users
-            .map((u: any) => ({
-              id: u.id,
-              nombre: u.nombre || "",
-              apellido: u.apellido || "",
-              celular: u.celular,
-              foto_perfil: u.foto_perfil || u.fotoPerfil,
-              isOnApp: true,
-            }))
+        const filteredContacts: Contact[] = allUsers
+          .filter((u: any) => 
+            u && 
+            u.id && 
+            u.id !== user.id &&
+            u.nombre &&
+            u.apellido
+          )
+          .map((u: any) => ({
+            id: u.id,
+            nombre: u.nombre || "",
+            apellido: u.apellido || "",
+            celular: u.celular,
+            foto_perfil: u.foto_perfil || u.fotoPerfil,
+            isOnApp: true,
+          }))
 
-          setContacts(filteredContacts)
-        }
-      } catch (e) {
-        console.error("[ProfileScreen] Error cargando contactos:", e)
+        setContacts(filteredContacts)
       }
     } catch (e) {
       console.error("[ProfileScreen] Error cargando datos del perfil:", e)
@@ -147,7 +138,8 @@ function ProfileScreenInner() {
     if (user?.id) {
       loadProfileData()
     }
-  }, [user?.id, loadProfileData])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]) // ✅ Solo ejecutar cuando cambie el ID del usuario
 
   const handleReviewClick = (reviewId: string) => {
     const review = reviews.find((r) => r.id === reviewId)
@@ -209,69 +201,69 @@ function ProfileScreenInner() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
-      <div className="pt-16 pb-6 text-center border-b border-gray-100">
-        <h1 className="text-2xl font-bold text-gray-900">Mi Perfil</h1>
+      <div className="pt-16 pb-4 sm:pb-6 text-center border-b border-gray-100">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Mi Perfil</h1>
       </div>
 
-      <div className="flex-1 px-6 py-6 overflow-y-auto">
+      <div className="flex-1 px-3 sm:px-6 py-4 sm:py-6 overflow-y-auto">
         {/* Profile Card */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
-          <div className="flex items-center space-x-4 mb-6">
+        <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
+          <div className="flex items-center space-x-3 sm:space-x-4 mb-4 sm:mb-6">
             <UserAvatar
               photo={user.foto_perfil || user.foto_perfil}
               name={user.nombre}
               surname={user.apellido}
-              className="w-20 h-20"
+              className="w-16 h-16 sm:w-20 sm:h-20"
               onClick={handleSettingsClick}
             />
-            <div className="flex-1">
-              <h2 className="text-xl font-bold text-gray-900">{fullName}</h2>
-              <p className="text-gray-600">{user.posicion || "Sin posición"} • {averageRating}★</p>
-              <p className="text-sm text-gray-500">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900 truncate">{fullName}</h2>
+              <p className="text-sm sm:text-base text-gray-600 truncate">{user.posicion || "Sin posición"} • {averageRating}★</p>
+              <p className="text-xs sm:text-sm text-gray-500">
                 Miembro desde {user.created_at ? new Date(user.created_at).getFullYear() : "..."}
               </p>
             </div>
-            <Button variant="outline" size="sm" className="bg-orange-50 border-orange-200" onClick={handleSettingsClick}>
+            <Button variant="outline" size="sm" className="bg-orange-50 border-orange-200 flex-shrink-0" onClick={handleSettingsClick}>
               <Settings className="w-4 h-4" />
             </Button>
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="text-center bg-gray-50 rounded-xl p-3">
-              <div className="text-lg font-bold text-gray-900">{edad !== null ? `${edad}` : "N/A"}</div>
-              <div className="text-sm text-gray-600">Edad</div>
+          <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-3 sm:mb-4">
+            <div className="text-center bg-gray-50 rounded-lg sm:rounded-xl p-2 sm:p-3">
+              <div className="text-base sm:text-lg font-bold text-gray-900">{edad !== null ? `${edad}` : "N/A"}</div>
+              <div className="text-xs sm:text-sm text-gray-600">Edad</div>
             </div>
-            <div className="text-center bg-gray-50 rounded-xl p-3">
-              <div className="text-lg font-bold text-gray-900">{user.altura ? `${user.altura}` : "N/A"}</div>
-              <div className="text-sm text-gray-600">Altura (cm)</div>
+            <div className="text-center bg-gray-50 rounded-lg sm:rounded-xl p-2 sm:p-3">
+              <div className="text-base sm:text-lg font-bold text-gray-900">{user.altura ? `${user.altura}` : "N/A"}</div>
+              <div className="text-xs sm:text-sm text-gray-600">Altura (cm)</div>
             </div>
-            <div className="text-center bg-gray-50 rounded-xl p-3">
-              <div className="text-lg font-bold text-gray-900">{user.peso ? `${user.peso}` : "N/A"}</div>
-              <div className="text-sm text-gray-600">Peso (kg)</div>
+            <div className="text-center bg-gray-50 rounded-lg sm:rounded-xl p-2 sm:p-3">
+              <div className="text-base sm:text-lg font-bold text-gray-900">{user.peso ? `${user.peso}` : "N/A"}</div>
+              <div className="text-xs sm:text-sm text-gray-600">Peso (kg)</div>
             </div>
-            <div className="text-center bg-gray-50 rounded-xl p-3">
-              <div className="text-lg font-bold text-gray-900">{averageRating}</div>
-              <div className="text-sm text-gray-600">Rating</div>
+            <div className="text-center bg-gray-50 rounded-lg sm:rounded-xl p-2 sm:p-3">
+              <div className="text-base sm:text-lg font-bold text-gray-900">{averageRating}</div>
+              <div className="text-xs sm:text-sm text-gray-600">Rating</div>
             </div>
           </div>
         </div>
 
         {/* Friend Requests */}
         {friendRequests.length > 0 && (
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-900">Solicitudes de amistad</h3>
-              <Badge className="bg-orange-100 text-orange-800">{friendRequests.length}</Badge>
+          <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-base sm:text-lg font-bold text-gray-900">Solicitudes de amistad</h3>
+              <Badge className="bg-orange-100 text-orange-800 text-xs">{friendRequests.length}</Badge>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {friendRequests.slice(0, 3).map((request) => (
-                <div key={request.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                  <div className="flex items-center space-x-3">
-                    <UserAvatar className="w-10 h-10" fullName="Nueva solicitud" />
-                    <div>
-                      <p className="font-medium text-gray-900">Nueva solicitud</p>
-                      <p className="text-xs text-gray-500">
+                <div key={request.id} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl">
+                  <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
+                    <UserAvatar className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0" fullName="Nueva solicitud" />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-gray-900 text-sm sm:text-base truncate">Nueva solicitud</p>
+                      <p className="text-[10px] sm:text-xs text-gray-500">
                         {new Date(request.createdAt).toLocaleDateString("es-ES")}
                       </p>
                     </div>
@@ -280,7 +272,7 @@ function ProfileScreenInner() {
                     size="sm"
                     variant="outline"
                     onClick={() => router.push(`/friend-requests`)}
-                    className="bg-transparent"
+                    className="bg-transparent flex-shrink-0 text-xs sm:text-sm"
                   >
                     Ver
                   </Button>
@@ -299,37 +291,37 @@ function ProfileScreenInner() {
         )}
 
         {/* Reviews Section */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-gray-900">Reseñas</h3>
+        <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h3 className="text-base sm:text-lg font-bold text-gray-900">Reseñas</h3>
             <div className="flex items-center space-x-1">
-              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-              <span className="text-sm font-medium">{averageRating}</span>
-              <span className="text-sm text-gray-500">({reviews.length})</span>
+              <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-yellow-400 text-yellow-400" />
+              <span className="text-xs sm:text-sm font-medium">{averageRating}</span>
+              <span className="text-xs sm:text-sm text-gray-500">({reviews.length})</span>
             </div>
           </div>
 
           {reviews.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">Aún no tienes reseñas</div>
+            <div className="text-center py-6 sm:py-8 text-gray-500 text-sm">Aún no tienes reseñas</div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {reviews.slice(0, 3).map((review) => {
                 const avgRating = Math.round((review.nivel + review.deportividad + review.companerismo) / 3)
                 return (
                   <div
                     key={review.id}
                     onClick={() => handleReviewClick(review.id)}
-                    className="border-b border-gray-100 last:border-b-0 pb-4 last:pb-0 cursor-pointer hover:bg-gray-50 -mx-2 px-2 py-2 rounded-xl transition-colors"
+                    className="border-b border-gray-100 last:border-b-0 pb-3 sm:pb-4 last:pb-0 cursor-pointer hover:bg-gray-50 -mx-2 px-2 py-2 rounded-lg sm:rounded-xl transition-colors"
                   >
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium text-gray-900">
+                      <span className="font-medium text-gray-900 text-sm sm:text-base truncate">
                         Usuario {review.usuario_que_califica_id.substring(0, 8)}
                       </span>
-                      <div className="flex items-center space-x-1">
+                      <div className="flex items-center space-x-0.5 sm:space-x-1 flex-shrink-0 ml-2">
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
-                            className={`w-3 h-3 ${i < avgRating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
+                            className={`w-2.5 h-2.5 sm:w-3 sm:h-3 ${i < avgRating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
                           />
                         ))}
                       </div>
@@ -385,25 +377,25 @@ function ProfileScreenInner() {
         </div>
 
         {/* Contacts Section */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-gray-900">Contactos</h3>
-            <Button variant="outline" size="sm" onClick={handleContactsClick} className="bg-transparent">
-              <Users className="w-4 h-4 mr-2" />
+        <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-20 sm:mb-24">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h3 className="text-base sm:text-lg font-bold text-gray-900">Contactos</h3>
+            <Button variant="outline" size="sm" onClick={handleContactsClick} className="bg-transparent text-xs sm:text-sm">
+              <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
               Ver todos
             </Button>
           </div>
 
           {contacts.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500 mb-4">No hay contactos</p>
-              <Button onClick={handleContactsClick} className="bg-green-600 hover:bg-green-700">
-                <UserPlus className="w-4 h-4 mr-2" />
+            <div className="text-center py-6 sm:py-8">
+              <p className="text-gray-500 mb-3 sm:mb-4 text-sm">No hay contactos</p>
+              <Button onClick={handleContactsClick} className="bg-green-600 hover:bg-green-700 text-xs sm:text-sm">
+                <UserPlus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 Buscar usuarios
               </Button>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {contacts.slice(0, 5).map((contact) => {
                 const contactName = `${contact.nombre} ${contact.apellido}`.trim() || "Usuario"
                 const photo = contact.foto_perfil || contact.fotoPerfil
@@ -412,18 +404,18 @@ function ProfileScreenInner() {
                   <div
                     key={contact.id}
                     onClick={() => handleContactClick(contact)}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors"
+                    className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl cursor-pointer hover:bg-gray-100 transition-colors"
                   >
-                    <div className="flex items-center space-x-3">
-                      <UserAvatar photo={photo} name={contact.nombre} surname={contact.apellido} className="w-10 h-10" />
-                      <div>
-                        <p className="font-medium text-gray-900">{contactName}</p>
+                    <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
+                      <UserAvatar photo={photo} name={contact.nombre} surname={contact.apellido} className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{contactName}</p>
                         {contact.celular && (
                           <button
-                            className="text-sm text-gray-500 hover:text-green-600 transition-colors"
+                            className="text-xs sm:text-sm text-gray-500 hover:text-green-600 transition-colors truncate block"
                             onClick={(e) => handlePhoneClick(contact.celular!, e)}
                           >
-                            <Phone className="w-3 h-3 inline mr-1" />
+                            <Phone className="w-2.5 h-2.5 sm:w-3 sm:h-3 inline mr-1" />
                             {contact.celular}
                           </button>
                         )}

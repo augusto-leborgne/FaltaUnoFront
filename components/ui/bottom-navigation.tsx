@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname } from "next/navigation"
 import { Home, Map, User, Calendar } from "lucide-react"
+import { useEffect } from "react"
 
 export function BottomNavigation() {
   const router = useRouter()
@@ -37,6 +38,30 @@ export function BottomNavigation() {
       isActive: pathname.startsWith("/profile"),
     },
   ]
+
+  // ⚡ Prefetch navigation routes for faster transitions
+  useEffect(() => {
+    // Prefetch all navigation routes on idle
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(() => {
+        navItems.forEach(item => {
+          if (!item.isActive) {
+            router.prefetch(item.path)
+          }
+        })
+      }, { timeout: 2000 })
+    } else {
+      // Fallback for browsers without requestIdleCallback
+      setTimeout(() => {
+        navItems.forEach(item => {
+          if (!item.isActive) {
+            router.prefetch(item.path)
+          }
+        })
+      }, 1000)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname])
 
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 pb-safe-area-inset-bottom z-40 shadow-lg">

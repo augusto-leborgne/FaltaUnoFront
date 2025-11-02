@@ -192,17 +192,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         
         // ⚡ CRÍTICO: Revalidar desde servidor en background para sincronizar datos
-        // Esto asegura que siempre tengamos la versión más reciente del perfil
-        console.log("[AuthProvider] Revalidando usuario desde servidor en background...");
-        try {
-          const serverUser = await AuthService.fetchCurrentUser();
-          if (serverUser && mountedRef.current) {
-            console.log("[AuthProvider] ✅ Usuario actualizado desde servidor:", serverUser.email);
-            setUserState(serverUser);
+        // Usar requestIdleCallback para no bloquear la renderización inicial
+        const revalidate = async () => {
+          console.log("[AuthProvider] Revalidando usuario desde servidor en background...");
+          try {
+            const serverUser = await AuthService.fetchCurrentUser();
+            if (serverUser && mountedRef.current) {
+              console.log("[AuthProvider] ✅ Usuario actualizado desde servidor:", serverUser.email);
+              setUserState(serverUser);
+            }
+          } catch (err) {
+            console.warn("[AuthProvider] Error revalidando usuario (manteniendo cache local):", err);
+            // No hacer nada - mantener usuario local
           }
-        } catch (err) {
-          console.warn("[AuthProvider] Error revalidando usuario (manteniendo cache local):", err);
-          // No hacer nada - mantener usuario local
+        }
+        
+        // Use requestIdleCallback if available, otherwise setTimeout
+        if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+          (window as any).requestIdleCallback(revalidate, { timeout: 2000 });
+        } else {
+          setTimeout(revalidate, 100);
         }
         
         return;
@@ -272,8 +281,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     window.addEventListener("storage", onStorage);
     
-    // ⚡ NUEVO: Revalidación periódica cada 5 minutos
-    // Esto asegura que el perfil esté siempre sincronizado
+    // ⚡ NUEVO: Revalidación periódica cada 10 minutos (aumentado de 5)
+    // Esto asegura que el perfil esté siempre sincronizado sin sobrecarga
     const revalidationInterval = setInterval(async () => {
       if (!mountedRef.current) return; // ⚡ FIX: Verificar si el componente está montado
       
@@ -290,7 +299,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (err) {
         console.warn("[AuthProvider] Error en revalidación periódica:", err);
       }
-    }, 5 * 60 * 1000); // 5 minutos
+    }, 10 * 60 * 1000); // 10 minutos (aumentado de 5)
 
     return () => {
       mountedRef.current = false;

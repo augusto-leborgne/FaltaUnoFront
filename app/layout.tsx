@@ -62,13 +62,18 @@ export default function RootLayout({
     <html lang="es" className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}>
       <head>
         {/* ⚡ Preconnect to external domains for faster loading */}
-        <link rel="preconnect" href="https://faltauno-backend-pg4rwegknq-uc.a.run.app" />
+        <link rel="preconnect" href="https://faltauno-backend-pg4rwegknq-uc.a.run.app" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://faltauno-backend-pg4rwegknq-uc.a.run.app" />
-        <link rel="preconnect" href="https://maps.googleapis.com" />
+        <link rel="preconnect" href="https://maps.googleapis.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://maps.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+        
+        {/* ⚡ Prefetch critical API endpoints */}
+        <link rel="prefetch" href="https://faltauno-backend-pg4rwegknq-uc.a.run.app/api/usuarios/me" as="fetch" crossOrigin="anonymous" />
         
         {/* Viewport and PWA meta tags */}
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" />
         <meta name="theme-color" content="#4caf50" />
         
         {/* Additional SEO meta tags */}
