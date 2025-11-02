@@ -18,7 +18,7 @@ export function ContactsScreen() {
   const [searchResults, setSearchResults] = useState<Usuario[]>([])
   const [selectedUser, setSelectedUser] = useState<Usuario | null>(null)
   const [isSendingRequest, setIsSendingRequest] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false) // Cambiar a false para UI inmediata
   const [searching, setSearching] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isSearchMode, setIsSearchMode] = useState(false)
@@ -29,7 +29,11 @@ export function ContactsScreen() {
 
   const loadAmigos = async () => {
     try {
-      setLoading(true)
+      // Solo mostrar loading si no hay amigos cargados
+      if (amigos.length === 0) {
+        setLoading(true)
+      }
+      
       setError(null)
       
       if (!AuthService.isLoggedIn()) {

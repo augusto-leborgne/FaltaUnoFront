@@ -50,7 +50,7 @@ export function HomeScreen() {
   const [upcomingMatches, setUpcomingMatches] = useState<Partido[]>([])
   const [pendingReviews, setPendingReviews] = useState<PendingReview[]>([])
   const [newsUpdates, setNewsUpdates] = useState<NewsUpdate[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false) // Cambiar a false para mostrar UI rápido
   const [communityStats, setCommunityStats] = useState({
     activeUsers: 0,
     matchesThisWeek: 0,

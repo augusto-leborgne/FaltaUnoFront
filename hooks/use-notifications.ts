@@ -8,7 +8,7 @@ export function useNotifications() {
   const [notificaciones, setNotificaciones] = useState<NotificacionDTO[]>([])
   const [noLeidas, setNoLeidas] = useState<NotificacionDTO[]>([])
   const [count, setCount] = useState(0)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false) // Cambiar a false para cargar en background
   const { toast } = useToast()
 
   // Cargar todas las notificaciones
@@ -23,7 +23,7 @@ export function useNotifications() {
     }
   }, [])
 
-  // Cargar contador de no leídas
+  // Cargar contador de no leídas (solo cuenta, muy rápido)
   const cargarContador = useCallback(async () => {
     try {
       const response = await NotificacionAPI.count()
@@ -115,21 +115,27 @@ export function useNotifications() {
     }
   }, [notificaciones, toast])
 
-  // Refrescar todo
+  // Refrescar todo (sin bloquear UI)
   const refrescar = useCallback(async () => {
-    setIsLoading(true)
-    await Promise.all([
+    // Cargar solo el contador primero (rápido)
+    cargarContador()
+    
+    // Cargar el resto en background
+    Promise.all([
       cargarNotificaciones(),
-      cargarContador(),
       cargarNoLeidas()
     ])
-    setIsLoading(false)
   }, [cargarNotificaciones, cargarContador, cargarNoLeidas])
 
-  // Cargar inicialmente
+  // Cargar inicialmente solo el contador
   useEffect(() => {
-    refrescar()
-  }, [refrescar])
+    cargarContador() // Rápido, solo número
+    // Resto en background
+    setTimeout(() => {
+      cargarNotificaciones()
+      cargarNoLeidas()
+    }, 100)
+  }, [])
 
   // Polling cada 30 segundos para actualizar contador
   useEffect(() => {

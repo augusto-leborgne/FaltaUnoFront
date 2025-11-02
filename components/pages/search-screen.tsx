@@ -43,7 +43,7 @@ export function SearchScreen() {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [results, setResults] = useState<SearchResult[]>([])
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false) // Ya está optimizado - false es correcto para búsqueda
   const [filter, setFilter] = useState<"todos" | "usuarios" | "partidos">("todos")
   const [showFilters, setShowFilters] = useState(false)
   const [showMapView, setShowMapView] = useState(false)

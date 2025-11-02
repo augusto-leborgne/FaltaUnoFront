@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { AuthService } from '@/lib/auth'
 import { logger } from '@/lib/logger'
+import { prefetchCommonData, prefetchUserData } from '@/lib/prefetch'
 
 interface ProtectedRouteProps {
   children: React.ReactNode
@@ -52,6 +53,12 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
         logger.debug('[ProtectedRoute] Perfil incompleto (faltan campos básicos), redirigiendo a profile-setup')
         router.push('/profile-setup')
         return
+      }
+      
+      // ✅ NUEVO: Prefetch de datos comunes una vez autenticado
+      prefetchCommonData()
+      if (user?.id) {
+        prefetchUserData(user.id)
       }
     }
   }, [pathname, router])

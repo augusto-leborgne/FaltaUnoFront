@@ -24,13 +24,14 @@ export function MatchesListing() {
   
   // Estados
   const [matches, setMatches] = useState<PartidoDTO[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false) // Cambiar a false para mostrar UI inmediatamente
   const [error, setError] = useState("")
   const [selectedFilters, setSelectedFilters] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
   const [selectedMatchId, setSelectedMatchId] = useState<string | undefined>()
   const [userInscriptions, setUserInscriptions] = useState<Map<string, { estado: InscripcionEstado | null }>>(new Map())
+  const [initialLoad, setInitialLoad] = useState(true) // Nuevo: detectar primera carga
 
   // Filtros rápidos
   const quickFilters = [
@@ -53,7 +54,10 @@ export function MatchesListing() {
 
   const loadMatches = async () => {
     try {
-      setLoading(true)
+      // Solo mostrar loading spinner si no hay datos previos
+      if (matches.length === 0) {
+        setLoading(true)
+      }
       setError("")
 
       // Validar autenticación
@@ -122,28 +126,11 @@ export function MatchesListing() {
 
       setMatches(partidos)
 
-      // Cargar estados de inscripción del usuario para cada partido
+      // Cargar estados de inscripción del usuario para cada partido (en background sin bloquear)
       const user = AuthService.getUser()
       if (user && partidos.length > 0) {
-        const inscriptionsMap = new Map<string, { estado: InscripcionEstado | null }>()
-        
-        // Cargar estado de inscripción en paralelo
-        await Promise.all(
-          partidos.map(async (partido) => {
-            try {
-              const estadoResponse = await InscripcionAPI.getEstado(partido.id!, user.id)
-              if (estadoResponse.success && estadoResponse.data) {
-                inscriptionsMap.set(partido.id!, {
-                  estado: estadoResponse.data.estado
-                })
-              }
-            } catch (err) {
-              console.error(`[MatchesListing] Error cargando estado para partido ${partido.id}:`, err)
-            }
-          })
-        )
-        
-        setUserInscriptions(inscriptionsMap)
+        // No esperar a las inscripciones, cargarlas en background
+        loadUserInscriptions(partidos, user.id)
       }
 
     } catch (err) {
@@ -152,6 +139,36 @@ export function MatchesListing() {
       setError(errorMessage)
     } finally {
       setLoading(false)
+      setInitialLoad(false)
+    }
+  }
+
+  // Cargar inscripciones en background
+  const loadUserInscriptions = async (partidos: PartidoDTO[], userId: string) => {
+    const inscriptionsMap = new Map<string, { estado: InscripcionEstado | null }>()
+    
+    // Cargar en lotes de 5 para no saturar
+    const batchSize = 5
+    for (let i = 0; i < partidos.length; i += batchSize) {
+      const batch = partidos.slice(i, i + batchSize)
+      
+      await Promise.all(
+        batch.map(async (partido) => {
+          try {
+            const estadoResponse = await InscripcionAPI.getEstado(partido.id!, userId)
+            if (estadoResponse.success && estadoResponse.data) {
+              inscriptionsMap.set(partido.id!, {
+                estado: estadoResponse.data.estado
+              })
+            }
+          } catch (err) {
+            // Ignorar errores silenciosamente
+          }
+        })
+      )
+      
+      // Actualizar el estado progresivamente
+      setUserInscriptions(new Map(inscriptionsMap))
     }
   }
 

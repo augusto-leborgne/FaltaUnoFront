@@ -17,7 +17,7 @@ interface PendingRequest {
 class ApiCache {
   private cache = new Map<string, CacheEntry>();
   private pendingRequests = new Map<string, PendingRequest>();
-  private readonly DEFAULT_TTL = 30000; // 30 seconds
+  private readonly DEFAULT_TTL = 60000; // 60 seconds (aumentado para mejor performance)
   private readonly MAX_PENDING_TIME = 10000; // 10 seconds
 
   /**

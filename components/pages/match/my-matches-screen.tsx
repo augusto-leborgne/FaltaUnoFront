@@ -19,7 +19,7 @@ export function MyMatchesScreen() {
   const [activeTab, setActiveTab] = useState<"Creados" | "Inscriptos">("Creados")
   const [createdMatches, setCreatedMatches] = useState<Match[]>([])
   const [joinedMatches, setJoinedMatches] = useState<Match[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false) // Cambiar a false para UI inmediata
   const [error, setError] = useState("")
 
   const currentUser = AuthService.getUser()
@@ -30,7 +30,11 @@ export function MyMatchesScreen() {
 
   const loadMatches = async () => {
     try {
-      setLoading(true)
+      // Solo mostrar loading si no hay datos previos
+      if (createdMatches.length === 0 && joinedMatches.length === 0) {
+        setLoading(true)
+      }
+      
       setError("")
 
       if (!AuthService.isLoggedIn()) {

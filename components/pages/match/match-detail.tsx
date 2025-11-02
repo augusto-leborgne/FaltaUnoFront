@@ -44,7 +44,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
   const [jugadores, setJugadores] = useState<any[]>([]) // ✅ NUEVO: Lista de jugadores inscritos
   const [userInscriptionStatus, setUserInscriptionStatus] = useState<string | null>(null) // ✅ NUEVO: Estado de inscripción del usuario
   const [isJoining, setIsJoining] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false) // Cambiar a false para UI inmediata
   const [error, setError] = useState<string>("")
 
   // Usuario actual (no forzamos re-render si cambia fuera)
@@ -54,9 +54,12 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
   // ====== CARGA / RE-CARGA SEGURA DEL PARTIDO ======
   const loadMatch = useCallback(async () => {
     try {
-      setIsLoading(true)
+      // Solo mostrar loading si no hay partido cargado
+      if (!match) {
+        setIsLoading(true)
+      }
+      
       setError("")
-      setMatch(null)
 
       // Evitar condiciones de carrera al volver desde otra pantalla:
       // esperamos un tick para que AuthService cargue/normalice el token
@@ -76,29 +79,33 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
 
       setMatch(response.data)
       
-      // ✅ NUEVO: Cargar jugadores inscritos (ACEPTADOS)
-      try {
-        const jugadoresResponse = await PartidoAPI.getJugadores(matchId)
-        if (jugadoresResponse.success && jugadoresResponse.data) {
-          setJugadores(jugadoresResponse.data)
-        }
-      } catch (err) {
-        console.error("[MatchDetail] Error cargando jugadores:", err)
-        // No fallar si no se pueden cargar jugadores
-      }
-
-      // ✅ NUEVO: Cargar estado de inscripción del usuario
-      const user = AuthService.getUser()
-      if (user) {
-        try {
-          const estadoResponse = await InscripcionAPI.getEstado(matchId, user.id)
-          if (estadoResponse.success && estadoResponse.data) {
-            setUserInscriptionStatus(estadoResponse.data.estado)
+      // ✅ Cargar jugadores y estado en background (no bloquear UI)
+      Promise.all([
+        // Cargar jugadores inscritos (ACEPTADOS)
+        PartidoAPI.getJugadores(matchId).then(jugadoresResponse => {
+          if (jugadoresResponse.success && jugadoresResponse.data) {
+            setJugadores(jugadoresResponse.data)
           }
-        } catch (err) {
-          console.error("[MatchDetail] Error cargando estado de inscripción:", err)
-        }
-      }
+        }).catch(err => {
+          console.error("[MatchDetail] Error cargando jugadores:", err)
+        }),
+        
+        // Cargar estado de inscripción del usuario
+        (async () => {
+          const user = AuthService.getUser()
+          if (user) {
+            try {
+              const estadoResponse = await InscripcionAPI.getEstado(matchId, user.id)
+              if (estadoResponse.success && estadoResponse.data) {
+                setUserInscriptionStatus(estadoResponse.data.estado)
+              }
+            } catch (err) {
+              console.error("[MatchDetail] Error cargando estado de inscripción:", err)
+            }
+          }
+        })()
+      ])
+      
     } catch (err: any) {
       if (err?.name !== "AbortError") {
         setError(err instanceof Error ? err.message : "Error al cargar el partido")

@@ -49,16 +49,17 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
   const [user, setUser] = useState<Usuario | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [friendStatus, setFriendStatus] = useState<'none' | 'friends' | 'pending-sent' | 'pending-received'>('none')
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false) // Cambiar a false para UI inmediata
   const [error, setError] = useState<string | null>(null)
 
   const loadUserProfile = useCallback(async () => {
     try {
-      setLoading(true)
+      // Solo mostrar loading si no hay usuario cargado
+      if (!user) {
+        setLoading(true)
+      }
+      
       setError(null)
-      setUser(null)
-      setReviews([])
-      setFriendStatus('none')
 
       // Esperar un tick para evitar condiciones de carrera con la lectura del token
       const token = await AuthService.ensureToken()
