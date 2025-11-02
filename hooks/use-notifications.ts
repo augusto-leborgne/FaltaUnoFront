@@ -30,17 +30,11 @@ export function useNotifications() {
       if (response.success) {
         setCount(response.data.count)
       } else {
-        // Si falla, no actualizar el contador para mantener el último valor válido
         console.warn("[useNotifications] Error en respuesta del contador:", response.message)
       }
     } catch (error) {
-      // Silenciar errores de red para evitar spam en consola
-      // El contador mantendrá el último valor válido
-      if (error instanceof Error && error.message.includes('Failed to fetch')) {
-        console.debug("[useNotifications] Error de red al cargar contador (silenciado):", error.message)
-      } else {
-        console.error("[useNotifications] Error cargando contador:", error)
-      }
+      // Log error but don't spam console - retry logic in API handles this
+      console.warn("[useNotifications] Error cargando contador:", error instanceof Error ? error.message : error)
     }
   }, [])
 

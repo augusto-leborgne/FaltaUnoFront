@@ -66,6 +66,54 @@ export interface PaginatedResponse<T> {
 }
 
 // ============================================
+// RETRY CONFIGURATION
+// ============================================
+
+const RETRY_CONFIG = {
+  maxRetries: 3,
+  initialDelayMs: 1000,
+  maxDelayMs: 5000,
+  backoffMultiplier: 2,
+  retryableStatusCodes: [408, 429, 500, 502, 503, 504],
+  retryableErrors: ['Failed to fetch', 'NetworkError', 'ERR_CONNECTION_CLOSED', 'ERR_CONNECTION_RESET']
+}
+
+/**
+ * Sleep utility for delays between retries
+ */
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+/**
+ * Check if an error is retryable
+ */
+const isRetryableError = (error: any, statusCode?: number): boolean => {
+  // Check status codes
+  if (statusCode && RETRY_CONFIG.retryableStatusCodes.includes(statusCode)) {
+    return true
+  }
+  
+  // Check error messages
+  if (error instanceof Error) {
+    return RETRY_CONFIG.retryableErrors.some(msg => 
+      error.message.includes(msg) || error.toString().includes(msg)
+    )
+  }
+  
+  return false
+}
+
+/**
+ * Calculate retry delay with exponential backoff and jitter
+ */
+const getRetryDelay = (attemptNumber: number): number => {
+  const baseDelay = RETRY_CONFIG.initialDelayMs * Math.pow(RETRY_CONFIG.backoffMultiplier, attemptNumber)
+  const delay = Math.min(baseDelay, RETRY_CONFIG.maxDelayMs)
+  // Add jitter (±25%)
+  const jitter = delay * 0.25 * (Math.random() - 0.5)
+  return Math.round(delay + jitter)
+}
+
+// ============================================
 // INTERFACES DE USUARIO
 // ============================================
 
@@ -270,135 +318,174 @@ async function apiFetch<T>(
 ): Promise<ApiResponse<T>> {
   const { skipAuth = false, customToken, skipAutoLogout = false, signal, ...fetchOptions } = options;
 
-  // ⚡ PROTECCIÓN: Validar y limpiar tokens corruptos/expirados
-  if (!skipAuth) {
-    AuthService.validateAndCleanup();
-  }
-
-  // Obtener token (no esperamos aquí para no añadir latencia a todas las peticiones)
-  const token = customToken || (!skipAuth ? AuthService.getToken() : null);
-  const hadToken = !!token // si al momento de construir la petición había token
-  
-  // ⚡ VALIDACIÓN CRÍTICA: Verificar que el token no esté corrupto antes de usarlo
-  if (token && !skipAuth) {
-    if (AuthService.isTokenExpired(token)) {
-      console.warn('[API] Token expirado detectado antes de hacer request - limpiando');
-      AuthService.removeToken();
-      AuthService.removeUser();
-      throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.');
+  // Retry wrapper function
+  const attemptFetch = async (attemptNumber: number = 0): Promise<ApiResponse<T>> => {
+    // ⚡ PROTECCIÓN: Validar y limpiar tokens corruptos/expirados
+    if (!skipAuth) {
+      AuthService.validateAndCleanup();
     }
-  }
-  
-  // Construir URL completa
-  const fullUrl = normalizeUrl(`${API_BASE}${endpoint}`);
 
-  // Preparar headers
-  const headers = new Headers(fetchOptions.headers);
-  
-  // Content-Type solo si no es FormData
-  if (!headers.has('Content-Type') && !(fetchOptions.body instanceof FormData)) {
-    headers.set('Content-Type', 'application/json');
-  }
-  
-  // Authorization header
-  if (token && !skipAuth) {
-    headers.set('Authorization', `Bearer ${token}`);
-  }
-
-  console.log(`[API] ${fetchOptions.method || 'GET'} ${endpoint}`);
-
-  try {
-    const response = await fetch(fullUrl, {
-      ...fetchOptions,
-      headers,
-      signal, // Add abort signal support
-    });
-
-    // Manejo de 401 - Sesión expirada
-    if (response.status === 401) {
-      // CRÍTICO: Solo hacer logout si tenemos certeza de que el token es inválido
-      // NO hacer logout por errores de red o timing
-      if (hadToken && !skipAutoLogout) {
-        // Verificar si el token realmente está expirado antes de hacer logout
-        if (token && AuthService.isTokenExpired(token)) {
-          console.warn('[API] 401 Unauthorized - Token expirado');
-          console.warn('[API] 🚪 LOGOUT INMEDIATO - Redirigiendo a login...');
-          AuthService.logout(); // window.location.replace("/login") inmediato
-          throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.');
-        } else {
-          // Token válido pero backend dice 401 - podría ser error transitorio
-          console.warn('[API] 401 pero token aún válido - NO haciendo logout automático');
-          throw new Error('Error de autenticación. Por favor intenta nuevamente.');
-        }
-      } else {
-        console.warn('[API] 401 recibido - no se hace logout automático');
-        throw new Error('No autorizado. Es posible que no tengas permisos para esta acción.');
+    // Obtener token (no esperamos aquí para no añadir latencia a todas las peticiones)
+    const token = customToken || (!skipAuth ? AuthService.getToken() : null);
+    const hadToken = !!token // si al momento de construir la petición había token
+    
+    // ⚡ VALIDACIÓN CRÍTICA: Verificar que el token no esté corrupto antes de usarlo
+    if (token && !skipAuth) {
+      if (AuthService.isTokenExpired(token)) {
+        console.warn('[API] Token expirado detectado antes de hacer request - limpiando');
+        AuthService.removeToken();
+        AuthService.removeUser();
+        throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.');
       }
     }
+    
+    // Construir URL completa
+    const fullUrl = normalizeUrl(`${API_BASE}${endpoint}`);
 
-    // Manejo de 403 - Sin permisos
-    if (response.status === 403) {
-      throw new Error('No tienes permisos para realizar esta acción');
+    // Preparar headers
+    const headers = new Headers(fetchOptions.headers);
+    
+    // Content-Type solo si no es FormData
+    if (!headers.has('Content-Type') && !(fetchOptions.body instanceof FormData)) {
+      headers.set('Content-Type', 'application/json');
+    }
+    
+    // Authorization header
+    if (token && !skipAuth) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+    
+    // Add connection management headers to prevent drops
+    if (!headers.has('Connection')) {
+      headers.set('Connection', 'keep-alive');
+    }
+    if (!headers.has('Keep-Alive')) {
+      headers.set('Keep-Alive', 'timeout=30');
     }
 
-    // Obtener texto de respuesta
-    const responseText = await response.text();
-    
-    // Intentar parsear JSON
-    let responseData: any;
+    const logPrefix = attemptNumber > 0 ? `[API Retry ${attemptNumber}/${RETRY_CONFIG.maxRetries}]` : '[API]'
+    console.log(`${logPrefix} ${fetchOptions.method || 'GET'} ${endpoint}`);
+
     try {
-      responseData = responseText ? JSON.parse(responseText) : {};
-    } catch (parseError) {
-      console.error('[API] Error parseando respuesta:', responseText);
-      throw new Error('Respuesta inválida del servidor');
-    }
+      const response = await fetch(fullUrl, {
+        ...fetchOptions,
+        headers,
+        signal, // Add abort signal support
+      });
 
-    // Si la respuesta no es OK
-    if (!response.ok) {
-      const errorMessage = responseData.message 
-        || responseData.error 
-        || `Error ${response.status}: ${response.statusText}`;
+      // Manejo de 401 - Sesión expirada
+      if (response.status === 401) {
+        // CRÍTICO: Solo hacer logout si tenemos certeza de que el token es inválido
+        // NO hacer logout por errores de red o timing
+        if (hadToken && !skipAutoLogout) {
+          // Verificar si el token realmente está expirado antes de hacer logout
+          if (token && AuthService.isTokenExpired(token)) {
+            console.warn('[API] 401 Unauthorized - Token expirado');
+            console.warn('[API] 🚪 LOGOUT INMEDIATO - Redirigiendo a login...');
+            AuthService.logout(); // window.location.replace("/login") inmediato
+            throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.');
+          } else {
+            // Token válido pero backend dice 401 - podría ser error transitorio
+            console.warn('[API] 401 pero token aún válido - NO haciendo logout automático');
+            throw new Error('Error de autenticación. Por favor intenta nuevamente.');
+          }
+        } else {
+          console.warn('[API] 401 recibido - no se hace logout automático');
+          throw new Error('No autorizado. Es posible que no tengas permisos para esta acción.');
+        }
+      }
+
+      // Manejo de 403 - Sin permisos
+      if (response.status === 403) {
+        throw new Error('No tienes permisos para realizar esta acción');
+      }
+
+      // Check if status code is retryable
+      if (!response.ok && isRetryableError(null, response.status)) {
+        const errorMessage = `Server error ${response.status}: ${response.statusText}`
+        console.warn(`${logPrefix} Retryable error:`, errorMessage)
+        
+        // Retry if we haven't exceeded max attempts
+        if (attemptNumber < RETRY_CONFIG.maxRetries) {
+          const delay = getRetryDelay(attemptNumber)
+          console.log(`${logPrefix} Retrying in ${delay}ms...`)
+          await sleep(delay)
+          return attemptFetch(attemptNumber + 1)
+        }
+        
+        throw new Error(errorMessage)
+      }
+
+      // Obtener texto de respuesta
+      const responseText = await response.text();
       
-      console.error(`[API] Error ${response.status}:`, errorMessage);
+      // Intentar parsear JSON
+      let responseData: any;
+      try {
+        responseData = responseText ? JSON.parse(responseText) : {};
+      } catch (parseError) {
+        console.error('[API] Error parseando respuesta:', responseText);
+        throw new Error('Respuesta inválida del servidor');
+      }
+
+      // Si la respuesta no es OK
+      if (!response.ok) {
+        const errorMessage = responseData.message 
+          || responseData.error 
+          || `Error ${response.status}: ${response.statusText}`;
+        
+        console.error(`[API] Error ${response.status}:`, errorMessage);
+        
+        throw new Error(errorMessage);
+      }
+
+      // Normalizar respuesta
+      const normalizedResponse: ApiResponse<T> = {
+        success: responseData.success ?? true,
+        data: responseData.data ?? responseData,
+        message: responseData.message,
+        error: responseData.error
+      };
+
+      if (attemptNumber > 0) {
+        console.log(`${logPrefix} ✓ ${endpoint} completado después de ${attemptNumber} reintentos`);
+      } else {
+        console.log(`[API] ✓ ${endpoint} completado`);
+      }
       
-      throw new Error(errorMessage);
-    }
+      return normalizedResponse;
 
-    // Normalizar respuesta
-    const normalizedResponse: ApiResponse<T> = {
-      success: responseData.success ?? true,
-      data: responseData.data ?? responseData,
-      message: responseData.message,
-      error: responseData.error
-    };
-
-    console.log(`[API] ✓ ${endpoint} completado`);
-    
-    return normalizedResponse;
-
-  } catch (error) {
-    console.error(`[API] Error en ${endpoint}:`, error);
-    
-    // Handle abort errors (timeouts)
-    if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error('La solicitud tardó demasiado tiempo. Por favor intenta nuevamente.');
+    } catch (error) {
+      console.error(`${logPrefix} Error en ${endpoint}:`, error);
+      
+      // Handle abort errors (timeouts) - don't retry user-initiated aborts
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('La solicitud tardó demasiado tiempo. Por favor intenta nuevamente.');
+      }
+      
+      // Handle network errors with retry
+      if (isRetryableError(error)) {
+        if (attemptNumber < RETRY_CONFIG.maxRetries) {
+          const delay = getRetryDelay(attemptNumber)
+          console.log(`${logPrefix} Network error, retrying in ${delay}ms...`)
+          await sleep(delay)
+          return attemptFetch(attemptNumber + 1)
+        } else {
+          console.error(`${logPrefix} Max retries (${RETRY_CONFIG.maxRetries}) exceeded for ${endpoint}`)
+          throw new Error('Error de conexión persistente. Verifica tu conexión a internet o intenta más tarde.');
+        }
+      }
+      
+      if (error instanceof Error) {
+        throw error;
+      }
+      
+      throw new Error('Error de red. Verifica tu conexión.');
     }
-    
-    // Handle network errors
-    if (error instanceof Error && (
-      error.message.includes('Failed to fetch') || 
-      error.message.includes('NetworkError') ||
-      error.message.includes('ERR_CONNECTION')
-    )) {
-      throw new Error('Error de conexión. Verifica tu conexión a internet o intenta nuevamente.');
-    }
-    
-    if (error instanceof Error) {
-      throw error;
-    }
-    
-    throw new Error('Error de red. Verifica tu conexión.');
   }
+
+  // Start the fetch with retry logic
+  return attemptFetch(0);
 }
 
 // ============================================
@@ -1393,28 +1480,12 @@ export const NotificacionAPI = {
    */
   count: async () => {
     try {
-      // Agregar timeout de 8 segundos para evitar conexiones colgadas
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 8000)
-      
-      const response = await apiFetch<{ count: number }>('/api/notificaciones/count', {
-        signal: controller.signal
-      })
-      
-      clearTimeout(timeoutId)
+      // Use built-in retry logic from apiFetch (no custom timeout needed)
+      const response = await apiFetch<{ count: number }>('/api/notificaciones/count')
       return response
     } catch (error) {
-      // Si es error de abort (timeout), retornar 0 sin error
-      if (error instanceof Error && error.name === 'AbortError') {
-        console.debug('[NotificacionAPI.count] Timeout - retornando 0')
-        return {
-          success: true,
-          data: { count: 0 } as any,
-          message: 'Timeout al contar notificaciones'
-        }
-      }
-      
       console.error('[NotificacionAPI.count] Error:', error);
+      // Return 0 count on error to prevent UI breaks
       return {
         success: false,
         data: { count: 0 } as any,
