@@ -1,7 +1,7 @@
 // components/auth/auth-provider.tsx - VERSIÓN MEJORADA
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useRef } from "react";
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from "react";
 import { AuthService } from "@/lib/auth";
 import { TokenPersistence } from "@/lib/token-persistence";
 import type { Usuario } from "@/lib/api";
@@ -23,16 +23,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const mountedRef = useRef(true);
 
   // Wrapper para setUser que preserva firma del contexto
-  const setUser = (u: Usuario | null) => {
+  const setUser = useCallback((u: Usuario | null) => {
     console.log("[AuthProvider] setUser llamado:", u?.email || "null");
     setUserState(u);
     if (u) {
       AuthService.setUser(u);
     }
-  };
+  }, []);
 
   // refreshUser: valida token y actualiza user en contexto desde server
-  const refreshUser = async (): Promise<Usuario | null> => {
+  const refreshUser = useCallback(async (): Promise<Usuario | null> => {
     console.log("[AuthProvider] refreshUser iniciado");
     
     // Evitar refresh durante logout
@@ -121,10 +121,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isLoggingOut]); // Agregar dependencias del useCallback
 
   // logout: limpiar storage, contexto y redirigir a login
-  const logout = () => {
+  const logout = useCallback(() => {
     console.log("[AuthProvider] logout llamado");
     
     // Marcar que estamos en proceso de logout
@@ -145,7 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.warn("[AuthProvider] redirect to login failed", e);
       }
     }
-  };
+  }, []); // useCallback sin dependencias
 
   // Inicialización: validar token y restaurar user si procede
   useEffect(() => {

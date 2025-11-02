@@ -49,16 +49,16 @@ function ProfileScreenInner() {
   const [reviews, setReviews] = useState<Review[]>([])
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([])
   const [contacts, setContacts] = useState<Contact[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // ⚡ CRÍTICO: Revalidar usuario al montar para asegurar datos frescos
+  // ⚡ CRÍTICO: Revalidar usuario al montar SOLO UNA VEZ
   useEffect(() => {
     console.log("[ProfileScreen] Revalidando usuario desde servidor...")
     refreshUser().catch(err => {
       console.error("[ProfileScreen] Error revalidando usuario:", err)
     })
-  }, [])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  }, [refreshUser]) // Agregar refreshUser a dependencias
 
   const loadProfileData = useCallback(async () => {
     try {

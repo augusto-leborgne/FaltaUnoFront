@@ -11,6 +11,7 @@ import { AuthService } from "@/lib/auth"
 import { API_BASE, InscripcionAPI, InscripcionEstado } from "@/lib/api"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useNotifications } from "@/hooks/use-notifications"
+import { useCurrentUser } from "@/hooks/use-current-user"
 
 interface NewsUpdate {
   id: string
@@ -47,6 +48,7 @@ interface PendingReview {
 export function HomeScreen() {
   const router = useRouter()
   const { count: notificationCount } = useNotifications()
+  const { user: currentUser } = useCurrentUser() // Obtener usuario con foto actualizada
   const [upcomingMatches, setUpcomingMatches] = useState<Partido[]>([])
   const [pendingReviews, setPendingReviews] = useState<PendingReview[]>([])
   const [newsUpdates, setNewsUpdates] = useState<NewsUpdate[]>([])
@@ -242,11 +244,11 @@ export function HomeScreen() {
               )}
             </button>
             <Avatar className="w-10 h-10 sm:w-12 sm:h-12 cursor-pointer" onClick={() => router.push("/profile")}>
-              {user?.foto_perfil ? (
-                <AvatarImage src={`data:image/jpeg;base64,${user.foto_perfil}`} />
+              {currentUser?.foto_perfil ? (
+                <AvatarImage src={currentUser.foto_perfil} alt={currentUser?.nombre || "Usuario"} />
               ) : (
                 <AvatarFallback className="bg-primary/10 text-primary">
-                  {user?.nombre?.[0] || "U"}
+                  {currentUser?.nombre?.[0] || "U"}
                 </AvatarFallback>
               )}
             </Avatar>
