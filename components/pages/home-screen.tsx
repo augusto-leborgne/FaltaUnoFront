@@ -308,13 +308,17 @@ export function HomeScreen() {
               className="bg-card rounded-2xl overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 touch-manipulation active:scale-[0.98] border border-border/50"
             >
               <div className="p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center space-x-2">
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="flex-shrink-0 mt-0.5">
                     {getNewsIcon(news.type)}
-                    <h3 className="font-bold text-foreground text-lg leading-tight">{news.title}</h3>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-foreground text-base leading-snug line-clamp-2">
+                      {news.title}
+                    </h3>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground mb-4 leading-relaxed">{news.description}</p>
+                <p className="text-sm text-muted-foreground mb-4 leading-relaxed line-clamp-3">{news.description}</p>
                 {news.tags && (
                   <div className="flex flex-wrap gap-2 mb-4">
                     {news.tags.map((tag) => (
