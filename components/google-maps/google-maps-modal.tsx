@@ -16,7 +16,7 @@ interface GoogleMapsModalProps {
 export function GoogleMapsModal({ isOpen, onClose, location, lat, lng }: GoogleMapsModalProps) {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
-  const markerRef = useRef<google.maps.Marker | null>(null);
+  const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
   const { isLoaded, error, google } = useGoogleMaps();
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export function GoogleMapsModal({ isOpen, onClose, location, lat, lng }: GoogleM
     // If already initialized and same center, reposition instead of recreating
     if (mapInstanceRef.current && markerRef.current) {
       mapInstanceRef.current.setCenter({ lat, lng });
-      markerRef.current.setPosition({ lat, lng });
+      markerRef.current.position = { lat, lng };
       return;
     }
 
@@ -68,7 +68,7 @@ export function GoogleMapsModal({ isOpen, onClose, location, lat, lng }: GoogleM
     return () => {
       // cleanup map + marker listeners
       if (markerRef.current) {
-        markerRef.current.setMap(null);
+        markerRef.current.map = null;
         markerRef.current = null;
       }
       if (mapInstanceRef.current) {

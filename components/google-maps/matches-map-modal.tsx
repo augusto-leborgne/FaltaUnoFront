@@ -30,7 +30,7 @@ export function MatchesMapModal({ isOpen, onClose }: MatchesMapModalProps) {
   const { isLoaded, error, google } = useGoogleMaps();
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
-  const markersRef = useRef<google.maps.Marker[]>([]);
+  const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
   const [selectedMatch, setSelectedMatch] = useState<MapMatch | null>(null);
 
   useEffect(() => {
@@ -85,7 +85,7 @@ export function MatchesMapModal({ isOpen, onClose }: MatchesMapModalProps) {
 
     return () => {
       // cleanup markers
-      markersRef.current.forEach((mk) => mk.setMap(null));
+      markersRef.current.forEach((mk) => mk.map = null);
       markersRef.current = [];
       mapInstanceRef.current = null;
       setSelectedMatch(null);
