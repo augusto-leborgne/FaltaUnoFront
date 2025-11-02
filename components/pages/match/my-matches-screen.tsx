@@ -135,6 +135,7 @@ export function MyMatchesScreen() {
         return `Mañana ${time}`
       } else {
         const weekday = date.toLocaleDateString("es-ES", { weekday: "long" })
+        // ✅ Capitalize first letter
         const formattedWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1)
         return `${formattedWeekday} ${time}`
       }
@@ -143,7 +144,25 @@ export function MyMatchesScreen() {
     }
   }
 
-  const getStatusBadge = (estado: string) => {
+  const getStatusBadge = (estado: string, fecha: string, hora: string) => {
+    // ✅ Apply backend business rules for status display
+    // Backend runs this every 5 minutes, but we can show it immediately in UI
+    const now = new Date()
+    const matchDateTime = new Date(`${fecha}T${hora}`)
+    const isPast = matchDateTime < now
+    
+    let displayEstado = estado
+    
+    // Rule 1: DISPONIBLE matches that passed their date/time → CANCELADO
+    if (isPast && estado === "DISPONIBLE") {
+      displayEstado = "CANCELADO"
+    }
+    
+    // Rule 2: CONFIRMADO matches that passed their date/time → COMPLETADO
+    if (isPast && estado === "CONFIRMADO") {
+      displayEstado = "COMPLETADO"
+    }
+    
     const statusMap: Record<string, { label: string; className: string }> = {
       "CONFIRMADO": { label: "Confirmado", className: "bg-green-100 text-green-800" },
       "CANCELADO": { label: "Cancelado", className: "bg-red-100 text-red-800" },
@@ -151,7 +170,7 @@ export function MyMatchesScreen() {
       "DISPONIBLE": { label: "Disponible", className: "bg-green-100 text-green-800" },
     }
 
-    const status = statusMap[estado] || statusMap["DISPONIBLE"]
+    const status = statusMap[displayEstado] || statusMap["DISPONIBLE"]
 
     return (
       <Badge className={`${status.className} hover:${status.className}`}>
@@ -271,7 +290,7 @@ export function MyMatchesScreen() {
                       <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
                         {formatMatchType(match.tipoPartido || 'FUTBOL_5')}
                       </Badge>
-                      {getStatusBadge(match.estado)}
+                      {getStatusBadge(match.estado, match.fecha, match.hora)}
                     </div>
                     {isActive && getSpotsLeftBadge(spotsLeft)}
                   </div>
