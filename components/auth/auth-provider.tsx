@@ -130,7 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       fetchInProgressRef.current = false; // ⚡ Reset fetch flag
     }
-  }, [isLoggingOut, user]); // ⚡ Add user as dependency
+  }, [isLoggingOut]); // ⚡ REMOVED user from dependencies to prevent infinite loops
 
   // logout: limpiar storage, contexto y redirigir a login
   const logout = useCallback(() => {

@@ -6,6 +6,14 @@ import { cn } from "@/lib/utils"
  */
 const ModernGreenSpinner = ({ className, size }: { className?: string; size: string }) => (
   <div className={cn("relative", className)}>
+    {/* Inline styles with animation */}
+    <style dangerouslySetInnerHTML={{__html: `
+      @keyframes spinner-spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+    `}} />
+    
     {/* Base circle (light green, more visible) */}
     <div 
       className={cn(
@@ -13,7 +21,7 @@ const ModernGreenSpinner = ({ className, size }: { className?: string; size: str
         size
       )} 
     />
-    {/* Animated segment (thick green) - INLINE ANIMATION */}
+    {/* Animated segment (thick green) */}
     <div 
       className={cn(
         "absolute inset-0 rounded-full border-[4px] border-transparent border-t-green-600",
@@ -23,16 +31,9 @@ const ModernGreenSpinner = ({ className, size }: { className?: string; size: str
         background: 'conic-gradient(from 0deg, transparent 0%, transparent 70%, #16a34a 70%, #16a34a 100%)',
         WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 4px), black calc(100% - 4px))',
         mask: 'radial-gradient(farthest-side, transparent calc(100% - 4px), black calc(100% - 4px))',
-        animation: 'spin 1s linear infinite'
+        animation: 'spinner-spin 1s linear infinite'
       }}
     />
-    {/* INLINE KEYFRAMES */}
-    <style jsx>{`
-      @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-      }
-    `}</style>
   </div>
 )
 
@@ -41,22 +42,21 @@ const ModernGreenSpinner = ({ className, size }: { className?: string; size: str
  */
 const CircleSpinner = ({ className }: { className?: string }) => (
   <>
+    <style dangerouslySetInnerHTML={{__html: `
+      @keyframes spinner-spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+    `}} />
     <div 
       className={cn(
         "rounded-full border-2 border-t-transparent",
         className
       )}
       style={{
-        animation: 'spin 1s linear infinite'
+        animation: 'spinner-spin 1s linear infinite'
       }}
     />
-    {/* INLINE KEYFRAMES */}
-    <style jsx>{`
-      @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-      }
-    `}</style>
   </>
 )
 
