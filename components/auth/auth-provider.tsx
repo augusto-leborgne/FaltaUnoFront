@@ -21,6 +21,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const mountedRef = useRef(true);
+  const fetchInProgressRef = useRef(false); // ⚡ Prevent duplicate fetches
 
   // Wrapper para setUser que preserva firma del contexto
   const setUser = useCallback((u: Usuario | null) => {
@@ -35,12 +36,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshUser = useCallback(async (): Promise<Usuario | null> => {
     console.log("[AuthProvider] refreshUser iniciado");
     
+    // ⚡ CRITICAL: Prevent duplicate concurrent fetches
+    if (fetchInProgressRef.current) {
+      console.log("[AuthProvider] Fetch already in progress, skipping");
+      return user; // Return current user instead of null
+    }
+    
     // Evitar refresh durante logout
     if (isLoggingOut) {
       console.log("[AuthProvider] Logout en progreso, cancelando refresh");
       return null;
     }
     
+    fetchInProgressRef.current = true;
     setLoading(true);
     
     try {
@@ -120,8 +128,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } finally {
       setLoading(false);
+      fetchInProgressRef.current = false; // ⚡ Reset fetch flag
     }
-  }, [isLoggingOut]); // Agregar dependencias del useCallback
+  }, [isLoggingOut, user]); // ⚡ Add user as dependency
 
   // logout: limpiar storage, contexto y redirigir a login
   const logout = useCallback(() => {
