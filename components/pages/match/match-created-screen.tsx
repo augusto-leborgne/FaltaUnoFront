@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Check, Users, Share2, AlertCircle } from "lucide-react"
+import { Check, Users, Share2, AlertCircle, CheckCircle2 } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
@@ -27,6 +27,7 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
   const [amigos, setAmigos] = useState<Amigo[]>([])
   const [loading, setLoading] = useState(true)
   const [invitando, setInvitando] = useState<Record<string, boolean>>({})
+  const [invitados, setInvitados] = useState<Record<string, boolean>>({}) // ✅ Tracking de invitaciones exitosas
   
   // Obtener matchId de props o de URL params
   const matchId = propMatchId || searchParams.get('matchId') || undefined
@@ -80,20 +81,49 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
       const response = await PartidoAPI.invitarJugador(matchId, friendId)
       
       if (response.success) {
+        // ✅ Marcar como invitado exitosamente
+        setInvitados(prev => ({ ...prev, [friendId]: true }))
+        
         toast({
-          title: "Invitación enviada",
+          title: "✅ Invitación enviada",
           description: "Tu amigo recibirá una notificación"
         })
       } else {
         throw new Error(response.message || "Error al enviar invitación")
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error invitando:", error)
-      const errorMessage = error instanceof Error ? error.message : "No se pudo enviar la invitación"
+      
+      // ✅ MEJORADO: Error handling específico por código HTTP
+      let errorTitle = "Error"
+      let errorMessage = "No se pudo enviar la invitación"
+      
+      if (error.message) {
+        // Detectar tipos de error específicos
+        if (error.message.includes("solicitud pendiente") || error.message.includes("ya tiene una")) {
+          errorTitle = "Invitación ya enviada"
+          errorMessage = "Este amigo ya tiene una invitación pendiente para este partido"
+          // Marcar como invitado aunque sea error 409
+          setInvitados(prev => ({ ...prev, [friendId]: true }))
+        } else if (error.message.includes("ya está inscrito")) {
+          errorTitle = "Ya inscrito"
+          errorMessage = "Este amigo ya está inscrito en el partido"
+          setInvitados(prev => ({ ...prev, [friendId]: true }))
+        } else if (error.message.includes("partido está completo")) {
+          errorTitle = "Partido completo"
+          errorMessage = "El partido ya alcanzó el máximo de jugadores"
+        } else if (error.message.includes("Usuario no encontrado")) {
+          errorTitle = "Usuario no encontrado"
+          errorMessage = "No se pudo encontrar a este usuario"
+        } else {
+          errorMessage = error.message
+        }
+      }
+      
       toast({
-        title: "Error",
+        title: errorTitle,
         description: errorMessage,
-        variant: "destructive"
+        variant: errorTitle === "Invitación ya enviada" || errorTitle === "Ya inscrito" ? "default" : "destructive"
       })
     } finally {
       setInvitando(prev => ({ ...prev, [friendId]: false }))
@@ -185,6 +215,7 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
                   const fullName = `${amigo.nombre} ${amigo.apellido}`
                   const initials = `${amigo.nombre[0]}${amigo.apellido[0]}`
                   const isInviting = invitando[amigo.id]
+                  const isInvited = invitados[amigo.id] // ✅ Verificar si ya fue invitado
 
                   return (
                     <div key={amigo.id} className="flex items-center justify-between">
@@ -200,19 +231,28 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
                         </Avatar>
                         <span className="font-medium text-gray-900">{fullName}</span>
                       </div>
-                      <Button
-                        onClick={() => handleInviteFriend(amigo.id)}
-                        size="sm"
-                        variant="outline"
-                        disabled={isInviting}
-                        className="bg-orange-50 border-orange-200 text-gray-700 hover:bg-orange-100 disabled:opacity-50"
-                      >
-                        {isInviting ? (
-                          <LoadingSpinner size="sm" variant="gray" />
-                        ) : (
-                          "Invitar"
-                        )}
-                      </Button>
+                      
+                      {/* ✅ MEJORADO: Mostrar estado de invitación */}
+                      {isInvited ? (
+                        <div className="flex items-center space-x-2 text-green-600 text-sm font-medium">
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>Invitado</span>
+                        </div>
+                      ) : (
+                        <Button
+                          onClick={() => handleInviteFriend(amigo.id)}
+                          size="sm"
+                          variant="outline"
+                          disabled={isInviting}
+                          className="bg-orange-50 border-orange-200 text-gray-700 hover:bg-orange-100 disabled:opacity-50"
+                        >
+                          {isInviting ? (
+                            <LoadingSpinner size="sm" variant="gray" />
+                          ) : (
+                            "Invitar"
+                          )}
+                        </Button>
+                      )}
                     </div>
                   )
                 })}
