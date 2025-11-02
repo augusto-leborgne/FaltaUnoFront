@@ -10,7 +10,7 @@ export type AuthCtx = {
   user: Usuario | null;
   loading: boolean;
   setUser: (u: Usuario | null) => void;
-  refreshUser: () => Promise<void>;
+  refreshUser: () => Promise<Usuario | null>;
   logout: () => void;
 };
 
@@ -31,13 +31,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   // refreshUser: valida token y actualiza user en contexto desde server
-  const refreshUser = async (): Promise<void> => {
+  const refreshUser = async (): Promise<Usuario | null> => {
     console.log("[AuthProvider] refreshUser iniciado");
     
     // Evitar refresh durante logout
     if (isLoggingOut) {
       console.log("[AuthProvider] Logout en progreso, cancelando refresh");
-      return;
+      return null;
     }
     
     setLoading(true);
@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!token) {
         console.log("[AuthProvider] refreshUser: no hay token");
         setUserState(null);
-        return;
+        return null;
       }
       
       // ⚡ PROTECCIÓN: Verificar que el token no esté corrupto
@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         AuthService.removeToken();
         AuthService.removeUser();
         setUserState(null);
-        return;
+        return null;
       }
 
       // Intentar obtener usuario desde el backend (me)
@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (serverUser) {
         console.log("[AuthProvider] Usuario actualizado desde servidor:", serverUser.email);
         setUserState(serverUser);
-        return;
+        return serverUser;
       }
 
       // Fallback: cargar desde localStorage si existe y token no expiró
@@ -77,12 +77,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (localUser && !AuthService.isTokenExpired(token)) {
         console.log("[AuthProvider] Usando usuario desde localStorage");
         setUserState(localUser);
+        return localUser;
       } else {
         console.log("[AuthProvider] No hay usuario válido - limpiando sin hacer logout forzado");
         // Solo limpiar el usuario, NO hacer logout completo
         // Esto permite que el usuario pueda volver a intentar autenticarse
         AuthService.removeUser();
         setUserState(null);
+        return null;
       }
     } catch (err) {
       console.error("[AuthProvider] refreshUser error:", err);
@@ -97,19 +99,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (localUser) {
             console.log("[AuthProvider] Usando usuario desde cache local");
             setUserState(localUser);
+            return localUser;
           } else {
             console.log("[AuthProvider] No hay usuario en cache - sin usuario pero token preservado");
             setUserState(null);
+            return null;
           }
         } else {
           console.log("[AuthProvider] Error y token inválido/expirado - limpiando sesión");
           AuthService.removeToken();
           AuthService.removeUser();
           setUserState(null);
+          return null;
         }
       } catch (fallbackErr) {
         console.error("[AuthProvider] Error en recuperación fallback:", fallbackErr);
         setUserState(null);
+        return null;
       }
     } finally {
       setLoading(false);
@@ -184,8 +190,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setLoading(false); // ⚡ Desbloquear UI inmediatamente
         }
         
-        // ⚡ NO hacer refresh en background si acabamos de cargar
-        // Esto previene loops infinitos de requests
+        // ⚡ CRÍTICO: Revalidar desde servidor en background para sincronizar datos
+        // Esto asegura que siempre tengamos la versión más reciente del perfil
+        console.log("[AuthProvider] Revalidando usuario desde servidor en background...");
+        try {
+          const serverUser = await AuthService.fetchCurrentUser();
+          if (serverUser && mounted) {
+            console.log("[AuthProvider] ✅ Usuario actualizado desde servidor:", serverUser.email);
+            setUserState(serverUser);
+          }
+        } catch (err) {
+          console.warn("[AuthProvider] Error revalidando usuario (manteniendo cache local):", err);
+          // No hacer nada - mantener usuario local
+        }
+        
         return;
       }
 
@@ -252,14 +270,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     window.addEventListener("storage", onStorage);
+    
+    // ⚡ NUEVO: Revalidación periódica cada 5 minutos
+    // Esto asegura que el perfil esté siempre sincronizado
+    const revalidationInterval = setInterval(async () => {
+      const token = AuthService.getToken();
+      if (!token || isLoggingOut) return;
+      
+      console.log("[AuthProvider] Revalidación periódica del usuario...");
+      try {
+        const serverUser = await AuthService.fetchCurrentUser();
+        if (serverUser && mounted) {
+          console.log("[AuthProvider] Usuario revalidado exitosamente");
+          setUserState(serverUser);
+        }
+      } catch (err) {
+        console.warn("[AuthProvider] Error en revalidación periódica:", err);
+      }
+    }, 5 * 60 * 1000); // 5 minutos
 
     return () => {
       mounted = false;
+      clearInterval(revalidationInterval);
       window.removeEventListener("storage", onStorage);
       window.removeEventListener('userUpdated', handleUserUpdated);
       window.removeEventListener('userLoggedOut', handleUserLoggedOut);
     };
-  }, []);
+  }, [isLoggingOut]);
 
   const ctx: AuthCtx = {
     user,

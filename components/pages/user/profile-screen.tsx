@@ -44,11 +44,19 @@ interface Contact {
 
 function ProfileScreenInner() {
   const router = useRouter()
-  const { user, loading: userLoading } = useAuth()
+  const { user, loading: userLoading, refreshUser } = useAuth()
 
   const [reviews, setReviews] = useState<Review[]>([])
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([])
   const [contacts, setContacts] = useState<Contact[]>([])
+
+  // ⚡ CRÍTICO: Revalidar usuario al montar para asegurar datos frescos
+  useEffect(() => {
+    console.log("[ProfileScreen] Revalidando usuario desde servidor...")
+    refreshUser().catch(err => {
+      console.error("[ProfileScreen] Error revalidando usuario:", err)
+    })
+  }, [])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 

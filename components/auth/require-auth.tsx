@@ -22,7 +22,7 @@ export default function RequireAuth({
 }: Props) {
   const router = useRouter()
   const pathname = usePathname()
-  const { user, loading } = useAuth()
+  const { user, loading, refreshUser } = useAuth()
 
   useEffect(() => {
     if (loading) {
@@ -52,11 +52,21 @@ export default function RequireAuth({
       allowUnverified
     })
 
-    // Redirecciones SOLO para completar flujo de registro/verificación
+    // ⚡ CRÍTICO: Si el perfil parece incompleto pero no estamos en profile-setup,
+    // revalidar desde servidor antes de redirigir para evitar falsos positivos
     if (!allowIncomplete && !user.perfilCompleto) {
       if (pathname !== "/profile-setup") {
-        console.log(`[RequireAuth:${pathname}] Perfil incompleto, redirigiendo a /profile-setup`)
-        router.replace("/profile-setup")
+        console.log(`[RequireAuth:${pathname}] Perfil incompleto detectado, revalidando antes de redirigir...`)
+        refreshUser().then((freshUser) => {
+          if (freshUser && !freshUser.perfilCompleto) {
+            console.log(`[RequireAuth:${pathname}] Confirmado: perfil incompleto, redirigiendo a /profile-setup`)
+            router.replace("/profile-setup")
+          } else if (freshUser?.perfilCompleto) {
+            console.log(`[RequireAuth:${pathname}] ✓ Perfil completo tras revalidación, permitiendo acceso`)
+          }
+        }).catch(err => {
+          console.error(`[RequireAuth:${pathname}] Error revalidando usuario:`, err)
+        })
       }
       return
     }
@@ -71,7 +81,7 @@ export default function RequireAuth({
 
     console.log(`[RequireAuth:${pathname}] ✓ Verificación completa, permitiendo acceso`)
     // Importante: no redirigir a "/" nunca acá.
-  }, [user, loading, router, pathname, allowIncomplete, allowUnverified])
+  }, [user, loading, router, pathname, allowIncomplete, allowUnverified, refreshUser])
 
   if (loading || !user) {
     return (
