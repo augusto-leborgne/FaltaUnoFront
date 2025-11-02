@@ -1,12 +1,12 @@
 "use client"
 
-import RequireAuth from "@/components/auth/require-auth"
+import { RequireAuthClientOnly } from "@/components/auth/client-only-wrapper"
 import { FriendRequestsListScreen } from "@/components/pages/user/friend-requests-list-screen"
 
 export default function FriendRequestsPage() {
   return (
-    <RequireAuth allowIncomplete allowUnverified>
+    <RequireAuthClientOnly allowIncomplete allowUnverified>
       <FriendRequestsListScreen />
-    </RequireAuth>
+    </RequireAuthClientOnly>
   )
 }

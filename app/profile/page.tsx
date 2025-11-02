@@ -1,12 +1,12 @@
 "use client"
 
-import RequireAuth from "@/components/auth/require-auth"
+import { RequireAuthClientOnly } from "@/components/auth/client-only-wrapper"
 import { ProfileScreen } from "@/components/pages/user/profile-screen"
 
 export default function ProfilePage() {
   return (
-    <RequireAuth allowIncomplete allowUnverified>
+    <RequireAuthClientOnly allowIncomplete allowUnverified>
       <ProfileScreen />
-    </RequireAuth>
+    </RequireAuthClientOnly>
   )
 }

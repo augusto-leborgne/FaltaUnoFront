@@ -1,12 +1,12 @@
 "use client"
 
-import RequireAuth from "@/components/auth/require-auth"
+import { RequireAuthClientOnly } from "@/components/auth/client-only-wrapper"
 import { ContactsScreen } from "@/components/pages/user/contacts-screen"
 
 export default function ContactsPage() {
   return (
-    <RequireAuth allowIncomplete allowUnverified>
+    <RequireAuthClientOnly allowIncomplete allowUnverified>
       <ContactsScreen />
-    </RequireAuth>
+    </RequireAuthClientOnly>
   )
 }

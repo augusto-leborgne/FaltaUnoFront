@@ -1,12 +1,12 @@
 "use client"
 
-import RequireAuth from "@/components/auth/require-auth";
+import { RequireAuthClientOnly } from "@/components/auth/client-only-wrapper";
 import { HomeScreen } from "@/components/pages/home-screen";
 
 export default function HomePage() {
   return (
-    <RequireAuth allowIncomplete={false} allowUnverified={false}>
+    <RequireAuthClientOnly allowIncomplete={false} allowUnverified={false}>
       <HomeScreen />
-    </RequireAuth>
+    </RequireAuthClientOnly>
   );
 }
