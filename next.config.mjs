@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Enable standalone output for Docker
-  output: 'standalone',
+  // DISABLED standalone due to pnpm symlink issues in Cloud Run build
+  // output: 'standalone',
   
   // ⚡ PERFORMANCE OPTIMIZATIONS
   // Compile only essential packages (reduce bundle size)
