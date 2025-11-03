@@ -1,13 +1,13 @@
 // ✅ CLIENT COMPONENT - Handles interactivity
 "use client"
 
-import { ErrorBoundary } from "@/components/error-boundary-wrapper"
-import { HomeScreenWithAuth } from "@/components/pages/home-screen-wrapper"
+import { HomeScreen } from "@/components/pages/home-screen"
+import RequireAuth from "@/components/auth/require-auth"
 
 export default function HomeClient() {
   return (
-    <ErrorBoundary>
-      <HomeScreenWithAuth />
-    </ErrorBoundary>
+    <RequireAuth allowIncomplete={false} allowUnverified={false}>
+      <HomeScreen />
+    </RequireAuth>
   )
 }
