@@ -1,7 +1,8 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { GeistSans } from "geist/font/sans"
-import { GeistMono } from "geist/font/mono"
+// TEMPORARY: Comment out Geist fonts to test if they're causing SSR issues
+// import { GeistSans } from "geist/font/sans"
+// import { GeistMono } from "geist/font/mono"
 import "./globals.css"
 import { AuthProvider } from "@/components/auth/auth-provider"
 import { ErrorBoundary } from "@/components/error-boundary"
@@ -59,7 +60,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="es" className={`${GeistSans.variable} ${GeistMono.variable} antialiased`}>
+    <html lang="es" className="antialiased">
       <head>
         {/* ⚡ Preconnect to external domains for faster loading */}
         <link rel="preconnect" href="https://faltauno-backend-pg4rwegknq-uc.a.run.app" crossOrigin="anonymous" />
