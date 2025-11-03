@@ -84,12 +84,13 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         const estadoData = await InscripcionAPI.getEstado(matchId, currentUser.id)
         
         if (estadoData.success && estadoData.data) {
-          const { inscrito, estado } = estadoData.data
+          const { inscrito } = estadoData.data
           
-          // Solo permitir acceso si está inscrito y ACEPTADO
-          if (!inscrito || estado !== "ACEPTADO") {
-            logger.warn("[MatchChat] Acceso denegado - inscrito:", inscrito, "estado:", estado)
-            setError("Debes estar inscrito y aceptado en el partido para acceder al chat")
+          // Solo permitir acceso si está inscrito (sin importar el estado)
+          // Solo bloquear si fue eliminado de la lista (no inscrito)
+          if (!inscrito) {
+            logger.warn("[MatchChat] Acceso denegado - no inscrito")
+            setError("Debes estar inscrito en el partido para acceder al chat")
             setTimeout(() => {
               router.push(`/matches/${matchId}`)
             }, 2000)
