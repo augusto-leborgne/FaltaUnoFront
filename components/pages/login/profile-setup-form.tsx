@@ -108,6 +108,14 @@ export function ProfileSetupForm() {
       
       case 'photo':
         if (!value) return "La foto de perfil es obligatoria"
+        // ✅ Validar tamaño (máx 5MB)
+        if (value instanceof File && value.size > 5 * 1024 * 1024) {
+          return "La foto no puede superar 5MB"
+        }
+        // ✅ Validar tipo
+        if (value instanceof File && !value.type.startsWith('image/')) {
+          return "Solo se permiten imágenes"
+        }
         return null
       
       case 'address':
