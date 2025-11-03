@@ -1,5 +1,7 @@
 "use client"
 
+
+import { logger } from '@/lib/logger'
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -78,10 +80,10 @@ export function RegisterScreen() {
     try {
       // URL completa del backend en Cloud Run (centralizada desde api.ts)
       const redirectUrl = `${API_BASE}/oauth2/authorization/${provider}`
-      console.log("[RegisterScreen] Redirigiendo a OAuth:", redirectUrl)
+      logger.log("[RegisterScreen] Redirigiendo a OAuth:", redirectUrl)
       window.location.href = redirectUrl
     } catch (err) {
-      console.error("[RegisterScreen] Error en OAuth:", err)
+      logger.error("[RegisterScreen] Error en OAuth:", err)
       setError("Error al iniciar sesión con " + provider)
     }
   }
@@ -104,7 +106,7 @@ export function RegisterScreen() {
     setError("")
 
     try {
-      console.log("[RegisterScreen] Iniciando pre-registro para:", formData.email)
+      logger.log("[RegisterScreen] Iniciando pre-registro para:", formData.email)
 
       // ✅ NUEVO FLUJO: Pre-registro con verificación de email (usa API_URL centralizado)
       const response = await fetch(`${API_URL}/auth/pre-register`, {
@@ -121,17 +123,17 @@ export function RegisterScreen() {
       const data = await response.json()
 
       if (data.success) {
-        console.log("[RegisterScreen] ✅ Pre-registro exitoso, redirigiendo a verificación")
+        logger.log("[RegisterScreen] ✅ Pre-registro exitoso, redirigiendo a verificación")
         
         // Redirigir a página de verificación con el email
         router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`)
       } else {
         const errorMsg = data.message || "Error al crear la cuenta"
-        console.error("[RegisterScreen] ❌ Error en respuesta:", errorMsg)
+        logger.error("[RegisterScreen] ❌ Error en respuesta:", errorMsg)
         setError(errorMsg)
       }
     } catch (err: any) {
-      console.error("[RegisterScreen] ❌ Error en registro:", err)
+      logger.error("[RegisterScreen] ❌ Error en registro:", err)
       
       let errorMessage = "Error al crear la cuenta"
       

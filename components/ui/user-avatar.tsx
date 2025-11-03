@@ -1,13 +1,18 @@
-// components/ui/user-avatar.tsx
+// components/ui/user-avatar.tsx - VERSIÓN OPTIMIZADA
 "use client"
 
-import React from "react"
+
+import { logger } from '@/lib/logger'
+import React, { useState, useEffect, useMemo } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
+import { PhotoCache } from "@/lib/photo-cache"
 
 interface UserAvatarProps {
   /** Base64 encoded photo string (with or without data URI prefix) */
   photo?: string | null
+  /** User ID for fetching photo from cache/server */
+  userId?: string
   /** User's name for fallback initials */
   name?: string
   /** User's surname for fallback initials */
@@ -20,24 +25,42 @@ interface UserAvatarProps {
   fallbackClassName?: string
   /** onClick handler */
   onClick?: () => void
+  /** Lazy load the image (default: false) */
+  lazy?: boolean
 }
 
 /**
  * UserAvatar - Componente reutilizable para mostrar avatares de usuario
  * 
+ * OPTIMIZACIONES v2.0:
+ * - Cache en memoria y sessionStorage
+ * - Lazy loading opcional
+ * - Fetching automático desde servidor si se provee userId
+ * - Normalización automática de formatos base64
+ * 
  * Maneja automáticamente:
  * - Fotos en base64 con o sin prefijo data:image
+ * - Carga desde servidor usando userId
  * - Iniciales calculadas desde nombre/apellido o fullName
  * - Fallback con iniciales estilizadas
  * 
  * @example
  * ```tsx
- * // Con objeto usuario completo
+ * // Con foto base64 directa
  * <UserAvatar 
  *   photo={user.foto_perfil}
  *   name={user.nombre}
  *   surname={user.apellido}
  *   className="w-12 h-12"
+ * />
+ * 
+ * // Con userId (carga automática desde servidor + cache)
+ * <UserAvatar 
+ *   userId={user.id}
+ *   name={user.nombre}
+ *   surname={user.apellido}
+ *   className="w-12 h-12"
+ *   lazy
  * />
  * 
  * // Con nombre completo
@@ -51,26 +74,74 @@ interface UserAvatarProps {
  */
 export function UserAvatar({
   photo,
+  userId,
   name,
   surname,
   fullName,
   className,
   fallbackClassName,
   onClick,
+  lazy = false,
 }: UserAvatarProps): JSX.Element {
+  const [loadedPhoto, setLoadedPhoto] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [hasError, setHasError] = useState(false)
+  
+  // ⚡ OPTIMIZACIÓN: Cargar foto desde cache/servidor si se provee userId
+  useEffect(() => {
+    // Si ya tenemos photo directa, no necesitamos cargar
+    if (photo) {
+      setLoadedPhoto(photo)
+      return
+    }
+    
+    // Si no hay userId, no hay nada que cargar
+    if (!userId) {
+      setLoadedPhoto(null)
+      return
+    }
+    
+    // Cargar desde cache/servidor
+    let cancelled = false
+    setIsLoading(true)
+    
+    PhotoCache.getPhoto(userId)
+      .then(cachedPhoto => {
+        if (!cancelled && cachedPhoto) {
+          setLoadedPhoto(cachedPhoto)
+          setHasError(false)
+        }
+      })
+      .catch(err => {
+        logger.warn(`[UserAvatar] Error loading photo for ${userId}:`, err)
+        if (!cancelled) {
+          setHasError(true)
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoading(false)
+        }
+      })
+    
+    return () => {
+      cancelled = true
+    }
+  }, [photo, userId])
   
   // Normalizar la foto a data URI si es necesario
   const normalizedPhoto = React.useMemo(() => {
-    if (!photo) return null
+    const photoToUse = photo || loadedPhoto
+    if (!photoToUse) return null
     
     // Si ya tiene el prefijo data:image, usarla directamente
-    if (photo.startsWith('data:image')) {
-      return photo
+    if (photoToUse.startsWith('data:image')) {
+      return photoToUse
     }
     
     // Si es base64 sin prefijo, agregar el prefijo
-    return `data:image/jpeg;base64,${photo}`
-  }, [photo])
+    return `data:image/jpeg;base64,${photoToUse}`
+  }, [photo, loadedPhoto])
 
   // Calcular iniciales
   const initials = React.useMemo(() => {
@@ -110,26 +181,42 @@ export function UserAvatar({
 
   return (
     <Avatar 
-      className={cn(className, onClick && "cursor-pointer hover:opacity-80 transition-opacity")}
+      className={cn(
+        className, 
+        onClick && "cursor-pointer hover:opacity-80 transition-opacity",
+        isLoading && "animate-pulse"
+      )}
       onClick={onClick}
     >
-      {normalizedPhoto && (
+      {normalizedPhoto && !hasError && (
         <AvatarImage 
           src={normalizedPhoto} 
           alt={fullName || `${name} ${surname}`.trim() || "Usuario"}
+          loading={lazy ? "lazy" : "eager"}
           onError={(e) => {
-            console.warn("[UserAvatar] Error loading image, showing fallback")
+            logger.warn("[UserAvatar] Error loading image, showing fallback")
+            setHasError(true)
             // En caso de error, ocultar la imagen y mostrar fallback
             e.currentTarget.style.display = 'none'
           }}
         />
       )}
-      <AvatarFallback className={cn(bgColor, fallbackClassName)}>
+      <AvatarFallback className={cn(bgColor, fallbackClassName, isLoading && "opacity-50")}>
         {initials}
       </AvatarFallback>
     </Avatar>
   )
 }
 
-// Export default for compatibility
-export default UserAvatar
+// ⚡ OPTIMIZACIÓN: React.memo previene re-renders innecesarios
+// Solo se re-renderiza si photo, userId, name o surname cambian
+export default React.memo(UserAvatar, (prevProps, nextProps) => {
+  return (
+    prevProps.photo === nextProps.photo &&
+    prevProps.userId === nextProps.userId &&
+    prevProps.name === nextProps.name &&
+    prevProps.surname === nextProps.surname &&
+    prevProps.fullName === nextProps.fullName &&
+    prevProps.className === nextProps.className
+  )
+})

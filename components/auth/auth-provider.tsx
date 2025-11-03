@@ -4,6 +4,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from "react";
 import { AuthService } from "@/lib/auth";
 import { TokenPersistence } from "@/lib/token-persistence";
+import { logger } from "@/lib/logger";
 import type { Usuario } from "@/lib/api";
 
 export type AuthCtx = {
@@ -25,7 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Wrapper para setUser que preserva firma del contexto
   const setUser = useCallback((u: Usuario | null) => {
-    console.log("[AuthProvider] setUser llamado:", u?.email || "null");
+    logger.debug("[AuthProvider] setUser llamado:", u?.email || "null");
     setUserState(u);
     if (u) {
       AuthService.setUser(u);
@@ -34,17 +35,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // refreshUser: valida token y actualiza user en contexto desde server
   const refreshUser = useCallback(async (): Promise<Usuario | null> => {
-    console.log("[AuthProvider] refreshUser iniciado");
+    logger.log("[AuthProvider] refreshUser iniciado");
     
     // ⚡ CRITICAL: Prevent duplicate concurrent fetches
     if (fetchInProgressRef.current) {
-      console.log("[AuthProvider] Fetch already in progress, skipping");
+      logger.log("[AuthProvider] Fetch already in progress, skipping");
       return user; // Return current user instead of null
     }
     
     // Evitar refresh durante logout
     if (isLoggingOut) {
-      console.log("[AuthProvider] Logout en progreso, cancelando refresh");
+      logger.log("[AuthProvider] Logout en progreso, cancelando refresh");
       return null;
     }
     
@@ -57,14 +58,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       const token = AuthService.getToken();
       if (!token) {
-        console.log("[AuthProvider] refreshUser: no hay token");
+        logger.log("[AuthProvider] refreshUser: no hay token");
         setUserState(null);
         return null;
       }
       
       // ⚡ PROTECCIÓN: Verificar que el token no esté corrupto
       if (AuthService.isTokenExpired(token)) {
-        console.warn("[AuthProvider] Token expirado detectado - limpiando");
+        logger.warn("[AuthProvider] Token expirado detectado - limpiando");
         AuthService.removeToken();
         AuthService.removeUser();
         setUserState(null);
@@ -72,11 +73,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Intentar obtener usuario desde el backend (me)
-      console.log("[AuthProvider] Obteniendo usuario desde servidor...");
+      logger.log("[AuthProvider] Obteniendo usuario desde servidor...");
       const serverUser = await AuthService.fetchCurrentUser();
       
       if (serverUser) {
-        console.log("[AuthProvider] Usuario actualizado desde servidor:", serverUser.email);
+        logger.log("[AuthProvider] Usuario actualizado desde servidor:", serverUser.email);
         setUserState(serverUser);
         return serverUser;
       }
@@ -84,11 +85,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Fallback: cargar desde localStorage si existe y token no expiró
       const localUser = AuthService.getUser();
       if (localUser && !AuthService.isTokenExpired(token)) {
-        console.log("[AuthProvider] Usando usuario desde localStorage");
+        logger.log("[AuthProvider] Usando usuario desde localStorage");
         setUserState(localUser);
         return localUser;
       } else {
-        console.log("[AuthProvider] No hay usuario válido - limpiando sin hacer logout forzado");
+        logger.log("[AuthProvider] No hay usuario válido - limpiando sin hacer logout forzado");
         // Solo limpiar el usuario, NO hacer logout completo
         // Esto permite que el usuario pueda volver a intentar autenticarse
         AuthService.removeUser();
@@ -96,33 +97,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return null;
       }
     } catch (err) {
-      console.error("[AuthProvider] refreshUser error:", err);
+      logger.error("[AuthProvider] refreshUser error:", err);
       
       // ⚡ RECUPERACIÓN INTELIGENTE: En caso de error, verificar si el token sigue siendo válido
       try {
         const token = AuthService.getToken();
         if (token && !AuthService.isTokenExpired(token)) {
-          console.warn("[AuthProvider] Error temporal pero token válido - preservando sesión");
+          logger.warn("[AuthProvider] Error temporal pero token válido - preservando sesión");
           // Intentar cargar usuario desde localStorage como fallback
           const localUser = AuthService.getUser();
           if (localUser) {
-            console.log("[AuthProvider] Usando usuario desde cache local");
+            logger.log("[AuthProvider] Usando usuario desde cache local");
             setUserState(localUser);
             return localUser;
           } else {
-            console.log("[AuthProvider] No hay usuario en cache - sin usuario pero token preservado");
+            logger.log("[AuthProvider] No hay usuario en cache - sin usuario pero token preservado");
             setUserState(null);
             return null;
           }
         } else {
-          console.log("[AuthProvider] Error y token inválido/expirado - limpiando sesión");
+          logger.log("[AuthProvider] Error y token inválido/expirado - limpiando sesión");
           AuthService.removeToken();
           AuthService.removeUser();
           setUserState(null);
           return null;
         }
       } catch (fallbackErr) {
-        console.error("[AuthProvider] Error en recuperación fallback:", fallbackErr);
+        logger.error("[AuthProvider] Error en recuperación fallback:", fallbackErr);
         setUserState(null);
         return null;
       }
@@ -134,7 +135,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // logout: limpiar storage, contexto y redirigir a login
   const logout = useCallback(() => {
-    console.log("[AuthProvider] logout llamado");
+    logger.log("[AuthProvider] logout llamado");
     
     // Marcar que estamos en proceso de logout
     setIsLoggingOut(true);
@@ -151,7 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Usar replace en lugar de href para evitar history
         window.location.replace("/login");
       } catch (e) {
-        console.warn("[AuthProvider] redirect to login failed", e);
+        logger.warn("[AuthProvider] redirect to login failed", e);
       }
     }
   }, []); // useCallback sin dependencias
@@ -161,18 +162,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     mountedRef.current = true;
 
     const init = async () => {
-      console.log("[AuthProvider] Inicializando...");
+      logger.log("[AuthProvider] Inicializando...");
       
       // CRÍTICO: Intentar recuperar token desde backups si es necesario
       const recoveredToken = TokenPersistence.recoverToken();
       if (recoveredToken) {
-        console.log("[AuthProvider] Token recuperado exitosamente desde backup");
+        logger.log("[AuthProvider] Token recuperado exitosamente desde backup");
       }
       
       // Verificar consistencia del token
       const consistency = TokenPersistence.verifyTokenConsistency();
       if (consistency.repaired) {
-        console.log("[AuthProvider] Token reparado durante inicialización");
+        logger.log("[AuthProvider] Token reparado durante inicialización");
       }
       
       // Limpiar tokens expirados
@@ -183,7 +184,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const localUser = AuthService.getUser();
 
       if (!token) {
-        console.log("[AuthProvider] No hay token en localStorage");
+        logger.log("[AuthProvider] No hay token en localStorage");
         if (mountedRef.current) {
           setUserState(null);
           setLoading(false);
@@ -194,7 +195,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // ⚡ OPTIMIZACIÓN: Si hay token y user local y token no expiró -> setear INMEDIATAMENTE
       // No esperar validación del servidor para mostrar UI
       if (localUser && !AuthService.isTokenExpired(token)) {
-        console.log("[AuthProvider] Restaurando sesión desde localStorage:", localUser.email);
+        logger.log("[AuthProvider] Restaurando sesión desde localStorage:", localUser.email);
         if (mountedRef.current) {
           setUserState(localUser);
           setLoading(false); // ⚡ Desbloquear UI inmediatamente
@@ -203,15 +204,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // ⚡ CRÍTICO: Revalidar desde servidor en background para sincronizar datos
         // Usar requestIdleCallback para no bloquear la renderización inicial
         const revalidate = async () => {
-          console.log("[AuthProvider] Revalidando usuario desde servidor en background...");
+          logger.log("[AuthProvider] Revalidando usuario desde servidor en background...");
           try {
             const serverUser = await AuthService.fetchCurrentUser();
             if (serverUser && mountedRef.current) {
-              console.log("[AuthProvider] ✅ Usuario actualizado desde servidor:", serverUser.email);
+              logger.log("[AuthProvider] ✅ Usuario actualizado desde servidor:", serverUser.email);
               setUserState(serverUser);
             }
           } catch (err) {
-            console.warn("[AuthProvider] Error revalidando usuario (manteniendo cache local):", err);
+            logger.warn("[AuthProvider] Error revalidando usuario (manteniendo cache local):", err);
             // No hacer nada - mantener usuario local
           }
         }
@@ -230,15 +231,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const serverUser = await AuthService.fetchCurrentUser();
         if (serverUser) {
-          console.log("[AuthProvider] Usuario restaurado desde servidor:", serverUser.email);
+          logger.log("[AuthProvider] Usuario restaurado desde servidor:", serverUser.email);
           if (mountedRef.current) setUserState(serverUser);
         } else {
-          console.log("[AuthProvider] Token no validado por servidor, limpiando");
+          logger.log("[AuthProvider] Token no validado por servidor, limpiando");
           AuthService.logout();
           if (mountedRef.current) setUserState(null);
         }
       } catch (err) {
-        console.warn("[AuthProvider] Error al validar token con servidor:", err);
+        logger.warn("[AuthProvider] Error al validar token con servidor:", err);
         AuthService.logout();
         if (mountedRef.current) setUserState(null);
       } finally {
@@ -250,12 +251,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // ✅ NUEVO: Escuchar eventos personalizados
     const handleUserUpdated = ((e: CustomEvent) => {
-      console.log("[AuthProvider] Usuario actualizado desde evento");
+      logger.log("[AuthProvider] Usuario actualizado desde evento");
       setUserState(e.detail);
     }) as EventListener;
     
     const handleUserLoggedOut = () => {
-      console.log("[AuthProvider] Logout detectado desde evento");
+      logger.log("[AuthProvider] Logout detectado desde evento");
       setUserState(null);
     };
 
@@ -264,14 +265,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Escuchar cambios en localStorage (sync entre pestañas)
     const onStorage = (e: StorageEvent) => {
-      console.log("[AuthProvider] Storage event:", e.key);
+      logger.log("[AuthProvider] Storage event:", e.key);
       
       if (e.key === "authToken") {
         if (!e.newValue) {
-          console.log("[AuthProvider] Token eliminado en otra pestaña");
+          logger.log("[AuthProvider] Token eliminado en otra pestaña");
           setUserState(null);
         } else if (AuthService.isTokenExpired(e.newValue)) {
-          console.log("[AuthProvider] Token expirado detectado via storage event");
+          logger.log("[AuthProvider] Token expirado detectado via storage event");
           AuthService.logout();
           setUserState(null);
         }
@@ -280,7 +281,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (e.key === "user") {
         try {
           const newUser = e.newValue ? JSON.parse(e.newValue) : null;
-          console.log("[AuthProvider] Usuario actualizado desde otra pestaña:", newUser?.email ?? null);
+          logger.log("[AuthProvider] Usuario actualizado desde otra pestaña:", newUser?.email ?? null);
           setUserState(newUser);
         } catch {
           setUserState(null);
@@ -298,15 +299,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const token = AuthService.getToken();
       if (!token || isLoggingOut) return;
       
-      console.log("[AuthProvider] Revalidación periódica del usuario...");
+      logger.log("[AuthProvider] Revalidación periódica del usuario...");
       try {
         const serverUser = await AuthService.fetchCurrentUser();
         if (serverUser && mountedRef.current) {
-          console.log("[AuthProvider] Usuario revalidado exitosamente");
+          logger.log("[AuthProvider] Usuario revalidado exitosamente");
           setUserState(serverUser);
         }
       } catch (err) {
-        console.warn("[AuthProvider] Error en revalidación periódica:", err);
+        logger.warn("[AuthProvider] Error en revalidación periódica:", err);
       }
     }, 10 * 60 * 1000); // 10 minutos (aumentado de 5)
 

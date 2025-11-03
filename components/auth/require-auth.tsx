@@ -5,6 +5,7 @@ import { useEffect } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { AuthService } from "@/lib/auth"
+import { logger } from "@/lib/logger"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 type Props = {
@@ -26,13 +27,13 @@ export default function RequireAuth({
 
   useEffect(() => {
     if (loading) {
-      console.log(`[RequireAuth:${pathname}] Loading...`)
+      logger.log(`[RequireAuth:${pathname}] Loading...`)
       return
     }
 
     const token = AuthService.getToken()
     if (!token || AuthService.isTokenExpired(token)) {
-      console.log(`[RequireAuth:${pathname}] Token inválido o expirado, redirigiendo a /login`)
+      logger.log(`[RequireAuth:${pathname}] Token inválido o expirado, redirigiendo a /login`)
       AuthService.logout()
       router.replace("/login")
       return
@@ -40,11 +41,11 @@ export default function RequireAuth({
 
     // Si no hay user todavía, quedate (render del loader abajo)
     if (!user) {
-      console.log(`[RequireAuth:${pathname}] Esperando usuario...`)
+      logger.log(`[RequireAuth:${pathname}] Esperando usuario...`)
       return
     }
 
-    console.log(`[RequireAuth:${pathname}] Usuario:`, {
+    logger.log(`[RequireAuth:${pathname}] Usuario:`, {
       email: user.email,
       perfilCompleto: user.perfilCompleto,
       cedulaVerificada: user.cedulaVerificada,
@@ -52,20 +53,31 @@ export default function RequireAuth({
       allowUnverified
     })
 
-    // ⚡ CRÍTICO: Si el perfil parece incompleto pero no estamos en profile-setup,
-    // revalidar desde servidor antes de redirigir para evitar falsos positivos
-    if (!allowIncomplete && !user.perfilCompleto) {
+    // ⚡ CRÍTICO: Validación mejorada de perfil incompleto
+    // Considerar incompleto si perfilCompleto no es true O faltan campos básicos
+    const hasBasicFields = user.nombre && user.apellido
+    const isProfileComplete = user.perfilCompleto === true
+    
+    if (!allowIncomplete && (!isProfileComplete || !hasBasicFields)) {
       if (pathname !== "/profile-setup") {
-        console.log(`[RequireAuth:${pathname}] Perfil incompleto detectado, revalidando antes de redirigir...`)
+        logger.log(`[RequireAuth:${pathname}] Perfil incompleto detectado, revalidando antes de redirigir...`, {
+          perfilCompleto: user.perfilCompleto,
+          hasBasicFields
+        })
         refreshUser().then((freshUser) => {
-          if (freshUser && !freshUser.perfilCompleto) {
-            console.log(`[RequireAuth:${pathname}] Confirmado: perfil incompleto, redirigiendo a /profile-setup`)
-            router.replace("/profile-setup")
-          } else if (freshUser?.perfilCompleto) {
-            console.log(`[RequireAuth:${pathname}] ✓ Perfil completo tras revalidación, permitiendo acceso`)
+          if (freshUser) {
+            const freshHasBasicFields = freshUser.nombre && freshUser.apellido
+            const freshIsComplete = freshUser.perfilCompleto === true
+            
+            if (!freshIsComplete || !freshHasBasicFields) {
+              logger.log(`[RequireAuth:${pathname}] Confirmado: perfil incompleto, redirigiendo a /profile-setup`)
+              router.replace("/profile-setup")
+            } else {
+              logger.log(`[RequireAuth:${pathname}] ✓ Perfil completo tras revalidación, permitiendo acceso`)
+            }
           }
         }).catch(err => {
-          console.error(`[RequireAuth:${pathname}] Error revalidando usuario:`, err)
+          logger.error(`[RequireAuth:${pathname}] Error revalidando usuario:`, err)
         })
       }
       return
@@ -73,13 +85,13 @@ export default function RequireAuth({
 
     if (!allowUnverified && user.perfilCompleto && !user.cedulaVerificada) {
       if (pathname !== "/verification") {
-        console.log(`[RequireAuth:${pathname}] Cédula no verificada, redirigiendo a /verification`)
+        logger.log(`[RequireAuth:${pathname}] Cédula no verificada, redirigiendo a /verification`)
         router.replace("/verification")
       }
       return
     }
 
-    console.log(`[RequireAuth:${pathname}] ✓ Verificación completa, permitiendo acceso`)
+    logger.log(`[RequireAuth:${pathname}] ✓ Verificación completa, permitiendo acceso`)
     // Importante: no redirigir a "/" nunca acá.
   }, [user, loading, router, pathname, allowIncomplete, allowUnverified, refreshUser])
 

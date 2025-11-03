@@ -1,5 +1,7 @@
 "use client"
 
+
+import { logger } from '@/lib/logger'
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,6 +11,7 @@ import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { MensajeAPI, PartidoAPI, InscripcionAPI, MensajeDTO } from '@/lib/api'
 import { LoadingSpinner, InlineSpinner } from "@/components/ui/loading-spinner"
+import { useSmartPolling } from "@/hooks/use-smart-polling"
 
 interface MatchChatScreenProps {
   matchId: string
@@ -24,7 +27,6 @@ interface MatchInfo {
 export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   const router = useRouter()
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const pollingIntervalRef = useRef<number | null>(null)
   
   // Estados
   const [message, setMessage] = useState("")
@@ -36,44 +38,25 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   
   const currentUser = AuthService.getUser()
 
-  // ============================================
-  // EFECTOS
-  // ============================================
+  // ⚡ OPTIMIZACIÓN: Smart polling que pausa cuando tab está inactiva
+  useSmartPolling(
+    () => loadMessages(true), // true = silent
+    {
+      interval: 5000,
+      enabled: !loading, // Solo hacer polling después de carga inicial
+      pauseWhenHidden: true, // Pausar cuando tab está oculta
+      hiddenInterval: 30000, // 30s cuando está oculta (ahorra batería)
+    }
+  )
 
   useEffect(() => {
     // Cargar datos iniciales
     loadChatData()
-
-    // Configurar polling para nuevos mensajes
-    startPolling()
-
-    // Cleanup
-    return () => {
-      stopPolling()
-    }
   }, [matchId])
 
   useEffect(() => {
     scrollToBottom()
   }, [messages])
-
-  // ============================================
-  // POLLING
-  // ============================================
-
-  const startPolling = () => {
-    // Polling cada 5 segundos
-    pollingIntervalRef.current = window.setInterval(() => {
-      loadMessages(true) // true = silent (sin mostrar loading)
-    }, 5000)
-  }
-
-  const stopPolling = () => {
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current)
-      pollingIntervalRef.current = null
-    }
-  }
 
   // ============================================
   // FUNCIONES DE CARGA
@@ -105,7 +88,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
           
           // Solo permitir acceso si está inscrito y ACEPTADO
           if (!inscrito || estado !== "ACEPTADO") {
-            console.warn("[MatchChat] Acceso denegado - inscrito:", inscrito, "estado:", estado)
+            logger.warn("[MatchChat] Acceso denegado - inscrito:", inscrito, "estado:", estado)
             setError("Debes estar inscrito y aceptado en el partido para acceder al chat")
             setTimeout(() => {
               router.push(`/matches/${matchId}`)
@@ -114,7 +97,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
           }
         }
       } catch (err) {
-        console.error("[MatchChat] Error verificando inscripción:", err)
+        logger.error("[MatchChat] Error verificando inscripción:", err)
         setError("Error al verificar permisos de acceso")
         setTimeout(() => {
           router.push(`/matches/${matchId}`)
@@ -134,7 +117,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
           })
         }
       } catch (err) {
-        console.warn("[MatchChat] Error cargando info del partido:", err)
+        logger.warn("[MatchChat] Error cargando info del partido:", err)
         // No es crítico, continuar
       }
 
@@ -142,7 +125,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
       await loadMessages()
 
     } catch (err) {
-      console.error("[MatchChat] Error cargando chat:", err)
+      logger.error("[MatchChat] Error cargando chat:", err)
       const errorMessage = err instanceof Error ? err.message : "Error al cargar el chat"
       setError(errorMessage)
     } finally {
@@ -170,7 +153,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
       }
 
     } catch (err) {
-      console.error("[MatchChat] Error cargando mensajes:", err)
+      logger.error("[MatchChat] Error cargando mensajes:", err)
       if (!silent) {
         const errorMessage = err instanceof Error ? err.message : "Error al cargar mensajes"
         setError(errorMessage)
@@ -219,7 +202,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
       await loadMessages(true)
 
     } catch (err) {
-      console.error("[MatchChat] Error enviando mensaje:", err)
+      logger.error("[MatchChat] Error enviando mensaje:", err)
       const errorMessage = err instanceof Error ? err.message : "Error al enviar mensaje"
       setError(errorMessage)
     } finally {

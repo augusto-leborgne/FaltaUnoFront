@@ -1,6 +1,8 @@
 // components/pages/user/profile-screen.tsx
 "use client"
 
+
+import { logger } from '@/lib/logger'
 import React, { useEffect, useState, useCallback } from "react"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { Button } from "@/components/ui/button"
@@ -118,7 +120,7 @@ function ProfileScreenInner() {
         setContacts(filteredContacts)
       }
     } catch (e) {
-      console.error("[ProfileScreen] Error cargando datos del perfil:", e)
+      logger.error("[ProfileScreen] Error cargando datos del perfil:", e)
       setError("Error al cargar datos del perfil")
     } finally {
       setLoading(false)
@@ -200,8 +202,9 @@ function ProfileScreenInner() {
         {/* Profile Card */}
         <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
           <div className="flex items-center space-x-3 sm:space-x-4 mb-4 sm:mb-6">
+            {/* ✅ OPTIMIZADO: UserAvatar con userId para carga automática */}
             <UserAvatar
-              photo={user.foto_perfil || user.foto_perfil}
+              userId={user.id}
               name={user.nombre}
               surname={user.apellido}
               className="w-16 h-16 sm:w-20 sm:h-20"
@@ -249,9 +252,13 @@ function ProfileScreenInner() {
             </div>
             <div className="space-y-2 sm:space-y-3">
               {friendRequests.slice(0, 3).map((request) => (
-                <div key={request.id} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl">
+                <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl">
                   <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
-                    <UserAvatar className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0" fullName="Nueva solicitud" />
+                    {/* ✅ Usar userId si hay ID del requester */}
+                    <UserAvatar 
+                      className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0" 
+                      fullName="Nueva solicitud"
+                    />
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-gray-900 text-sm sm:text-base truncate">Nueva solicitud</p>
                       <p className="text-[10px] sm:text-xs text-gray-500">
@@ -389,7 +396,6 @@ function ProfileScreenInner() {
             <div className="space-y-2 sm:space-y-3">
               {contacts.slice(0, 5).map((contact) => {
                 const contactName = `${contact.nombre} ${contact.apellido}`.trim() || "Usuario"
-                const photo = contact.foto_perfil || contact.fotoPerfil
 
                 return (
                   <div
@@ -398,7 +404,14 @@ function ProfileScreenInner() {
                     className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl cursor-pointer hover:bg-gray-100 transition-colors"
                   >
                     <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
-                      <UserAvatar photo={photo} name={contact.nombre} surname={contact.apellido} className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0" />
+                      {/* ✅ OPTIMIZADO: Usar userId + lazy loading para contactos */}
+                      <UserAvatar 
+                        userId={contact.id}
+                        name={contact.nombre} 
+                        surname={contact.apellido} 
+                        className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0"
+                        lazy
+                      />
                       <div className="min-w-0 flex-1">
                         <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{contactName}</p>
                         {contact.celular && (

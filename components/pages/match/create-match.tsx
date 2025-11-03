@@ -1,5 +1,7 @@
 "use client"
 
+
+import { logger } from '@/lib/logger'
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -86,7 +88,7 @@ export function CreateMatchScreen() {
     const newPlayerCount = playerCounts[formData.type] || 10
     
     if (formData.totalPlayers !== newPlayerCount) {
-      console.log(`[CreateMatch] Auto-ajustando jugadores: ${formData.type} → ${newPlayerCount} jugadores`)
+      logger.log(`[CreateMatch] Auto-ajustando jugadores: ${formData.type} → ${newPlayerCount} jugadores`)
       setFormData((prev) => ({ ...prev, totalPlayers: newPlayerCount }))
       
       // Limpiar error de validación si existe
@@ -238,7 +240,7 @@ export function CreateMatchScreen() {
     setError("")
 
     try {
-      console.log("[CreateMatch] Iniciando creación de partido...")
+      logger.log("[CreateMatch] Iniciando creación de partido...")
 
       // Mapear datos del formulario al DTO
       const partidoDTO = mapFormDataToPartidoDTO({
@@ -255,32 +257,32 @@ export function CreateMatchScreen() {
         organizadorId: user.id
       })
 
-      console.log("[CreateMatch] DTO preparado:", partidoDTO)
+      logger.log("[CreateMatch] DTO preparado:", partidoDTO)
 
       // Llamar a la API
       const response = await PartidoAPI.crear(partidoDTO)
 
-      console.log("[CreateMatch] Respuesta de la API:", response)
+      logger.log("[CreateMatch] Respuesta de la API:", response)
 
       // El partido puede haber sido creado aunque response.success sea false
       // Verificar si tenemos un ID de partido
       const partidoId = response.data?.id || (response as any)?.id
       
       if (partidoId) {
-        console.log("[CreateMatch] Partido creado exitosamente con ID:", partidoId)
+        logger.log("[CreateMatch] Partido creado exitosamente con ID:", partidoId)
         setSuccess(true)
-        console.log("[CreateMatch] Redirigiendo a match-created con ID:", partidoId)
+        logger.log("[CreateMatch] Redirigiendo a match-created con ID:", partidoId)
         setTimeout(() => router.push(`/match-created?matchId=${partidoId}`), 1000)
       } else if (!response.success) {
         throw new Error(response.message || "Error al crear el partido")
       } else {
-        console.warn("[CreateMatch] Partido creado pero sin ID, redirigiendo a my-matches")
+        logger.warn("[CreateMatch] Partido creado pero sin ID, redirigiendo a my-matches")
         setSuccess(true)
         setTimeout(() => router.push("/my-matches"), 1000)
       }
 
     } catch (err) {
-      console.error("[CreateMatch] Error:", err)
+      logger.error("[CreateMatch] Error:", err)
       const errorMessage = err instanceof Error ? err.message : "Error al crear el partido"
       setError(errorMessage)
     } finally {
@@ -302,7 +304,7 @@ export function CreateMatchScreen() {
   }
 
   const handleLocationChange = (address: string, placeDetails?: PlaceResult | null) => {
-    console.log("[CreateMatch] Ubicación cambiada:", { address, placeDetails })
+    logger.log("[CreateMatch] Ubicación cambiada:", { address, placeDetails })
     
     setFormData((prev) => ({ ...prev, location: address }))
     
@@ -319,10 +321,10 @@ export function CreateMatchScreen() {
       const lng = typeof loc.lng === "function" ? loc.lng() : Number(loc.lng)
 
       setLocationCoordinates({ lat, lng })
-      console.log("[CreateMatch] Coordenadas establecidas:", { lat, lng })
+      logger.log("[CreateMatch] Coordenadas establecidas:", { lat, lng })
     } else {
       setLocationCoordinates(null)
-      console.log("[CreateMatch] Sin coordenadas disponibles")
+      logger.log("[CreateMatch] Sin coordenadas disponibles")
     }
   }
 

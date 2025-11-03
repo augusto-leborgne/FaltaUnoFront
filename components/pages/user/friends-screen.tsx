@@ -1,6 +1,8 @@
 // components/pages/user/friends-screen.tsx
 "use client"
 
+
+import { logger } from '@/lib/logger'
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Users, UserPlus, Search } from "lucide-react"
@@ -71,7 +73,7 @@ export function FriendsScreen() {
         setFriends(amigos)
       }
     } catch (error) {
-      console.error("Error cargando amigos:", error)
+      logger.error("Error cargando amigos:", error)
     } finally {
       setLoading(false)
     }

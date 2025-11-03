@@ -1,9 +1,11 @@
 "use client"
 
+
+import { logger } from '@/lib/logger'
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { UserAvatar } from "@/components/ui/user-avatar"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { Clock, Calendar, Star, Bell, Newspaper, TrendingUp, Award, X } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -180,7 +182,7 @@ export function HomeScreen() {
       }
 
     } catch (error) {
-      console.error("Error cargando datos:", error)
+      logger.error("Error cargando datos:", error)
       setNewsUpdates(getDefaultNews())
     } finally {
       setIsLoading(false)
@@ -209,7 +211,7 @@ export function HomeScreen() {
           return
         }
       } catch (err) {
-        console.error("[HomeScreen] Error verificando inscripción:", err)
+        logger.error("[HomeScreen] Error verificando inscripción:", err)
       }
     }
     router.push(`/matches/${matchId}`)
@@ -267,18 +269,14 @@ export function HomeScreen() {
                 </span>
               )}
             </button>
-            <Avatar className="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 cursor-pointer" onClick={() => router.push("/profile")}>
-              {currentUser?.foto_perfil ? (
-                <AvatarImage 
-                  src={currentUser.foto_perfil} 
-                  alt={currentUser?.nombre || "Usuario"}
-                />
-              ) : (
-                <AvatarFallback className="bg-primary/10 text-primary text-sm sm:text-base">
-                  {currentUser?.nombre?.[0]?.toUpperCase() || "U"}
-                </AvatarFallback>
-              )}
-            </Avatar>
+            {/* ✅ OPTIMIZADO: UserAvatar con userId para carga automática de foto */}
+            <UserAvatar 
+              userId={currentUser?.id}
+              name={currentUser?.nombre}
+              surname={currentUser?.apellido}
+              className="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 cursor-pointer"
+              onClick={() => router.push("/profile")}
+            />
           </div>
         </div>
 

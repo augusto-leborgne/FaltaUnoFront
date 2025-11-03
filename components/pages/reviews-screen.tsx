@@ -1,5 +1,7 @@
 "use client"
 
+
+import { logger } from '@/lib/logger'
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowLeft, Star } from "lucide-react"
@@ -48,11 +50,11 @@ export function ReviewsScreen() {
         const result = await response.json()
         setReviews(result.data || [])
       } else {
-        console.error("Error response:", response.status)
+        logger.error("Error response:", response.status)
         setReviews([])
       }
     } catch (error) {
-      console.error("Error cargando reviews:", error)
+      logger.error("Error cargando reviews:", error)
       setReviews([]) // Set empty array on error to prevent crashes
     } finally {
       setLoading(false)

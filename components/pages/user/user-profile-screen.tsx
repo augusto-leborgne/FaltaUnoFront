@@ -1,5 +1,7 @@
 "use client"
 
+
+import { logger } from '@/lib/logger'
 import React, { useEffect, useState, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -174,7 +176,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
         alert(response.message || "Error al enviar solicitud")
       }
     } catch (error) {
-      console.error("Error sending friend request:", error)
+      logger.error("Error sending friend request:", error)
       alert("Error al enviar solicitud")
     }
   }

@@ -2,6 +2,7 @@
 
 import dynamicImport from 'next/dynamic'
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { ErrorBoundary } from "@/components/error-boundary-wrapper"
 
 // Force client-side only rendering
 export const dynamic = 'force-dynamic'
@@ -20,5 +21,9 @@ const CreateMatchScreen = dynamicImport(
 )
 
 export default function CreateMatchPage() {
-  return <CreateMatchScreen />
+  return (
+    <ErrorBoundary>
+      <CreateMatchScreen />
+    </ErrorBoundary>
+  )
 }

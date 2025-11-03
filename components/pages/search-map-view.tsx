@@ -1,6 +1,8 @@
 // components/pages/search-map-view.tsx
 "use client"
 
+
+import { logger } from '@/lib/logger'
 import React, { useEffect, useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -50,7 +52,7 @@ export function SearchMapView({ partidos, onClose, onPartidoClick }: SearchMapVi
           })
         },
         (error) => {
-          console.warn("Error obteniendo ubicación:", error)
+          logger.warn("Error obteniendo ubicación:", error)
           // Ubicación por defecto (Montevideo, Uruguay)
           setUserLocation({ lat: -34.9011, lng: -56.1645 })
         }

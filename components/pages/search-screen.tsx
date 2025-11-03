@@ -1,6 +1,8 @@
 // components/pages/search-screen.tsx - VERSIÓN MEJORADA
 "use client"
 
+
+import { logger } from '@/lib/logger'
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
@@ -12,6 +14,7 @@ import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { AuthService } from "@/lib/auth"
 import { API_BASE, InscripcionAPI, InscripcionEstado } from "@/lib/api"
 import { SearchMapView } from "./search-map-view"
+import { useDebounce } from "@/hooks/use-performance"
 
 interface SearchResult {
   id: string
@@ -66,19 +69,18 @@ export function SearchScreen() {
     }
   }, [])
 
-  // Debounce para búsqueda en tiempo real
+  // ⚡ Optimización: Usar hook useDebounce en lugar de setTimeout manual
+  const debouncedSearchQuery = useDebounce(searchQuery, 500)
+
+  // Ejecutar búsqueda cuando el término debounced cambia
   useEffect(() => {
-    if (!searchQuery.trim()) {
+    if (!debouncedSearchQuery.trim()) {
       setResults([])
       return
     }
 
-    const timeoutId = setTimeout(() => {
-      handleSearch()
-    }, 500) // Esperar 500ms después de que el usuario deje de escribir
-
-    return () => clearTimeout(timeoutId)
-  }, [searchQuery, filters])
+    handleSearch()
+  }, [debouncedSearchQuery, filters])
 
   const saveRecentSearch = (query: string) => {
     if (!query.trim()) return
@@ -126,7 +128,7 @@ export function SearchScreen() {
 
       // Buscar usuarios si aplica
       if (filter === "todos" || filter === "usuarios") {
-        console.log("[SearchScreen] Buscando usuarios con token:", token ? "SÍ" : "NO")
+        logger.log("[SearchScreen] Buscando usuarios con token:", token ? "SÍ" : "NO")
         const usersResponse = await fetch(`${API_BASE}/api/usuarios?${queryParams}`, {
           headers: {
             "Authorization": `Bearer ${token}`,
@@ -134,11 +136,11 @@ export function SearchScreen() {
           }
         })
 
-        console.log("[SearchScreen] Respuesta usuarios:", usersResponse.status, usersResponse.statusText)
+        logger.log("[SearchScreen] Respuesta usuarios:", usersResponse.status, usersResponse.statusText)
 
         // Manejar error 401
         if (usersResponse.status === 401) {
-          console.error("[SearchScreen] Token inválido o expirado")
+          logger.error("[SearchScreen] Token inválido o expirado")
           AuthService.logout()
           router.push("/login")
           return
@@ -147,7 +149,7 @@ export function SearchScreen() {
         if (usersResponse.ok) {
           const usersData = await usersResponse.json()
           const users = usersData.data || []
-          console.log("[SearchScreen] Usuarios encontrados:", users.length)
+          logger.log("[SearchScreen] Usuarios encontrados:", users.length)
           
           // Cargar amistades
           const amisταdesResponse = await fetch(`${API_BASE}/api/amistades`, {
@@ -181,13 +183,13 @@ export function SearchScreen() {
             })
           })
         } else {
-          console.error("[SearchScreen] Error al buscar usuarios:", await usersResponse.text())
+          logger.error("[SearchScreen] Error al buscar usuarios:", await usersResponse.text())
         }
       }
 
       // Buscar partidos si aplica
       if (filter === "todos" || filter === "partidos") {
-        console.log("[SearchScreen] Buscando partidos")
+        logger.log("[SearchScreen] Buscando partidos")
         const partidosResponse = await fetch(`${API_BASE}/api/partidos?${queryParams}`, {
           headers: {
             "Authorization": `Bearer ${token}`,
@@ -195,11 +197,11 @@ export function SearchScreen() {
           }
         })
 
-        console.log("[SearchScreen] Respuesta partidos:", partidosResponse.status, partidosResponse.statusText)
+        logger.log("[SearchScreen] Respuesta partidos:", partidosResponse.status, partidosResponse.statusText)
 
         // Manejar error 401
         if (partidosResponse.status === 401) {
-          console.error("[SearchScreen] Token inválido o expirado en búsqueda de partidos")
+          logger.error("[SearchScreen] Token inválido o expirado en búsqueda de partidos")
           AuthService.logout()
           router.push("/login")
           return
@@ -229,7 +231,7 @@ export function SearchScreen() {
 
       setResults(sortResults(allResults))
     } catch (error) {
-      console.error("Error en búsqueda:", error)
+      logger.error("Error en búsqueda:", error)
     } finally {
       setLoading(false)
     }
@@ -291,7 +293,7 @@ export function SearchScreen() {
             return
           }
         } catch (err) {
-          console.error("[SearchScreen] Error verificando inscripción:", err)
+          logger.error("[SearchScreen] Error verificando inscripción:", err)
         }
       }
       // Usuario no es miembro o error → ir a vista externa
@@ -345,7 +347,7 @@ export function SearchScreen() {
                 return
               }
             } catch (err) {
-              console.error("[SearchScreen] Error verificando inscripción:", err)
+              logger.error("[SearchScreen] Error verificando inscripción:", err)
             }
           }
           

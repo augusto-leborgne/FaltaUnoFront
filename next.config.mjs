@@ -7,7 +7,9 @@ const nextConfig = {
   // ⚡ PERFORMANCE OPTIMIZATIONS
   // Compile only essential packages (reduce bundle size)
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production' ? true : false,
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn'] // Keep errors and warnings
+    } : false,
   },
   
   // Enable SWC minification (faster than Terser)
@@ -21,6 +23,17 @@ const nextConfig = {
   
   // Optimize production builds
   productionBrowserSourceMaps: false,
+  
+  // ⚡ NUEVO: Enable advanced optimizations
+  poweredByHeader: false,
+  generateEtags: true,
+  
+  // ⚡ NUEVO: Optimize images aggressively
+  images: {
+    ...nextConfig.images,
+    unoptimized: false,
+    loader: 'default',
+  },
   
   // ⚡ Enable modularized imports to reduce bundle size
   modularizeImports: {
@@ -139,8 +152,13 @@ const nextConfig = {
     // ⚡ PERFORMANCE: Optimize package imports
     optimizePackageImports: [
       '@radix-ui/react-icons',
+      '@radix-ui/react-avatar',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-toast',
       'date-fns',
       'recharts',
+      'lucide-react',
     ],
     
     // ⚡ Optimize server components
@@ -156,11 +174,17 @@ const nextConfig = {
       },
     },
     
+    // ⚡ NUEVO: Enable partial prerendering for better performance
+    ppr: false, // Keep false for now - still experimental
+    
     // ⚡ Optimize CSS - DISABLED: requires critters package
     // optimizeCss: true,
     
     // ⚡ Use SWC for faster compilation
     swcPlugins: [],
+    
+    // ⚡ NUEVO: Optimize client-side navigation
+    optimisticClientCache: false, // Disable as we have custom caching
   },
   
   // Ensure lucide-react is properly transpiled in all environments

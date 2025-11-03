@@ -1,5 +1,7 @@
 "use client"
 
+
+import { logger } from '@/lib/logger'
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Bell, CheckCheck, Trash2, Calendar, Users, UserPlus, MessageSquare, Star, TrendingUp, AlertCircle, ArrowLeft } from "lucide-react"
@@ -89,7 +91,7 @@ export function NotificationsScreen() {
             return
           }
         } catch (err) {
-          console.error("[Notifications] Error verificando inscripción:", err)
+          logger.error("[Notifications] Error verificando inscripción:", err)
         }
       }
       router.push(`/matches/${notif.entidad_id}`)

@@ -1,6 +1,7 @@
 import { AuthService } from "./auth";
 import { keysToCamelCase, keysToSnakeCase, dualCaseKeys } from "./case-converter";
 import { logger } from "./logger";
+import { fetchWithTimeout, fetchWithRetry } from "./fetch-with-timeout";
 
 // ============================================
 // CONFIGURACIÓN CENTRALIZADA
@@ -332,7 +333,7 @@ async function apiFetch<T>(
     // ⚡ VALIDACIÓN CRÍTICA: Verificar que el token no esté corrupto antes de usarlo
     if (token && !skipAuth) {
       if (AuthService.isTokenExpired(token)) {
-        console.warn('[API] Token expirado detectado antes de hacer request - limpiando');
+        logger.warn('[API] Token expirado detectado antes de hacer request - limpiando');
         AuthService.removeToken();
         AuthService.removeUser();
         throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.');
@@ -364,14 +365,15 @@ async function apiFetch<T>(
     }
 
     const logPrefix = attemptNumber > 0 ? `[API Retry ${attemptNumber}/${RETRY_CONFIG.maxRetries}]` : '[API]'
-    console.log(`${logPrefix} ${fetchOptions.method || 'GET'} ${endpoint}`);
+    logger.log(`${logPrefix} ${fetchOptions.method || 'GET'} ${endpoint}`);
 
     try {
-      const response = await fetch(fullUrl, {
+      // ⚡ NUEVO: Usar fetchWithTimeout para prevenir requests colgados
+      const response = await fetchWithTimeout(fullUrl, {
         ...fetchOptions,
         headers,
         signal, // Add abort signal support
-      });
+      }, 30000); // 30 segundos timeout
 
       // Manejo de 401 - Sesión expirada
       if (response.status === 401) {
@@ -380,17 +382,17 @@ async function apiFetch<T>(
         if (hadToken && !skipAutoLogout) {
           // Verificar si el token realmente está expirado antes de hacer logout
           if (token && AuthService.isTokenExpired(token)) {
-            console.warn('[API] 401 Unauthorized - Token expirado');
-            console.warn('[API] 🚪 LOGOUT INMEDIATO - Redirigiendo a login...');
+            logger.warn('[API] 401 Unauthorized - Token expirado');
+            logger.warn('[API] 🚪 LOGOUT INMEDIATO - Redirigiendo a login...');
             AuthService.logout(); // window.location.replace("/login") inmediato
             throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.');
           } else {
             // Token válido pero backend dice 401 - podría ser error transitorio
-            console.warn('[API] 401 pero token aún válido - NO haciendo logout automático');
+            logger.warn('[API] 401 pero token aún válido - NO haciendo logout automático');
             throw new Error('Error de autenticación. Por favor intenta nuevamente.');
           }
         } else {
-          console.warn('[API] 401 recibido - no se hace logout automático');
+          logger.warn('[API] 401 recibido - no se hace logout automático');
           throw new Error('No autorizado. Es posible que no tengas permisos para esta acción.');
         }
       }
@@ -403,12 +405,12 @@ async function apiFetch<T>(
       // Check if status code is retryable
       if (!response.ok && isRetryableError(null, response.status)) {
         const errorMessage = `Server error ${response.status}: ${response.statusText}`
-        console.warn(`${logPrefix} Retryable error:`, errorMessage)
+        logger.warn(`${logPrefix} Retryable error:`, errorMessage)
         
         // Retry if we haven't exceeded max attempts
         if (attemptNumber < RETRY_CONFIG.maxRetries) {
           const delay = getRetryDelay(attemptNumber)
-          console.log(`${logPrefix} Retrying in ${delay}ms...`)
+          logger.log(`${logPrefix} Retrying in ${delay}ms...`)
           await sleep(delay)
           return attemptFetch(attemptNumber + 1)
         }
@@ -424,7 +426,7 @@ async function apiFetch<T>(
       try {
         responseData = responseText ? JSON.parse(responseText) : {};
       } catch (parseError) {
-        console.error('[API] Error parseando respuesta:', responseText);
+        logger.error('[API] Error parseando respuesta:', responseText);
         throw new Error('Respuesta inválida del servidor');
       }
 
@@ -434,7 +436,7 @@ async function apiFetch<T>(
           || responseData.error 
           || `Error ${response.status}: ${response.statusText}`;
         
-        console.error(`[API] Error ${response.status}:`, errorMessage);
+        logger.error(`[API] Error ${response.status}:`, errorMessage);
         
         throw new Error(errorMessage);
       }
@@ -448,15 +450,15 @@ async function apiFetch<T>(
       };
 
       if (attemptNumber > 0) {
-        console.log(`${logPrefix} ✓ ${endpoint} completado después de ${attemptNumber} reintentos`);
+        logger.log(`${logPrefix} ✓ ${endpoint} completado después de ${attemptNumber} reintentos`);
       } else {
-        console.log(`[API] ✓ ${endpoint} completado`);
+        logger.log(`[API] ✓ ${endpoint} completado`);
       }
       
       return normalizedResponse;
 
     } catch (error) {
-      console.error(`${logPrefix} Error en ${endpoint}:`, error);
+      logger.error(`${logPrefix} Error en ${endpoint}:`, error);
       
       // Handle abort errors (timeouts) - don't retry user-initiated aborts
       if (error instanceof Error && error.name === 'AbortError') {
@@ -467,11 +469,11 @@ async function apiFetch<T>(
       if (isRetryableError(error)) {
         if (attemptNumber < RETRY_CONFIG.maxRetries) {
           const delay = getRetryDelay(attemptNumber)
-          console.log(`${logPrefix} Network error, retrying in ${delay}ms...`)
+          logger.log(`${logPrefix} Network error, retrying in ${delay}ms...`)
           await sleep(delay)
           return attemptFetch(attemptNumber + 1)
         } else {
-          console.error(`${logPrefix} Max retries (${RETRY_CONFIG.maxRetries}) exceeded for ${endpoint}`)
+          logger.error(`${logPrefix} Max retries (${RETRY_CONFIG.maxRetries}) exceeded for ${endpoint}`)
           throw new Error('Error de conexión persistente. Verifica tu conexión a internet o intenta más tarde.');
         }
       }
@@ -626,7 +628,7 @@ export const UsuarioAPI = {
 
       return response;
     } catch (error) {
-      console.error('[UsuarioAPI.login] Error:', error);
+      logger.error('[UsuarioAPI.login] Error:', error);
       return {
         success: false,
         data: null as any,
@@ -643,7 +645,7 @@ export const UsuarioAPI = {
     try {
       return await apiFetch<Usuario>('/api/usuarios/me');
     } catch (error) {
-      console.error('[UsuarioAPI.getMe] Error:', error);
+      logger.error('[UsuarioAPI.getMe] Error:', error);
       return {
         success: false,
         data: null as any,
@@ -660,7 +662,7 @@ export const UsuarioAPI = {
     try {
       return await apiFetch<Usuario>(`/api/usuarios/${id}`);
     } catch (error) {
-      console.error('[UsuarioAPI.get] Error:', error);
+      logger.error('[UsuarioAPI.get] Error:', error);
       return {
         success: false,
         data: null as any,
@@ -679,7 +681,7 @@ export const UsuarioAPI = {
         skipAutoLogout: true // Don't auto-logout on 401, handle error gracefully
       });
     } catch (error) {
-      console.error('[UsuarioAPI.list] Error:', error);
+      logger.error('[UsuarioAPI.list] Error:', error);
       return {
         success: false,
         data: [] as any,
@@ -698,7 +700,7 @@ export const UsuarioAPI = {
       // No enviar foto_perfil en creación (se sube después)
       delete payload.foto_perfil;
       
-      console.log('[UsuarioAPI.crear] Payload:', payload);
+      logger.log('[UsuarioAPI.crear] Payload:', payload);
       
       return await apiFetch<{ token?: string; user: Usuario }>('/api/usuarios', {
         method: 'POST',
@@ -706,7 +708,7 @@ export const UsuarioAPI = {
         skipAuth: true
       });
     } catch (error) {
-      console.error('[UsuarioAPI.crear] Error:', error);
+      logger.error('[UsuarioAPI.crear] Error:', error);
       return {
         success: false,
         data: null as any,
@@ -726,7 +728,7 @@ export const UsuarioAPI = {
         body: JSON.stringify(perfil)
       });
     } catch (error) {
-      console.error('[UsuarioAPI.actualizarPerfil] Error:', error);
+      logger.error('[UsuarioAPI.actualizarPerfil] Error:', error);
       return {
         success: false,
         data: null as any,
@@ -749,7 +751,7 @@ export const UsuarioAPI = {
         body: formData
       });
     } catch (error) {
-      console.error('[UsuarioAPI.subirFoto] Error:', error);
+      logger.error('[UsuarioAPI.subirFoto] Error:', error);
       return {
         success: false,
         data: null as any,
@@ -772,7 +774,7 @@ export const UsuarioAPI = {
         }
       );
     } catch (error) {
-      console.error('[UsuarioAPI.verificarCedula] Error:', error);
+      logger.error('[UsuarioAPI.verificarCedula] Error:', error);
       return {
         success: false,
         data: null as any,
@@ -794,7 +796,7 @@ export const UsuarioAPI = {
         }
       );
     } catch (error) {
-      console.error('[UsuarioAPI.eliminarCuenta] Error:', error);
+      logger.error('[UsuarioAPI.eliminarCuenta] Error:', error);
       return {
         success: false,
         data: null as any,
@@ -814,7 +816,7 @@ export const PartidoAPI = {
    * Crear partido - CORREGIDO para coincidir con el backend
    */
   crear: async (partido: Partial<PartidoDTO>) => {
-    console.log("[PartidoAPI.crear] Datos recibidos:", partido);
+    logger.log("[PartidoAPI.crear] Datos recibidos:", partido);
     
     // Validar campos requeridos
     if (!partido.fecha) {
@@ -859,7 +861,7 @@ export const PartidoAPI = {
       organizador_id: partido.organizadorId ?? partido.organizador_id
     };
 
-    console.log("[PartidoAPI.crear] Payload a enviar:", payload);
+    logger.log("[PartidoAPI.crear] Payload a enviar:", payload);
 
     try {
       const response = await apiFetch<any>('/api/partidos', {
@@ -867,10 +869,10 @@ export const PartidoAPI = {
         body: JSON.stringify(payload)
       });
 
-      console.log("[PartidoAPI.crear] Respuesta del servidor:", response);
+      logger.log("[PartidoAPI.crear] Respuesta del servidor:", response);
 
       if (!response.success || !response.data) {
-        console.error("[PartidoAPI.crear] Error en respuesta:", response.message);
+        logger.error("[PartidoAPI.crear] Error en respuesta:", response.message);
         return {
           success: false,
           message: response.message || "Error al crear el partido",
@@ -885,7 +887,7 @@ export const PartidoAPI = {
       };
       
     } catch (error: any) {
-      console.error("[PartidoAPI.crear] Error capturado:", error);
+      logger.error("[PartidoAPI.crear] Error capturado:", error);
       
       return {
         success: false,
@@ -900,15 +902,15 @@ export const PartidoAPI = {
    * Obtener partido por ID
    */
   get: async (id: string) => {
-    console.log("[PartidoAPI.get] Solicitando partido ID:", id);
+    logger.log("[PartidoAPI.get] Solicitando partido ID:", id);
     
     try {
       const response = await apiFetch<any>(`/api/partidos/${id}`);
       
-      console.log("[PartidoAPI.get] Respuesta raw:", response);
+      logger.log("[PartidoAPI.get] Respuesta raw:", response);
       
       if (!response.success) {
-        console.error("[PartidoAPI.get] Error en respuesta:", response.message);
+        logger.error("[PartidoAPI.get] Error en respuesta:", response.message);
         return {
           success: false,
           message: response.message || "Partido no encontrado",
@@ -918,7 +920,7 @@ export const PartidoAPI = {
       
       // Verificar que tengamos datos válidos
       if (!response.data) {
-        console.error("[PartidoAPI.get] Respuesta sin datos");
+        logger.error("[PartidoAPI.get] Respuesta sin datos");
         return {
           success: false,
           message: "Partido no encontrado",
@@ -934,7 +936,7 @@ export const PartidoAPI = {
       };
       
     } catch (error: any) {
-      console.error("[PartidoAPI.get] Error capturado:", error);
+      logger.error("[PartidoAPI.get] Error capturado:", error);
       
       // Manejar 404 específicamente
       if (error.message?.includes('404')) {
@@ -967,7 +969,7 @@ export const PartidoAPI = {
     estado?: string;
     search?: string;
   }) => {
-    console.log("[PartidoAPI.list] Filtros:", filtros);
+    logger.log("[PartidoAPI.list] Filtros:", filtros);
     
     try {
       const params = new URLSearchParams();
@@ -984,11 +986,11 @@ export const PartidoAPI = {
       const query = params.toString();
       const endpoint = query ? `/api/partidos?${query}` : '/api/partidos';
       
-      console.log("[PartidoAPI.list] Endpoint:", endpoint);
+      logger.log("[PartidoAPI.list] Endpoint:", endpoint);
 
       const response = await apiFetch<any>(endpoint);
       
-      console.log("[PartidoAPI.list] Respuesta raw:", response);
+      logger.log("[PartidoAPI.list] Respuesta raw:", response);
       
       // Extraer array de partidos de diferentes formatos de respuesta
       let partidos: any[] = [];
@@ -1000,11 +1002,11 @@ export const PartidoAPI = {
       } else if (response.data && typeof response.data === 'object') {
         partidos = response.data.items || response.data.content || [];
       } else {
-        console.warn("[PartidoAPI.list] Formato de respuesta inesperado");
+        logger.warn("[PartidoAPI.list] Formato de respuesta inesperado");
         partidos = [];
       }
       
-      console.log("[PartidoAPI.list] Partidos a normalizar:", partidos.length);
+      logger.log("[PartidoAPI.list] Partidos a normalizar:", partidos.length);
       
       // Normalizar cada partido de forma segura
       const normalized = partidos
@@ -1012,14 +1014,14 @@ export const PartidoAPI = {
           try {
             return normalizePartido(p);
           } catch (err) {
-            console.error("[PartidoAPI.list] Error normalizando partido:", err);
-            console.error("[PartidoAPI.list] Datos del partido problemático:", p);
+            logger.error("[PartidoAPI.list] Error normalizando partido:", err);
+            logger.error("[PartidoAPI.list] Datos del partido problemático:", p);
             return null;
           }
         })
         .filter(Boolean) as PartidoDTO[];
       
-      console.log("[PartidoAPI.list] Partidos normalizados exitosamente:", normalized.length);
+      logger.log("[PartidoAPI.list] Partidos normalizados exitosamente:", normalized.length);
       
       return {
         success: true,
@@ -1028,7 +1030,7 @@ export const PartidoAPI = {
       };
       
     } catch (error: any) {
-      console.error("[PartidoAPI.list] Error:", error);
+      logger.error("[PartidoAPI.list] Error:", error);
       
       return {
         success: false,
@@ -1043,7 +1045,7 @@ export const PartidoAPI = {
    * Actualizar partido - CORREGIDO
    */
   actualizar: async (id: string, cambios: Partial<PartidoDTO>) => {
-    console.log("[PartidoAPI.actualizar] ID:", id, "Cambios:", cambios);
+    logger.log("[PartidoAPI.actualizar] ID:", id, "Cambios:", cambios);
     
     // Convertir a snake_case para el backend
     const payload: any = {};
@@ -1066,7 +1068,7 @@ export const PartidoAPI = {
       body: JSON.stringify(payload)
     });
 
-    console.log("[PartidoAPI.actualizar] Respuesta:", response);
+    logger.log("[PartidoAPI.actualizar] Respuesta:", response);
 
     return {
       ...response,
@@ -1131,12 +1133,12 @@ export const PartidoAPI = {
    * Listar partidos de un usuario - CORREGIDO
    */
   listByUser: async (usuarioId: string) => {
-    console.log("[PartidoAPI.listByUser] Usuario ID:", usuarioId);
+    logger.log("[PartidoAPI.listByUser] Usuario ID:", usuarioId);
     
     try {
       const response = await apiFetch<any>(`/api/partidos/usuario/${usuarioId}`);
       
-      console.log("[PartidoAPI.listByUser] Respuesta raw:", response);
+      logger.log("[PartidoAPI.listByUser] Respuesta raw:", response);
       
       let partidos: any[] = [];
       
@@ -1154,7 +1156,7 @@ export const PartidoAPI = {
         try {
           return normalizePartido(p);
         } catch (err) {
-          console.error("[PartidoAPI.listByUser] Error normalizando:", p, err);
+          logger.error("[PartidoAPI.listByUser] Error normalizando:", p, err);
           return null;
         }
       }).filter(Boolean) as PartidoDTO[];
@@ -1165,7 +1167,7 @@ export const PartidoAPI = {
       };
       
     } catch (error) {
-      console.error("[PartidoAPI.listByUser] Error:", error);
+      logger.error("[PartidoAPI.listByUser] Error:", error);
       
       if (error instanceof Error && error.message.includes('500')) {
         return {
@@ -1183,7 +1185,7 @@ export const PartidoAPI = {
    * Invitar usuario a un partido
    */
   invitarJugador: async (partidoId: string, usuarioId: string) => {
-    console.log("[PartidoAPI.invitarJugador] Partido:", partidoId, "Usuario:", usuarioId);
+    logger.log("[PartidoAPI.invitarJugador] Partido:", partidoId, "Usuario:", usuarioId);
     
     return apiFetch<{ success: boolean; message?: string }>(
       `/api/partidos/${partidoId}/invitar`,
@@ -1198,12 +1200,12 @@ export const PartidoAPI = {
    * Obtener partidos del usuario (creados e inscritos)
    */
   misPartidos: async (usuarioId: string) => {
-    console.log("[PartidoAPI.misPartidos] Usuario:", usuarioId);
+    logger.log("[PartidoAPI.misPartidos] Usuario:", usuarioId);
     
     try {
       const response = await apiFetch<any>(`/api/partidos/usuario/${usuarioId}`);
       
-      console.log("[PartidoAPI.misPartidos] Respuesta raw:", response);
+      logger.log("[PartidoAPI.misPartidos] Respuesta raw:", response);
       
       // Extraer array de partidos
       let partidos: any[] = [];
@@ -1222,7 +1224,7 @@ export const PartidoAPI = {
           try {
             return normalizePartido(p);
           } catch (err) {
-            console.error("[PartidoAPI.misPartidos] Error normalizando:", err);
+            logger.error("[PartidoAPI.misPartidos] Error normalizando:", err);
             return null;
           }
         })
@@ -1234,11 +1236,11 @@ export const PartidoAPI = {
       };
       
     } catch (error: any) {
-      console.error("[PartidoAPI.misPartidos] Error:", error);
+      logger.error("[PartidoAPI.misPartidos] Error:", error);
       
       // Si es 404 o 500, retornar array vacío
       if (error.message?.includes('404') || error.message?.includes('500')) {
-        console.warn("[PartidoAPI.misPartidos] Backend no disponible, retornando array vacío");
+        logger.warn("[PartidoAPI.misPartidos] Backend no disponible, retornando array vacío");
         return {
           success: true,
           data: [],
@@ -1306,13 +1308,13 @@ export const InscripcionAPI = {
    * Obtener solicitudes pendientes de un partido
    */
   getPendientes: async (partidoId: string) => {
-    console.log("[InscripcionAPI.getPendientes] Partido ID:", partidoId);
+    logger.log("[InscripcionAPI.getPendientes] Partido ID:", partidoId);
     
     const response = await apiFetch<InscripcionDTO[]>(
       `/api/partidos/${partidoId}/solicitudes`
     );
 
-    console.log("[InscripcionAPI.getPendientes] Respuesta:", response);
+    logger.log("[InscripcionAPI.getPendientes] Respuesta:", response);
 
     return {
       ...response,
@@ -1448,7 +1450,7 @@ export const NotificacionAPI = {
     try {
       return await apiFetch<NotificacionDTO[]>('/api/notificaciones');
     } catch (error) {
-      console.error('[NotificacionAPI.list] Error:', error);
+      logger.error('[NotificacionAPI.list] Error:', error);
       return {
         success: false,
         data: [],
@@ -1465,7 +1467,7 @@ export const NotificacionAPI = {
     try {
       return await apiFetch<NotificacionDTO[]>('/api/notificaciones/no-leidas');
     } catch (error) {
-      console.error('[NotificacionAPI.getNoLeidas] Error:', error);
+      logger.error('[NotificacionAPI.getNoLeidas] Error:', error);
       return {
         success: false,
         data: [],
@@ -1484,7 +1486,7 @@ export const NotificacionAPI = {
       const response = await apiFetch<{ count: number }>('/api/notificaciones/count')
       return response
     } catch (error) {
-      console.error('[NotificacionAPI.count] Error:', error);
+      logger.error('[NotificacionAPI.count] Error:', error);
       // Return 0 count on error to prevent UI breaks
       return {
         success: false,
@@ -1504,7 +1506,7 @@ export const NotificacionAPI = {
         method: 'PUT'
       });
     } catch (error) {
-      console.error('[NotificacionAPI.marcarLeida] Error:', error);
+      logger.error('[NotificacionAPI.marcarLeida] Error:', error);
       return {
         success: false,
         data: null as any,
@@ -1523,7 +1525,7 @@ export const NotificacionAPI = {
         method: 'PUT'
       });
     } catch (error) {
-      console.error('[NotificacionAPI.marcarTodasLeidas] Error:', error);
+      logger.error('[NotificacionAPI.marcarTodasLeidas] Error:', error);
       return {
         success: false,
         data: { count: 0 } as any,
@@ -1542,7 +1544,7 @@ export const NotificacionAPI = {
         method: 'DELETE'
       });
     } catch (error) {
-      console.error('[NotificacionAPI.eliminar] Error:', error);
+      logger.error('[NotificacionAPI.eliminar] Error:', error);
       return {
         success: false,
         data: null as any,
@@ -1574,7 +1576,7 @@ export const NotificationPreferencesAPI = {
     try {
       return await apiFetch<NotificationPreferences>('/api/usuarios/me/notification-preferences');
     } catch (error) {
-      console.error('[NotificationPreferencesAPI.get] Error:', error);
+      logger.error('[NotificationPreferencesAPI.get] Error:', error);
       return {
         success: false,
         data: null as any,
@@ -1594,7 +1596,7 @@ export const NotificationPreferencesAPI = {
         body: JSON.stringify(preferences)
       });
     } catch (error) {
-      console.error('[NotificationPreferencesAPI.update] Error:', error);
+      logger.error('[NotificationPreferencesAPI.update] Error:', error);
       return {
         success: false,
         data: null as any,
@@ -1639,7 +1641,7 @@ export const AmistadAPI = {
         })) || []
       };
     } catch (error) {
-      console.error('[AmistadAPI.listarAmigos] Error:', error);
+      logger.error('[AmistadAPI.listarAmigos] Error:', error);
       return {
         success: false,
         data: [],
@@ -1660,7 +1662,7 @@ export const AmistadAPI = {
         data: response.data || []
       };
     } catch (error) {
-      console.error('[AmistadAPI.listarSolicitudesPendientes] Error:', error);
+      logger.error('[AmistadAPI.listarSolicitudesPendientes] Error:', error);
       return {
         success: false,
         data: [],
@@ -1681,7 +1683,7 @@ export const AmistadAPI = {
         data: response.data || []
       };
     } catch (error) {
-      console.error('[AmistadAPI.listarSolicitudesEnviadas] Error:', error);
+      logger.error('[AmistadAPI.listarSolicitudesEnviadas] Error:', error);
       return {
         success: false,
         data: [],
@@ -1700,7 +1702,7 @@ export const AmistadAPI = {
         method: 'POST'
       });
     } catch (error) {
-      console.error('[AmistadAPI.enviarSolicitud] Error:', error);
+      logger.error('[AmistadAPI.enviarSolicitud] Error:', error);
       return {
         success: false,
         data: null as any,
@@ -1719,7 +1721,7 @@ export const AmistadAPI = {
         method: 'POST'
       });
     } catch (error) {
-      console.error('[AmistadAPI.aceptarSolicitud] Error:', error);
+      logger.error('[AmistadAPI.aceptarSolicitud] Error:', error);
       return {
         success: false,
         data: null as any,
@@ -1738,7 +1740,7 @@ export const AmistadAPI = {
         method: 'POST'
       });
     } catch (error) {
-      console.error('[AmistadAPI.rechazarSolicitud] Error:', error);
+      logger.error('[AmistadAPI.rechazarSolicitud] Error:', error);
       return {
         success: false,
         data: null as any,
@@ -1757,7 +1759,7 @@ export const AmistadAPI = {
         method: 'DELETE'
       });
     } catch (error) {
-      console.error('[AmistadAPI.eliminarAmistad] Error:', error);
+      logger.error('[AmistadAPI.eliminarAmistad] Error:', error);
       return {
         success: false,
         data: null as any,

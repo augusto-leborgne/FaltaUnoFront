@@ -1,29 +1,30 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import dynamicImport from 'next/dynamic'
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { ErrorBoundary } from "@/components/error-boundary-wrapper"
 
 // Prevent any server-side pre-rendering
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 
-export default function HomePage() {
-  const [HomeComponent, setHomeComponent] = useState<React.ComponentType | null>(null)
-
-  useEffect(() => {
-    // Only load component on client-side
-    import("@/components/pages/home-screen-wrapper")
-      .then(mod => setHomeComponent(() => mod.HomeScreenWithAuth))
-      .catch(err => console.error("Error loading home screen:", err))
-  }, [])
-
-  if (!HomeComponent) {
-    return (
+// ⚡ Lazy load HomeScreen for better initial bundle size
+const HomeScreenWithAuth = dynamicImport(
+  () => import("@/components/pages/home-screen-wrapper").then(mod => ({ default: mod.HomeScreenWithAuth })),
+  {
+    ssr: false,
+    loading: () => (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <LoadingSpinner size="lg" variant="green" />
       </div>
     )
   }
+)
 
-  return <HomeComponent />
+export default function HomePage() {
+  return (
+    <ErrorBoundary>
+      <HomeScreenWithAuth />
+    </ErrorBoundary>
+  )
 }

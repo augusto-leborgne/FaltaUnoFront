@@ -1,5 +1,7 @@
 "use client"
 
+
+import { logger } from '@/lib/logger'
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -41,11 +43,11 @@ export function ContactsScreen() {
         return
       }
 
-      console.log("[ContactsScreen] Cargando amigos...")
+      logger.log("[ContactsScreen] Cargando amigos...")
       
       const response = await AmistadAPI.listarAmigos()
       
-      console.log("[ContactsScreen] Amigos response:", response)
+      logger.log("[ContactsScreen] Amigos response:", response)
 
       if (!response.success || !response.data) {
         throw new Error(response.message || "No se pudieron cargar los amigos")
@@ -56,10 +58,10 @@ export function ContactsScreen() {
         .map((amistad: any) => amistad.amigo)
         .filter((amigo: any) => amigo != null && amigo.id && amigo.nombre && amigo.apellido) // ✅ Filter out null/undefined/invalid users
       
-      console.log("[ContactsScreen] Amigos procesados:", friendsList.length)
+      logger.log("[ContactsScreen] Amigos procesados:", friendsList.length)
       setAmigos(friendsList)
     } catch (error) {
-      console.error("[ContactsScreen] Error cargando amigos:", error)
+      logger.error("[ContactsScreen] Error cargando amigos:", error)
       setError(error instanceof Error ? error.message : "Error al cargar amigos")
     } finally {
       setLoading(false)
@@ -98,7 +100,7 @@ export function ContactsScreen() {
         setError(response.message || "No se pudieron cargar los usuarios")
       }
     } catch (error) {
-      console.error("[ContactsScreen] Error buscando usuarios:", error)
+      logger.error("[ContactsScreen] Error buscando usuarios:", error)
       setError(error instanceof Error ? error.message : "Error al buscar usuarios. Por favor intenta nuevamente.")
       setSearchResults([])
     } finally {
@@ -123,7 +125,7 @@ export function ContactsScreen() {
     
     setIsSendingRequest(true)
     try {
-      console.log("[ContactsScreen] Enviando solicitud a:", selectedUser.id)
+      logger.log("[ContactsScreen] Enviando solicitud a:", selectedUser.id)
       const response = await AmistadAPI.enviarSolicitud(selectedUser.id!)
       
       if (response.success) {
@@ -133,7 +135,7 @@ export function ContactsScreen() {
         alert(response.message || "Error al enviar solicitud")
       }
     } catch (error) {
-      console.error("[ContactsScreen] Error enviando solicitud:", error)
+      logger.error("[ContactsScreen] Error enviando solicitud:", error)
       alert("Error al enviar solicitud")
     } finally {
       setIsSendingRequest(false)

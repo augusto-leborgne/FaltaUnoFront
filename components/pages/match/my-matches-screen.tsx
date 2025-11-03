@@ -1,5 +1,7 @@
 "use client"
 
+
+import { logger } from '@/lib/logger'
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -47,12 +49,12 @@ export function MyMatchesScreen() {
         throw new Error("Usuario no encontrado")
       }
 
-      console.log("[MyMatches] Cargando partidos del usuario:", user.id)
+      logger.log("[MyMatches] Cargando partidos del usuario:", user.id)
 
       // Usar PartidoAPI en lugar de fetch directo
       const response = await PartidoAPI.misPartidos(user.id)
 
-      console.log("[MyMatches] Respuesta:", response)
+      logger.log("[MyMatches] Respuesta:", response)
 
       const partidos = response.data || []
 
@@ -71,13 +73,13 @@ export function MyMatchesScreen() {
         }
       }
 
-      console.log("[MyMatches] Creados:", created.length, "Inscritos:", joined.length)
+      logger.log("[MyMatches] Creados:", created.length, "Inscritos:", joined.length)
 
       setCreatedMatches(created.sort(sortByDate))
       setJoinedMatches(joined.sort(sortByDate))
 
     } catch (err) {
-      console.error("[MyMatches] Error:", err)
+      logger.error("[MyMatches] Error:", err)
       // No mostrar error si es un problema de carga simple
       // Solo mantener arrays vacíos
       setCreatedMatches([])

@@ -1,5 +1,7 @@
 "use client"
 
+
+import { logger } from '@/lib/logger'
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -70,7 +72,7 @@ export function MatchConfirmation({ matchId }: MatchConfirmationProps) {
         router.push(`/matches/${matchId}/confirmed`)
       }
     } catch (error) {
-      console.error("Error confirmando inscripción:", error)
+      logger.error("Error confirmando inscripción:", error)
       
       toast({
         title: "Error",

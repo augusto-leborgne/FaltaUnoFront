@@ -1,5 +1,7 @@
 "use client"
 
+
+import { logger } from '@/lib/logger'
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -52,10 +54,10 @@ export function FriendRequestsListScreen() {
         throw new Error("Usuario no encontrado")
       }
 
-      console.log("[FriendRequestsList] Cargando solicitudes pendientes...")
+      logger.log("[FriendRequestsList] Cargando solicitudes pendientes...")
       
       const response = await AmistadAPI.listarSolicitudesPendientes()
-      console.log("[FriendRequestsList] Solicitudes recibidas:", response)
+      logger.log("[FriendRequestsList] Solicitudes recibidas:", response)
 
       if (response.success && response.data) {
         // Mapear la respuesta del backend al formato esperado
@@ -75,13 +77,13 @@ export function FriendRequestsListScreen() {
             fechaSolicitud: solicitud.fechaSolicitud || solicitud.fecha_solicitud || solicitud.createdAt || new Date().toISOString(),
           }))
         
-        console.log("[FriendRequestsList] Solicitudes mapeadas:", mappedRequests)
+        logger.log("[FriendRequestsList] Solicitudes mapeadas:", mappedRequests)
         setFriendRequests(mappedRequests)
       } else {
         setFriendRequests([])
       }
     } catch (error) {
-      console.error("[FriendRequestsList] Error:", error)
+      logger.error("[FriendRequestsList] Error:", error)
       setError(error instanceof Error ? error.message : "Error al cargar solicitudes")
     } finally {
       setLoading(false)
@@ -91,19 +93,19 @@ export function FriendRequestsListScreen() {
   const handleAccept = async (solicitudId: string) => {
     setProcessingId(solicitudId)
     try {
-      console.log("[FriendRequestsList] Aceptando solicitud:", solicitudId)
+      logger.log("[FriendRequestsList] Aceptando solicitud:", solicitudId)
       
       const response = await AmistadAPI.aceptarSolicitud(solicitudId)
       
       if (response.success) {
         // Remover de la lista
         setFriendRequests(prev => prev.filter(req => req.solicitudId !== solicitudId))
-        console.log("[FriendRequestsList] Solicitud aceptada exitosamente")
+        logger.log("[FriendRequestsList] Solicitud aceptada exitosamente")
       } else {
         throw new Error(response.message || "Error al aceptar solicitud")
       }
     } catch (error) {
-      console.error("[FriendRequestsList] Error aceptando solicitud:", error)
+      logger.error("[FriendRequestsList] Error aceptando solicitud:", error)
       alert("Error al aceptar solicitud: " + (error instanceof Error ? error.message : "Intenta nuevamente"))
     } finally {
       setProcessingId(null)
@@ -113,19 +115,19 @@ export function FriendRequestsListScreen() {
   const handleReject = async (solicitudId: string) => {
     setProcessingId(solicitudId)
     try {
-      console.log("[FriendRequestsList] Rechazando solicitud:", solicitudId)
+      logger.log("[FriendRequestsList] Rechazando solicitud:", solicitudId)
       
       const response = await AmistadAPI.rechazarSolicitud(solicitudId)
       
       if (response.success) {
         // Remover de la lista
         setFriendRequests(prev => prev.filter(req => req.solicitudId !== solicitudId))
-        console.log("[FriendRequestsList] Solicitud rechazada exitosamente")
+        logger.log("[FriendRequestsList] Solicitud rechazada exitosamente")
       } else {
         throw new Error(response.message || "Error al rechazar solicitud")
       }
     } catch (error) {
-      console.error("[FriendRequestsList] Error rechazando solicitud:", error)
+      logger.error("[FriendRequestsList] Error rechazando solicitud:", error)
       alert("Error al rechazar solicitud: " + (error instanceof Error ? error.message : "Intenta nuevamente"))
     } finally {
       setProcessingId(null)

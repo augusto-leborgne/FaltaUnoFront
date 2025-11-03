@@ -40,17 +40,21 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     if (pathname !== '/profile-setup' && pathname !== '/complete-profile') {
       const user = AuthService.getUser()
       
-      // Verificar si el perfil está incompleto
-      // Solo redirigir si perfilCompleto es explícitamente false
-      if (user && user.perfilCompleto === false) {
-        logger.debug('[ProtectedRoute] Perfil incompleto (perfilCompleto=false), redirigiendo a profile-setup')
-        router.push('/profile-setup')
-        return
-      }
+      // ⚡ CRÍTICO: Validación de perfil incompleto
+      // Considerar incompleto si:
+      // 1. perfilCompleto es explícitamente false
+      // 2. perfilCompleto es undefined/null (nuevo usuario)
+      // 3. Faltan campos críticos (nombre o apellido)
       
-      // Validación adicional: Si no tiene nombre o apellido, también es incompleto
-      if (user && (!user.nombre || !user.apellido)) {
-        logger.debug('[ProtectedRoute] Perfil incompleto (faltan campos básicos), redirigiendo a profile-setup')
+      const hasBasicFields = user?.nombre && user?.apellido
+      const isProfileComplete = user?.perfilCompleto === true
+      
+      if (user && (!isProfileComplete || !hasBasicFields)) {
+        logger.debug('[ProtectedRoute] Perfil incompleto, redirigiendo a profile-setup', {
+          perfilCompleto: user.perfilCompleto,
+          hasNombre: !!user.nombre,
+          hasApellido: !!user.apellido
+        })
         router.push('/profile-setup')
         return
       }

@@ -1,5 +1,7 @@
 "use client"
 
+
+import { logger } from '@/lib/logger'
 import React, { useRef, useState, useEffect } from "react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -195,7 +197,7 @@ export function ProfileSetupForm() {
     setIsUploading(true)
     try {
       const token = AuthService.getToken()
-      console.log("[ProfileSetup] Token disponible:", token ? "SÍ" : "NO")
+      logger.log("[ProfileSetup] Token disponible:", token ? "SÍ" : "NO")
       if (!token) {
         alert("No estás autenticado. Por favor, inicia sesión nuevamente.")
         router.replace("/login")
@@ -209,17 +211,17 @@ export function ProfileSetupForm() {
       }
 
       // 1) Subir foto vía API unificada
-      console.log("[ProfileSetup] Subiendo foto...")
+      logger.log("[ProfileSetup] Subiendo foto...")
       const fotoRes = await UsuarioAPI.subirFoto(formData.photo)
-      console.log("[ProfileSetup] Respuesta subir foto:", fotoRes)
+      logger.log("[ProfileSetup] Respuesta subir foto:", fotoRes)
       if (!fotoRes?.success) {
         const errorMsg = fotoRes?.message || "No se pudo subir la foto"
-        console.error("[ProfileSetup] Error subiendo foto:", errorMsg)
+        logger.error("[ProfileSetup] Error subiendo foto:", errorMsg)
         throw new Error(errorMsg)
       }
 
       // 2) Actualizar perfil
-      console.log("[ProfileSetup] Actualizando perfil...")
+      logger.log("[ProfileSetup] Actualizando perfil...")
       const payload: any = {
         nombre: formData.name,
         apellido: formData.surname,
@@ -232,22 +234,36 @@ export function ProfileSetupForm() {
         direccion: formData.address,
         placeDetails: formData.placeDetails ? JSON.stringify(formData.placeDetails) : null,
       }
-      console.log("[ProfileSetup] Payload a enviar:", payload)
+      logger.log("[ProfileSetup] Payload a enviar:", payload)
       const perfilRes = await UsuarioAPI.actualizarPerfil(payload)
-      console.log("[ProfileSetup] Respuesta actualizar perfil:", perfilRes)
+      logger.log("[ProfileSetup] Respuesta actualizar perfil:", perfilRes)
       if (!perfilRes?.success) {
         const errorMsg = perfilRes?.message || "No se pudo actualizar el perfil"
-        console.error("[ProfileSetup] Error actualizando perfil:", errorMsg)
+        logger.error("[ProfileSetup] Error actualizando perfil:", errorMsg)
         throw new Error(errorMsg)
       }
 
       // 3) Actualizar user local inmediatamente (clave para salir del loop)
-      const serverUser = perfilRes.data || {}
+      const serverUser: any = perfilRes.data || {}
+      const currentUser: any = AuthService.getUser() || {}
+      
+      // ⚡ CRÍTICO: Preservar TODOS los campos importantes
       const merged: any = {
-        ...(AuthService.getUser() ?? {}),
-        ...serverUser,
-        perfilCompleto: true, // <<<< habilita flujo siguiente
+        ...currentUser,           // Empezar con usuario actual
+        ...serverUser,            // Sobrescribir con datos del servidor
+        perfilCompleto: true,     // <<<< FORZAR perfilCompleto=true después de completar setup
+        cedulaVerificada: serverUser.cedulaVerificada ?? currentUser.cedulaVerificada ?? false,
+        // Asegurar que campos críticos no se pierdan
+        email: serverUser.email ?? currentUser.email,
+        id: serverUser.id ?? currentUser.id,
       }
+      
+      logger.log("[ProfileSetup] ✅ Perfil completado, guardando usuario:", {
+        email: merged.email,
+        perfilCompleto: merged.perfilCompleto,
+        cedulaVerificada: merged.cedulaVerificada,
+      })
+      
       AuthService.setUser(merged)
       setUser(merged)
 
@@ -257,7 +273,7 @@ export function ProfileSetupForm() {
       // (opcional) refrescar en background
       setTimeout(() => AuthService.fetchCurrentUser(), 1500)
     } catch (err: any) {
-      console.error("[ProfileSetup] Error al guardar perfil:", err)
+      logger.error("[ProfileSetup] Error al guardar perfil:", err)
       alert(`Error al guardar perfil: ${err?.message ?? "Intenta nuevamente"}`)
     } finally {
       setIsUploading(false)

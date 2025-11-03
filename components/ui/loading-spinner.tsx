@@ -1,10 +1,11 @@
 import { cn } from "@/lib/utils"
+import React from "react"
 
 /**
  * Modern green circular spinner with gradient effect
  * This is a sophisticated spinner with a thicker, more visible border
  */
-const ModernGreenSpinner = ({ className, size }: { className?: string; size: string }) => (
+const ModernGreenSpinner = React.memo(({ className, size }: { className?: string; size: string }) => (
   <div className={cn("relative", className)}>
     {/* Inline styles with animation */}
     <style dangerouslySetInnerHTML={{__html: `
@@ -35,12 +36,12 @@ const ModernGreenSpinner = ({ className, size }: { className?: string; size: str
       }}
     />
   </div>
-)
+))
 
 /**
  * Simple thin-border circular spinner (fallback/alternative)
  */
-const CircleSpinner = ({ className }: { className?: string }) => (
+const CircleSpinner = React.memo(({ className }: { className?: string }) => (
   <>
     <style dangerouslySetInnerHTML={{__html: `
       @keyframes spinner-spin {
@@ -58,7 +59,7 @@ const CircleSpinner = ({ className }: { className?: string }) => (
       }}
     />
   </>
-)
+))
 
 interface LoadingSpinnerProps {
   /**

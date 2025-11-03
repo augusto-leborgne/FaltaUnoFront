@@ -1,4 +1,5 @@
 // hooks/use-current-user.ts
+
 "use client"
 
 import { useEffect, useState } from "react"
@@ -22,7 +23,7 @@ import type { Usuario } from "@/lib/api"
  * 
  * return (
  *   <div>
- *     <UserAvatar photo={user.foto_perfil} name={user.nombre} />
+ *     <UserAvatar userId={user.id} name={user.nombre} />
  *     <p>{user.nombre} {user.apellido}</p>
  *   </div>
  * )

@@ -1,7 +1,9 @@
 // lib/auth.ts — versión robusta y lista para prod
-import type { Usuario } from "./api"
-import { API_BASE, normalizeUrl } from "./api"
+import { normalizeUrl, API_BASE } from "./api"
+import { keysToCamelCase } from "./case-converter"
 import { logger } from "./logger"
+import { fetchWithTimeout } from "./fetch-with-timeout"
+import type { Usuario } from "./api"
 
 const TOKEN_KEY = "authToken"
 const USER_KEY = "user"
@@ -138,14 +140,19 @@ export class AuthService {
       // La foto se carga desde el servidor cuando se necesita
       const { foto_perfil, fotoPerfil, ...userWithoutPhoto } = user as any
       
+      // ⚡ CRÍTICO: Preservar TODOS los campos importantes del perfil
       const normalized = {
         ...userWithoutPhoto,
         // Guardar solo un flag indicando si tiene foto
-        hasFotoPerfil: !!(foto_perfil || fotoPerfil)
+        hasFotoPerfil: !!(foto_perfil || fotoPerfil),
+        // ⚡ NUEVO: Asegurar que perfilCompleto esté definido
+        perfilCompleto: user.perfilCompleto ?? true, // Default a true si no está definido
+        cedulaVerificada: user.cedulaVerificada ?? false, // Default a false
       }
       
       localStorage.setItem(USER_KEY, JSON.stringify(normalized))
       logger?.debug?.("[AuthService] Usuario guardado (sin foto):", normalized?.email)
+      logger?.debug?.("[AuthService] Perfil completo:", normalized.perfilCompleto)
       
       // ⚡ OPCIONAL: Guardar foto en IndexedDB si existe (mejor para datos grandes)
       // Por ahora simplemente no la guardamos - se cargará del servidor cuando se necesite
@@ -367,23 +374,40 @@ export class AuthService {
         logger?.debug?.(`[AuthService] Fetching current user (intento ${attempt}/${retries})...`)
         const url = normalizeUrl(`${API_BASE}/api/usuarios/me`)
         
-        // ⚡ NO timeout - Cloud Run puede tener cold starts
-        // El retry logic ya maneja requests lentos
-        const res = await fetch(url, { 
+        // ⚡ Usar fetchWithTimeout para prevenir requests colgados
+        // Cloud Run cold starts pueden tardar, damos 45s de timeout
+        const res = await fetchWithTimeout(url, { 
           headers: this.getAuthHeaders()
-        })
+        }, 45000) // 45 segundos para cold starts
         
         if (!res.ok) {
           logger?.error?.("[AuthService] fetchCurrentUser status:", res.status)
           
-          // 401 = token inválido o expirado
+          // ⚡ CRÍTICO: NO hacer logout automático en 401
+          // El token puede ser válido pero el servidor está teniendo problemas
           if (res.status === 401) {
-            logger?.error?.("[AuthService] 401 Unauthorized - Token inválido")
-            // Solo hacer logout si estamos seguros
+            logger?.warn?.("[AuthService] 401 recibido - verificando token localmente")
+            
+            // Verificar si el token realmente está expirado
             if (this.isTokenExpired(token)) {
-              logger?.error?.("[AuthService] 🚪 LOGOUT - Token expirado")
-              this.logout()
+              logger?.error?.("[AuthService] Token REALMENTE expirado - hacer logout")
+              // Solo en este caso hacemos logout
+              if (attempt >= retries) { // Solo logout en último intento
+                this.logout()
+              }
+              return null
             }
+            
+            // Token válido pero backend dice 401 - reintentar
+            if (attempt < retries) {
+              const delay = 2000 // Esperar más en caso de 401
+              logger?.warn?.(`[AuthService] 401 pero token válido, reintentando en ${delay}ms...`)
+              await new Promise(resolve => setTimeout(resolve, delay))
+              continue
+            }
+            
+            // Último intento falló - NO hacer logout, preservar sesión
+            logger?.error?.("[AuthService] 401 persistente pero token válido - NO haciendo logout")
             return null
           }
           
@@ -393,7 +417,7 @@ export class AuthService {
             return null
           }
           
-          // Otros errores (500, 503, etc) → solo 1 reintento
+          // Otros errores (500, 503, etc) → reintentar
           if (attempt < retries && res.status >= 500) {
             const delay = 1000 // Solo 1 segundo de espera
             logger?.warn?.(`[AuthService] Error ${res.status}, reintentando en ${delay}ms...`)
@@ -406,13 +430,25 @@ export class AuthService {
         
         const json = await res.json()
         const data = json?.data ?? json
+        const currentUser = this.getUser()
+        
+        // ⚡ CRÍTICO: Preservar perfilCompleto si ya estaba en true localmente
+        // Esto evita que un backend response incompleto borre el estado
         const normalized: any = {
           ...data,
           foto_perfil: data?.foto_perfil ?? data?.fotoPerfil ?? undefined,
+          // ⚡ PRESERVAR perfilCompleto - solo cambiar si backend explícitamente lo actualiza
+          perfilCompleto: data?.perfilCompleto ?? currentUser?.perfilCompleto ?? true,
+          cedulaVerificada: data?.cedulaVerificada ?? currentUser?.cedulaVerificada ?? false,
         }
         delete normalized.fotoPerfil
+        
         this.setUser(normalized)
-        logger?.debug?.("[AuthService] ✅ Usuario actualizado desde servidor")
+        logger?.debug?.("[AuthService] ✅ Usuario actualizado desde servidor:", {
+          email: normalized.email,
+          perfilCompleto: normalized.perfilCompleto,
+          cedulaVerificada: normalized.cedulaVerificada,
+        })
         return normalized as Usuario
         
       } catch (e) {
@@ -443,11 +479,11 @@ export class AuthService {
       const form = new FormData()
       form.append("file", file)
       const url = normalizeUrl(`${API_BASE}/api/usuarios/me/foto`)
-      const res = await fetch(url, {
+      const res = await fetchWithTimeout(url, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: form,
-      })
+      }, 60000) // 60s para subida de foto
       if (!res.ok) throw new Error(`Error ${res.status}: ${await res.text()}`)
       await this.fetchCurrentUser()
       return true
@@ -460,11 +496,11 @@ export class AuthService {
   static async updateProfile(data: Partial<Usuario>): Promise<boolean> {
     try {
       const url = normalizeUrl(`${API_BASE}/api/usuarios/me`)
-      const res = await fetch(url, {
+      const res = await fetchWithTimeout(url, {
         method: "PUT",
         headers: this.getAuthHeaders(),
         body: JSON.stringify(data),
-      })
+      }, 30000) // 30s timeout
       if (!res.ok) throw new Error(`Error ${res.status}: ${await res.text()}`)
       await this.fetchCurrentUser()
       return true

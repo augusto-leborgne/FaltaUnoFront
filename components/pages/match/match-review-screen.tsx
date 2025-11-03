@@ -1,5 +1,7 @@
 "use client"
 
+
+import { logger } from '@/lib/logger'
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -138,7 +140,7 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
 
       router.push("/home")
     } catch (error) {
-      console.error("Error enviando reseñas:", error)
+      logger.error("Error enviando reseñas:", error)
       toast({
         title: "Error al enviar reseñas",
         description: error instanceof Error ? error.message : "Hubo un problema. Inténtalo de nuevo.",

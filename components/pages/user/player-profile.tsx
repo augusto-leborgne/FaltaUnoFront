@@ -1,5 +1,7 @@
 "use client"
 
+
+import { logger } from '@/lib/logger'
 import React, { useEffect, useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
@@ -99,7 +101,7 @@ function PlayerProfile({ playerId }: PlayerProfileProps) {
         }
       } catch (err: any) {
         if (err?.name !== "AbortError") {
-          console.error("Error cargando perfil del jugador:", err)
+          logger.error("Error cargando perfil del jugador:", err)
           setError(err instanceof Error ? err.message : "Error al cargar el perfil")
         }
       } finally {
@@ -144,7 +146,7 @@ function PlayerProfile({ playerId }: PlayerProfileProps) {
         alert(errorData?.message || "Error al enviar solicitud")
       }
     } catch (err) {
-      console.error("Error enviando solicitud:", err)
+      logger.error("Error enviando solicitud:", err)
       alert("Error al enviar solicitud")
     } finally {
       setSendingRequest(false)
@@ -179,7 +181,7 @@ function PlayerProfile({ playerId }: PlayerProfileProps) {
         alert(errorData?.message || "Error al eliminar amistad")
       }
     } catch (err) {
-      console.error("Error eliminando amistad:", err)
+      logger.error("Error eliminando amistad:", err)
       alert("Error al eliminar amistad")
     } finally {
       setRemovingFriend(false)

@@ -49,13 +49,13 @@ export function VerificationScreen() {
     setError("");
     
     try {
-      console.log("[VerificationScreen] Verificando cédula:", cedula);
+      logger.log("[VerificationScreen] Verificando cédula:", cedula);
       const res = await UsuarioAPI.verificarCedula(cedula);
-      console.log("[VerificationScreen] Respuesta:", res);
+      logger.log("[VerificationScreen] Respuesta:", res);
 
       if (res.success) {
         if (res.data?.verified) {
-          console.log("[VerificationScreen] Cédula verificada exitosamente");
+          logger.log("[VerificationScreen] Cédula verificada exitosamente");
 
           // Actualizar usuario en localStorage primero
           const currentUser = AuthService.getUser();
@@ -63,7 +63,7 @@ export function VerificationScreen() {
             currentUser.cedulaVerificada = true;
             currentUser.cedula = cedula;
             AuthService.setUser(currentUser);
-            console.log("[VerificationScreen] Usuario actualizado en localStorage");
+            logger.log("[VerificationScreen] Usuario actualizado en localStorage");
           }
 
           // Mostrar mensaje de éxito inmediatamente
@@ -71,24 +71,24 @@ export function VerificationScreen() {
 
           // Refrescar contexto desde el servidor para obtener datos más recientes
           try {
-            console.log("[VerificationScreen] Refrescando usuario desde servidor...");
+            logger.log("[VerificationScreen] Refrescando usuario desde servidor...");
             await refreshUser();
             
             // Verificar qué devolvió el refresh
             const refreshedUser = AuthService.getUser();
-            console.log("[VerificationScreen] Usuario después del refresh:", {
+            logger.log("[VerificationScreen] Usuario después del refresh:", {
               email: refreshedUser?.email,
               cedulaVerificada: refreshedUser?.cedulaVerificada,
               perfilCompleto: refreshedUser?.perfilCompleto
             });
             
             if (!refreshedUser?.cedulaVerificada) {
-              console.error("[VerificationScreen] ⚠️ PROBLEMA: El backend no devolvió cedulaVerificada=true después del refresh");
+              logger.error("[VerificationScreen] ⚠️ PROBLEMA: El backend no devolvió cedulaVerificada=true después del refresh");
             } else {
-              console.log("[VerificationScreen] ✅ Usuario refrescado correctamente con cedulaVerificada=true");
+              logger.log("[VerificationScreen] ✅ Usuario refrescado correctamente con cedulaVerificada=true");
             }
           } catch (refreshError) {
-            console.warn("[VerificationScreen] Error al refrescar usuario:", refreshError);
+            logger.warn("[VerificationScreen] Error al refrescar usuario:", refreshError);
             // Continuar de todos modos, el usuario ya está actualizado en localStorage
           }
 
@@ -96,18 +96,18 @@ export function VerificationScreen() {
           await new Promise(resolve => setTimeout(resolve, 1500));
 
           // Redirigir a home con push en vez de replace para mejor transición
-          console.log("[VerificationScreen] Redirigiendo a /home");
+          logger.log("[VerificationScreen] Redirigiendo a /home");
           router.push("/home");
         } else {
-          console.log("[VerificationScreen] Cédula no verificada");
+          logger.log("[VerificationScreen] Cédula no verificada");
           setError(res.message ?? "Cédula inválida");
         }
       } else {
-        console.log("[VerificationScreen] Error en verificación:", res.message);
+        logger.log("[VerificationScreen] Error en verificación:", res.message);
         setError(res.message ?? "No se pudo verificar la cédula");
       }
     } catch (err) {
-      console.error("[VerificationScreen] Error:", err);
+      logger.error("[VerificationScreen] Error:", err);
       setError("Error al verificar la identidad. Intenta nuevamente.");
     } finally {
       setIsVerifying(false);

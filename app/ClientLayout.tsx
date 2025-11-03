@@ -7,6 +7,7 @@ import { Suspense } from "react"
 import { Toaster } from "@/components/ui/toaster"
 import { UpdateBanner } from "@/components/ui/update-banner"
 import { ProtectedRoute } from "@/components/auth/protected-route"
+import { ErrorBoundary } from "@/components/error-boundary-wrapper"
 
 export default function ClientLayout({
   children,
@@ -14,13 +15,15 @@ export default function ClientLayout({
   children: React.ReactNode
 }) {
   return (
-    <ProtectedRoute>
-      <UpdateBanner />
-      <Suspense fallback={<div>Loading...</div>}>
-        {children}
-        <Analytics />
-        <Toaster />
-      </Suspense>
-    </ProtectedRoute>
+    <ErrorBoundary>
+      <ProtectedRoute>
+        <UpdateBanner />
+        <Suspense fallback={<div>Loading...</div>}>
+          {children}
+          <Analytics />
+          <Toaster />
+        </Suspense>
+      </ProtectedRoute>
+    </ErrorBoundary>
   )
 }

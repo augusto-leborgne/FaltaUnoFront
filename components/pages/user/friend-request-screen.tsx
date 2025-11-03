@@ -1,5 +1,7 @@
 "use client"
 
+
+import { logger } from '@/lib/logger'
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -51,7 +53,7 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
         setError("Usuario no encontrado")
       }
     } catch (err) {
-      console.error("Error cargando usuario:", err)
+      logger.error("Error cargando usuario:", err)
       setError("Error al cargar datos del usuario")
     } finally {
       setLoadingData(false)
@@ -90,7 +92,7 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
         setError(errorData.message || "Error al enviar solicitud")
       }
     } catch (err) {
-      console.error("Error enviando solicitud:", err)
+      logger.error("Error enviando solicitud:", err)
       setError("Error al enviar solicitud. Intenta nuevamente.")
     } finally {
       setIsLoading(false)

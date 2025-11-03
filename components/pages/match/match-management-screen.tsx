@@ -1,5 +1,7 @@
 "use client"
 
+
+import { logger } from '@/lib/logger'
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -127,12 +129,12 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
           setSolicitudes(solicitudesResponse.data)
         }
       } catch (err) {
-        console.warn("[MatchManagement] Error cargando solicitudes:", err)
+        logger.warn("[MatchManagement] Error cargando solicitudes:", err)
         // No es crítico, continuar
       }
 
     } catch (err) {
-      console.error("[MatchManagement] Error cargando datos:", err)
+      logger.error("[MatchManagement] Error cargando datos:", err)
       const errorMessage = err instanceof Error ? err.message : "Error al cargar datos"
       setError(errorMessage)
     } finally {
@@ -194,7 +196,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
       await loadMatchData()
 
     } catch (err) {
-      console.error("[MatchManagement] Error guardando:", err)
+      logger.error("[MatchManagement] Error guardando:", err)
       const errorMessage = err instanceof Error ? err.message : "Error al guardar cambios"
       toast({
         title: "Error",
@@ -260,7 +262,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
       await loadMatchData()
 
     } catch (err) {
-      console.error("[MatchManagement] Error aceptando:", err)
+      logger.error("[MatchManagement] Error aceptando:", err)
       const errorMessage = err instanceof Error ? err.message : "Error al aceptar solicitud"
       toast({
         title: "Error",
@@ -284,7 +286,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
       await loadMatchData()
 
     } catch (err) {
-      console.error("[MatchManagement] Error rechazando:", err)
+      logger.error("[MatchManagement] Error rechazando:", err)
       const errorMessage = err instanceof Error ? err.message : "Error al rechazar solicitud"
       toast({
         title: "Error",
@@ -330,7 +332,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
       await loadMatchData()
 
     } catch (err) {
-      console.error("[MatchManagement] Error confirmando:", err)
+      logger.error("[MatchManagement] Error confirmando:", err)
       const errorMessage = err instanceof Error ? err.message : "Error al confirmar partido"
       toast({
         title: "Error",
@@ -372,7 +374,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
       await loadMatchData()
 
     } catch (err) {
-      console.error("[MatchManagement] Error removiendo:", err)
+      logger.error("[MatchManagement] Error removiendo:", err)
       const errorMessage = err instanceof Error ? err.message : "Error al remover jugador"
       toast({
         title: "Error",
@@ -429,7 +431,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
         description: "El enlace se ha copiado al portapapeles",
       })
     } catch (err) {
-      console.error("[MatchManagement] Error copiando:", err)
+      logger.error("[MatchManagement] Error copiando:", err)
     }
   }
 

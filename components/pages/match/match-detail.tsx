@@ -1,5 +1,7 @@
 "use client"
 
+
+import { logger } from '@/lib/logger'
 import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -87,7 +89,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
             setJugadores(jugadoresResponse.data)
           }
         }).catch(err => {
-          console.error("[MatchDetail] Error cargando jugadores:", err)
+          logger.error("[MatchDetail] Error cargando jugadores:", err)
         }),
         
         // Cargar estado de inscripción del usuario
@@ -100,7 +102,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
                 setUserInscriptionStatus(estadoResponse.data.estado)
               }
             } catch (err) {
-              console.error("[MatchDetail] Error cargando estado de inscripción:", err)
+              logger.error("[MatchDetail] Error cargando estado de inscripción:", err)
             }
           }
         })()

@@ -1,5 +1,7 @@
 "use client"
 
+
+import { logger } from '@/lib/logger'
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -91,7 +93,7 @@ export function MatchesListing() {
       // Solo partidos disponibles y futuros
       filtros.estado = PartidoEstado.DISPONIBLE
 
-      console.log("[MatchesListing] Cargando con filtros:", filtros)
+      logger.log("[MatchesListing] Cargando con filtros:", filtros)
 
       // Llamar a la API
       const response = await PartidoAPI.list(filtros)
@@ -134,7 +136,7 @@ export function MatchesListing() {
       }
 
     } catch (err) {
-      console.error("[MatchesListing] Error cargando partidos:", err)
+      logger.error("[MatchesListing] Error cargando partidos:", err)
       const errorMessage = err instanceof Error ? err.message : "Error al cargar partidos"
       setError(errorMessage)
     } finally {

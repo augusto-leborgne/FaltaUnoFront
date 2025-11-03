@@ -2,9 +2,10 @@
 
 import { useRouter, usePathname } from "next/navigation"
 import { Home, Map, User, Calendar } from "lucide-react"
-import { useEffect } from "react"
+import { useEffect, useMemo, useCallback } from "react"
+import React from "react"
 
-export function BottomNavigation() {
+function BottomNavigationComponent() {
   const router = useRouter()
   const pathname = usePathname()
 
@@ -91,3 +92,6 @@ export function BottomNavigation() {
     </div>
   )
 }
+
+// ⚡ OPTIMIZACIÓN: React.memo previene re-renders al cambiar pathname
+export const BottomNavigation = React.memo(BottomNavigationComponent)

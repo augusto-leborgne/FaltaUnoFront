@@ -1,5 +1,7 @@
 "use client"
 
+
+import { logger } from '@/lib/logger'
 import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -77,13 +79,13 @@ export function LoginScreen() {
 
         if (token) {
           AuthService.setToken(token)
-          console.log("[LoginScreen] Token guardado")
+          logger.log("[LoginScreen] Token guardado")
         }
 
         if (user) {
           AuthService.setUser(user)
           setUser(user)
-          console.log("[LoginScreen] Usuario guardado y contexto actualizado")
+          logger.log("[LoginScreen] Usuario guardado y contexto actualizado")
         }
 
         // Redirección correcta: validar returnTo contra estado del usuario
@@ -92,21 +94,21 @@ export function LoginScreen() {
           const canAccessReturnTo = user?.perfilCompleto && (user?.cedulaVerificada || true) // cedulaVerificada es opcional
           
           if (canAccessReturnTo) {
-            console.log("[LoginScreen] Redirigiendo a returnTo:", returnTo)
+            logger.log("[LoginScreen] Redirigiendo a returnTo:", returnTo)
             router.push(returnTo)
           } else {
-            console.log("[LoginScreen] Usuario no puede acceder a returnTo, redirigiendo según estado")
+            logger.log("[LoginScreen] Usuario no puede acceder a returnTo, redirigiendo según estado")
             postAuthRedirect(user)
           }
         } else {
-          console.log("[LoginScreen] Redirección post-auth (profile-setup/home)")
+          logger.log("[LoginScreen] Redirección post-auth (profile-setup/home)")
           postAuthRedirect(user)
         }
       } else {
         setError(res?.message || res?.error || "Credenciales inválidas")
       }
     } catch (err) {
-      console.error("[LoginScreen] Error login:", err)
+      logger.error("[LoginScreen] Error login:", err)
       const errorMessage = err instanceof Error ? err.message : "Error al iniciar sesión. Verifica tus credenciales."
       setError(errorMessage)
     } finally {
@@ -130,14 +132,14 @@ export function LoginScreen() {
       // URL completa del backend en Cloud Run (centralizada desde api.ts)
       const oauthUrl = `${API_BASE}/oauth2/authorization/${provider}`
       
-      console.log(`[LoginScreen] Redirigiendo a OAuth ${provider}:`, oauthUrl)
+      logger.log(`[LoginScreen] Redirigiendo a OAuth ${provider}:`, oauthUrl)
       
       // Pequeño delay para que el spinner sea visible
       setTimeout(() => {
         window.location.href = oauthUrl
       }, 300)
     } catch (e) {
-      console.error("[LoginScreen] OAuth error:", e)
+      logger.error("[LoginScreen] OAuth error:", e)
       setError(`Error al iniciar sesión con ${provider}. Por favor intenta nuevamente.`)
       setIsOAuthLoading(false)
     }

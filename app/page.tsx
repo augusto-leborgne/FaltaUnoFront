@@ -38,9 +38,16 @@ export default function RootPage() {
 
     // Si hay token válido y user → decidir según estado del perfil
     if (user) {
-      // ⚡ Validaciones rápidas sin logging excesivo
-      if (!user.perfilCompleto) {
-        if (shouldLog) logger.debug("[RootPage] Perfil incompleto → /profile-setup");
+      // ⚡ CRÍTICO: Validación mejorada de perfil completo
+      // Considerar incompleto si perfilCompleto no es true O faltan campos básicos
+      const hasBasicFields = user.nombre && user.apellido
+      const isProfileComplete = user.perfilCompleto === true
+      
+      if (!isProfileComplete || !hasBasicFields) {
+        if (shouldLog) logger.debug("[RootPage] Perfil incompleto → /profile-setup", {
+          perfilCompleto: user.perfilCompleto,
+          hasBasicFields
+        });
         router.replace("/profile-setup");
         return;
       }

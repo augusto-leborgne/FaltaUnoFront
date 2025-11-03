@@ -2,11 +2,12 @@
 
 import dynamicImport from 'next/dynamic'
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { ErrorBoundary } from "@/components/error-boundary-wrapper"
 
 // Force client-side only rendering
 export const dynamic = 'force-dynamic'
 
-// Deshabilitar SSR para evitar error 500 durante el render del servidor
+// ⚡ Lazy load MyMatchesScreen
 const MyMatchesScreen = dynamicImport(
   () => import("@/components/pages/match/my-matches-screen").then(mod => ({ default: mod.MyMatchesScreen })),
   { 
@@ -20,5 +21,9 @@ const MyMatchesScreen = dynamicImport(
 )
 
 export default function MyMatchesPage() {
-  return <MyMatchesScreen />
+  return (
+    <ErrorBoundary>
+      <MyMatchesScreen />
+    </ErrorBoundary>
+  )
 }

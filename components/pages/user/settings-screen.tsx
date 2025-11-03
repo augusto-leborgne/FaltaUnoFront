@@ -1,6 +1,8 @@
 // components/pages/user/settings-screen.tsx - VERSIÓN MEJORADA
 "use client"
 
+
+import { logger } from '@/lib/logger'
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,6 +13,7 @@ import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { useAuth } from "@/hooks/use-auth"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { PhotoCache } from "@/lib/photo-cache"
 
 const positions = ["Portero", "Defensa", "Mediocampista", "Delantero"]
 
@@ -123,7 +126,7 @@ export function SettingsScreen() {
       setAuthMethod(user.provider === "GOOGLE" ? "google" : "email")
 
     } catch (error) {
-      console.error("[Settings] Error cargando datos:", error)
+      logger.error("[Settings] Error cargando datos:", error)
       setError("Error al cargar datos del perfil")
     } finally {
       setIsLoading(false)
@@ -139,7 +142,7 @@ export function SettingsScreen() {
         setNotificationPreferences(response.data)
       }
     } catch (error) {
-      console.error("[Settings] Error cargando preferencias:", error)
+      logger.error("[Settings] Error cargando preferencias:", error)
     }
   }
 
@@ -164,22 +167,29 @@ export function SettingsScreen() {
     setSuccess(false)
     
     try {
-      console.log("[Settings] Guardando cambios...")
+      logger.log("[Settings] Guardando cambios...")
 
       // 1. Subir foto si hay una nueva
       if (photoFile) {
-        console.log("[Settings] Subiendo foto...")
+        logger.log("[Settings] Subiendo foto...")
         const success = await AuthService.updateProfilePhoto(photoFile)
         
         if (!success) {
           throw new Error("Error al subir la foto")
         }
         
-        console.log("[Settings] Foto subida exitosamente")
+        logger.log("[Settings] Foto subida exitosamente")
+        
+        // ✅ CRÍTICO: Invalidar cache de foto para forzar recarga
+        const currentUser = AuthService.getUser()
+        if (currentUser?.id) {
+          PhotoCache.invalidate(currentUser.id)
+          logger.log("[Settings] Cache de foto invalidado")
+        }
       }
 
       // 2. Actualizar perfil (sin nombre, apellido, email)
-      console.log("[Settings] Actualizando perfil...")
+      logger.log("[Settings] Actualizando perfil...")
       
       const perfilData = {
         celular: formData.phone,
@@ -194,29 +204,36 @@ export function SettingsScreen() {
         throw new Error("Error al actualizar el perfil")
       }
 
-      console.log("[Settings] Perfil actualizado exitosamente")
+      logger.log("[Settings] Perfil actualizado exitosamente")
 
       // 3. Guardar preferencias de notificación
-      console.log("[Settings] Guardando preferencias de notificación...")
+      logger.log("[Settings] Guardando preferencias de notificación...")
       try {
         const { NotificationPreferencesAPI } = await import('@/lib/api')
         await NotificationPreferencesAPI.update(notificationPreferences)
-        console.log("[Settings] Preferencias de notificación guardadas")
+        logger.log("[Settings] Preferencias de notificación guardadas")
       } catch (prefError) {
-        console.warn("[Settings] Error guardando preferencias de notificación:", prefError)
+        logger.warn("[Settings] Error guardando preferencias de notificación:", prefError)
         // No fallar el guardado completo por esto
       }
 
       // 4. Refrescar contexto
       await refreshUser()
 
-      // 5. Actualizar avatar con la nueva foto si se subió
+      // 5. Actualizar avatar con la nueva foto desde cache (después de invalidar)
       if (photoFile) {
         const currentUser = AuthService.getUser()
-        if (currentUser?.foto_perfil) {
-          // El refreshUser() ya trajo la nueva foto en base64
-          setAvatar(currentUser.foto_perfil)
-          setPhotoFile(null)
+        if (currentUser?.id) {
+          // Esperar un momento para que el servidor procese la foto
+          await new Promise(resolve => setTimeout(resolve, 500))
+          
+          // Cargar nueva foto desde servidor
+          const newPhoto = await PhotoCache.getPhoto(currentUser.id)
+          if (newPhoto) {
+            setAvatar(newPhoto)
+            setPhotoFile(null)
+            logger.log("[Settings] Avatar actualizado con nueva foto")
+          }
         }
       }
 
@@ -228,7 +245,7 @@ export function SettingsScreen() {
       }, 1000)
 
     } catch (error) {
-      console.error("[Settings] Error guardando cambios:", error)
+      logger.error("[Settings] Error guardando cambios:", error)
       setError(error instanceof Error ? error.message : "Error al guardar cambios")
     } finally {
       setIsSaving(false)
@@ -258,7 +275,7 @@ export function SettingsScreen() {
       }
       reader.readAsDataURL(file)
       
-      console.log("[Settings] Foto seleccionada:", file.name)
+      logger.log("[Settings] Foto seleccionada:", file.name)
     }
   }
 
@@ -272,7 +289,7 @@ export function SettingsScreen() {
     setError("")
 
     try {
-      console.log("[Settings] Eliminando cuenta...")
+      logger.log("[Settings] Eliminando cuenta...")
       
       const { UsuarioAPI } = await import('@/lib/api')
       const response = await UsuarioAPI.eliminarCuenta()
@@ -281,14 +298,14 @@ export function SettingsScreen() {
         throw new Error(response.message || "Error al eliminar la cuenta")
       }
 
-      console.log("[Settings] Cuenta eliminada exitosamente")
+      logger.log("[Settings] Cuenta eliminada exitosamente")
       
       // Cerrar sesión y redirigir
       AuthService.logout()
       router.replace("/login")
       
     } catch (error) {
-      console.error("[Settings] Error eliminando cuenta:", error)
+      logger.error("[Settings] Error eliminando cuenta:", error)
       setError(error instanceof Error ? error.message : "Error al eliminar la cuenta")
       setIsDeleting(false)
     }

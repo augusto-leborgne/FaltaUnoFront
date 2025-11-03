@@ -1,5 +1,7 @@
 "use client"
 
+
+import { logger } from '@/lib/logger'
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -57,7 +59,7 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
         setAmigos([])
       }
     } catch (error) {
-      console.error("Error cargando amigos:", error)
+      logger.error("Error cargando amigos:", error)
       // En caso de error, mostrar lista vacía
       setAmigos([])
     } finally {
@@ -92,7 +94,7 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
         throw new Error(response.message || "Error al enviar invitación")
       }
     } catch (error: any) {
-      console.error("Error invitando:", error)
+      logger.error("Error invitando:", error)
       
       // ✅ MEJORADO: Error handling específico por código HTTP
       let errorTitle = "Error"
@@ -163,7 +165,7 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
           url: shareUrl
         })
       } catch (error) {
-        console.log("Error compartiendo:", error)
+        logger.log("Error compartiendo:", error)
       }
     } else {
       // Fallback: copiar al portapapeles
