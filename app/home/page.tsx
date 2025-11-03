@@ -1,16 +1,16 @@
 "use client"
 
-import dynamicImport from 'next/dynamic'
+import dynamic from 'next/dynamic'
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { ErrorBoundary } from "@/components/error-boundary-wrapper"
 
 // Prevent any server-side pre-rendering
-export const dynamic = 'force-dynamic'
-export const fetchCache = 'force-no-store'
+export const dynamicParams = true
+export const revalidate = 0
 
 // ⚡ Lazy load HomeScreen for better initial bundle size
 // FIX: Import the default export, not named export
-const HomeScreenWithAuth = dynamicImport(
+const HomeScreenWithAuth = dynamic(
   () => import("@/components/pages/home-screen-wrapper"),
   {
     ssr: false,
