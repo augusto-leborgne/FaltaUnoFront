@@ -215,7 +215,7 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
               <div className="space-y-3 mb-4">
                 {amigos.map((amigo) => {
                   const fullName = `${amigo.nombre} ${amigo.apellido}`
-                  const initials = `${amigo.nombre[0]}${amigo.apellido[0]}`
+                  const initials = `${amigo.nombre?.[0] ?? ""}${amigo.apellido?.[0] ?? ""}`
                   const isInviting = invitando[amigo.id]
                   const isInvited = invitados[amigo.id] // ✅ Verificar si ya fue invitado
 

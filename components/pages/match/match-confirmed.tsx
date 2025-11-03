@@ -138,7 +138,7 @@ export function MatchConfirmed({ matchId }: MatchConfirmedProps) {
                     <AvatarImage src={`data:image/jpeg;base64,${match.organizador.foto_perfil}`} />
                   ) : (
                     <AvatarFallback className="bg-orange-100">
-                      {match.organizador.nombre[0]}{match.organizador.apellido[0]}
+                      {match.organizador.nombre?.[0] ?? ""}{match.organizador.apellido?.[0] ?? ""}
                     </AvatarFallback>
                   )}
                 </Avatar>

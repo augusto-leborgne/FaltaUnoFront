@@ -401,7 +401,10 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
             </h3>
 
             <div className="space-y-3">
-              {jugadores.map((player: any) => (
+              {jugadores.map((player: any) => {
+                if (!player?.id) return null; // Skip invalid players
+                
+                return (
                 <div
                   key={player.id}
                   onClick={() => handlePlayerClick(player.id)}
@@ -437,7 +440,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
                     </div>
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
           </div>
         )}

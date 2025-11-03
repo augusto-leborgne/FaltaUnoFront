@@ -12,9 +12,15 @@ export async function generateMetadata({ params }: MatchDetailPageProps): Promis
   
   // Intentar obtener datos del partido
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 seg timeout para metadata
+
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/partidos/${id}`, {
       cache: 'no-store',
+      signal: controller.signal,
     })
+    
+    clearTimeout(timeoutId);
     
     if (response.ok) {
       const match = await response.json()
@@ -49,8 +55,8 @@ export async function generateMetadata({ params }: MatchDetailPageProps): Promis
         },
       }
     }
-  } catch (error) {
-    console.error("Error fetching match metadata:", error)
+  } catch (error: any) {
+    console.error("Error fetching match metadata:", error?.name === 'AbortError' ? 'Timeout' : error)
   }
   
   // Fallback metadata

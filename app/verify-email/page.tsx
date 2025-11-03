@@ -127,6 +127,9 @@ function VerifyEmailContent() {
     setError('');
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seg timeout
+
       const response = await fetch(`${API_URL}/verification/verify-code`, {
         method: 'POST',
         headers: {
@@ -136,7 +139,14 @@ function VerifyEmailContent() {
           email,
           code: codeString,
         }),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
 
       const data = await response.json();
 
@@ -156,9 +166,13 @@ function VerifyEmailContent() {
         setCode(['', '', '', '', '', '']);
         inputRefs.current[0]?.focus();
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error verificando código:', err);
-      setError('Error al verificar el código. Por favor intenta de nuevo.');
+      if (err.name === 'AbortError') {
+        setError('La solicitud tardó demasiado. Por favor intenta de nuevo.');
+      } else {
+        setError('Error al verificar el código. Por favor intenta de nuevo.');
+      }
     } finally {
       setIsVerifying(false);
     }
@@ -170,13 +184,23 @@ function VerifyEmailContent() {
     setError('');
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seg timeout
+
       const response = await fetch(`${API_URL}/verification/resend-code`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email }),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
 
       const data = await response.json();
 
@@ -194,9 +218,13 @@ function VerifyEmailContent() {
       } else {
         setError(data.message || 'Error al reenviar el código');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error reenviando código:', err);
-      setError('Error al reenviar el código. Por favor intenta de nuevo.');
+      if (err.name === 'AbortError') {
+        setError('La solicitud tardó demasiado. Por favor intenta de nuevo.');
+      } else {
+        setError('Error al reenviar el código. Por favor intenta de nuevo.');
+      }
     } finally {
       setIsResending(false);
     }

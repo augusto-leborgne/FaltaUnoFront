@@ -119,7 +119,7 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
 
     try {
       // Enviar cada review usando ReviewAPI
-      const promises = reviews.map(review => 
+      const promises = reviews.map(review =>
         ReviewAPI.crear({
           partidoId: matchId,
           usuarioQueCalificaId: user.id,
@@ -131,14 +131,22 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
         })
       )
 
-      await Promise.all(promises)
+      const results = await Promise.allSettled(promises)
+      
+      // Contar éxitos y fallos
+      const successful = results.filter(r => r.status === 'fulfilled').length
+      const failed = results.filter(r => r.status === 'rejected').length
 
-      toast({
-        title: "¡Reseñas enviadas!",
-        description: "Gracias por tu feedback.",
-      })
-
-      router.push("/home")
+      if (successful > 0) {
+        toast({
+          title: failed === 0 ? "¡Reseñas enviadas!" : `${successful} reseñas enviadas`,
+          description: failed === 0 ? "Gracias por tu feedback." : `${failed} reseña(s) no se pudieron enviar.`,
+          variant: failed > 0 ? "default" : "default",
+        })
+        router.push("/home")
+      } else {
+        throw new Error("No se pudo enviar ninguna reseña")
+      }
     } catch (error) {
       logger.error("Error enviando reseñas:", error)
       toast({

@@ -362,7 +362,7 @@ export function HomeScreen() {
                   </div>
                 </div>
                 <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 leading-relaxed line-clamp-3">{news.description}</p>
-                {news.tags && (
+                {news.tags && news.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1 sm:gap-2 mb-3 sm:mb-4">
                     {news.tags.map((tag) => (
                       <span key={tag} className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-muted text-muted-foreground text-[10px] sm:text-xs rounded-lg">

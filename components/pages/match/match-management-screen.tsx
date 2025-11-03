@@ -851,7 +851,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                         <AvatarImage src={`data:image/jpeg;base64,${player.foto_perfil}`} />
                       ) : (
                         <AvatarFallback className="bg-gray-200">
-                          {player.nombre[0]}{player.apellido[0]}
+                          {player.nombre?.[0] ?? ""}{player.apellido?.[0] ?? ""}
                         </AvatarFallback>
                       )}
                     </Avatar>
@@ -912,7 +912,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                           <AvatarImage src={`data:image/jpeg;base64,${usuario.foto_perfil}`} />
                         ) : (
                           <AvatarFallback className="bg-gray-200">
-                            {usuario.nombre[0]}{usuario.apellido[0]}
+                            {usuario.nombre?.[0] ?? ""}{usuario.apellido?.[0] ?? ""}
                           </AvatarFallback>
                         )}
                       </Avatar>

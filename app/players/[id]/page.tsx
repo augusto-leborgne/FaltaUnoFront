@@ -12,9 +12,15 @@ export async function generateMetadata({ params }: PlayerProfilePageProps): Prom
   
   // Intentar obtener datos del jugador
   try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 seg timeout para metadata
+
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/usuarios/${id}`, {
       cache: 'no-store',
+      signal: controller.signal,
     })
+    
+    clearTimeout(timeoutId);
     
     if (response.ok) {
       const player = await response.json()
@@ -50,8 +56,8 @@ export async function generateMetadata({ params }: PlayerProfilePageProps): Prom
         },
       }
     }
-  } catch (error) {
-    console.error("Error fetching player metadata:", error)
+  } catch (error: any) {
+    console.error("Error fetching player metadata:", error?.name === 'AbortError' ? 'Timeout' : error)
   }
   
   // Fallback metadata

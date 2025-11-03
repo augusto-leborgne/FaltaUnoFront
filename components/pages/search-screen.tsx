@@ -63,9 +63,17 @@ export function SearchScreen() {
 
   // Cargar búsquedas recientes del localStorage
   useEffect(() => {
-    const saved = localStorage.getItem("recentSearches")
-    if (saved) {
-      setRecentSearches(JSON.parse(saved))
+    try {
+      const saved = localStorage.getItem("recentSearches")
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed)) {
+          setRecentSearches(parsed)
+        }
+      }
+    } catch (error) {
+      console.error('Error loading recent searches:', error)
+      localStorage.removeItem("recentSearches")
     }
   }, [])
 

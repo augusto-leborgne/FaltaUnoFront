@@ -101,6 +101,9 @@ export default function CompleteProfilePage() {
     setError('');
 
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seg timeout
+
       const response = await fetch(`${API_URL}/auth/complete-register`, {
         method: 'POST',
         headers: {
@@ -116,7 +119,15 @@ export default function CompleteProfilePage() {
           fechaNacimiento: formData.fechaNacimiento,
           emailVerified: true,
         }),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Error del servidor' }));
+        throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+      }
 
       const data = await response.json();
 
@@ -135,9 +146,15 @@ export default function CompleteProfilePage() {
       } else {
         setError(data.message || 'Error al completar el registro');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error completando registro:', err);
-      setError('Error al completar el registro. Por favor intenta de nuevo.');
+      if (err.name === 'AbortError') {
+        setError('La solicitud tardó demasiado. Por favor intenta de nuevo.');
+      } else if (err.message) {
+        setError(err.message);
+      } else {
+        setError('Error al completar el registro. Por favor intenta de nuevo.');
+      }
     } finally {
       setIsLoading(false);
     }
