@@ -1,4 +1,5 @@
 // ✅ SERVER COMPONENT - App Router Pattern
+// Force rebuild - fixed dynamic import naming conflict
 import { Suspense } from 'react'
 import dynamicImport from 'next/dynamic'
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
