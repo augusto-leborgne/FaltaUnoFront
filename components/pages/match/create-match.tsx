@@ -144,7 +144,7 @@ export function CreateMatchScreen() {
         const price = Number(value)
         if (isNaN(price)) return "Ingresa un precio válido"
         if (price < 0) return "El precio no puede ser negativo"
-        if (price > 1000000) return "El precio no puede superar $1,000,000"
+        if (price > 100000) return "El precio no puede superar $100,000"
         return null
 
       case "duration":
