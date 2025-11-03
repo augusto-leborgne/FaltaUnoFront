@@ -1,14 +1,13 @@
 "use client"
 
-import dynamic from 'next/dynamic'
+import dynamicImport from 'next/dynamic'
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
-// Force dynamic rendering
-export const dynamicParams = true
-export const revalidate = 0
+// Force client-side only rendering
+export const dynamic = 'force-dynamic'
 
 // ⚡ Lazy load the MatchesListing component for better performance
-const MatchesListing = dynamic(
+const MatchesListing = dynamicImport(
   () => import("@/components/pages/match/matches-listing").then(mod => ({ default: mod.MatchesListing })),
   { 
     ssr: false,

@@ -1,14 +1,13 @@
 "use client"
 
-import dynamic from 'next/dynamic'
+import dynamicImport from 'next/dynamic'
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
-// Force dynamic rendering
-export const dynamicParams = true
-export const revalidate = 0
+// Force client-side only rendering
+export const dynamic = 'force-dynamic'
 
 // ⚡ Lazy load SearchScreen for better performance
-const SearchScreen = dynamic(
+const SearchScreen = dynamicImport(
   () => import("@/components/pages/search-screen").then(mod => ({ default: mod.SearchScreen })),
   { 
     ssr: false,

@@ -1,14 +1,13 @@
 "use client"
 
-import dynamic from 'next/dynamic'
+import dynamicImport from 'next/dynamic'
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
-// Force dynamic rendering
-export const dynamicParams = true
-export const revalidate = 0
+// Force client-side only rendering
+export const dynamic = 'force-dynamic'
 
 // Deshabilitar SSR para evitar error 500 durante el render del servidor
-const MyMatchesScreen = dynamic(
+const MyMatchesScreen = dynamicImport(
   () => import("@/components/pages/match/my-matches-screen").then(mod => ({ default: mod.MyMatchesScreen })),
   { 
     ssr: false,

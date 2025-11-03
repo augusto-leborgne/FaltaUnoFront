@@ -1,15 +1,14 @@
 "use client"
 
 // app/login/page.tsx
-import dynamic from "next/dynamic"
+import dynamicImport from "next/dynamic"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
-// Force dynamic rendering
-export const dynamicParams = true
-export const revalidate = 0
+// Force client-side only rendering
+export const dynamic = 'force-dynamic'
 
 // ✅ Deshabilitar SSR para evitar error 500 en producción
-const LoginScreen = dynamic(
+const LoginScreen = dynamicImport(
   () => import("@/components/pages/login/login-screen").then((mod) => mod.LoginScreen),
   { 
     ssr: false, 

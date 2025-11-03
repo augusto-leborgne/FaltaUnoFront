@@ -1,14 +1,13 @@
 "use client"
 
-import dynamic from 'next/dynamic'
+import dynamicImport from 'next/dynamic'
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
-// Force dynamic rendering
-export const dynamicParams = true
-export const revalidate = 0
+// Force client-side only rendering
+export const dynamic = 'force-dynamic'
 
 // ⚡ Lazy load CreateMatchScreen for better performance (includes Google Maps)
-const CreateMatchScreen = dynamic(
+const CreateMatchScreen = dynamicImport(
   () => import("@/components/pages/match/create-match").then(mod => ({ default: mod.CreateMatchScreen })),
   { 
     ssr: false,
