@@ -75,9 +75,6 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
         
-        {/* ⚡ Prefetch critical API endpoints */}
-        <link rel="prefetch" href="https://faltauno-backend-169771742214.us-central1.run.app/api/usuarios/me" as="fetch" crossOrigin="anonymous" />
-        
         {/* Viewport and PWA meta tags */}
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" />
         <meta name="theme-color" content="#4caf50" />
