@@ -1,20 +1,30 @@
-import dynamic from 'next/dynamic'
+"use client"
 
-const HomeScreen = dynamic(() => import('@/components/pages/home-screen').then(mod => ({ default: mod.HomeScreen })), { 
-  ssr: false,
-  loading: () => (
-    <div className="min-h-screen flex items-center justify-center bg-white p-6">
-      <div className="flex flex-col items-center gap-3">
-        <div className="relative w-16 h-16">
-          <div className="rounded-full border-[3px] border-green-300 w-16 h-16"></div>
-          <div className="absolute inset-0 rounded-full border-[4px] border-transparent border-t-green-600 w-16 h-16 animate-spin"></div>
-        </div>
-        <p className="text-sm font-medium text-gray-600">Cargando...</p>
-      </div>
-    </div>
-  )
-})
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { AuthService } from "@/lib/auth"
 
 export default function HomePage() {
-  return <HomeScreen />
+  const router = useRouter()
+
+  useEffect(() => {
+    const token = AuthService.getToken()
+    if (!token || AuthService.isTokenExpired(token)) {
+      router.replace("/login")
+      return
+    }
+
+    const user = AuthService.getUser()
+    if (!user?.id) {
+      router.replace("/login")
+      return
+    }
+  }, [router])
+
+  return (
+    <div className="min-h-screen bg-white p-6">
+      <h1 className="text-2xl font-bold">Home Page Test</h1>
+      <p>Si ves esto, el problema está en algún componente de HomeScreen</p>
+    </div>
+  )
 }
