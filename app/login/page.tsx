@@ -1,11 +1,32 @@
-"use client"
+// ✅ SERVER COMPONENT - App Router Pattern
+import { Suspense } from 'react'
+import dynamicImport from 'next/dynamic'
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
-// app/login/page.tsx
-import { LoginScreen } from "@/components/pages/login/login-screen"
-
-// Force client-side only rendering
+// Force dynamic rendering
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+const LoginClient = dynamicImport(
+  () => import('./login-client'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <LoadingSpinner size="lg" variant="green" />
+      </div>
+    )
+  }
+)
 
 export default function LoginPage() {
-  return <LoginScreen />
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <LoadingSpinner size="lg" variant="green" />
+      </div>
+    }>
+      <LoginClient />
+    </Suspense>
+  )
 }

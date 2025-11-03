@@ -1,16 +1,15 @@
-"use client"
-
+// ✅ SERVER COMPONENT - App Router Pattern
+import { Suspense } from 'react'
 import dynamicImport from 'next/dynamic'
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
-// Force client-side only rendering
+// Force dynamic rendering
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
-// Deshabilitar SSR para evitar error 500 durante el render del servidor
-// FIX: Use named import correctly
-const MatchManagementScreen = dynamicImport(
-  () => import("@/components/pages/match/match-management-screen").then(mod => mod.MatchManagementScreen),
-  { 
+const MatchManagementClient = dynamicImport(
+  () => import('./match-management-client'),
+  {
     ssr: false,
     loading: () => (
       <div className="flex items-center justify-center min-h-screen bg-background">
@@ -27,5 +26,13 @@ interface PageProps {
 }
 
 export default function MatchManagementPage({ params }: PageProps) {
-  return <MatchManagementScreen matchId={params.id} />
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <LoadingSpinner size="lg" variant="green" />
+      </div>
+    }>
+      <MatchManagementClient matchId={params.id} />
+    </Suspense>
+  )
 }
