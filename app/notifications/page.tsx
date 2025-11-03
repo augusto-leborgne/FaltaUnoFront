@@ -1,7 +1,10 @@
-"use client"
+import dynamicImport from 'next/dynamic'
 
-import { NotificationsScreen } from "@/components/pages/notifications-screen"
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+const NotificationsClient = dynamicImport(() => import('./notifications-client'), { ssr: false })
 
 export default function NotificationsPage() {
-  return <NotificationsScreen />
+  return <NotificationsClient />
 }
