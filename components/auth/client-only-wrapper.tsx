@@ -12,6 +12,7 @@ export function ClientOnlyWrapper({ children }: { children: React.ReactNode }) {
 }
 
 // Export dynamic version of RequireAuth with SSR disabled
+// FIX: Import default export directly, not with .then()
 export const RequireAuthClientOnly = dynamic(
   () => import("@/components/auth/require-auth"),
   {

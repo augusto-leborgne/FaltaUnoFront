@@ -8,8 +8,9 @@ import { ErrorBoundary } from "@/components/error-boundary-wrapper"
 export const dynamic = 'force-dynamic'
 
 // ⚡ Lazy load SearchScreen for better performance
+// FIX: Use named import correctly
 const SearchScreen = dynamicImport(
-  () => import("@/components/pages/search-screen").then(mod => ({ default: mod.SearchScreen })),
+  () => import("@/components/pages/search-screen").then(mod => mod.SearchScreen),
   { 
     ssr: false,
     loading: () => (

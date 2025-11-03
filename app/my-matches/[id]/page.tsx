@@ -7,8 +7,9 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 export const dynamic = 'force-dynamic'
 
 // Deshabilitar SSR para evitar error 500 durante el render del servidor
+// FIX: Use named import correctly
 const MatchManagementScreen = dynamicImport(
-  () => import("@/components/pages/match/match-management-screen").then(mod => ({ default: mod.MatchManagementScreen })),
+  () => import("@/components/pages/match/match-management-screen").then(mod => mod.MatchManagementScreen),
   { 
     ssr: false,
     loading: () => (

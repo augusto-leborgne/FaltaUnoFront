@@ -8,8 +8,9 @@ import { ErrorBoundary } from "@/components/error-boundary-wrapper"
 export const dynamic = 'force-dynamic'
 
 // ⚡ Lazy load CreateMatchScreen for better performance (includes Google Maps)
+// FIX: Use named import correctly
 const CreateMatchScreen = dynamicImport(
-  () => import("@/components/pages/match/create-match").then(mod => ({ default: mod.CreateMatchScreen })),
+  () => import("@/components/pages/match/create-match").then(mod => mod.CreateMatchScreen),
   { 
     ssr: false,
     loading: () => (

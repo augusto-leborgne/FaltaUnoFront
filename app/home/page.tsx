@@ -9,8 +9,9 @@ export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 
 // ⚡ Lazy load HomeScreen for better initial bundle size
+// FIX: Import the default export, not named export
 const HomeScreenWithAuth = dynamicImport(
-  () => import("@/components/pages/home-screen-wrapper").then(mod => ({ default: mod.HomeScreenWithAuth })),
+  () => import("@/components/pages/home-screen-wrapper"),
   {
     ssr: false,
     loading: () => (

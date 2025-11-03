@@ -6,8 +6,9 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { ErrorBoundary } from "@/components/error-boundary-wrapper"
 
 // ⚡ Lazy load ProfileScreen
+// FIX: Use named import correctly
 const ProfileScreen = dynamic(
-  () => import("@/components/pages/user/profile-screen").then(mod => ({ default: mod.ProfileScreen })),
+  () => import("@/components/pages/user/profile-screen").then(mod => mod.ProfileScreen),
   {
     ssr: false,
     loading: () => (

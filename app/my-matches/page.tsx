@@ -8,8 +8,9 @@ import { ErrorBoundary } from "@/components/error-boundary-wrapper"
 export const dynamic = 'force-dynamic'
 
 // ⚡ Lazy load MyMatchesScreen
+// FIX: Use named import correctly
 const MyMatchesScreen = dynamicImport(
-  () => import("@/components/pages/match/my-matches-screen").then(mod => ({ default: mod.MyMatchesScreen })),
+  () => import("@/components/pages/match/my-matches-screen").then(mod => mod.MyMatchesScreen),
   { 
     ssr: false,
     loading: () => (

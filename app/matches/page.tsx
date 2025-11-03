@@ -8,8 +8,9 @@ import { ErrorBoundary } from "@/components/error-boundary-wrapper"
 export const dynamic = 'force-dynamic'
 
 // ⚡ Lazy load the MatchesListing component for better performance
+// FIX: Use named import correctly
 const MatchesListing = dynamicImport(
-  () => import("@/components/pages/match/matches-listing").then(mod => ({ default: mod.MatchesListing })),
+  () => import("@/components/pages/match/matches-listing").then(mod => mod.MatchesListing),
   { 
     ssr: false,
     loading: () => (

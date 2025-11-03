@@ -13,7 +13,7 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner'
 // ============================================
 
 export const HomeScreen = dynamic(
-  () => import('@/components/pages/home-screen').then(mod => ({ default: mod.HomeScreen })),
+  () => import('@/components/pages/home-screen').then(mod => mod.HomeScreen),
   {
     loading: () => <LoadingSpinner size="xl" variant="green" />,
     ssr: false, // Desactivar SSR para componentes que usan hooks de cliente
@@ -21,7 +21,7 @@ export const HomeScreen = dynamic(
 )
 
 export const MatchesListing = dynamic(
-  () => import('@/components/pages/match/matches-listing').then(mod => ({ default: mod.MatchesListing })),
+  () => import('@/components/pages/match/matches-listing').then(mod => mod.MatchesListing),
   {
     loading: () => <LoadingSpinner size="xl" variant="green" />,
     ssr: false,
@@ -29,7 +29,7 @@ export const MatchesListing = dynamic(
 )
 
 export const MyMatchesScreen = dynamic(
-  () => import('@/components/pages/match/my-matches-screen').then(mod => ({ default: mod.MyMatchesScreen })),
+  () => import('@/components/pages/match/my-matches-screen').then(mod => mod.MyMatchesScreen),
   {
     loading: () => <LoadingSpinner size="xl" variant="green" />,
     ssr: false,
@@ -37,7 +37,7 @@ export const MyMatchesScreen = dynamic(
 )
 
 export const ProfileScreen = dynamic(
-  () => import('@/components/pages/user/profile-screen').then(mod => ({ default: mod.default })),
+  () => import('@/components/pages/user/profile-screen').then(mod => mod.ProfileScreen),
   {
     loading: () => <LoadingSpinner size="xl" variant="green" />,
     ssr: false,
@@ -45,7 +45,7 @@ export const ProfileScreen = dynamic(
 )
 
 export const SettingsScreen = dynamic(
-  () => import('@/components/pages/user/settings-screen').then(mod => ({ default: mod.SettingsScreen })),
+  () => import('@/components/pages/user/settings-screen').then(mod => mod.SettingsScreen),
   {
     loading: () => <LoadingSpinner size="xl" variant="green" />,
     ssr: false,
@@ -53,7 +53,7 @@ export const SettingsScreen = dynamic(
 )
 
 export const SearchScreen = dynamic(
-  () => import('@/components/pages/search-screen').then(mod => ({ default: mod.SearchScreen })),
+  () => import('@/components/pages/search-screen').then(mod => mod.SearchScreen),
   {
     loading: () => <LoadingSpinner size="xl" variant="green" />,
     ssr: false,
@@ -81,7 +81,7 @@ export const PlayerProfile = dynamic(
 )
 
 export const MatchChatScreen = dynamic(
-  () => import('@/components/pages/match/match-chat-screen').then(mod => ({ default: mod.MatchChatScreen })),
+  () => import('@/components/pages/match/match-chat-screen').then(mod => mod.MatchChatScreen),
   {
     loading: () => <LoadingSpinner size="lg" variant="green" />,
     ssr: false,
