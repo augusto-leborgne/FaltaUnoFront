@@ -1,6 +1,6 @@
 "use client"
 
-import dynamic from "next/dynamic"
+import RequireAuth from "@/components/auth/require-auth"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 /**
@@ -11,16 +11,26 @@ export function ClientOnlyWrapper({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
-// Export dynamic version of RequireAuth with SSR disabled
-// FIX: Import default export directly, not with .then()
-export const RequireAuthClientOnly = dynamic(
-  () => import("@/components/auth/require-auth"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <LoadingSpinner size="xl" variant="green" />
-      </div>
-    ),
-  }
-)
+/**
+ * RequireAuth wrapper optimized for client-side only rendering.
+ * No dynamic import needed - both this and RequireAuth are already client components.
+ */
+export function RequireAuthClientOnly({ 
+  children,
+  allowIncomplete = false,
+  allowUnverified = true
+}: { 
+  children: React.ReactNode
+  allowIncomplete?: boolean
+  allowUnverified?: boolean
+}) {
+  return (
+    <RequireAuth 
+      allowIncomplete={allowIncomplete} 
+      allowUnverified={allowUnverified}
+    >
+      {children}
+    </RequireAuth>
+  )
+}
+
