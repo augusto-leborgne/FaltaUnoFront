@@ -1,6 +1,6 @@
 import dynamic from 'next/dynamic'
 
-const HomeClient = dynamic(() => import('./home-client'), { 
+const HomeScreen = dynamic(() => import('@/components/pages/home-screen').then(mod => ({ default: mod.HomeScreen })), { 
   ssr: false,
   loading: () => (
     <div className="min-h-screen flex items-center justify-center bg-white p-6">
@@ -16,5 +16,5 @@ const HomeClient = dynamic(() => import('./home-client'), {
 })
 
 export default function HomePage() {
-  return <HomeClient />
+  return <HomeScreen />
 }
