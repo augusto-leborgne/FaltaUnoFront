@@ -1,24 +1,29 @@
 "use client"
 
-import dynamicImport from 'next/dynamic'
+import { useEffect, useState } from 'react'
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 // Prevent any server-side pre-rendering
 export const dynamic = 'force-dynamic'
 export const fetchCache = 'force-no-store'
 
-const HomeScreenWithAuth = dynamicImport(
-  () => import("@/components/pages/home-screen-wrapper").then(mod => ({ default: mod.HomeScreenWithAuth })),
-  { 
-    ssr: false,
-    loading: () => (
+export default function HomePage() {
+  const [HomeComponent, setHomeComponent] = useState<React.ComponentType | null>(null)
+
+  useEffect(() => {
+    // Only load component on client-side
+    import("@/components/pages/home-screen-wrapper")
+      .then(mod => setHomeComponent(() => mod.HomeScreenWithAuth))
+      .catch(err => console.error("Error loading home screen:", err))
+  }, [])
+
+  if (!HomeComponent) {
+    return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <LoadingSpinner size="lg" variant="green" />
       </div>
     )
   }
-)
 
-export default function HomePage() {
-  return <HomeScreenWithAuth />
+  return <HomeComponent />
 }
