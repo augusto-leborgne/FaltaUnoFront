@@ -9,6 +9,7 @@ import { UsuarioAPI } from "@/lib/api";
 import { AuthService } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { logger } from "@/lib/logger";
 
 export function VerificationScreen() {
   const router = useRouter();

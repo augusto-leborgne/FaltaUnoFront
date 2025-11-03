@@ -45,7 +45,7 @@ export const ProfileScreen = dynamic(
 )
 
 export const SettingsScreen = dynamic(
-  () => import('@/components/pages/user/settings-screen').then(mod => ({ default: mod.default })),
+  () => import('@/components/pages/user/settings-screen').then(mod => ({ default: mod.SettingsScreen })),
   {
     loading: () => <LoadingSpinner size="xl" variant="green" />,
     ssr: false,
@@ -81,7 +81,7 @@ export const PlayerProfile = dynamic(
 )
 
 export const MatchChatScreen = dynamic(
-  () => import('@/components/pages/match/match-chat-screen'),
+  () => import('@/components/pages/match/match-chat-screen').then(mod => ({ default: mod.MatchChatScreen })),
   {
     loading: () => <LoadingSpinner size="lg" variant="green" />,
     ssr: false,
@@ -104,9 +104,11 @@ export const MatchChatScreen = dynamic(
  * ```
  */
 export const preloadMatchDetail = () => {
+  // @ts-ignore - dynamic() doesn't type the preload function
   MatchDetail.preload?.()
 }
 
 export const preloadPlayerProfile = () => {
+  // @ts-ignore - dynamic() doesn't type the preload function
   PlayerProfile.preload?.()
 }

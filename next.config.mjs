@@ -28,13 +28,6 @@ const nextConfig = {
   poweredByHeader: false,
   generateEtags: true,
   
-  // ⚡ NUEVO: Optimize images aggressively
-  images: {
-    ...nextConfig.images,
-    unoptimized: false,
-    loader: 'default',
-  },
-  
   // ⚡ Enable modularized imports to reduce bundle size
   modularizeImports: {
     'lucide-react': {
@@ -49,6 +42,8 @@ const nextConfig = {
   
   // Configure Next.js Image optimization
   images: {
+    unoptimized: false,
+    loader: 'default',
     remotePatterns: [
       {
         protocol: 'https',
