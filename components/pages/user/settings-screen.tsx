@@ -94,13 +94,9 @@ export function SettingsScreen() {
 
   const loadUserData = async () => {
     try {
-      // Primero intentar obtener del cache
-      let user = AuthService.getUser()
-      
-      // Si no hay en cache, fetchear del servidor
-      if (!user) {
-        user = await AuthService.fetchCurrentUser()
-      }
+      // ⚡ CRÍTICO: SIEMPRE fetchear desde servidor para obtener foto_perfil
+      // foto_perfil NO se guarda en localStorage (puede exceder quota de 5-10MB)
+      let user = await AuthService.fetchCurrentUser()
       
       if (!user) {
         router.push("/login")
