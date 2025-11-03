@@ -1,12 +1,10 @@
-"use client"
+import dynamicImport from 'next/dynamic'
 
-import { RequireAuthClientOnly } from "@/components/auth/client-only-wrapper"
-import { FriendRequestsListScreen } from "@/components/pages/user/friend-requests-list-screen"
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+const FriendRequestsClient = dynamicImport(() => import('./friend-requests-client'), { ssr: false })
 
 export default function FriendRequestsPage() {
-  return (
-    <RequireAuthClientOnly allowIncomplete allowUnverified>
-      <FriendRequestsListScreen />
-    </RequireAuthClientOnly>
-  )
+  return <FriendRequestsClient />
 }

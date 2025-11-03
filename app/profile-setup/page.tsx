@@ -1,16 +1,10 @@
-"use client"
+import dynamicImport from 'next/dynamic'
 
-// app/profile-setup/page.tsx
-import { RequireAuthClientOnly } from "@/components/auth/client-only-wrapper";
-import { ProfileSetupForm } from "@/components/pages/login/profile-setup-form";
-import RequireIncompleteProfile from "@/components/auth/require-incomplete-profile";
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+const ProfileSetupClient = dynamicImport(() => import('./profile-setup-client'), { ssr: false })
 
 export default function ProfileSetupPage() {
-  return (
-    <RequireAuthClientOnly>
-      <RequireIncompleteProfile>
-        <ProfileSetupForm/>
-      </RequireIncompleteProfile>
-    </RequireAuthClientOnly>
-  );
+  return <ProfileSetupClient />
 }

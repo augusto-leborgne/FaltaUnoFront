@@ -1,13 +1,10 @@
-"use client"
+import dynamicImport from 'next/dynamic'
 
-// app/register/page.tsx
-import RedirectIfAuthenticated from "@/components/auth/redirect-if-authenticated";
-import { RegisterScreen } from "@/components/pages/login/register-screen";
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+const RegisterClient = dynamicImport(() => import('./register-client'), { ssr: false })
 
 export default function RegisterPage() {
-  return (
-    <RedirectIfAuthenticated>
-      <RegisterScreen />
-    </RedirectIfAuthenticated>
-  );
+  return <RegisterClient />
 }

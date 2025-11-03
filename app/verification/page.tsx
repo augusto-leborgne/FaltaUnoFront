@@ -1,13 +1,10 @@
-"use client"
+import dynamicImport from 'next/dynamic'
 
-// app/verification/page.tsx
-import { RequireAuthClientOnly } from "@/components/auth/client-only-wrapper";
-import { VerificationScreen } from "@/components/pages/login/verification-screen";
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+const VerificationClient = dynamicImport(() => import('./verification-client'), { ssr: false })
 
 export default function VerificationPage() {
-  return (
-    <RequireAuthClientOnly allowIncomplete={false} allowUnverified={true}>
-      <VerificationScreen />
-    </RequireAuthClientOnly>
-  );
+  return <VerificationClient />
 }

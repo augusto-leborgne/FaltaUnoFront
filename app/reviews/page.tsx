@@ -1,7 +1,10 @@
-"use client"
+import dynamicImport from 'next/dynamic'
 
-import { ReviewsScreen } from "@/components/pages/reviews-screen"
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+const ReviewsClient = dynamicImport(() => import('./reviews-client'), { ssr: false })
 
 export default function ReviewsPage() {
-  return <ReviewsScreen />
+  return <ReviewsClient />
 }
