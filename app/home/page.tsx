@@ -1,17 +1,16 @@
-"use client"
-
-import dynamic from 'next/dynamic'
+// ✅ SERVER COMPONENT - App Router Pattern
+// This is a server component that handles routing and configuration
+import { Suspense } from 'react'
+import dynamicImport from 'next/dynamic'
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import { ErrorBoundary } from "@/components/error-boundary-wrapper"
 
-// Prevent any server-side pre-rendering
-export const dynamicParams = true
+// Force dynamic rendering (no static generation)
+export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-// ⚡ Lazy load HomeScreen for better initial bundle size
-// FIX: Import the default export, not named export
-const HomeScreenWithAuth = dynamic(
-  () => import("@/components/pages/home-screen-wrapper"),
+// Dynamically import the client component
+const HomeClient = dynamicImport(
+  () => import('./home-client'),
   {
     ssr: false,
     loading: () => (
@@ -24,8 +23,12 @@ const HomeScreenWithAuth = dynamic(
 
 export default function HomePage() {
   return (
-    <ErrorBoundary>
-      <HomeScreenWithAuth />
-    </ErrorBoundary>
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <LoadingSpinner size="lg" variant="green" />
+      </div>
+    }>
+      <HomeClient />
+    </Suspense>
   )
 }

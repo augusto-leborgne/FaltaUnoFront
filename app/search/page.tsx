@@ -1,17 +1,15 @@
-"use client"
-
+// ✅ SERVER COMPONENT - App Router Pattern
+import { Suspense } from 'react'
 import dynamicImport from 'next/dynamic'
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import { ErrorBoundary } from "@/components/error-boundary-wrapper"
 
-// Force client-side only rendering
+// Force dynamic rendering
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
-// ⚡ Lazy load SearchScreen for better performance
-// FIX: Use named import correctly
-const SearchScreen = dynamicImport(
-  () => import("@/components/pages/search-screen").then(mod => mod.SearchScreen),
-  { 
+const SearchClient = dynamicImport(
+  () => import('./search-client'),
+  {
     ssr: false,
     loading: () => (
       <div className="flex items-center justify-center min-h-screen bg-background">
@@ -23,8 +21,12 @@ const SearchScreen = dynamicImport(
 
 export default function SearchPage() {
   return (
-    <ErrorBoundary>
-      <SearchScreen />
-    </ErrorBoundary>
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <LoadingSpinner size="lg" variant="green" />
+      </div>
+    }>
+      <SearchClient />
+    </Suspense>
   )
 }

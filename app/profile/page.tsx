@@ -1,14 +1,14 @@
-"use client"
-
-import dynamic from 'next/dynamic'
-import { RequireAuthClientOnly } from "@/components/auth/client-only-wrapper"
+// ✅ SERVER COMPONENT - App Router Pattern
+import { Suspense } from 'react'
+import dynamicImport from 'next/dynamic'
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import { ErrorBoundary } from "@/components/error-boundary-wrapper"
 
-// ⚡ Lazy load ProfileScreen
-// FIX: Use named import correctly
-const ProfileScreen = dynamic(
-  () => import("@/components/pages/user/profile-screen").then(mod => mod.ProfileScreen),
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+const ProfileClient = dynamicImport(
+  () => import('./profile-client'),
   {
     ssr: false,
     loading: () => (
@@ -21,10 +21,12 @@ const ProfileScreen = dynamic(
 
 export default function ProfilePage() {
   return (
-    <ErrorBoundary>
-      <RequireAuthClientOnly allowIncomplete allowUnverified>
-        <ProfileScreen />
-      </RequireAuthClientOnly>
-    </ErrorBoundary>
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <LoadingSpinner size="lg" variant="green" />
+      </div>
+    }>
+      <ProfileClient />
+    </Suspense>
   )
 }

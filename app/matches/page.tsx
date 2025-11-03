@@ -1,17 +1,15 @@
-"use client"
-
+// ✅ SERVER COMPONENT - App Router Pattern
+import { Suspense } from 'react'
 import dynamicImport from 'next/dynamic'
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import { ErrorBoundary } from "@/components/error-boundary-wrapper"
 
-// Force client-side only rendering
+// Force dynamic rendering
 export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
-// ⚡ Lazy load the MatchesListing component for better performance
-// FIX: Use named import correctly
-const MatchesListing = dynamicImport(
-  () => import("@/components/pages/match/matches-listing").then(mod => mod.MatchesListing),
-  { 
+const MatchesClient = dynamicImport(
+  () => import('./matches-client'),
+  {
     ssr: false,
     loading: () => (
       <div className="flex items-center justify-center min-h-screen bg-background">
@@ -23,8 +21,12 @@ const MatchesListing = dynamicImport(
 
 export default function MatchesPage() {
   return (
-    <ErrorBoundary>
-      <MatchesListing />
-    </ErrorBoundary>
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <LoadingSpinner size="lg" variant="green" />
+      </div>
+    }>
+      <MatchesClient />
+    </Suspense>
   )
 }

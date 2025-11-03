@@ -1,13 +1,14 @@
-"use client"
-
+// ✅ SERVER COMPONENT - App Router Pattern
+import { Suspense } from 'react'
 import dynamicImport from 'next/dynamic'
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import { ErrorBoundary } from "@/components/error-boundary-wrapper"
 
-// ⚡ Lazy load SettingsScreen
-// FIX: Use named import correctly
-const SettingsScreen = dynamicImport(
-  () => import("@/components/pages/user/settings-screen").then(mod => mod.SettingsScreen),
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
+const SettingsClient = dynamicImport(
+  () => import('./settings-client'),
   {
     ssr: false,
     loading: () => (
@@ -20,8 +21,12 @@ const SettingsScreen = dynamicImport(
 
 export default function SettingsPage() {
   return (
-    <ErrorBoundary>
-      <SettingsScreen />
-    </ErrorBoundary>
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <LoadingSpinner size="lg" variant="green" />
+      </div>
+    }>
+      <SettingsClient />
+    </Suspense>
   )
 }
