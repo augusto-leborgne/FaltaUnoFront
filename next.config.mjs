@@ -166,80 +166,14 @@ const nextConfig = {
   // Ensure lucide-react is properly transpiled in all environments
   transpilePackages: ['lucide-react'],
   
-  // ⚡ Webpack optimizations for production
+  // ⚡ Webpack optimizations for production - SIMPLIFIED to fix SSR issues
   webpack: (config, { dev, isServer }) => {
-    // Production optimizations
+    // Minimal optimizations to avoid breaking SSR
     if (!dev && !isServer) {
-      // Enable aggressive code splitting
       config.optimization = {
         ...config.optimization,
         moduleIds: 'deterministic',
-        runtimeChunk: 'single',
-        splitChunks: {
-          chunks: 'all',
-          cacheGroups: {
-            default: false,
-            vendors: false,
-            // React & Next.js core (highest priority)
-            framework: {
-              name: 'framework',
-              test: /[\\/]node_modules[\\/](react|react-dom|next|scheduler)[\\/]/,
-              chunks: 'all',
-              priority: 50,
-              enforce: true,
-            },
-            // Radix UI separate chunk (large library)
-            radix: {
-              name: 'radix',
-              test: /[\\/]node_modules[\\/]@radix-ui[\\/]/,
-              chunks: 'all',
-              priority: 40,
-              enforce: true,
-            },
-            // Lucide icons
-            icons: {
-              name: 'icons',
-              test: /[\\/]node_modules[\\/]lucide-react[\\/]/,
-              chunks: 'all',
-              priority: 35,
-              enforce: true,
-            },
-            // Third-party libraries
-            lib: {
-              test: /[\\/]node_modules[\\/]/,
-              name(module) {
-                const packageName = module.context.match(
-                  /[\\/]node_modules[\\/](.*?)([\\/]|$)/
-                )?.[1];
-                return `lib.${packageName?.replace('@', '')}`;
-              },
-              chunks: 'all',
-              priority: 30,
-            },
-            // Common components used across pages
-            common: {
-              name: 'common',
-              minChunks: 2,
-              chunks: 'all',
-              priority: 20,
-              reuseExistingChunk: true,
-              enforce: true,
-            },
-          },
-          maxInitialRequests: 30,
-          maxAsyncRequests: 30,
-          minSize: 20000,
-          maxSize: 244000,
-        },
-        minimize: true,
       }
-    }
-    
-    // Add performance hints
-    config.performance = {
-      hints: dev ? false : 'warning',
-      maxEntrypointSize: 512000,
-      maxAssetSize: 512000,
     }
     
     return config
