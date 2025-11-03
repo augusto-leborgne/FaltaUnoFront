@@ -68,15 +68,15 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon-192.png" />
         
         {/* ⚡ Preconnect to external domains for faster loading */}
-        <link rel="preconnect" href="https://faltauno-backend-pg4rwegknq-uc.a.run.app" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://faltauno-backend-pg4rwegknq-uc.a.run.app" />
+        <link rel="preconnect" href="https://faltauno-backend-169771742214.us-central1.run.app" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://faltauno-backend-169771742214.us-central1.run.app" />
         <link rel="preconnect" href="https://maps.googleapis.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://maps.googleapis.com" />
         <link rel="preconnect" href="https://fonts.googleapis.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
         
         {/* ⚡ Prefetch critical API endpoints */}
-        <link rel="prefetch" href="https://faltauno-backend-pg4rwegknq-uc.a.run.app/api/usuarios/me" as="fetch" crossOrigin="anonymous" />
+        <link rel="prefetch" href="https://faltauno-backend-169771742214.us-central1.run.app/api/usuarios/me" as="fetch" crossOrigin="anonymous" />
         
         {/* Viewport and PWA meta tags */}
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" />
