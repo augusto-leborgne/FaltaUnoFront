@@ -62,6 +62,11 @@ export default function RootLayout({
   return (
     <html lang="es" className="antialiased">
       <head>
+        {/* Favicon */}
+        <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/logo.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
+        
         {/* ⚡ Preconnect to external domains for faster loading */}
         <link rel="preconnect" href="https://faltauno-backend-pg4rwegknq-uc.a.run.app" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://faltauno-backend-pg4rwegknq-uc.a.run.app" />

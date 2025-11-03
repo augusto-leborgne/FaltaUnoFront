@@ -154,8 +154,15 @@ export function RegisterScreen() {
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-white">
       <div className="w-full max-w-md px-6">
-        {/* Encabezado */}
+        {/* Logo + Encabezado */}
         <div className="text-center mb-8">
+          <div className="flex justify-center mb-6">
+            <img 
+              src="/logo.png" 
+              alt="Falta Uno" 
+              className="h-24 w-auto"
+            />
+          </div>
           <h1 className="text-2xl font-semibold text-gray-900">Crear cuenta</h1>
           <p className="text-sm text-gray-500 mt-1">Regístrate para organizar y sumarte a partidos</p>
         </div>
