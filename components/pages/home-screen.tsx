@@ -60,7 +60,6 @@ export function HomeScreen() {
   const [pendingReviews, setPendingReviews] = useState<PendingReview[]>([])
   const [newsUpdates, setNewsUpdates] = useState<NewsUpdate[]>([])
   const [isLoading, setIsLoading] = useState(false) // Cambiar a false para mostrar UI rápido
-  const [userPhotoUrl, setUserPhotoUrl] = useState<string | null>(null)
   const [selectedNews, setSelectedNews] = useState<NewsUpdate | null>(null)
   const [isNewsDialogOpen, setIsNewsDialogOpen] = useState(false)
   const [communityStats, setCommunityStats] = useState({
@@ -85,13 +84,6 @@ export function HomeScreen() {
 
     loadData()
   }, [])
-
-  // Cargar foto del usuario desde el servidor
-  useEffect(() => {
-    if (currentUser?.id) {
-      setUserPhotoUrl(getUserPhotoUrl(currentUser.id))
-    }
-  }, [currentUser?.id])
 
   const loadData = async () => {
     try {
@@ -276,11 +268,10 @@ export function HomeScreen() {
               )}
             </button>
             <Avatar className="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 cursor-pointer" onClick={() => router.push("/profile")}>
-              {userPhotoUrl ? (
+              {currentUser?.foto_perfil ? (
                 <AvatarImage 
-                  src={userPhotoUrl} 
+                  src={currentUser.foto_perfil} 
                   alt={currentUser?.nombre || "Usuario"}
-                  onError={() => setUserPhotoUrl(null)}
                 />
               ) : (
                 <AvatarFallback className="bg-primary/10 text-primary text-sm sm:text-base">

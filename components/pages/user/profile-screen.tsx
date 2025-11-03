@@ -52,15 +52,6 @@ function ProfileScreenInner() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // ⚡ CRÍTICO: Revalidar usuario al montar SOLO UNA VEZ
-  useEffect(() => {
-    console.log("[ProfileScreen] Revalidando usuario desde servidor...")
-    refreshUser().catch(err => {
-      console.error("[ProfileScreen] Error revalidando usuario:", err)
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []) // ✅ Array vacío para ejecutar solo una vez al montar
-
   const loadProfileData = useCallback(async () => {
     try {
       setLoading(true)
