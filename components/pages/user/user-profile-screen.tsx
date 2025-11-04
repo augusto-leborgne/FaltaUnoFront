@@ -260,7 +260,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
             </Avatar>
             <div className="flex-1">
               <h2 className="text-xl font-bold text-foreground">{fullName}</h2>
-              <p className="text-muted-foreground">{(user as any).posicion || "Sin posición"}</p>
+              <p className="text-muted-foreground">{(user as any).posicion || "Sin posición preferida"}</p>
               {(user as any).ubicacion && (
                 <p className="text-sm text-muted-foreground">{(user as any).ubicacion}</p>
               )}

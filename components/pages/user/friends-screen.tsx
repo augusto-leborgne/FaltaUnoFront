@@ -24,15 +24,35 @@ interface Friend {
   celular?: string
 }
 
+interface User {
+  id: string
+  nombre: string
+  apellido: string
+  foto_perfil?: string
+  fotoPerfil?: string
+  posicion?: string
+}
+
+type Tab = 'amigos' | 'todos'
+
 export function FriendsScreen() {
   const router = useRouter()
+  const [activeTab, setActiveTab] = useState<Tab>('amigos')
   const [friends, setFriends] = useState<Friend[]>([])
+  const [allUsers, setAllUsers] = useState<User[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [loading, setLoading] = useState(true)
+  const [loadingUsers, setLoadingUsers] = useState(false)
 
   useEffect(() => {
     loadFriends()
   }, [])
+
+  useEffect(() => {
+    if (activeTab === 'todos' && allUsers.length === 0) {
+      loadAllUsers()
+    }
+  }, [activeTab])
 
   const loadFriends = async () => {
     try {
@@ -79,31 +99,107 @@ export function FriendsScreen() {
     }
   }
 
+  const loadAllUsers = async () => {
+    try {
+      setLoadingUsers(true)
+      const token = AuthService.getToken()
+      
+      if (!token) {
+        router.push("/login")
+        return
+      }
+
+      const response = await fetch(`${API_BASE}/api/usuarios`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      })
+
+      if (response.ok) {
+        const result = await response.json()
+        const usuarios = result.data || []
+        
+        // Excluir al usuario actual
+        const currentUser = AuthService.getUser()
+        const filteredUsers = usuarios.filter((user: User) => user.id !== currentUser?.id)
+        
+        setAllUsers(filteredUsers)
+      }
+    } catch (error) {
+      logger.error("Error cargando usuarios:", error)
+    } finally {
+      setLoadingUsers(false)
+    }
+  }
+
   const handleBack = () => router.back()
 
   const handleUserClick = (userId: string) => {
     router.push(`/users/${userId}`)
   }
 
-  const filteredFriends = friends.filter(friend => {
-    const fullName = `${friend.nombre} ${friend.apellido}`.toLowerCase()
-    return fullName.includes(searchQuery.toLowerCase())
-  })
+  const getFilteredData = () => {
+    const data = activeTab === 'amigos' ? friends : allUsers
+    
+    return data.filter(item => {
+      const fullName = `${item.nombre} ${item.apellido}`.toLowerCase()
+      return fullName.includes(searchQuery.toLowerCase())
+    })
+  }
+
+  const filteredData = getFilteredData()
+  const isLoading = activeTab === 'amigos' ? loading : loadingUsers
+  const friendIds = new Set(friends.map(f => f.id))
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      <div className="pt-16 pb-6 px-6 border-b border-gray-100">
-        <div className="flex items-center space-x-4 mb-4">
-          <button onClick={handleBack} className="p-2 -ml-2">
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
-          </button>
-          <h1 className="text-xl font-bold text-gray-900">Amigos</h1>
+      {/* Header */}
+      <div className="pt-12 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6 border-b border-gray-100">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3 sm:space-x-4">
+            <button
+              onClick={handleBack}
+              className="p-2 -ml-2 hover:bg-gray-100 rounded-xl transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </button>
+            <h1 className="text-xl font-bold text-gray-900">Usuarios</h1>
+          </div>
         </div>
         
+        {/* Tabs */}
+        <div className="flex space-x-2 mb-4">
+          <button
+            onClick={() => setActiveTab('amigos')}
+            className={`flex-1 py-2 px-4 rounded-xl font-medium transition-colors ${
+              activeTab === 'amigos'
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Amigos
+            {friends.length > 0 && (
+              <span className="ml-2 text-xs">({friends.length})</span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('todos')}
+            className={`flex-1 py-2 px-4 rounded-xl font-medium transition-colors ${
+              activeTab === 'todos'
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Todos
+          </button>
+        </div>
+
+        {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input
-            placeholder="Buscar amigos..."
+            placeholder={activeTab === 'amigos' ? "Buscar amigos..." : "Buscar usuarios..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 bg-gray-50 border-gray-200 rounded-xl"
@@ -111,41 +207,51 @@ export function FriendsScreen() {
         </div>
       </div>
 
-      <div className="flex-1 px-6 py-6 pb-24">
-        {loading ? (
+      {/* Content */}
+      <div className="flex-1 px-4 sm:px-6 py-4 sm:py-6 pb-24 overflow-y-auto">
+        {isLoading ? (
           <div className="text-center py-12">
-            <LoadingSpinner size="lg" variant="green" text="Cargando amigos..." />
+            <LoadingSpinner size="lg" variant="green" text={`Cargando ${activeTab === 'amigos' ? 'amigos' : 'usuarios'}...`} />
           </div>
-        ) : filteredFriends.length === 0 ? (
+        ) : filteredData.length === 0 ? (
           <div className="text-center py-12">
             <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500 mb-4">
-              {searchQuery ? "No se encontraron amigos" : "Aún no tienes amigos"}
+              {searchQuery 
+                ? `No se encontraron ${activeTab === 'amigos' ? 'amigos' : 'usuarios'}`
+                : activeTab === 'amigos'
+                  ? "Aún no tienes amigos"
+                  : "No hay usuarios disponibles"
+              }
             </p>
-            <Button
-              onClick={() => router.push("/contacts")}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <UserPlus className="w-4 h-4 mr-2" />
-              Buscar usuarios
-            </Button>
+            {activeTab === 'amigos' && !searchQuery && (
+              <Button
+                onClick={() => setActiveTab('todos')}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                Ver todos los usuarios
+              </Button>
+            )}
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredFriends.map((friend) => {
-              const fullName = `${friend.nombre} ${friend.apellido}`.trim() || "Usuario"
+            {filteredData.map((item) => {
+              const fullName = `${item.nombre} ${item.apellido}`.trim() || "Usuario"
               const initials = fullName.split(" ").map(n => n[0]).join("").toUpperCase()
+              const isFriend = friendIds.has(item.id)
+              const photoField = (item as any).foto_perfil || (item as any).fotoPerfil
               
               return (
                 <div
-                  key={friend.id}
-                  onClick={() => handleUserClick(friend.id)}
+                  key={item.id}
+                  onClick={() => handleUserClick(item.id)}
                   className="flex items-center justify-between p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors"
                 >
                   <div className="flex items-center space-x-3">
                     <Avatar className="w-12 h-12">
-                      {friend.foto_perfil ? (
-                        <AvatarImage src={`data:image/jpeg;base64,${friend.foto_perfil}`} />
+                      {photoField ? (
+                        <AvatarImage src={`data:image/jpeg;base64,${photoField}`} />
                       ) : (
                         <AvatarFallback className="bg-gray-200">
                           {initials}
@@ -154,12 +260,14 @@ export function FriendsScreen() {
                     </Avatar>
                     <div>
                       <p className="font-medium text-gray-900">{fullName}</p>
-                      {friend.posicion && (
-                        <p className="text-sm text-gray-500">{friend.posicion}</p>
+                      {item.posicion && (
+                        <p className="text-sm text-gray-500">{item.posicion}</p>
                       )}
                     </div>
                   </div>
-                  <Badge className="bg-green-100 text-green-800">Amigo</Badge>
+                  {isFriend && activeTab === 'todos' && (
+                    <Badge className="bg-green-100 text-green-800">Amigo</Badge>
+                  )}
                 </div>
               )
             })}

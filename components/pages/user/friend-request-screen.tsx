@@ -218,7 +218,7 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
             <div className="space-y-2 text-sm">
               {user.posicion && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Posición:</span>
+                  <span className="text-gray-600">Posición preferida:</span>
                   <span className="text-gray-900 font-medium">{user.posicion}</span>
                 </div>
               )}

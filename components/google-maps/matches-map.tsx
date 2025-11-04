@@ -5,28 +5,53 @@ import { Badge } from "@/components/ui/badge";
 import { BottomNavigation } from "@/components/ui/bottom-navigation";
 import { ArrowLeft, MapPin, List } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useGoogleMaps } from "@/lib/google-maps-loader"; // adjust path
+import { useGoogleMaps } from "@/lib/google-maps-loader";
+import { useAuth } from "@/hooks/use-auth";
 
 const mapMatches = [
-  { id: 1, type: "Fútbol 7", time: "Hoy 20:00", location: "Centro Deportivo Sur", spotsLeft: 2, lat: -34.9011, lng: -56.1645 },
-  { id: 2, type: "Fútbol 5", time: "Mañana 18:30", location: "Polideportivo Norte", spotsLeft: 1, lat: -34.8941, lng: -56.1662 },
+  { id: 1, type: "Fútbol 7", time: "Hoy 20:00", location: "Centro Deportivo Sur", spotsLeft: 2, lat: -34.9011, lng: -56.1645, organizadorId: "user123" },
+  { id: 2, type: "Fútbol 5", time: "Mañana 18:30", location: "Polideportivo Norte", spotsLeft: 1, lat: -34.8941, lng: -56.1662, organizadorId: "user456" },
 ];
 
 export function MatchesMap() {
   const router = useRouter();
+  const { user } = useAuth();
   const [selectedMatch, setSelectedMatch] = useState<number | null>(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const { isLoaded, error, google } = useGoogleMaps();
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
 
+  // Obtener ubicación del usuario al cargar
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          });
+        },
+        (err) => {
+          console.error("Error obteniendo ubicación:", err);
+          // Fallback a Montevideo por defecto
+          setUserLocation({ lat: -34.9011, lng: -56.1645 });
+        }
+      );
+    } else {
+      // No soporta geolocalización, usar default
+      setUserLocation({ lat: -34.9011, lng: -56.1645 });
+    }
+  }, []);
+
   useEffect(() => {
     if (!isLoaded || !google) return;
-    if (!mapRef.current) return;
+    if (!mapRef.current || !userLocation) return;
 
     const map = new google.maps.Map(mapRef.current, {
-      center: { lat: -34.9011, lng: -56.1645 },
-      zoom: 13,
+      center: userLocation,
+      zoom: 14, // Zoom apropiado para nivel de ciudad (nunca más amplio)
       disableDefaultUI: true,
       mapId: "falta-uno-map", // Requerido para AdvancedMarkerElement
     });
@@ -103,10 +128,23 @@ export function MatchesMap() {
       mapInstanceRef.current = null;
       setSelectedMatch(null);
     };
-  }, [isLoaded, google]);
+  }, [isLoaded, google, userLocation]);
 
   const handleBack = () => router.back();
-  const handleMatchClick = (matchId: number) => router.push(`/matches/${matchId}`);
+  
+  const handleMatchClick = (matchId: number) => {
+    const match = mapMatches.find(m => m.id === matchId);
+    if (!match) return;
+    
+    // Si el usuario es el organizador, ir a página de gestión
+    if (user && match.organizadorId === user.id) {
+      router.push(`/matches/${matchId}/manage`);
+    } else {
+      // Si no es organizador, ir a página de detalles
+      router.push(`/matches/${matchId}`);
+    }
+  };
+  
   const handleListView = () => router.push("/matches");
 
   return (

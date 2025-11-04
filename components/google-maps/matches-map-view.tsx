@@ -317,19 +317,6 @@ export function MatchesMapView({
       {/* Contenedor del mapa */}
       <div ref={setMapRef} className="w-full h-full" />
 
-      {/* Badge con cantidad de partidos */}
-      {isMapReady && matches.length > 0 && (
-        <div className="absolute top-4 left-4 bg-white rounded-full px-3 py-1.5 shadow-lg z-10">
-          <div className="flex items-center space-x-1.5">
-            <MapPin className="w-4 h-4 text-green-600" />
-            <span className="text-sm font-medium text-gray-900">
-              {matches.filter((m) => m.latitud && m.longitud).length}{" "}
-              {matches.length === 1 ? "partido" : "partidos"}
-            </span>
-          </div>
-        </div>
-      )}
-
       {/* Loading overlay */}
       {isLoading && (
         <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">

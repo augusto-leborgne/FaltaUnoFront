@@ -33,40 +33,45 @@ export function DateSelector({
   const [month, setMonth] = useState("")
   const [year, setYear] = useState("")
 
-  // Parse initial value
+  // Parse initial value - solo la primera vez o cuando hay un valor válido completo
   useEffect(() => {
-    if (value) {
+    if (value && value.includes("-")) {
       const [y, m, d] = value.split("-")
-      setYear(y || "")
-      setMonth(m || "")
-      setDay(d || "")
+      if (y && m && d) {
+        setYear(y)
+        setMonth(m)
+        setDay(d)
+      }
     }
+    // No resetear estados si value es vacío - preservar selección parcial del usuario
   }, [value])
 
-  // Update parent on change
+  // Update parent on change - solo cuando todos los campos están completos
   const updateDate = (newDay: string, newMonth: string, newYear: string) => {
     if (newDay && newMonth && newYear) {
       // Formatear con padding de ceros
       const paddedMonth = newMonth.padStart(2, "0")
       const paddedDay = newDay.padStart(2, "0")
       onChange(`${newYear}-${paddedMonth}-${paddedDay}`)
-    } else {
-      onChange("")
     }
+    // No enviar nada si está incompleto - evitar resetear el form
   }
 
   const handleDayChange = (newDay: string) => {
     setDay(newDay)
+    // Preservar mes y año existentes
     updateDate(newDay, month, year)
   }
 
   const handleMonthChange = (newMonth: string) => {
     setMonth(newMonth)
+    // Preservar día y año existentes
     updateDate(day, newMonth, year)
   }
 
   const handleYearChange = (newYear: string) => {
     setYear(newYear)
+    // Preservar día y mes existentes
     updateDate(day, month, newYear)
   }
 

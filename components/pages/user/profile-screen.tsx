@@ -196,8 +196,17 @@ function ProfileScreenInner() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
-      <div className="pt-16 pb-4 sm:pb-6 text-center border-b border-gray-100">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Mi Perfil</h1>
+      <div className="pt-12 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6 border-b border-gray-100">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-bold text-gray-900">Mi Perfil</h1>
+          <button
+            onClick={handleSettingsClick}
+            className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+            title="Configuración"
+          >
+            <Settings className="w-5 h-5 text-gray-600" />
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 px-3 sm:px-6 py-4 sm:py-6 overflow-y-auto">
@@ -214,14 +223,11 @@ function ProfileScreenInner() {
             />
             <div className="flex-1 min-w-0">
               <h2 className="text-lg sm:text-xl font-bold text-gray-900 truncate">{fullName}</h2>
-              <p className="text-sm sm:text-base text-gray-600 truncate">{user.posicion || "Sin posición"} • {averageRating}★</p>
+              <p className="text-sm sm:text-base text-gray-600 truncate">{user.posicion || "Sin posición preferida"} • {averageRating}★</p>
               <p className="text-xs sm:text-sm text-gray-500">
                 Miembro desde {user.created_at ? new Date(user.created_at).getFullYear() : "..."}
               </p>
             </div>
-            <Button variant="outline" size="sm" className="bg-orange-50 border-orange-200 flex-shrink-0" onClick={handleSettingsClick}>
-              <Settings className="w-4 h-4" />
-            </Button>
           </div>
 
           {/* Stats Grid */}

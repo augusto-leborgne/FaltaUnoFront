@@ -311,7 +311,7 @@ export default function CompleteProfilePage() {
                 🎯 Siguiente paso: Configurar tu perfil de jugador
               </p>
               <ul className="text-xs text-green-700 space-y-1">
-                <li>• Posición favorita</li>
+                <li>• Posición preferida</li>
                 <li>• Altura y peso</li>
                 <li>• Foto de perfil</li>
               </ul>

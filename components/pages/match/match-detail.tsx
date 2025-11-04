@@ -7,12 +7,12 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
-import { Star, ArrowLeft, Share2, MapPin, Users, DollarSign, Clock, AlertCircle } from "lucide-react"
+import { Star, ArrowLeft, Share2, MapPin, Users, DollarSign, Clock, AlertCircle, XCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { CompressedMap } from "@/components/google-maps/compressed-map"
 import AuthService from "@/lib/auth"
 import { PartidoAPI, InscripcionAPI, PartidoDTO, PartidoEstado, InscripcionEstado } from "@/lib/api"
-import { formatMatchType, formatDate, getSpotsLeftColor } from "@/lib/utils"
+import { formatMatchType, formatDateRegional as formatDate, getSpotsLeftColor } from "@/lib/utils"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 interface MatchDetailProps {
@@ -48,6 +48,9 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
   const [isJoining, setIsJoining] = useState(false)
   const [isLoading, setIsLoading] = useState(false) // Cambiar a false para UI inmediata
   const [error, setError] = useState<string>("")
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
+  const [showMapModal, setShowMapModal] = useState(false)
 
   // Usuario actual (no forzamos re-render si cambia fuera)
   const currentUser = AuthService.getUser()
@@ -196,6 +199,29 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
     }
   }
 
+  const handleCancelMatch = async () => {
+    if (!match || !isOrganizer) return
+    
+    setIsCancelling(true)
+    try {
+      const response = await PartidoAPI.cancelar(matchId)
+      
+      if (response.success) {
+        alert("Partido cancelado exitosamente")
+        setShowCancelModal(false)
+        // Recargar el partido para mostrar estado actualizado
+        await loadMatch()
+      } else {
+        alert(response.message || "Error al cancelar el partido")
+      }
+    } catch (err) {
+      logger.error("[MatchDetail] Error cancelando partido:", err)
+      alert("Error al cancelar el partido")
+    } finally {
+      setIsCancelling(false)
+    }
+  }
+
   const handlePlayerClick = (playerId?: string) => {
     if (!playerId || playerId === "undefined" || playerId === "null") {
       alert("Error: No se pudo obtener la información del usuario")
@@ -280,12 +306,15 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
             </button>
             <h1 className="text-xl font-bold text-gray-900">Detalle del partido</h1>
           </div>
-          <button
-            onClick={handleShareMatch}
-            className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
-          >
-            <Share2 className="w-5 h-5 text-gray-600" />
-          </button>
+          {isOrganizer && !isMatchCancelled && (
+            <button
+              onClick={() => setShowCancelModal(true)}
+              className="p-2 hover:bg-red-50 rounded-xl transition-colors"
+              title="Cancelar partido"
+            >
+              <XCircle className="w-5 h-5 text-red-600" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -353,12 +382,14 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
 
           {/* Map */}
           {Boolean((match as any).latitud && (match as any).longitud && nombreUbicacion) && (
-            <CompressedMap
-              location={nombreUbicacion}
-              lat={(match as any).latitud}
-              lng={(match as any).longitud}
-              className="mb-4"
-            />
+            <div onClick={() => setShowMapModal(true)} className="cursor-pointer">
+              <CompressedMap
+                location={nombreUbicacion}
+                lat={(match as any).latitud}
+                lng={(match as any).longitud}
+                className="mb-4"
+              />
+            </div>
           )}
         </div>
 
@@ -397,11 +428,13 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
         {jugadores.length > 0 && (
           <div className="mb-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4">
-              Jugadores ({jugadores.length}/{getCantidadJugadores(match)})
+              Jugadores ({jugadores.filter((p: any) => p.id !== (match as any)?.organizadorId).length}/{getCantidadJugadores(match)})
             </h3>
 
             <div className="space-y-3">
-              {jugadores.map((player: any) => {
+              {jugadores
+                .filter((player: any) => player.id !== (match as any)?.organizadorId) // Excluir organizador de la lista
+                .map((player: any) => {
                 if (!player?.id) return null; // Skip invalid players
                 
                 return (
@@ -423,7 +456,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
                     </Avatar>
                     <div>
                       <div className="font-semibold text-gray-900">
-                        {(player?.nombre ?? "")} {(player?.apellido?.[0] ?? "")}.
+                        {(player?.nombre ?? "")} {(player?.apellido ?? "")}
                       </div>
                       <div className="flex items-center space-x-2 text-sm text-gray-600">
                         {player.posicion && <span>{player.posicion}</span>}
@@ -513,6 +546,72 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
           )}
         </div>
       </div>
+
+      {/* Modal de confirmación para cancelar partido */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              ¿Cancelar partido?
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Esta acción no se puede deshacer. Todos los jugadores inscritos serán notificados de la cancelación.
+            </p>
+            
+            <div className="space-y-3">
+              <Button
+                onClick={handleCancelMatch}
+                disabled={isCancelling}
+                className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl"
+              >
+                {isCancelling ? "Cancelando..." : "Sí, cancelar partido"}
+              </Button>
+              
+              <Button
+                onClick={() => setShowCancelModal(false)}
+                disabled={isCancelling}
+                variant="outline"
+                className="w-full border-gray-300 py-3 rounded-xl"
+              >
+                No, mantener partido
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de mapa expandido */}
+      {showMapModal && match && (match as any).latitud && (match as any).longitud && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl overflow-hidden max-w-2xl w-full max-h-[80vh] flex flex-col">
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900">Ubicación del partido</h3>
+              <button
+                onClick={() => setShowMapModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+              >
+                <XCircle className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+            
+            <div className="flex-1 min-h-[400px]">
+              <CompressedMap
+                location={getNombreUbicacion(match)}
+                lat={(match as any).latitud}
+                lng={(match as any).longitud}
+                className="h-full"
+              />
+            </div>
+            
+            <div className="p-4 border-t border-gray-200">
+              <div className="flex items-center space-x-2 text-gray-700">
+                <MapPin className="w-5 h-5 text-green-600" />
+                <span className="font-medium">{getNombreUbicacion(match)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <BottomNavigation />
     </div>

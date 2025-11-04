@@ -91,7 +91,7 @@ export function ProfileSetupForm() {
         return null
       
       case 'position':
-        if (!value) return "Selecciona una posición"
+        if (!value) return "Selecciona una posición preferida"
         return null
       
       case 'height':
@@ -190,7 +190,7 @@ export function ProfileSetupForm() {
     if (!formData.phone) return alert("El número de teléfono es obligatorio")
     if (!formData.fechaNacimiento) return alert("La fecha de nacimiento es obligatoria")
     if (!formData.genero) return alert("El género es obligatorio")
-    if (!formData.position) return alert("La posición es obligatoria")
+    if (!formData.position) return alert("La posición preferida es obligatoria")
     // Nivel removido - no existe en backend
     if (!formData.height) return alert("La altura es obligatoria")
     if (!formData.weight) return alert("El peso es obligatorio")
@@ -537,7 +537,7 @@ export function ProfileSetupForm() {
                 fieldErrors.position ? 'border-red-500' : 'border-gray-300'
               }`}
             >
-              <span>{formData.position || "Selecciona tu posición *"}</span>
+              <span>{formData.position || "Selecciona tu posición preferida *"}</span>
               <ChevronDown className="w-5 h-5" />
             </Button>
             {showPositionDropdown && (
