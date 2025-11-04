@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ArrowLeft, Send, AlertCircle } from "lucide-react"
+import { ArrowLeft, Send, AlertCircle, Users, MapPin, Clock, MoreVertical, Image as ImageIcon, Smile } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { MensajeAPI, PartidoAPI, InscripcionAPI, MensajeDTO } from '@/lib/api'
@@ -22,27 +22,48 @@ interface MatchInfo {
   fecha: string
   hora: string
   nombre_ubicacion: string
+  jugadores_actuales: number
+  jugadores_necesarios: number
+}
+
+interface DateSeparator {
+  type: 'date-separator'
+  date: string
+}
+
+type MessageOrSeparator = MensajeDTO | DateSeparator
+
+function isDateSeparator(item: MessageOrSeparator): item is DateSeparator {
+  return 'type' in item && item.type === 'date-separator'
 }
 
 export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   const router = useRouter()
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   
   // Estados
   const [message, setMessage] = useState("")
   const [messages, setMessages] = useState<MensajeDTO[]>([])
+  const [messagesWithSeparators, setMessagesWithSeparators] = useState<MessageOrSeparator[]>([])
   const [matchInfo, setMatchInfo] = useState<MatchInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
   const [error, setError] = useState("")
+  const [showScrollButton, setShowScrollButton] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [isTyping, setIsTyping] = useState(false)
+  const [replyingTo, setReplyingTo] = useState<MensajeDTO | null>(null)
   
   const currentUser = AuthService.getUser()
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // ⚡ OPTIMIZACIÓN: Smart polling que pausa cuando tab está inactiva
   useSmartPolling(
     () => loadMessages(true), // true = silent
     {
-      interval: 5000,
+      interval: 2000, // Más frecuente para mejor UX (2s)
       enabled: !loading, // Solo hacer polling después de carga inicial
       pauseWhenHidden: true, // Pausar cuando tab está oculta
       hiddenInterval: 30000, // 30s cuando está oculta (ahorra batería)
@@ -55,12 +76,84 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   }, [matchId])
 
   useEffect(() => {
-    scrollToBottom()
+    // Añadir separadores de fecha a los mensajes
+    const grouped = groupMessagesByDate(messages)
+    setMessagesWithSeparators(grouped)
   }, [messages])
+
+  useEffect(() => {
+    // Auto-scroll al cargar nuevos mensajes solo si está cerca del final
+    const container = messagesContainerRef.current
+    if (container) {
+      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 150
+      if (isNearBottom) {
+        scrollToBottom(false)
+        setUnreadCount(0)
+      } else {
+        // Incrementar contador si hay nuevos mensajes y no está al final
+        const newCount = messages.length - (messagesWithSeparators.filter(m => !isDateSeparator(m)).length)
+        if (newCount > 0) {
+          setUnreadCount(prev => prev + newCount)
+        }
+      }
+    }
+  }, [messagesWithSeparators])
+
+  // Detectar scroll para mostrar botón "ir al final"
+  const handleScroll = () => {
+    const container = messagesContainerRef.current
+    if (container) {
+      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 150
+      setShowScrollButton(!isNearBottom)
+      
+      if (isNearBottom) {
+        setUnreadCount(0)
+      }
+    }
+  }
+
+  // Simular typing indicator
+  const handleInputChange = (value: string) => {
+    setMessage(value)
+    
+    // Simular indicador de "escribiendo..." (se puede implementar con WebSocket en el futuro)
+    if (!isTyping) {
+      setIsTyping(true)
+    }
+    
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current)
+    }
+    
+    typingTimeoutRef.current = setTimeout(() => {
+      setIsTyping(false)
+    }, 1000)
+  }
 
   // ============================================
   // FUNCIONES DE CARGA
   // ============================================
+
+  const groupMessagesByDate = (msgs: MensajeDTO[]): MessageOrSeparator[] => {
+    const result: MessageOrSeparator[] = []
+    let lastDate = ''
+
+    msgs.forEach((msg) => {
+      const msgDate = new Date(msg.createdAt).toDateString()
+      
+      if (msgDate !== lastDate) {
+        result.push({
+          type: 'date-separator',
+          date: msgDate
+        })
+        lastDate = msgDate
+      }
+      
+      result.push(msg)
+    })
+
+    return result
+  }
 
   const loadChatData = async () => {
     try {
@@ -86,10 +179,12 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         if (matchResponse.success && matchResponse.data) {
           const matchData = matchResponse.data
           setMatchInfo({
-            tipo_partido: matchData.tipoPartido || "FUTBOL_5",
+            tipo_partido: matchData.tipoPartido || matchData.tipo_partido || "FUTBOL_5",
             fecha: matchData.fecha,
             hora: matchData.hora,
-            nombre_ubicacion: matchData.nombreUbicacion || "Ubicación no especificada"
+            nombre_ubicacion: matchData.nombreUbicacion || matchData.nombre_ubicacion || "Ubicación no especificada",
+            jugadores_actuales: matchData.jugadoresActuales || matchData.jugadores_actuales || 0,
+            jugadores_necesarios: matchData.cantidadJugadores || matchData.cantidad_jugadores || 0
           })
           
           // Verificar si el usuario es el organizador
@@ -218,27 +313,39 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
 
     setSending(true)
     setError("")
+    setIsTyping(false)
+
+    const tempMessage = message.trim()
 
     try {
+      // Limpiar input y reply inmediatamente para mejor UX
+      setMessage("")
+      setReplyingTo(null)
+      
+      // Auto-scroll al enviar
+      scrollToBottom(true)
+
       // Enviar mensaje (usuarioId viene del token de autenticación)
       const response = await MensajeAPI.crear(matchId, {
-        contenido: message.trim()
+        contenido: tempMessage
       })
 
       if (!response.success) {
         throw new Error(response.message || "Error al enviar mensaje")
       }
 
-      // Limpiar input
-      setMessage("")
-
       // Recargar mensajes inmediatamente
       await loadMessages(true)
+      
+      // Enfocar input nuevamente
+      inputRef.current?.focus()
 
     } catch (err) {
       logger.error("[MatchChat] Error enviando mensaje:", err)
       const errorMessage = err instanceof Error ? err.message : "Error al enviar mensaje"
       setError(errorMessage)
+      // Restaurar mensaje si falló
+      setMessage(tempMessage)
     } finally {
       setSending(false)
     }
@@ -259,8 +366,18 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   // HELPERS
   // ============================================
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  const scrollToBottom = (smooth = true) => {
+    messagesEndRef.current?.scrollIntoView({ 
+      behavior: smooth ? "smooth" : "auto" 
+    })
+  }
+
+  const scrollToBottomQuick = () => {
+    const container = messagesContainerRef.current
+    if (container) {
+      container.scrollTop = container.scrollHeight
+      setUnreadCount(0)
+    }
   }
 
   const formatTime = (dateString: string) => {
@@ -301,6 +418,34 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
       }
     } catch {
       return `${dateString} ${timeString}`
+    }
+  }
+
+  const formatDateSeparator = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr)
+      const today = new Date()
+      const yesterday = new Date(today)
+      yesterday.setDate(yesterday.getDate() - 1)
+
+      today.setHours(0, 0, 0, 0)
+      yesterday.setHours(0, 0, 0, 0)
+      const compareDate = new Date(date)
+      compareDate.setHours(0, 0, 0, 0)
+
+      if (compareDate.getTime() === today.getTime()) {
+        return "Hoy"
+      } else if (compareDate.getTime() === yesterday.getTime()) {
+        return "Ayer"
+      } else {
+        return date.toLocaleDateString("es-ES", {
+          day: "numeric",
+          month: "long",
+          year: date.getFullYear() !== today.getFullYear() ? "numeric" : undefined
+        })
+      }
+    } catch {
+      return dateStr
     }
   }
 
@@ -382,38 +527,57 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   // ============================================
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      {/* Header */}
-      <div className="pt-16 pb-4 px-6 border-b border-gray-100 bg-white">
-        <div className="flex items-center space-x-4">
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      {/* Header Moderno - Estilo WhatsApp */}
+      <div className="pt-16 pb-3 px-4 bg-gradient-to-r from-green-600 to-green-700 shadow-lg">
+        <div className="flex items-center space-x-3">
           <button 
             onClick={handleBack} 
-            className="p-2 -ml-2 hover:bg-gray-100 rounded-xl transition-colors"
+            className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors"
           >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
+            <ArrowLeft className="w-5 h-5 text-white" />
           </button>
-          <div className="flex-1">
-            <h1 className="text-lg font-bold text-gray-900">Chat del partido</h1>
+          
+          {/* Match avatar/icon */}
+          <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+            <Users className="w-5 h-5 text-white" />
+          </div>
+          
+          <div className="flex-1 min-w-0">
+            <h1 className="text-base font-semibold text-white truncate">
+              Grupo del partido
+            </h1>
             {matchInfo && (
-              <p className="text-sm text-gray-500">
-                {formatDate(matchInfo.fecha, matchInfo.hora)} • {matchInfo.nombre_ubicacion}
-              </p>
+              <div className="flex items-center space-x-2 text-xs text-white/90">
+                <Clock className="w-3 h-3" />
+                <span className="truncate">
+                  {formatDate(matchInfo.fecha, matchInfo.hora)} • {matchInfo.jugadores_actuales}/{matchInfo.jugadores_necesarios} jugadores
+                </span>
+              </div>
             )}
           </div>
+
+          {/* More options button */}
+          <button 
+            className="p-2 hover:bg-white/10 rounded-full transition-colors"
+            title="Más opciones"
+          >
+            <MoreVertical className="w-5 h-5 text-white" />
+          </button>
         </div>
       </div>
 
-      {/* Error Message - Solo para errores durante el uso normal */}
+      {/* Error Message */}
       {error && messages.length > 0 && (
-        <div className="px-6 pt-4">
-          <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-start space-x-2">
+        <div className="px-4 pt-3">
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start space-x-2 animate-in slide-in-from-top duration-300 shadow-sm">
             <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="text-red-600 text-sm">{error}</p>
             </div>
             <button 
               onClick={() => setError("")}
-              className="text-red-600 hover:text-red-700"
+              className="text-red-600 hover:text-red-700 text-lg leading-none"
             >
               ✕
             </button>
@@ -421,71 +585,139 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         </div>
       )}
 
-      {/* Messages */}
-      <div className="flex-1 px-6 py-4 space-y-4 overflow-y-auto">
-        {messages.length === 0 ? (
+      {/* Messages Container con wallpaper */}
+      <div 
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 px-4 py-4 space-y-2 overflow-y-auto"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          backgroundColor: '#f0f2f5'
+        }}
+      >
+        {messagesWithSeparators.length === 0 ? (
           <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Send className="w-8 h-8 text-gray-400" />
+            <div className="text-center bg-white rounded-2xl p-8 shadow-sm max-w-sm mx-auto">
+              <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-green-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Send className="w-10 h-10 text-green-600" />
               </div>
-              <p className="text-gray-500 mb-2">No hay mensajes aún</p>
-              <p className="text-sm text-gray-400">Sé el primero en escribir</p>
+              <p className="text-gray-700 font-semibold mb-2 text-lg">¡Comienza la conversación!</p>
+              <p className="text-sm text-gray-500 mb-4">
+                Este es el inicio del chat del grupo. Saluda a tus compañeros de juego.
+              </p>
+              <div className="inline-flex items-center space-x-2 text-xs text-gray-400 bg-gray-50 px-3 py-2 rounded-full">
+                <Users className="w-3.5 h-3.5" />
+                <span>Grupo del partido</span>
+              </div>
             </div>
           </div>
         ) : (
-          messages.map((msg) => {
+          messagesWithSeparators.map((item, index) => {
+            // Separador de fecha
+            if (isDateSeparator(item)) {
+              return (
+                <div key={`separator-${index}`} className="flex items-center justify-center my-6">
+                  <div className="bg-white/90 backdrop-blur-sm text-gray-600 text-[11px] font-medium px-4 py-1.5 rounded-full shadow-sm border border-gray-200">
+                    {formatDateSeparator(item.date)}
+                  </div>
+                </div>
+              )
+            }
+
+            // Mensaje normal
+            const msg = item as MensajeDTO
             const isOwn = msg.usuarioId === currentUser?.id
             const userName = getUserName(msg.usuario?.nombre, msg.usuario?.apellido)
             const initials = getUserInitials(msg.usuario?.nombre, msg.usuario?.apellido)
+            
+            // Verificar si es el último mensaje del mismo usuario
+            const nextItem = messagesWithSeparators[index + 1]
+            const isLastInGroup = !nextItem || isDateSeparator(nextItem) || 
+              (nextItem as MensajeDTO).usuarioId !== msg.usuarioId
 
             return (
               <div 
                 key={msg.id} 
-                className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
+                className={`flex ${isOwn ? "justify-end" : "justify-start"} animate-in slide-in-from-bottom duration-200`}
               >
                 <div
-                  className={`flex items-end space-x-2 max-w-[80%] ${
+                  className={`group flex items-end space-x-2 max-w-[85%] relative ${
                     isOwn ? "flex-row-reverse space-x-reverse" : ""
                   }`}
                 >
-                  {!isOwn && (
+                  {/* Avatar solo en último mensaje del grupo */}
+                  {!isOwn && isLastInGroup && (
                     <Avatar
-                      className="w-8 h-8 cursor-pointer hover:scale-110 transition-transform flex-shrink-0"
+                      className="w-8 h-8 cursor-pointer hover:scale-110 transition-transform flex-shrink-0 ring-2 ring-white shadow-sm"
                       onClick={() => handleUserClick(msg.usuarioId)}
                     >
                       {msg.usuario?.foto_perfil ? (
                         <AvatarImage src={`data:image/jpeg;base64,${msg.usuario.foto_perfil}`} />
                       ) : (
-                        <AvatarFallback className="bg-gray-200 text-xs">
+                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white text-xs font-semibold">
                           {initials}
                         </AvatarFallback>
                       )}
                     </Avatar>
                   )}
-                  <div
-                    className={`rounded-2xl px-4 py-2 ${
-                      isOwn 
-                        ? "bg-blue-600 text-white" 
-                        : "bg-gray-100 text-gray-900"
-                    }`}
-                  >
-                    {!isOwn && (
+                  {!isOwn && !isLastInGroup && (
+                    <div className="w-8 flex-shrink-0" /> 
+                  )}
+                  
+                  {/* Mensaje bubble */}
+                  <div className="relative">
+                    {/* Opciones de mensaje (aparecen al hover) */}
+                    <div className={`absolute top-0 ${isOwn ? 'left-0 -translate-x-full' : 'right-0 translate-x-full'} opacity-0 group-hover:opacity-100 transition-opacity flex items-center space-x-1 px-2`}>
                       <button
-                        className="text-xs font-medium mb-1 opacity-70 hover:opacity-100 transition-opacity block"
-                        onClick={() => handleUserClick(msg.usuarioId)}
+                        onClick={() => setReplyingTo(msg)}
+                        className="p-1.5 bg-white hover:bg-gray-100 rounded-full shadow-md transition-colors"
+                        title="Responder"
                       >
-                        {userName}
+                        <svg className="w-3.5 h-3.5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                        </svg>
                       </button>
-                    )}
-                    <p className="text-sm whitespace-pre-wrap break-words">
-                      {msg.contenido}
-                    </p>
-                    <p className={`text-xs mt-1 ${
-                      isOwn ? "text-blue-100" : "text-gray-500"
-                    }`}>
-                      {formatTime(msg.createdAt)}
-                    </p>
+                      <button
+                        className="p-1.5 bg-white hover:bg-gray-100 rounded-full shadow-md transition-colors"
+                        title="Más opciones"
+                      >
+                        <MoreVertical className="w-3.5 h-3.5 text-gray-600" />
+                      </button>
+                    </div>
+
+                    <div
+                      className={`rounded-2xl px-4 py-2 shadow-sm transition-all hover:shadow-md ${
+                        isOwn 
+                          ? "bg-gradient-to-br from-green-500 to-green-600 text-white rounded-br-md" 
+                          : "bg-white text-gray-900 border border-gray-200 rounded-bl-md"
+                      }`}
+                    >
+                      {!isOwn && isLastInGroup && (
+                        <button
+                          className="text-xs font-semibold mb-1.5 opacity-80 hover:opacity-100 transition-opacity block text-green-600"
+                          onClick={() => handleUserClick(msg.usuarioId)}
+                        >
+                          {userName}
+                        </button>
+                      )}
+                      <p className="text-[15px] whitespace-pre-wrap break-words leading-relaxed">
+                        {msg.contenido}
+                      </p>
+                      <div className="flex items-center justify-end space-x-1 mt-1">
+                        <p className={`text-[10px] ${
+                          isOwn ? "text-white/80" : "text-gray-400"
+                        }`}>
+                          {formatTime(msg.createdAt)}
+                        </p>
+                        {/* Check marks para mensajes propios */}
+                        {isOwn && (
+                          <svg className="w-4 h-4 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 13l4 4L23 7" />
+                          </svg>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -495,36 +727,101 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Message Input */}
-      <div className="p-6 border-t border-gray-100 bg-white">
-        <div className="flex items-center space-x-3">
-          <Input
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Escribe un mensaje..."
-            className="flex-1 rounded-full border-gray-300"
-            disabled={sending}
-            maxLength={500}
-          />
-          <Button
-            onClick={handleSendMessage}
-            disabled={!message.trim() || sending}
-            size="sm"
-            className="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-3 min-h-[44px] min-w-[44px] disabled:opacity-50"
+      {/* Botón flotante para scroll al final - Estilo WhatsApp */}
+      {showScrollButton && (
+        <div className="absolute bottom-28 right-4 z-10 animate-in slide-in-from-bottom duration-200">
+          <button
+            onClick={scrollToBottomQuick}
+            className="bg-white hover:bg-gray-50 text-gray-700 rounded-full p-3 shadow-xl hover:shadow-2xl transition-all relative border border-gray-200"
           >
-            {sending ? (
-              <InlineSpinner variant="white" />
-            ) : (
-              <Send className="w-4 h-4" />
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            </svg>
+            {unreadCount > 0 && (
+              <div className="absolute -top-2 -right-2 bg-green-500 text-white text-[10px] font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5 shadow-lg">
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </div>
             )}
-          </Button>
+          </button>
         </div>
-        {message.length > 450 && (
-          <p className="text-xs text-gray-500 mt-2 text-right">
-            {message.length}/500 caracteres
-          </p>
+      )}
+
+      {/* Message Input Mejorado - Estilo WhatsApp/Telegram */}
+      <div className="border-t border-gray-200 bg-white">
+        {/* Reply preview */}
+        {replyingTo && (
+          <div className="px-4 pt-3 pb-2 border-b border-gray-100 bg-blue-50">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-blue-600 mb-1">
+                  Respondiendo a {getUserName(replyingTo.usuario?.nombre, replyingTo.usuario?.apellido)}
+                </p>
+                <p className="text-sm text-gray-600 truncate">
+                  {replyingTo.contenido}
+                </p>
+              </div>
+              <button
+                onClick={() => setReplyingTo(null)}
+                className="ml-2 text-gray-400 hover:text-gray-600 text-lg leading-none"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
         )}
+        
+        <div className="p-3">
+          <div className="flex items-end space-x-2">
+            {/* Emoji button */}
+            <button
+              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+              title="Emojis (próximamente)"
+            >
+              <Smile className="w-5 h-5" />
+            </button>
+            
+            {/* Input container */}
+            <div className="flex-1 relative">
+              <Input
+                ref={inputRef}
+                value={message}
+                onChange={(e) => handleInputChange(e.target.value)}
+                onKeyPress={handleKeyPress}
+                placeholder="Escribe un mensaje..."
+                className="rounded-3xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 py-3 px-4 pr-12 bg-gray-50"
+                disabled={sending}
+                maxLength={500}
+              />
+              {message.length > 400 && (
+                <div className="absolute right-3 bottom-3 text-[10px] font-medium text-gray-400 bg-white rounded-full px-1.5 py-0.5">
+                  {500 - message.length}
+                </div>
+              )}
+            </div>
+
+            {/* Attach button (opcional, para futuro) */}
+            <button
+              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+              title="Adjuntar imagen (próximamente)"
+            >
+              <ImageIcon className="w-5 h-5" />
+            </button>
+            
+            {/* Send button */}
+            <Button
+              onClick={handleSendMessage}
+              disabled={!message.trim() || sending}
+              size="lg"
+              className="bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-full p-0 min-h-[44px] min-w-[44px] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all flex-shrink-0"
+            >
+              {sending ? (
+                <InlineSpinner variant="white" />
+              ) : (
+                <Send className="w-5 h-5" />
+              )}
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   )
