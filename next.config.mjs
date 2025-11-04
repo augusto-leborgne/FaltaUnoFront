@@ -134,48 +134,13 @@ const nextConfig = {
     NEXT_PUBLIC_BUILD_ID: process.env.BUILD_ID || `build-${Date.now()}`,
   },
   
-  // Experimental features
+  // Experimental features - TEMPORARILY DISABLED TO DEBUG SSR ERRORS
   experimental: {
-    // ⚡ PERFORMANCE: Optimize package imports
-    // REMOVED lucide-react - causes SSR undefined component errors
-    optimizePackageImports: [
-      '@radix-ui/react-icons',
-      '@radix-ui/react-avatar',
-      '@radix-ui/react-dialog',
-      '@radix-ui/react-dropdown-menu',
-      '@radix-ui/react-toast',
-      'date-fns',
-      'recharts',
-    ],
-    
-    // ⚡ Optimize server components
-    serverComponentsExternalPackages: ['@radix-ui'],
-    
-    // ⚡ Enable turbo mode for faster builds
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
-        },
-      },
-    },
-    
-    // ⚡ NUEVO: Enable partial prerendering for better performance
-    ppr: false, // Keep false for now - still experimental
-    
-    // ⚡ Optimize CSS - DISABLED: requires critters package
-    // optimizeCss: true,
-    
-    // ⚡ Use SWC for faster compilation
-    swcPlugins: [],
-    
-    // ⚡ NUEVO: Optimize client-side navigation
-    optimisticClientCache: false, // Disable as we have custom caching
+    // All experimental optimizations disabled to isolate SSR undefined component error
   },
   
-  // Ensure lucide-react is properly transpiled in all environments
-  transpilePackages: ['lucide-react'],
+  // Ensure lucide-react is properly transpiled - TEMPORARILY DISABLED
+  // transpilePackages: ['lucide-react'],
   
   // ⚡ Webpack optimizations for production - SIMPLIFIED to fix SSR issues
   webpack: (config, { dev, isServer }) => {
