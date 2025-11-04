@@ -519,7 +519,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
       {/* Modal de mapa expandido */}
       {showMapModal && match && (match as any).latitud && (match as any).longitud && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl overflow-hidden max-w-2xl w-full max-h-[80vh] flex flex-col">
+          <div className="bg-white rounded-2xl overflow-hidden max-w-md w-full max-h-[60vh] flex flex-col">
             <div className="p-4 border-b border-gray-200 flex items-center justify-between">
               <h3 className="text-lg font-bold text-gray-900">Ubicación del partido</h3>
               <button
@@ -530,7 +530,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
               </button>
             </div>
             
-            <div className="flex-1 min-h-[400px]">
+            <div className="flex-1 min-h-[300px]">
               <CompressedMap
                 location={getNombreUbicacion(match)}
                 lat={(match as any).latitud}

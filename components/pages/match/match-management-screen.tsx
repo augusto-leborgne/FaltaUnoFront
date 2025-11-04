@@ -879,7 +879,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
               <Button
                 onClick={() => setShowCancelModal(true)}
                 variant="outline"
-                className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 py-3 px-4 rounded-xl"
+                className="flex-1 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 py-3 rounded-xl"
               >
                 Cancelar partido
               </Button>
@@ -1068,7 +1068,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
       {/* Modal de mapa expandido */}
       {showMapModal && match && match.latitud && match.longitud && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl overflow-hidden max-w-2xl w-full max-h-[80vh] flex flex-col">
+          <div className="bg-white rounded-2xl overflow-hidden max-w-md w-full max-h-[60vh] flex flex-col">
             <div className="p-4 border-b border-gray-200 flex items-center justify-between">
               <h3 className="text-lg font-bold text-gray-900">Ubicación del partido</h3>
               <button
@@ -1079,7 +1079,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
               </button>
             </div>
             
-            <div className="flex-1 min-h-[400px]">
+            <div className="flex-1 min-h-[300px]">
               <CompressedMap
                 location={match.nombreUbicacion || ''}
                 lat={match.latitud}

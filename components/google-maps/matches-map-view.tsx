@@ -164,15 +164,12 @@ export function MatchesMapView({
             transition: all 0.3s ease;
             ${isSelected ? 'animation: bounce 0.75s;' : ''}
           ">
-            <!-- Número de cupos -->
+            <!-- Solo emoji de fútbol -->
             <div style="
               transform: rotate(45deg);
-              color: white;
-              font-size: ${isSelected ? '16px' : '14px'};
-              font-weight: bold;
-              text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+              font-size: ${isSelected ? '18px' : '16px'};
             ">
-              ${spotsLeft > 0 ? spotsLeft : '⚽'}
+              ⚽
             </div>
           </div>
           <!-- Sombra del pin -->
