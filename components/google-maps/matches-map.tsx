@@ -139,8 +139,11 @@ export function MatchesMap() {
     // Si el usuario es el organizador, ir a página de gestión
     if (user && match.organizadorId === user.id) {
       router.push(`/my-matches/${matchId}`);
+    } else if (user && (match as any).jugadores?.some((j: any) => j.id === user.id)) {
+      // Si el usuario está inscrito (pero no es organizador), ir a vista de miembro
+      router.push(`/matches/${matchId}/member`);
     } else {
-      // Si no es organizador, ir a página de detalles
+      // Si no es ni organizador ni está inscrito, ir a página de detalles pública
       router.push(`/matches/${matchId}`);
     }
   };
