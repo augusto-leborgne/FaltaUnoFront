@@ -49,23 +49,53 @@ export function MatchesMapModal({ isOpen, onClose }: MatchesMapModalProps) {
     // create markers
     markersRef.current = mapMatches.map((m) => {
       // Crear contenido del marker
+      const pinColor = m.spotsLeft === 0 ? '#ef4444' : m.spotsLeft <= 3 ? '#f59e0b' : '#16a34a'
       const markerContent = document.createElement("div");
       markerContent.className = "advanced-marker";
       markerContent.innerHTML = `
         <div style="
-          width: 32px;
-          height: 32px;
-          background-color: #16a34a;
-          border: 2px solid white;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-size: 12px;
-          font-weight: bold;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-        ">${m.spotsLeft}</div>
+          position: relative;
+          cursor: pointer;
+        ">
+          <!-- Pin principal -->
+          <div style="
+            background-color: ${pinColor};
+            width: 36px;
+            height: 36px;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            border: 3px solid white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.3s ease;
+          ">
+            <!-- Número de cupos -->
+            <div style="
+              transform: rotate(45deg);
+              color: white;
+              font-size: 14px;
+              font-weight: bold;
+              text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            ">
+              ${m.spotsLeft > 0 ? m.spotsLeft : '⚽'}
+            </div>
+          </div>
+          <!-- Sombra del pin -->
+          <div style="
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 4px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 50%;
+            filter: blur(2px);
+          "></div>
+        </div>
       `;
 
       const marker = new google.maps.marker.AdvancedMarkerElement({

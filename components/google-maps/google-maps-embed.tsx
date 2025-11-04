@@ -91,18 +91,46 @@ export function GoogleMapsEmbed({
         const markersList = markers.length > 0 ? markers : [{ lat, lng, title: "Ubicación" }];
 
         markersList.forEach((markerData) => {
-          // Crear contenido HTML del marker
+          // Crear contenido HTML del marker con estilo de pin
           const markerContent = document.createElement("div")
           markerContent.innerHTML = `
             <div style="
-              background-color: #16a34a;
-              width: 16px;
-              height: 16px;
-              border-radius: 50%;
-              border: 2px solid white;
-              box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+              position: relative;
               cursor: pointer;
-            "></div>
+            ">
+              <!-- Pin simple para embed -->
+              <div style="
+                background-color: #16a34a;
+                width: 28px;
+                height: 28px;
+                border-radius: 50% 50% 50% 0;
+                transform: rotate(-45deg);
+                border: 3px solid white;
+                box-shadow: 0 3px 8px rgba(0,0,0,0.35);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+              ">
+                <div style="
+                  transform: rotate(45deg);
+                  color: white;
+                  font-size: 14px;
+                  font-weight: bold;
+                ">⚽</div>
+              </div>
+              <!-- Sombra -->
+              <div style="
+                position: absolute;
+                bottom: -6px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 10px;
+                height: 3px;
+                background: rgba(0,0,0,0.2);
+                border-radius: 50%;
+                filter: blur(1px);
+              "></div>
+            </div>
           `
 
           const marker = new window.google.maps.marker.AdvancedMarkerElement({

@@ -125,23 +125,53 @@ export function SearchMapView({ partidos, onClose, onPartidoClick }: SearchMapVi
     markersRef.current = partidosConCoordenadas.map((partido) => {
       const disponibles = (partido.capacidad || 0) - (partido.inscritos || 0)
       const isLleno = disponibles <= 0
+      const pinColor = isLleno ? '#ef4444' : disponibles <= 3 ? '#f59e0b' : '#16a34a'
 
       const markerContent = document.createElement("div");
       markerContent.innerHTML = `
         <div style="
-          width: 28px;
-          height: 28px;
-          background-color: ${isLleno ? '#ef4444' : '#16a34a'};
-          border: 2px solid white;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-size: 11px;
-          font-weight: bold;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-        ">${disponibles}</div>
+          position: relative;
+          cursor: pointer;
+        ">
+          <!-- Pin principal -->
+          <div style="
+            background-color: ${pinColor};
+            width: 36px;
+            height: 36px;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            border: 3px solid white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.3s ease;
+          ">
+            <!-- Número de cupos -->
+            <div style="
+              transform: rotate(45deg);
+              color: white;
+              font-size: 14px;
+              font-weight: bold;
+              text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            ">
+              ${disponibles > 0 ? disponibles : '⚽'}
+            </div>
+          </div>
+          <!-- Sombra del pin -->
+          <div style="
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 4px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 50%;
+            filter: blur(2px);
+          "></div>
+        </div>
       `;
 
       const marker = new google.maps.marker.AdvancedMarkerElement({

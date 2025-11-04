@@ -38,19 +38,19 @@ export const metadata: Metadata = {
     description: "Conecta con jugadores, organiza partidos y juega fútbol en tu ciudad. La plataforma que une a la comunidad futbolera.",
     images: [
       {
-        url: "https://faltauno-frontend-169771742214.us-central1.run.app/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Falta Uno - Encuentra tu partido de fútbol",
+        url: "https://faltauno-frontend-169771742214.us-central1.run.app/logo.png",
+        width: 512,
+        height: 512,
+        alt: "Falta Uno - Logo",
       },
     ],
   },
   // Twitter Card metadata
   twitter: {
-    card: "summary_large_image",
+    card: "summary",
     title: "Falta Uno - Encuentra tu partido de fútbol",
     description: "Conecta con jugadores, organiza partidos y juega fútbol en tu ciudad.",
-    images: ["https://faltauno-frontend-169771742214.us-central1.run.app/og-image.png"],
+    images: ["https://faltauno-frontend-169771742214.us-central1.run.app/logo.png"],
   },
 }
 

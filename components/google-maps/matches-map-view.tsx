@@ -141,31 +141,57 @@ export function MatchesMapView({
       if (spotsLeft === 0) pinColor = "#ef4444" // rojo
       else if (spotsLeft <= 3) pinColor = "#f59e0b" // ámbar
 
-      // Crear contenido HTML del marker
+      // Crear contenido HTML del marker mejorado
       const markerContent = document.createElement("div")
       markerContent.innerHTML = `
         <div style="
-          background-color: ${pinColor};
-          width: ${isSelected ? '24px' : '20px'};
-          height: ${isSelected ? '24px' : '20px'};
-          border-radius: 50%;
-          border: ${isSelected ? '3px' : '2px'} solid white;
-          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: white;
-          font-size: 10px;
-          font-weight: bold;
+          position: relative;
           cursor: pointer;
-          ${isSelected ? 'animation: bounce 0.75s;' : ''}
         ">
-          ${spotsLeft > 0 ? spotsLeft : ''}
+          <!-- Pin principal -->
+          <div style="
+            background-color: ${pinColor};
+            width: ${isSelected ? '42px' : '36px'};
+            height: ${isSelected ? '42px' : '36px'};
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            border: 3px solid white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.3s ease;
+            ${isSelected ? 'animation: bounce 0.75s;' : ''}
+          ">
+            <!-- Número de cupos -->
+            <div style="
+              transform: rotate(45deg);
+              color: white;
+              font-size: ${isSelected ? '16px' : '14px'};
+              font-weight: bold;
+              text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            ">
+              ${spotsLeft > 0 ? spotsLeft : '⚽'}
+            </div>
+          </div>
+          <!-- Sombra del pin -->
+          <div style="
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: ${isSelected ? '16px' : '12px'};
+            height: 4px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 50%;
+            filter: blur(2px);
+          "></div>
         </div>
         <style>
           @keyframes bounce {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+            50% { transform: translateY(-12px); }
           }
         </style>
       `

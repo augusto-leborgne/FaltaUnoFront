@@ -199,9 +199,9 @@ export function ChatsScreen() {
             <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Chats</h1>
             <button
               onClick={() => router.push('/create-match')}
-              className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-full p-2 sm:p-2.5 min-h-[36px] min-w-[36px] sm:min-h-[44px] sm:min-w-[44px] touch-manipulation shadow-md transition-transform active:scale-95"
+              className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-full p-2 flex items-center justify-center min-h-[40px] min-w-[40px] sm:min-h-[44px] sm:min-w-[44px] touch-manipulation shadow-md transition-transform active:scale-95"
             >
-              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+              <Plus className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
           </div>
         </div>
