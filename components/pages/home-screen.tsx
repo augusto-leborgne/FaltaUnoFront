@@ -14,6 +14,7 @@ import { API_BASE, InscripcionAPI, InscripcionEstado, getUserPhotoUrl } from "@/
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useNotifications } from "@/hooks/use-notifications"
 import { useCurrentUser } from "@/hooks/use-current-user"
+import { apiCache } from "@/lib/api-cache-manager"
 import {
   Dialog,
   DialogContent,
@@ -102,39 +103,42 @@ export function HomeScreen() {
         return
       }
 
-      // ⚡ OPTIMIZACIÓN: Cargar datos en paralelo para reducir tiempo de carga
+      const authHeaders = {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+      }
+
+      // ⚡ OPTIMIZACIÓN: Cargar datos en paralelo CON CACHÉ
       const [matchesResult, reviewsResult, statsResult, novedadesResult] = await Promise.allSettled([
-        // Cargar partidos del usuario
-        fetch(`${API_BASE}/api/partidos/usuario/${user.id}`, {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
-        }).then(res => res.ok ? res.json() : null),
+        // Cargar partidos del usuario (CACHED)
+        apiCache.get(
+          `partidos-usuario-${user.id}`,
+          () => fetch(`${API_BASE}/api/partidos/usuario/${user.id}`, { headers: authHeaders })
+            .then(res => res.ok ? res.json() : null)
+        ),
         
-        // Cargar reseñas pendientes
-        fetch(`${API_BASE}/api/usuarios/${user.id}/pending-reviews`, {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
-        }).then(res => res.ok ? res.json() : null),
+        // Cargar reseñas pendientes (CACHED)
+        apiCache.get(
+          `pending-reviews-${user.id}`,
+          () => fetch(`${API_BASE}/api/usuarios/${user.id}/pending-reviews`, { headers: authHeaders })
+            .then(res => res.ok ? res.json() : null)
+        ),
         
-        // Cargar estadísticas de la comunidad
-        fetch(`${API_BASE}/api/usuarios/stats`, {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
-        }).then(res => res.ok ? res.json() : null),
+        // Cargar estadísticas de la comunidad (CACHED - más tiempo)
+        apiCache.get(
+          `stats-global`,
+          () => fetch(`${API_BASE}/api/usuarios/stats`, { headers: authHeaders })
+            .then(res => res.ok ? res.json() : null),
+          { ttl: 10 * 60 * 1000 } // 10 minutos para stats globales
+        ),
         
-        // Cargar novedades
-        fetch(`${API_BASE}/api/novedades?limit=5`, {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
-        }).then(res => res.ok ? res.json() : null)
+        // Cargar novedades (CACHED - más tiempo)
+        apiCache.get(
+          `novedades-latest`,
+          () => fetch(`${API_BASE}/api/novedades?limit=5`, { headers: authHeaders })
+            .then(res => res.ok ? res.json() : null),
+          { ttl: 15 * 60 * 1000 } // 15 minutos para novedades
+        )
       ])
 
       // Procesar partidos

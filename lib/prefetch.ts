@@ -4,7 +4,7 @@
  */
 
 import { PartidoAPI } from './api'
-import { apiCache } from './api-cache'
+import { apiCache } from './api-cache-manager'
 import { logger } from './logger'
 
 // Track prefetched routes
@@ -112,14 +112,14 @@ export async function prefetchUserData(userId: string) {
  * Invalida caché después de mutaciones
  */
 export function invalidatePartidosCache() {
-  apiCache.clearPattern('/api/partidos')
+  apiCache.invalidatePattern('partidos')
 }
 
 export function invalidateInscripcionesCache() {
-  apiCache.clearPattern('/api/inscripciones')
+  apiCache.invalidatePattern('inscripcion')
 }
 
 export function invalidateUsuariosCache() {
-  apiCache.clearPattern('/api/usuarios')
+  apiCache.invalidatePattern('usuario')
 }
 

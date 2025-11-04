@@ -15,6 +15,7 @@ import { calcularEdad } from "@/lib/utils"
 import { AuthService } from "@/lib/auth"
 import { useAuth } from "@/hooks/use-auth"
 import { API_BASE, normalizeUrl } from "@/lib/api"
+import { apiCache } from "@/lib/api-cache-manager"
 
 interface Review {
   id: string
@@ -87,19 +88,31 @@ function ProfileScreenInner() {
         "Content-Type": "application/json",
       }
 
-      // ⚡ OPTIMIZACIÓN: Cargar todos los datos en paralelo
+      // ⚡ OPTIMIZACIÓN: Cargar todos los datos en paralelo CON CACHÉ
       const [reviewsResult, frResult, friendsResult] = await Promise.allSettled([
-        // Reviews
-        fetch(normalizeUrl(`${API_BASE}/api/reviews/usuario/${user.id}`), { headers: authHeaders })
-          .then(res => res.ok ? res.json() : null),
+        // Reviews (CACHED)
+        apiCache.get(
+          `reviews-usuario-${user.id}`,
+          () => fetch(normalizeUrl(`${API_BASE}/api/reviews/usuario/${user.id}`), { headers: authHeaders })
+            .then(res => res.ok ? res.json() : null),
+          { ttl: 10 * 60 * 1000 } // 10 minutos - las reviews no cambian tan seguido
+        ),
         
-        // Friend requests pendientes
-        fetch(normalizeUrl(`${API_BASE}/api/amistades/pendientes`), { headers: authHeaders })
-          .then(res => res.ok ? res.json() : null),
+        // Friend requests pendientes (CACHED)
+        apiCache.get(
+          `amistades-pendientes-${user.id}`,
+          () => fetch(normalizeUrl(`${API_BASE}/api/amistades/pendientes`), { headers: authHeaders })
+            .then(res => res.ok ? res.json() : null),
+          { ttl: 1 * 60 * 1000 } // 1 minuto - más frecuente porque pueden cambiar
+        ),
         
-        // Amigos aceptados
-        fetch(normalizeUrl(`${API_BASE}/api/amistades`), { headers: authHeaders })
-          .then(res => res.ok ? res.json() : null)
+        // Amigos aceptados (CACHED)
+        apiCache.get(
+          `amigos-${user.id}`,
+          () => fetch(normalizeUrl(`${API_BASE}/api/amistades`), { headers: authHeaders })
+            .then(res => res.ok ? res.json() : null),
+          { ttl: 5 * 60 * 1000 } // 5 minutos
+        )
       ])
 
       // Procesar reviews

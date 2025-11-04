@@ -9,6 +9,7 @@ import { AuthService } from "@/lib/auth"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { Badge } from "@/components/ui/badge"
+import { apiCache } from "@/lib/api-cache-manager"
 
 interface PartidoWithUnread extends PartidoDTO {
   unreadCount?: number
@@ -42,7 +43,12 @@ export function ChatsScreen() {
       }
       setError("")
       
-      const response = await PartidoAPI.misPartidos(currentUser.id)
+      // ⚡ OPTIMIZACIÓN: Usar caché para partidos con TTL corto (1 min)
+      const response = await apiCache.get(
+        `mis-partidos-${currentUser.id}`,
+        () => PartidoAPI.misPartidos(currentUser.id),
+        { ttl: 1 * 60 * 1000 } // 1 minuto - se actualiza frecuente
+      )
       
       if (!response.success || !response.data) {
         throw new Error(response.message || "Error al cargar partidos")
@@ -50,13 +56,19 @@ export function ChatsScreen() {
 
       const partidosInscritos = response.data
       
-      // Cargar mensajes para cada partido en paralelo (optimizado)
+      // Cargar mensajes para cada partido en paralelo con caché
       const partidosWithMessages = await Promise.all(
         partidosInscritos.map(async (partido) => {
           try {
             if (!partido.id) return partido
             
-            const messagesResponse = await MensajeAPI.list(partido.id)
+            // ⚡ Caché de mensajes por partido (30 segundos)
+            const messagesResponse = await apiCache.get(
+              `mensajes-partido-${partido.id}`,
+              () => MensajeAPI.list(partido.id!),
+              { ttl: 30 * 1000 } // 30 segundos - muy dinámico
+            )
+            
             if (messagesResponse.success && messagesResponse.data && messagesResponse.data.length > 0) {
               const messages = messagesResponse.data
               const lastMessage = messages[messages.length - 1]
