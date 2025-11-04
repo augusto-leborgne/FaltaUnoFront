@@ -61,10 +61,22 @@ export function RegisterScreen() {
     }
   }
 
+  // ✅ NUEVO: Detectar si el email es Gmail
+  const isGmail = (email: string): boolean => {
+    return email.toLowerCase().endsWith('@gmail.com')
+  }
+
+  const [showGmailWarning, setShowGmailWarning] = useState(false)
+
   const handleFieldChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
     const fieldError = validateField(field, value)
     setFieldErrors(prev => ({ ...prev, [field]: fieldError || undefined }))
+    
+    // ✅ NUEVO: Mostrar advertencia de Gmail
+    if (field === 'email') {
+      setShowGmailWarning(isGmail(value))
+    }
     
     // Re-validar confirmPassword si cambió password
     if (field === 'password' && formData.confirmPassword) {
@@ -137,10 +149,15 @@ export function RegisterScreen() {
       
       let errorMessage = "Error al crear la cuenta"
       
-      if (err.message?.includes("Failed to fetch")) {
-        errorMessage = "No se pudo conectar con el servidor. Verifica tu conexión."
+      // ✅ MEJORADO: Detección de errores CORS
+      if (err.message?.includes("Failed to fetch") || err.message?.includes("NetworkError")) {
+        errorMessage = "Error de conexión con el servidor. Verifica tu internet e intenta nuevamente."
+      } else if (err.message?.includes("CORS") || err.name === "TypeError") {
+        errorMessage = "Error de configuración del servidor. Por favor intenta usar 'Continuar con Google'."
       } else if (err.message?.includes("409") || err.message?.includes("email ya está registrado")) {
         errorMessage = "Este email ya está registrado. Intenta iniciar sesión."
+      } else if (err.message?.includes("500")) {
+        errorMessage = "Error del servidor. Por favor intenta nuevamente en unos segundos o usa 'Continuar con Google'."
       } else if (err.message) {
         errorMessage = err.message
       }
@@ -186,11 +203,28 @@ export function RegisterScreen() {
               onChange={(e) => handleFieldChange('email', e.target.value)}
               required
               disabled={isLoading}
-              autoComplete="email"
               className={`rounded-2xl py-3 ${fieldErrors.email ? 'border-red-500' : ''}`}
+              autoComplete="email"
             />
             {fieldErrors.email && (
               <p className="text-xs text-red-600 mt-1">{fieldErrors.email}</p>
+            )}
+            
+            {/* ✅ NUEVO: Advertencia de Gmail */}
+            {showGmailWarning && !fieldErrors.email && (
+              <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+                <p className="text-xs text-blue-700 font-medium mb-1">💡 ¿Usas Gmail?</p>
+                <p className="text-xs text-blue-600 mb-2">
+                  Para una mejor experiencia, te recomendamos usar <strong>"Continuar con Google"</strong> en lugar de crear una contraseña.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => handleSocialAuth('google')}
+                  className="text-xs text-blue-600 font-semibold underline hover:text-blue-800"
+                >
+                  Ir a "Continuar con Google"
+                </button>
+              </div>
             )}
           </div>
 

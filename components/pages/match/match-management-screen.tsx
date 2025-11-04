@@ -272,9 +272,24 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
 
     } catch (err) {
       logger.error("[MatchManagement] Error aceptando:", err)
-      const errorMessage = err instanceof Error ? err.message : "Error al aceptar solicitud"
+      
+      // ✅ MEJORADO: Mensajes de error más específicos
+      let errorMessage = "Error al aceptar solicitud"
+      
+      if (err instanceof Error) {
+        if (err.message.includes("500")) {
+          errorMessage = "Error del servidor. Por favor intenta nuevamente en unos segundos."
+        } else if (err.message.includes("Network") || err.message.includes("network")) {
+          errorMessage = "Error de conexión. Verifica tu internet."
+        } else if (err.message.includes("timeout")) {
+          errorMessage = "La solicitud tardó demasiado. Intenta nuevamente."
+        } else {
+          errorMessage = err.message
+        }
+      }
+      
       toast({
-        title: "Error",
+        title: "Error al aceptar",
         description: errorMessage,
         variant: "destructive",
       })
@@ -296,9 +311,24 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
 
     } catch (err) {
       logger.error("[MatchManagement] Error rechazando:", err)
-      const errorMessage = err instanceof Error ? err.message : "Error al rechazar solicitud"
+      
+      // ✅ MEJORADO: Mensajes de error más específicos
+      let errorMessage = "Error al rechazar solicitud"
+      
+      if (err instanceof Error) {
+        if (err.message.includes("500")) {
+          errorMessage = "Error del servidor. Por favor intenta nuevamente en unos segundos."
+        } else if (err.message.includes("Network") || err.message.includes("network")) {
+          errorMessage = "Error de conexión. Verifica tu internet."
+        } else if (err.message.includes("timeout")) {
+          errorMessage = "La solicitud tardó demasiado. Intenta nuevamente."
+        } else {
+          errorMessage = err.message
+        }
+      }
+      
       toast({
-        title: "Error",
+        title: "Error al rechazar",
         description: errorMessage,
         variant: "destructive",
       })

@@ -279,7 +279,10 @@ export function LoginScreen() {
           <p className="text-sm text-gray-500">
             ¿No tienes cuenta?{" "}
             <button
-              onClick={() => router.push("/register")}
+              onClick={() => {
+                // ✅ FIX: Usar window.location para evitar que ProtectedRoute intercepte
+                window.location.href = "/register"
+              }}
               className="text-green-600 font-medium"
             >
               Regístrate aquí

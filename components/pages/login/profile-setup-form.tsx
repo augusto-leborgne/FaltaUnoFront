@@ -9,12 +9,14 @@ import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { DateSelector } from "@/components/ui/date-selector"
 import { useRouter } from "next/navigation"
-import { User, ChevronDown, AlertCircle } from "lucide-react"
+import { User, ChevronDown, AlertCircle, X } from "lucide-react"
 import AddressAutocomplete from "@/components/google-maps/address-autocomplete"
 import { AuthService } from "@/lib/auth"
 import { useAuth } from "@/hooks/use-auth"
 import { UsuarioAPI } from "@/lib/api"
 import { usePostAuthRedirect } from "@/lib/navigation"
+import PhoneInput from 'react-phone-number-input'
+import ReactCrop, { type Crop } from 'react-image-crop'
 
 export function ProfileSetupForm() {
   const router = useRouter()
@@ -42,6 +44,19 @@ export function ProfileSetupForm() {
   // const [showLevelDropdown, setShowLevelDropdown] = useState(false)  // Removido
   const [showGeneroDropdown, setShowGeneroDropdown] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
+
+  // Image crop states
+  const [showCropModal, setShowCropModal] = useState(false)
+  const [imageToCrop, setImageToCrop] = useState<string>("")
+  const [crop, setCrop] = useState<Crop>({
+    unit: '%',
+    width: 90,
+    height: 90,
+    x: 5,
+    y: 5
+  })
+  const [completedCrop, setCompletedCrop] = useState<Crop | null>(null)
+  const imageRef = useRef<HTMLImageElement | null>(null)
 
   // ✅ NUEVO: Validación en tiempo real
   const [fieldErrors, setFieldErrors] = useState<{
@@ -148,11 +163,65 @@ export function ProfileSetupForm() {
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0] ?? null
     if (!f) return
-    if (formData.photoPreviewUrl) URL.revokeObjectURL(formData.photoPreviewUrl)
-    setFormData((p) => ({ ...p, photo: f, photoPreviewUrl: URL.createObjectURL(f) }))
-    // ✅ Validar foto
-    const photoError = validateField('photo', f)
-    setFieldErrors(prev => ({ ...prev, photo: photoError || undefined }))
+    
+    // Crear URL para preview y abrir modal de crop
+    const reader = new FileReader()
+    reader.onload = () => {
+      setImageToCrop(reader.result as string)
+      setShowCropModal(true)
+    }
+    reader.readAsDataURL(f)
+    
+    // Resetear input para permitir seleccionar la misma imagen
+    e.target.value = ''
+  }
+
+  const handleCropComplete = async () => {
+    if (!imageRef.current || !completedCrop) return
+
+    const canvas = document.createElement('canvas')
+    const scaleX = imageRef.current.naturalWidth / imageRef.current.width
+    const scaleY = imageRef.current.naturalHeight / imageRef.current.height
+    const ctx = canvas.getContext('2d')
+
+    if (!ctx) return
+
+    canvas.width = completedCrop.width * scaleX
+    canvas.height = completedCrop.height * scaleY
+
+    ctx.drawImage(
+      imageRef.current,
+      completedCrop.x * scaleX,
+      completedCrop.y * scaleY,
+      completedCrop.width * scaleX,
+      completedCrop.height * scaleY,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    )
+
+    // Convertir canvas a blob
+    canvas.toBlob((blob) => {
+      if (!blob) return
+      
+      // Crear archivo desde blob
+      const file = new File([blob], 'profile-photo.jpg', { type: 'image/jpeg' })
+      
+      // Limpiar URL anterior
+      if (formData.photoPreviewUrl) URL.revokeObjectURL(formData.photoPreviewUrl)
+      
+      // Actualizar formData
+      setFormData((p) => ({ ...p, photo: file, photoPreviewUrl: URL.createObjectURL(file) }))
+      
+      // Validar foto
+      const photoError = validateField('photo', file)
+      setFieldErrors(prev => ({ ...prev, photo: photoError || undefined }))
+      
+      // Cerrar modal
+      setShowCropModal(false)
+      setImageToCrop('')
+    }, 'image/jpeg', 0.95)
   }
 
   const handlePositionSelect = (position: string) => {
@@ -363,7 +432,7 @@ export function ProfileSetupForm() {
               <label htmlFor="profile-name" className="sr-only">Nombre</label>
               <Input
                 id="profile-name"
-                name="name"
+                name="given-name"
                 placeholder="Nombre"
                 value={formData.name}
                 onChange={(e) => handleFieldChange('name', e.target.value)}
@@ -383,7 +452,7 @@ export function ProfileSetupForm() {
               <label htmlFor="profile-surname" className="sr-only">Apellido</label>
               <Input
                 id="profile-surname"
-                name="surname"
+                name="family-name"
                 placeholder="Apellido"
                 value={formData.surname}
                 onChange={(e) => handleFieldChange('surname', e.target.value)}
@@ -402,17 +471,16 @@ export function ProfileSetupForm() {
           </div>
 
           <div>
-            <label htmlFor="profile-phone" className="sr-only">Celular</label>
-            <Input
-              id="profile-phone"
-              name="phone"
-              placeholder="Celular"
+            <label htmlFor="profile-phone" className="text-sm font-medium text-gray-700 mb-1 block">
+              Celular
+            </label>
+            <PhoneInput
+              international
+              defaultCountry="UY"
               value={formData.phone}
-              onChange={(e) => handleFieldChange('phone', e.target.value)}
-              className={fieldErrors.phone ? 'border-red-500' : ''}
-              type="tel"
-              autoComplete="tel"
-              required
+              onChange={(value) => handleFieldChange('phone', value || '')}
+              className={fieldErrors.phone ? 'phone-input-error' : ''}
+              placeholder="Ingresa tu número de celular"
             />
             {fieldErrors.phone && (
               <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
@@ -592,6 +660,63 @@ export function ProfileSetupForm() {
           </Button>
         </form>
       </div>
+
+      {/* Modal de crop de imagen */}
+      {showCropModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900">Recortar imagen</h3>
+              <button
+                onClick={() => {
+                  setShowCropModal(false)
+                  setImageToCrop('')
+                }}
+                className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-gray-50">
+              <ReactCrop
+                crop={crop}
+                onChange={(c) => setCrop(c)}
+                onComplete={(c) => setCompletedCrop(c)}
+                aspect={1}
+                circularCrop
+              >
+                <img
+                  ref={imageRef}
+                  src={imageToCrop}
+                  alt="Imagen a recortar"
+                  className="max-w-full max-h-[60vh] object-contain"
+                />
+              </ReactCrop>
+            </div>
+
+            <div className="p-4 border-t border-gray-200 flex space-x-3">
+              <Button
+                onClick={() => {
+                  setShowCropModal(false)
+                  setImageToCrop('')
+                }}
+                variant="outline"
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleCropComplete}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                disabled={!completedCrop}
+              >
+                Aplicar recorte
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
