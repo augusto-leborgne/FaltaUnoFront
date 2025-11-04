@@ -87,23 +87,33 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         logger.log("[MatchChat] Respuesta de estado:", JSON.stringify(estadoData, null, 2))
         
         if (estadoData.success && estadoData.data) {
-          const { inscrito, estado } = estadoData.data
+          const { inscrito, estado, inscripcionId } = estadoData.data
           
-          logger.log("[MatchChat] Estado parseado - inscrito:", inscrito, "estado:", estado)
+          logger.log("[MatchChat] Estado parseado - inscrito:", inscrito, "estado:", estado, "inscripcionId:", inscripcionId)
+          
+          // IMPORTANTE: Si el usuario tiene inscripcionId, está inscrito
+          // El problema puede ser que el backend no devuelve estado="ACEPTADO" correctamente
+          const estaInscrito = inscrito || !!inscripcionId
+          const estaAceptado = estado === "ACEPTADO"
+          
+          logger.log("[MatchChat] Validación - estaInscrito:", estaInscrito, "estaAceptado:", estaAceptado)
           
           // Solo permitir acceso si está inscrito y ACEPTADO
-          // No importa el estado del partido (DISPONIBLE/CONFIRMADO)
-          if (!inscrito || estado !== "ACEPTADO") {
-            logger.warn("[MatchChat] ❌ Acceso denegado - inscrito:", inscrito, "estado:", estado)
+          if (!estaInscrito || !estaAceptado) {
+            logger.warn("[MatchChat] ❌ Acceso denegado - inscrito:", estaInscrito, "estado:", estado)
             
             // Mostrar mensaje de error más claro según el caso
             let mensajeError = "No tienes acceso al chat de este partido"
-            if (!inscrito) {
+            if (!estaInscrito) {
               mensajeError = "Debes inscribirte en el partido para acceder al chat"
             } else if (estado === "PENDIENTE") {
               mensajeError = "El organizador aún no ha aceptado tu inscripción. Solo los jugadores aceptados pueden acceder al chat."
             } else if (estado === "RECHAZADO") {
               mensajeError = "Tu inscripción fue rechazada. No puedes acceder al chat de este partido."
+            } else if (estado === null || estado === undefined) {
+              // Caso especial: inscrito pero sin estado definido
+              mensajeError = "Tu inscripción está siendo procesada. Por favor intenta nuevamente en unos momentos."
+              logger.error("[MatchChat] ⚠️ BACKEND BUG: Usuario inscrito (ID:", inscripcionId, ") pero estado es null/undefined")
             }
             
             setError(mensajeError)
