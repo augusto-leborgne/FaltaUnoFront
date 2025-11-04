@@ -75,6 +75,52 @@ export function CreateMatchScreen() {
   } | null>(null)
 
   // ============================================
+  // PERSISTENCIA DE FORMULARIO
+  // ============================================
+  
+  // Cargar datos guardados al montar el componente
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('createMatchDraft')
+      if (saved) {
+        const draft = JSON.parse(saved)
+        logger.log("[CreateMatch] Recuperando borrador guardado")
+        setFormData(draft.formData)
+        if (draft.coordinates) {
+          setLocationCoordinates(draft.coordinates)
+        }
+      }
+    } catch (error) {
+      logger.error("[CreateMatch] Error cargando borrador:", error)
+    }
+  }, [])
+
+  // Guardar datos cada vez que cambia el formulario
+  useEffect(() => {
+    // Solo guardar si hay algún dato relevante
+    if (formData.location || formData.description || formData.date) {
+      try {
+        localStorage.setItem('createMatchDraft', JSON.stringify({
+          formData,
+          coordinates: locationCoordinates
+        }))
+      } catch (error) {
+        logger.error("[CreateMatch] Error guardando borrador:", error)
+      }
+    }
+  }, [formData, locationCoordinates])
+
+  // Limpiar borrador al crear exitosamente
+  const clearDraft = () => {
+    try {
+      localStorage.removeItem('createMatchDraft')
+      logger.log("[CreateMatch] Borrador eliminado")
+    } catch (error) {
+      logger.error("[CreateMatch] Error eliminando borrador:", error)
+    }
+  }
+
+  // ============================================
   // AUTO-CALCULAR CANTIDAD DE JUGADORES
   // ============================================
   
@@ -285,6 +331,7 @@ export function CreateMatchScreen() {
       if (partidoId) {
         logger.log("[CreateMatch] Partido creado exitosamente con ID:", partidoId)
         setSuccess(true)
+        clearDraft() // Limpiar borrador guardado
         logger.log("[CreateMatch] Redirigiendo a match-created con ID:", partidoId)
         setTimeout(() => router.push(`/match-created?matchId=${partidoId}`), 1000)
       } else if (!response.success) {
@@ -292,6 +339,7 @@ export function CreateMatchScreen() {
       } else {
         logger.warn("[CreateMatch] Partido creado pero sin ID, redirigiendo a my-matches")
         setSuccess(true)
+        clearDraft() // Limpiar borrador guardado
         setTimeout(() => router.push("/my-matches"), 1000)
       }
 
