@@ -48,8 +48,6 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
   const [isJoining, setIsJoining] = useState(false)
   const [isLoading, setIsLoading] = useState(false) // Cambiar a false para UI inmediata
   const [error, setError] = useState<string>("")
-  const [showCancelModal, setShowCancelModal] = useState(false)
-  const [isCancelling, setIsCancelling] = useState(false)
   const [showMapModal, setShowMapModal] = useState(false)
 
   // Usuario actual (no forzamos re-render si cambia fuera)
@@ -199,29 +197,6 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
     }
   }
 
-  const handleCancelMatch = async () => {
-    if (!match || !isOrganizer) return
-    
-    setIsCancelling(true)
-    try {
-      const response = await PartidoAPI.cancelar(matchId)
-      
-      if (response.success) {
-        alert("Partido cancelado exitosamente")
-        setShowCancelModal(false)
-        // Recargar el partido para mostrar estado actualizado
-        await loadMatch()
-      } else {
-        alert(response.message || "Error al cancelar el partido")
-      }
-    } catch (err) {
-      logger.error("[MatchDetail] Error cancelando partido:", err)
-      alert("Error al cancelar el partido")
-    } finally {
-      setIsCancelling(false)
-    }
-  }
-
   const handlePlayerClick = (playerId?: string) => {
     if (!playerId || playerId === "undefined" || playerId === "null") {
       alert("Error: No se pudo obtener la información del usuario")
@@ -306,23 +281,13 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
             </button>
             <h1 className="text-xl font-bold text-gray-900">Detalle del partido</h1>
           </div>
-          {isOrganizer && !isMatchCancelled ? (
-            <button
-              onClick={() => setShowCancelModal(true)}
-              className="p-2 hover:bg-red-50 rounded-xl transition-colors"
-              title="Cancelar partido"
-            >
-              <XCircle className="w-5 h-5 text-red-600" />
-            </button>
-          ) : (
-            <button
-              onClick={handleShareMatch}
-              className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
-              title="Compartir partido"
-            >
-              <Share2 className="w-5 h-5 text-gray-600" />
-            </button>
-          )}
+          <button
+            onClick={handleShareMatch}
+            className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+            title="Compartir partido"
+          >
+            <Share2 className="w-5 h-5 text-gray-600" />
+          </button>
         </div>
       </div>
 
@@ -550,39 +515,6 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
           )}
         </div>
       </div>
-
-      {/* Modal de confirmación para cancelar partido */}
-      {showCancelModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
-              ¿Cancelar partido?
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Esta acción no se puede deshacer. Todos los jugadores inscriptos serán notificados de la cancelación.
-            </p>
-            
-            <div className="space-y-3">
-              <Button
-                onClick={handleCancelMatch}
-                disabled={isCancelling}
-                className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-xl"
-              >
-                {isCancelling ? "Cancelando..." : "Sí, cancelar partido"}
-              </Button>
-              
-              <Button
-                onClick={() => setShowCancelModal(false)}
-                disabled={isCancelling}
-                variant="outline"
-                className="w-full border-gray-300 py-3 rounded-xl"
-              >
-                No, mantener partido
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Modal de mapa expandido */}
       {showMapModal && match && (match as any).latitud && (match as any).longitud && (

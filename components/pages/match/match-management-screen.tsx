@@ -260,19 +260,13 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
         throw new Error(response.message || "Error al aceptar")
       }
 
+      // Recargar datos ANTES del toast para mostrar cambios inmediatamente
+      await loadMatchData()
+
       toast({
         title: "¡Solicitud aceptada!",
         description: "El jugador se ha unido al partido",
       })
-
-      // Actualización optimística: incrementar jugadores actuales
-      setMatch(prev => prev ? {
-        ...prev,
-        jugadoresActuales: (prev.jugadoresActuales || 0) + 1
-      } : prev)
-
-      // Recargar datos completos del servidor
-      await loadMatchData()
 
     } catch (err) {
       logger.error("[MatchManagement] Error aceptando:", err)
@@ -882,13 +876,13 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                 <MessageCircle className="w-4 h-4 mr-2" />
                 Chat grupal
               </Button>
-              <button
+              <Button
                 onClick={() => setShowCancelModal(true)}
-                className="p-2 hover:bg-red-50 rounded-xl transition-colors border border-red-200"
-                title="Cancelar partido"
+                variant="outline"
+                className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 py-3 px-4 rounded-xl"
               >
-                <XCircle className="w-5 h-5 text-red-600" />
-              </button>
+                Cancelar partido
+              </Button>
             </div>
           )}
         </div>
@@ -903,6 +897,33 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                 lat={match.latitud}
                 lng={match.longitud}
               />
+            </div>
+          </div>
+        )}
+
+        {/* Organizador Section */}
+        {!isEditing && match.organizador && (
+          <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Organizador</h3>
+            <div
+              onClick={() => match.organizador?.id && handlePlayerClick(match.organizador.id)}
+              className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors"
+            >
+              <Avatar className="w-12 h-12">
+                {match.organizador?.foto_perfil ? (
+                  <AvatarImage src={`data:image/jpeg;base64,${match.organizador.foto_perfil}`} />
+                ) : (
+                  <AvatarFallback className="bg-orange-100">
+                    {match.organizador?.nombre?.[0] ?? ""}
+                    {match.organizador?.apellido?.[0] ?? ""}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              <div>
+                <span className="font-semibold text-gray-900 block">
+                  {match.organizador?.nombre} {match.organizador?.apellido}
+                </span>
+              </div>
             </div>
           </div>
         )}
