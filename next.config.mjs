@@ -137,6 +137,7 @@ const nextConfig = {
   // Experimental features
   experimental: {
     // ⚡ PERFORMANCE: Optimize package imports
+    // REMOVED lucide-react - causes SSR undefined component errors
     optimizePackageImports: [
       '@radix-ui/react-icons',
       '@radix-ui/react-avatar',
@@ -145,7 +146,6 @@ const nextConfig = {
       '@radix-ui/react-toast',
       'date-fns',
       'recharts',
-      'lucide-react',
     ],
     
     // ⚡ Optimize server components
