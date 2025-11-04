@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ArrowLeft, Send, AlertCircle, Users, MapPin, Clock, MoreVertical, Image as ImageIcon, Smile } from "lucide-react"
+import { ArrowLeft, Send, AlertCircle, Users, MapPin, Clock, MoreVertical } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { MensajeAPI, PartidoAPI, InscripcionAPI, MensajeDTO } from '@/lib/api'
@@ -528,8 +528,8 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col">
-      {/* Header Personalizado - Paleta de tu app */}
-      <div className="pt-16 pb-4 px-4 bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 shadow-lg">
+      {/* Header Personalizado - Fijo al hacer scroll */}
+      <div className="sticky top-0 z-20 pt-16 pb-4 px-4 bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 shadow-lg">
         <div className="flex items-center space-x-3">
           <button 
             onClick={handleBack} 
@@ -794,14 +794,6 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         
         <div className="p-3">
           <div className="flex items-center space-x-2.5">
-            {/* Emoji button */}
-            <button
-              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors flex-shrink-0"
-              title="Emojis (próximamente)"
-            >
-              <Smile className="w-6 h-6" />
-            </button>
-            
             {/* Input container mejorado */}
             <div className="flex-1 relative">
               <Input
@@ -821,27 +813,18 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
               )}
             </div>
 
-            {/* Send/Attach button mejorado */}
-            {message.trim() ? (
-              <Button
-                onClick={handleSendMessage}
-                disabled={sending}
-                className="bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-full p-0 min-h-[50px] min-w-[50px] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all hover:scale-105 flex-shrink-0"
-              >
-                {sending ? (
-                  <InlineSpinner variant="white" />
-                ) : (
-                  <Send className="w-5 h-5" />
-                )}
-              </Button>
-            ) : (
-              <button
-                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors flex-shrink-0"
-                title="Adjuntar imagen (próximamente)"
-              >
-                <ImageIcon className="w-6 h-6" />
-              </button>
-            )}
+            {/* Send button */}
+            <Button
+              onClick={handleSendMessage}
+              disabled={sending || !message.trim()}
+              className="bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-full p-0 min-h-[50px] min-w-[50px] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all hover:scale-105 flex-shrink-0"
+            >
+              {sending ? (
+                <InlineSpinner variant="white" />
+              ) : (
+                <Send className="w-5 h-5" />
+              )}
+            </Button>
           </div>
         </div>
       </div>
