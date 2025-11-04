@@ -95,10 +95,24 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
           // No importa el estado del partido (DISPONIBLE/CONFIRMADO)
           if (!inscrito || estado !== "ACEPTADO") {
             logger.warn("[MatchChat] ❌ Acceso denegado - inscrito:", inscrito, "estado:", estado)
-            setError("Debes estar inscrito y aceptado en el partido para acceder al chat")
+            
+            // Mostrar mensaje de error más claro según el caso
+            let mensajeError = "No tienes acceso al chat de este partido"
+            if (!inscrito) {
+              mensajeError = "Debes inscribirte en el partido para acceder al chat"
+            } else if (estado === "PENDIENTE") {
+              mensajeError = "El organizador aún no ha aceptado tu inscripción. Solo los jugadores aceptados pueden acceder al chat."
+            } else if (estado === "RECHAZADO") {
+              mensajeError = "Tu inscripción fue rechazada. No puedes acceder al chat de este partido."
+            }
+            
+            setError(mensajeError)
+            setLoading(false) // Asegurar que el loading se quite para mostrar el error
+            
+            // Redirigir después de 3 segundos (más tiempo para leer)
             setTimeout(() => {
               router.push(`/matches/${matchId}`)
-            }, 2000)
+            }, 3000)
             return
           }
           
@@ -108,10 +122,11 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         }
       } catch (err) {
         logger.error("[MatchChat] Error verificando inscripción:", err)
-        setError("Error al verificar permisos de acceso")
+        setError("Error al verificar permisos de acceso. Redirigiendo...")
+        setLoading(false)
         setTimeout(() => {
           router.push(`/matches/${matchId}`)
-        }, 2000)
+        }, 3000)
         return
       }
 
@@ -303,6 +318,57 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   }
 
   // ============================================
+  // RENDER - ACCESS DENIED
+  // ============================================
+
+  if (error && !loading) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        {/* Header */}
+        <div className="pt-16 pb-4 px-6 border-b border-gray-100 bg-white">
+          <div className="flex items-center space-x-4">
+            <button 
+              onClick={handleBack} 
+              className="p-2 -ml-2 hover:bg-gray-100 rounded-xl transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </button>
+            <div className="flex-1">
+              <h1 className="text-lg font-bold text-gray-900">Chat del partido</h1>
+            </div>
+          </div>
+        </div>
+
+        {/* Error Message - Centro de la pantalla */}
+        <div className="flex-1 flex items-center justify-center px-6">
+          <div className="max-w-md w-full text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-red-600" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900 mb-2">
+              Acceso no permitido
+            </h2>
+            <p className="text-gray-600 mb-6">
+              {error}
+            </p>
+            <div className="p-4 bg-gray-50 rounded-xl">
+              <p className="text-sm text-gray-500">
+                Serás redirigido al partido en unos segundos...
+              </p>
+            </div>
+            <Button
+              onClick={() => router.push(`/matches/${matchId}`)}
+              className="mt-4 bg-green-600 hover:bg-green-700 text-white"
+            >
+              Volver al partido
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ============================================
   // RENDER - MAIN
   // ============================================
 
@@ -328,8 +394,8 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         </div>
       </div>
 
-      {/* Error Message */}
-      {error && (
+      {/* Error Message - Solo para errores durante el uso normal */}
+      {error && messages.length > 0 && (
         <div className="px-6 pt-4">
           <div className="p-3 bg-red-50 border border-red-200 rounded-xl flex items-start space-x-2">
             <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
