@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { ArrowLeft, Send, AlertCircle, Users, MapPin, Clock, MoreVertical } from "lucide-react"
+import { ArrowLeft, Send, AlertCircle, Users, MapPin, Clock } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { MensajeAPI, PartidoAPI, InscripcionAPI, MensajeDTO } from '@/lib/api'
@@ -530,45 +530,36 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col">
       {/* Header Compacto - Fijo al hacer scroll */}
       <div className="sticky top-0 z-20 bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 shadow-md">
-        <div className="flex items-center justify-between px-3 py-2 pt-14">
-          <div className="flex items-center space-x-2 flex-1 min-w-0">
-            <button 
-              onClick={handleBack} 
-              className="p-1.5 hover:bg-white/20 rounded-lg transition-all flex-shrink-0 active:scale-95"
-              aria-label="Volver"
-            >
-              <ArrowLeft className="w-5 h-5 text-white" />
-            </button>
-            
-            {/* Match info compacto */}
-            <div className="flex-1 min-w-0">
-              <h1 className="text-sm font-bold text-white truncate leading-tight">
-                Chat del Partido
-              </h1>
-              {matchInfo && (
-                <div className="flex items-center space-x-2 text-[10px] text-blue-100 mt-0.5">
-                  <div className="flex items-center space-x-0.5">
-                    <Clock className="w-2.5 h-2.5" />
-                    <span>{formatDate(matchInfo.fecha, matchInfo.hora)}</span>
-                  </div>
-                  <span className="text-blue-300">•</span>
-                  <div className="flex items-center space-x-0.5">
-                    <Users className="w-2.5 h-2.5" />
-                    <span>{matchInfo.jugadores_actuales}/{matchInfo.jugadores_necesarios}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Info button diferenciado */}
+        <div className="flex items-center px-3 py-2 pt-14">
           <button 
-            className="p-1.5 hover:bg-white/20 rounded-lg transition-all flex-shrink-0 ml-2 active:scale-95 border border-white/30"
-            title="Ver detalles del partido"
-            onClick={() => router.push(`/matches/${matchId}`)}
-            aria-label="Información"
+            onClick={handleBack} 
+            className="p-1.5 hover:bg-white/20 rounded-lg transition-all flex-shrink-0 active:scale-95 mr-2"
+            aria-label="Volver"
           >
-            <MoreVertical className="w-4 h-4 text-white" />
+            <ArrowLeft className="w-5 h-5 text-white" />
+          </button>
+          
+          {/* Match info compacto - clickeable para ir al partido */}
+          <button 
+            onClick={() => router.push(`/matches/${matchId}`)}
+            className="flex-1 min-w-0 text-left hover:bg-white/10 rounded-lg px-2 py-1 transition-all active:scale-[0.98]"
+          >
+            <h1 className="text-sm font-bold text-white truncate leading-tight">
+              Chat del Partido
+            </h1>
+            {matchInfo && (
+              <div className="flex items-center space-x-2 text-[10px] text-blue-100 mt-0.5">
+                <div className="flex items-center space-x-0.5">
+                  <Clock className="w-2.5 h-2.5" />
+                  <span>{formatDate(matchInfo.fecha, matchInfo.hora)}</span>
+                </div>
+                <span className="text-blue-300">•</span>
+                <div className="flex items-center space-x-0.5">
+                  <Users className="w-2.5 h-2.5" />
+                  <span>{matchInfo.jugadores_actuales}/{matchInfo.jugadores_necesarios}</span>
+                </div>
+              </div>
+            )}
           </button>
         </div>
       </div>
