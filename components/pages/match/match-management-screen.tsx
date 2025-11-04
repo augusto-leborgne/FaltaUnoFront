@@ -774,7 +774,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-900 mb-2">
-                    Precio total <span className="text-red-500">*</span>
+                    Costo total <span className="text-red-500">*</span>
                   </label>
                   <Input
                     type="number"

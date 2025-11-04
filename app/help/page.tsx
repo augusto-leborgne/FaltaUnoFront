@@ -13,7 +13,7 @@ interface FAQItem {
 const faqs: FAQItem[] = [
   {
     question: "¿Cómo creo un partido?",
-    answer: "Ve a la sección 'Mis Partidos' y toca el botón '+'. Completa la información del partido (tipo, fecha, ubicación, precio) y publícalo. Los jugadores podrán solicitar unirse."
+    answer: "Ve a la sección 'Mis Partidos' y toca el botón '+'. Completa la información del partido (tipo, fecha, ubicación, costo) y publícalo. Los jugadores podrán solicitar unirse."
   },
   {
     question: "¿Cómo me uno a un partido?",

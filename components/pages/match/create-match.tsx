@@ -42,6 +42,7 @@ export function CreateMatchScreen() {
     totalPlayers?: string
     totalPrice?: string
     duration?: string
+    description?: string
   }>({})
 
   // ✅ Inicializar con hora actual más cercana (siguiente intervalo de 5 minutos)
@@ -142,9 +143,9 @@ export function CreateMatchScreen() {
 
       case "totalPrice":
         const price = Number(value)
-        if (isNaN(price)) return "Ingresa un precio válido"
-        if (price < 0) return "El precio no puede ser negativo"
-        if (price > 100000) return "El precio no puede superar $100,000"
+        if (isNaN(price)) return "Ingresa un costo válido"
+        if (price < 0) return "El costo no puede ser negativo"
+        if (price > 100000) return "El costo no puede superar $100,000"
         return null
 
       case "duration":
@@ -152,6 +153,11 @@ export function CreateMatchScreen() {
         if (isNaN(duration)) return "Ingresa una duración válida"
         if (duration < 30) return "Duración mínima: 30 minutos"
         if (duration > 180) return "Duración máxima: 180 minutos"
+        return null
+
+      case "description":
+        if (!value || value.trim() === "") return "La descripción es obligatoria"
+        if (value.trim().length < 10) return "La descripción debe tener al menos 10 caracteres"
         return null
 
       default:
@@ -192,14 +198,22 @@ export function CreateMatchScreen() {
       return "La cantidad de jugadores debe estar entre 6 y 22"
     }
 
-    // Precio
+    // Costo
     if (formData.totalPrice < 0) {
-      return "El precio no puede ser negativo"
+      return "El costo no puede ser negativo"
     }
 
     // Duración
     if (formData.duration < 30 || formData.duration > 180) {
       return "La duración debe estar entre 30 y 180 minutos"
+    }
+
+    // Descripción
+    if (!formData.description || formData.description.trim() === "") {
+      return "Debes ingresar una descripción"
+    }
+    if (formData.description.trim().length < 10) {
+      return "La descripción debe tener al menos 10 caracteres"
     }
 
     return null
@@ -556,10 +570,10 @@ export function CreateMatchScreen() {
           )}
         </div>
 
-        {/* Precio */}
+        {/* Costo */}
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-900 mb-2">
-            Precio total ($UYU) <span className="text-red-500">*</span>
+            Costo del partido ($UYU) <span className="text-red-500">*</span>
           </label>
           <div className="relative">
             <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -619,20 +633,37 @@ export function CreateMatchScreen() {
         {/* Descripción */}
         <div className="mb-8">
           <label className="block text-sm font-medium text-gray-900 mb-2">
-            Descripción (opcional)
+            Descripción <span className="text-red-500">*</span>
           </label>
           <Textarea
-            placeholder="Ej: Partido rápido en pista cubierta. Trae camiseta oscura y puntualidad."
+            placeholder="Describe la cancha (ubicación exacta, tipo de superficie, vestuarios disponibles, estacionamiento, etc.)"
             value={formData.description}
             onChange={(e) => handleInputChange("description", e.target.value)}
-            className="py-3 rounded-xl border-gray-300 resize-none"
+            className={`py-3 rounded-xl resize-none ${fieldErrors.description ? 'border-red-500' : 'border-gray-300'}`}
             rows={3}
             disabled={isLoading}
             maxLength={500}
+            required
           />
+          {fieldErrors.description && (
+            <p className="text-xs text-red-600 mt-1 flex items-center">
+              <AlertCircle className="w-3 h-3 mr-1" />
+              {fieldErrors.description}
+            </p>
+          )}
           <p className="text-xs text-gray-500 mt-1">
             {formData.description.length}/500 caracteres
           </p>
+          
+          {/* Disclaimer sobre reservas */}
+          <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+            <p className="text-xs text-orange-800 flex items-start">
+              <AlertCircle className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" />
+              <span>
+                <strong>Importante:</strong> Falta Uno no gestiona reservas de canchas. Es responsabilidad del organizador coordinar y pagar la reserva de la cancha.
+              </span>
+            </p>
+          </div>
         </div>
 
         {/* Submit Button */}
