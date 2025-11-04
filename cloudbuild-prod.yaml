@@ -13,6 +13,22 @@ steps:
       - '--build-arg'
       - 'BUILD_TIMESTAMP=${BUILD_ID}'
       - '.'
+  
+  # Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'faltauno-frontend'
+      - '--image'
+      - 'us-central1-docker.pkg.dev/master-might-274420/cloud-run-source-deploy/faltauno-frontend:${SHORT_SHA}-prod'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+
 images:
   - 'us-central1-docker.pkg.dev/master-might-274420/cloud-run-source-deploy/faltauno-frontend:${SHORT_SHA}-prod'
 timeout: 1200s
