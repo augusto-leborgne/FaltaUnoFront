@@ -143,18 +143,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Limpiar estado inmediatamente
     setUserState(null);
     
-    // Limpiar storage
+    // AuthService.logout() ya maneja:
+    // - Limpieza de tokens y storage
+    // - Disparo del evento userLoggedOut
+    // - Redirección a /login
+    // NO necesitamos hacer nada más aquí
     AuthService.logout();
     
-    // Redirigir a login de forma segura en client
-    if (typeof window !== "undefined") {
-      try {
-        // Usar replace en lugar de href para evitar history
-        window.location.replace("/login");
-      } catch (e) {
-        logger.warn("[AuthProvider] redirect to login failed", e);
-      }
-    }
   }, []); // useCallback sin dependencias
 
   // Inicialización: validar token y restaurar user si procede
@@ -162,6 +157,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     mountedRef.current = true;
 
     const init = async () => {
+      // CRÍTICO: Si estamos en proceso de logout, no inicializar nada
+      if (typeof window !== "undefined" && sessionStorage.getItem("isLoggingOut") === "true") {
+        logger.log("[AuthProvider] Logout en progreso, saltando inicialización");
+        sessionStorage.removeItem("isLoggingOut"); // Limpiar flag
+        if (mountedRef.current) {
+          setUserState(null);
+          setLoading(false);
+        }
+        return;
+      }
+      
       logger.log("[AuthProvider] Inicializando...");
       
       // CRÍTICO: Intentar recuperar token desde backups si es necesario
@@ -295,6 +301,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Esto asegura que el perfil esté siempre sincronizado sin sobrecarga
     const revalidationInterval = setInterval(async () => {
       if (!mountedRef.current) return; // ⚡ FIX: Verificar si el componente está montado
+      
+      // CRÍTICO: No revalidar si estamos en proceso de logout
+      if (typeof window !== "undefined" && sessionStorage.getItem("isLoggingOut") === "true") {
+        logger.log("[AuthProvider] Logout en progreso, saltando revalidación");
+        return;
+      }
       
       const token = AuthService.getToken();
       if (!token || isLoggingOut) return;

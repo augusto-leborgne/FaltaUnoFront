@@ -217,25 +217,44 @@ export class AuthService {
 
   static logout(): void {
     logger?.debug?.("[AuthService] Logout iniciado")
+    
+    // Marcar flag de logout para prevenir reinicios automáticos
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("isLoggingOut", "true")
+    }
+    
     this.removeToken()
     this.removeUser()
+    
     if (typeof window !== "undefined") {
       try {
-        // Limpieza de llaves auxiliares
+        // Limpieza completa de storage
         const keys = Object.keys(localStorage)
         for (const k of keys) {
-          if (k.startsWith("match_") || k.startsWith("user_")) {
+          if (k.startsWith("match_") || k.startsWith("user_") || k.startsWith("cache_")) {
             localStorage.removeItem(k)
           }
+        }
+        
+        // Limpiar también sessionStorage excepto el flag
+        const sessionKeys = Object.keys(sessionStorage).filter(k => k !== "isLoggingOut")
+        for (const k of sessionKeys) {
+          sessionStorage.removeItem(k)
         }
       } catch (e) {
         logger?.error?.("[AuthService] Error limpiando storage extra:", e)
       }
+      
+      // Disparar evento para que otros componentes sepan del logout
+      window.dispatchEvent(new CustomEvent("userLoggedOut"))
     }
-    logger?.debug?.("[AuthService] Logout completado")
+    
+    logger?.debug?.("[AuthService] Logout completado, storage limpiado")
+    
     if (typeof window !== "undefined") {
       // INMEDIATO: Usar replace para evitar que el usuario use "back"
-      window.location.replace("/login")
+      // Agregar timestamp para evitar cache del navegador
+      window.location.replace("/login?t=" + Date.now())
     }
   }
 
