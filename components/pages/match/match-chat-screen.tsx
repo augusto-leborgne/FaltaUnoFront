@@ -528,42 +528,47 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col">
-      {/* Header Personalizado - Fijo al hacer scroll */}
-      <div className="sticky top-0 z-20 pt-16 pb-4 px-4 bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 shadow-lg">
-        <div className="flex items-center space-x-3">
-          <button 
-            onClick={handleBack} 
-            className="p-2 -ml-2 hover:bg-white/10 rounded-xl transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-white" />
-          </button>
-          
-          {/* Match info compacto */}
-          <div className="flex-1 min-w-0">
-            <h1 className="text-base font-bold text-white truncate">
-              Chat del Partido
-            </h1>
-            {matchInfo && (
-              <div className="flex items-center space-x-3 text-xs text-blue-100 mt-0.5">
-                <div className="flex items-center space-x-1">
-                  <Clock className="w-3 h-3" />
-                  <span>{formatDate(matchInfo.fecha, matchInfo.hora)}</span>
+      {/* Header Compacto - Fijo al hacer scroll */}
+      <div className="sticky top-0 z-20 bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 shadow-md">
+        <div className="flex items-center justify-between px-3 py-2 pt-14">
+          <div className="flex items-center space-x-2 flex-1 min-w-0">
+            <button 
+              onClick={handleBack} 
+              className="p-1.5 hover:bg-white/20 rounded-lg transition-all flex-shrink-0 active:scale-95"
+              aria-label="Volver"
+            >
+              <ArrowLeft className="w-5 h-5 text-white" />
+            </button>
+            
+            {/* Match info compacto */}
+            <div className="flex-1 min-w-0">
+              <h1 className="text-sm font-bold text-white truncate leading-tight">
+                Chat del Partido
+              </h1>
+              {matchInfo && (
+                <div className="flex items-center space-x-2 text-[10px] text-blue-100 mt-0.5">
+                  <div className="flex items-center space-x-0.5">
+                    <Clock className="w-2.5 h-2.5" />
+                    <span>{formatDate(matchInfo.fecha, matchInfo.hora)}</span>
+                  </div>
+                  <span className="text-blue-300">•</span>
+                  <div className="flex items-center space-x-0.5">
+                    <Users className="w-2.5 h-2.5" />
+                    <span>{matchInfo.jugadores_actuales}/{matchInfo.jugadores_necesarios}</span>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-1">
-                  <Users className="w-3 h-3" />
-                  <span>{matchInfo.jugadores_actuales}/{matchInfo.jugadores_necesarios}</span>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
-          {/* Info button */}
+          {/* Info button diferenciado */}
           <button 
-            className="p-2 hover:bg-white/10 rounded-xl transition-colors"
-            title="Información del partido"
+            className="p-1.5 hover:bg-white/20 rounded-lg transition-all flex-shrink-0 ml-2 active:scale-95 border border-white/30"
+            title="Ver detalles del partido"
             onClick={() => router.push(`/matches/${matchId}`)}
+            aria-label="Información"
           >
-            <MoreVertical className="w-5 h-5 text-white" />
+            <MoreVertical className="w-4 h-4 text-white" />
           </button>
         </div>
       </div>
@@ -639,54 +644,55 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
             return (
               <div 
                 key={msg.id} 
-                className={`flex ${isOwn ? "justify-end" : "justify-start"} ${isFirstInGroup ? 'mt-4' : 'mt-1.5'}`}
+                className={`flex ${isOwn ? "justify-end" : "justify-start"} ${isFirstInGroup ? 'mt-3' : 'mt-0.5'}`}
               >
                 <div
-                  className={`group flex items-end space-x-2.5 max-w-[75%] relative ${
+                  className={`group flex items-end space-x-2 max-w-[75%] relative ${
                     isOwn ? "flex-row-reverse space-x-reverse" : ""
                   }`}
                 >
-                  {/* Avatar mejorado */}
+                  {/* Avatar con foto real */}
                   {!isOwn && isLastInGroup ? (
                     <Avatar
-                      className="w-9 h-9 cursor-pointer hover:ring-4 hover:ring-blue-100 transition-all flex-shrink-0 shadow-md"
+                      className="w-7 h-7 cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all flex-shrink-0 shadow-sm"
                       onClick={() => handleUserClick(msg.usuarioId)}
                     >
                       {msg.usuario?.foto_perfil ? (
-                        <AvatarImage src={`data:image/jpeg;base64,${msg.usuario.foto_perfil}`} alt={userName} />
+                        <AvatarImage 
+                          src={msg.usuario.foto_perfil.startsWith('data:') 
+                            ? msg.usuario.foto_perfil 
+                            : `data:image/jpeg;base64,${msg.usuario.foto_perfil}`
+                          } 
+                          alt={userName}
+                          className="object-cover"
+                        />
                       ) : (
-                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white text-xs font-bold">
+                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white text-[10px] font-bold">
                           {initials}
                         </AvatarFallback>
                       )}
                     </Avatar>
                   ) : !isOwn ? (
-                    <div className="w-9 flex-shrink-0" /> 
+                    <div className="w-7 flex-shrink-0" /> 
                   ) : null}
                   
-                  {/* Mensaje bubble mejorado */}
+                  {/* Mensaje bubble compacto */}
                   <div className="relative flex-1">
-                    {/* Opciones de mensaje (aparecen al hover) - Mejoradas */}
-                    <div className={`absolute top-2 ${isOwn ? 'left-0 -translate-x-full pl-2' : 'right-0 translate-x-full pr-2'} opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center space-x-1.5`}>
+                    {/* Opciones de mensaje (aparecen al hover) */}
+                    <div className={`absolute top-1 ${isOwn ? 'left-0 -translate-x-full pl-1.5' : 'right-0 translate-x-full pr-1.5'} opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center space-x-1`}>
                       <button
                         onClick={() => setReplyingTo(msg)}
-                        className="p-2 bg-white hover:bg-blue-50 rounded-lg shadow-lg border border-gray-200 transition-all hover:scale-110"
+                        className="p-1.5 bg-white hover:bg-blue-50 rounded-lg shadow-md border border-gray-200 transition-all hover:scale-105"
                         title="Responder"
                       >
-                        <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-3.5 h-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                         </svg>
-                      </button>
-                      <button
-                        className="p-2 bg-white hover:bg-blue-50 rounded-lg shadow-lg border border-gray-200 transition-all hover:scale-110"
-                        title="Más opciones"
-                      >
-                        <MoreVertical className="w-4 h-4 text-gray-600" />
                       </button>
                     </div>
 
                     <div
-                      className={`inline-block px-4 py-2.5 transition-all group-hover:scale-[1.02] ${
+                      className={`inline-block px-3 py-1.5 transition-all group-hover:scale-[1.01] ${
                         isOwn 
                           ? `bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white shadow-md hover:shadow-lg ${
                               isFirstInGroup && isLastInGroup ? 'rounded-2xl' :
@@ -694,7 +700,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                               isLastInGroup ? 'rounded-b-2xl rounded-tl-2xl rounded-tr-md' :
                               'rounded-l-2xl rounded-r-md'
                             }` 
-                          : `bg-white text-gray-900 border-2 border-gray-200 shadow-sm hover:shadow-md ${
+                          : `bg-white text-gray-900 border border-gray-200 shadow-sm hover:shadow-md ${
                               isFirstInGroup && isLastInGroup ? 'rounded-2xl' :
                               isFirstInGroup ? 'rounded-t-2xl rounded-br-2xl rounded-bl-md' :
                               isLastInGroup ? 'rounded-b-2xl rounded-tr-2xl rounded-tl-md' :
@@ -702,36 +708,36 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                             }`
                       }`}
                     >
-                      {/* Nombre mejorado */}
+                      {/* Nombre compacto */}
                       {!isOwn && isFirstInGroup && (
                         <button
-                          className="text-xs font-extrabold mb-2 block text-blue-600 hover:text-blue-700 transition-colors tracking-wide"
+                          className="text-[11px] font-bold mb-0.5 block text-blue-600 hover:text-blue-700 transition-colors"
                           onClick={() => handleUserClick(msg.usuarioId)}
                         >
                           {userName}
                         </button>
                       )}
                       
-                      {/* Contenido del mensaje mejorado */}
-                      <p className={`text-[15px] whitespace-pre-wrap break-words leading-[1.5] ${
+                      {/* Contenido del mensaje */}
+                      <p className={`text-[14px] whitespace-pre-wrap break-words leading-[1.4] ${
                         isOwn ? 'font-normal' : 'font-normal'
                       }`}>
                         {msg.contenido}
                       </p>
                       
-                      {/* Footer con hora y check marks mejorado */}
-                      <div className={`flex items-center space-x-1.5 mt-2 ${
+                      {/* Footer con hora y check marks */}
+                      <div className={`flex items-center space-x-1 mt-1 ${
                         isOwn ? 'justify-end' : 'justify-start'
                       }`}>
-                        <span className={`text-[10px] font-semibold tracking-wide ${
-                          isOwn ? "text-blue-200" : "text-gray-500"
+                        <span className={`text-[9px] font-medium ${
+                          isOwn ? "text-blue-200" : "text-gray-400"
                         }`}>
                           {formatTime(msg.createdAt)}
                         </span>
-                        {/* Check marks para mensajes propios - Mejorados */}
+                        {/* Check mark para mensajes propios */}
                         {isOwn && (
                           <div className="flex-shrink-0">
-                            <svg className="w-[18px] h-[18px] text-blue-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="w-3.5 h-3.5 text-blue-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                             </svg>
                           </div>
