@@ -167,7 +167,7 @@ export function LoginScreen() {
             <img 
               src="/logo.png" 
               alt="Falta Uno" 
-              className="w-auto max-h-8 sm:max-h-12 md:max-h-16"
+              className="w-auto max-h-20 sm:max-h-24 md:max-h-28"
             />
           </div>
           <h1 className="text-2xl font-semibold text-gray-900">Iniciar sesión</h1>
