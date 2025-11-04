@@ -79,81 +79,80 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         return
       }
 
-      // ✅ Verificar estado de inscripción
-      try {
-        logger.log("[MatchChat] Verificando estado - matchId:", matchId, "userId:", currentUser.id)
-        const estadoData = await InscripcionAPI.getEstado(matchId, currentUser.id)
-        
-        logger.log("[MatchChat] Respuesta de estado:", JSON.stringify(estadoData, null, 2))
-        
-        if (estadoData.success && estadoData.data) {
-          const { inscrito, estado, inscripcionId } = estadoData.data
-          
-          logger.log("[MatchChat] Estado parseado - inscrito:", inscrito, "estado:", estado, "inscripcionId:", inscripcionId)
-          
-          // IMPORTANTE: Si el usuario tiene inscripcionId, está inscrito
-          // El problema puede ser que el backend no devuelve estado="ACEPTADO" correctamente
-          const estaInscrito = inscrito || !!inscripcionId
-          const estaAceptado = estado === "ACEPTADO"
-          
-          logger.log("[MatchChat] Validación - estaInscrito:", estaInscrito, "estaAceptado:", estaAceptado)
-          
-          // Solo permitir acceso si está inscrito y ACEPTADO
-          if (!estaInscrito || !estaAceptado) {
-            logger.warn("[MatchChat] ❌ Acceso denegado - inscrito:", estaInscrito, "estado:", estado)
-            
-            // Mostrar mensaje de error más claro según el caso
-            let mensajeError = "No tienes acceso al chat de este partido"
-            if (!estaInscrito) {
-              mensajeError = "Debes inscribirte en el partido para acceder al chat"
-            } else if (estado === "PENDIENTE") {
-              mensajeError = "El organizador aún no ha aceptado tu inscripción. Solo los jugadores aceptados pueden acceder al chat."
-            } else if (estado === "RECHAZADO") {
-              mensajeError = "Tu inscripción fue rechazada. No puedes acceder al chat de este partido."
-            } else if (estado === null || estado === undefined) {
-              // Caso especial: inscrito pero sin estado definido
-              mensajeError = "Tu inscripción está siendo procesada. Por favor intenta nuevamente en unos momentos."
-              logger.error("[MatchChat] ⚠️ BACKEND BUG: Usuario inscrito (ID:", inscripcionId, ") pero estado es null/undefined")
-            }
-            
-            setError(mensajeError)
-            setLoading(false) // Asegurar que el loading se quite para mostrar el error
-            
-            // Redirigir después de 3 segundos (más tiempo para leer)
-            setTimeout(() => {
-              router.push(`/matches/${matchId}`)
-            }, 3000)
-            return
-          }
-          
-          logger.log("[MatchChat] ✅ Acceso permitido - usuario ACEPTADO")
-        } else {
-          logger.error("[MatchChat] Respuesta inválida de estado:", estadoData)
-        }
-      } catch (err) {
-        logger.error("[MatchChat] Error verificando inscripción:", err)
-        setError("Error al verificar permisos de acceso. Redirigiendo...")
-        setLoading(false)
-        setTimeout(() => {
-          router.push(`/matches/${matchId}`)
-        }, 3000)
-        return
-      }
-
-      // Cargar info del partido
+      // Cargar info del partido PRIMERO (necesitamos saber si es organizador)
+      let isOrganizer = false
       try {
         const matchResponse = await PartidoAPI.get(matchId)
         if (matchResponse.success && matchResponse.data) {
+          const matchData = matchResponse.data
           setMatchInfo({
-            tipo_partido: matchResponse.data.tipoPartido || "FUTBOL_5",
-            fecha: matchResponse.data.fecha,
-            hora: matchResponse.data.hora,
-            nombre_ubicacion: matchResponse.data.nombreUbicacion || "Ubicación no especificada"
+            tipo_partido: matchData.tipoPartido || "FUTBOL_5",
+            fecha: matchData.fecha,
+            hora: matchData.hora,
+            nombre_ubicacion: matchData.nombreUbicacion || "Ubicación no especificada"
           })
+          
+          // Verificar si el usuario es el organizador
+          isOrganizer = matchData.organizadorId === currentUser.id
+          logger.log("[MatchChat] ¿Es organizador?", isOrganizer, "- OrganizadorId:", matchData.organizadorId, "UserId:", currentUser.id)
         }
       } catch (err) {
         logger.warn("[MatchChat] Error cargando info del partido:", err)
-        // No es crítico, continuar
+      }
+
+      // ✅ Si es organizador, permitir acceso directo al chat
+      if (isOrganizer) {
+        logger.log("[MatchChat] ✅✅ ACCESO DIRECTO: Usuario es el organizador del partido")
+        // No verificar inscripción, continuar cargando mensajes
+      } else {
+        // ✅ Si NO es organizador, verificar estado de inscripción
+        try {
+          logger.log("[MatchChat] Verificando estado de inscripción - matchId:", matchId, "userId:", currentUser.id)
+          logger.log("[MatchChat] 📞 Llamando a InscripcionAPI.getEstado...")
+          const estadoData = await InscripcionAPI.getEstado(matchId, currentUser.id)
+          
+          logger.log("[MatchChat] 📥 Respuesta completa:", JSON.stringify(estadoData, null, 2))
+          
+          if (estadoData.success && estadoData.data) {
+            const { inscrito, estado, inscripcionId } = estadoData.data
+            
+            logger.log("[MatchChat] 📊 Estado parseado:")
+            logger.log("  - inscrito:", inscrito)
+            logger.log("  - estado:", estado)
+            logger.log("  - inscripcionId:", inscripcionId)
+            logger.log("  - tipo de estado:", typeof estado)
+            
+            const estaInscrito = inscrito || !!inscripcionId
+            
+            logger.log("[MatchChat] ✅ Validación - estaInscrito:", estaInscrito, "estado:", estado)
+            
+            // Permitir acceso si está inscrito (sin importar el estado)
+            // Si está inscrito = ya fue aceptado por el organizador
+            if (!estaInscrito) {
+              logger.warn("[MatchChat] ❌ Acceso denegado - no inscrito")
+              
+              setError("Debes inscribirte en el partido para acceder al chat")
+              setLoading(false)
+              
+              setTimeout(() => {
+                router.push(`/matches/${matchId}`)
+              }, 3000)
+              return
+            }
+            
+            logger.log("[MatchChat] ✅ Acceso permitido - usuario inscrito")
+          } else {
+            logger.error("[MatchChat] Respuesta inválida de estado:", estadoData)
+          }
+        } catch (err) {
+          logger.error("[MatchChat] Error verificando inscripción:", err)
+          setError("Error al verificar permisos de acceso. Redirigiendo...")
+          setLoading(false)
+          setTimeout(() => {
+            router.push(`/matches/${matchId}`)
+          }, 3000)
+          return
+        }
       }
 
       // Cargar mensajes

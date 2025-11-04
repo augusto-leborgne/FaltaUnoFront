@@ -122,15 +122,24 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
         descripcion: matchData.descripcion || "",
       })
 
-      // Cargar solicitudes pendientes
-      try {
-        const solicitudesResponse = await InscripcionAPI.getPendientes(matchId)
-        if (solicitudesResponse.success && solicitudesResponse.data) {
-          setSolicitudes(solicitudesResponse.data)
+      // ✅ SOLO cargar solicitudes si el usuario es el organizador
+      const currentUser = AuthService.getUser()
+      const isOrganizer = currentUser?.id === matchData.organizadorId
+      
+      if (isOrganizer) {
+        try {
+          logger.log("[MatchManagement] Usuario es organizador, cargando solicitudes...")
+          const solicitudesResponse = await InscripcionAPI.getPendientes(matchId)
+          if (solicitudesResponse.success && solicitudesResponse.data) {
+            setSolicitudes(solicitudesResponse.data)
+            logger.log("[MatchManagement] ✅ Solicitudes cargadas:", solicitudesResponse.data.length)
+          }
+        } catch (err) {
+          logger.warn("[MatchManagement] Error cargando solicitudes:", err)
+          // No es crítico, continuar
         }
-      } catch (err) {
-        logger.warn("[MatchManagement] Error cargando solicitudes:", err)
-        // No es crítico, continuar
+      } else {
+        logger.log("[MatchManagement] Usuario NO es organizador, omitiendo carga de solicitudes")
       }
 
     } catch (err) {
