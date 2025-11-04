@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter, usePathname } from "next/navigation"
-import { Home, Map, User, Calendar } from "lucide-react"
+import { Home, Map, User, Calendar, MessageCircle } from "lucide-react"
 import { useEffect, useMemo, useCallback } from "react"
 import React from "react"
 
@@ -30,6 +30,13 @@ function BottomNavigationComponent() {
       icon: Calendar,
       path: "/my-matches",
       isActive: pathname.startsWith("/my-matches"),
+    },
+    {
+      id: "chats",
+      label: "Chats",
+      icon: MessageCircle,
+      path: "/chats",
+      isActive: pathname.startsWith("/chats"),
     },
     {
       id: "profile",
