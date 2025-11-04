@@ -54,6 +54,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
   const [isSaving, setIsSaving] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [showMapModal, setShowMapModal] = useState(false)
   
   const [editData, setEditData] = useState({
     fecha: "",
@@ -474,6 +475,40 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
     }
   }
 
+  const handleCancelMatch = async () => {
+    if (!match) return
+    
+    if (!confirm("¿Estás seguro de que quieres cancelar el partido? Esta acción no se puede deshacer.")) {
+      return
+    }
+    
+    try {
+      const response = await PartidoAPI.cancelar(matchId)
+      
+      if (response.success) {
+        toast({
+          title: "Partido cancelado",
+          description: "El partido ha sido cancelado exitosamente",
+        })
+        // Recargar datos
+        await loadMatchData()
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || "Error al cancelar el partido",
+          variant: "destructive",
+        })
+      }
+    } catch (err) {
+      logger.error("[MatchManagement] Error cancelando partido:", err)
+      toast({
+        title: "Error",
+        description: "Error al cancelar el partido",
+        variant: "destructive",
+      })
+    }
+  }
+
   const handlePlayerClick = (playerId: string) => {
     router.push(`/users/${playerId}`)
   }
@@ -845,12 +880,12 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                 Chat grupal
               </Button>
               <Button
-                onClick={handleShareMatch}
+                onClick={handleCancelMatch}
                 variant="outline"
-                className="flex-1 border-gray-200 hover:bg-gray-50 py-3 rounded-xl bg-transparent"
+                className="flex-1 border-red-200 text-red-600 hover:bg-red-50 py-3 rounded-xl bg-transparent"
               >
-                <Share className="w-4 h-4 mr-2" />
-                Compartir
+                <X className="w-4 h-4 mr-2" />
+                Cancelar partido
               </Button>
             </div>
           )}
@@ -860,11 +895,13 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
         {!isEditing && match.latitud && match.longitud && match.nombreUbicacion && (
           <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Ubicación</h3>
-            <CompressedMap
-              location={match.nombreUbicacion}
-              lat={match.latitud}
-              lng={match.longitud}
-            />
+            <div onClick={() => setShowMapModal(true)} className="cursor-pointer">
+              <CompressedMap
+                location={match.nombreUbicacion}
+                lat={match.latitud}
+                lng={match.longitud}
+              />
+            </div>
           </div>
         )}
 
@@ -1002,6 +1039,39 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
           )}
         </div>
       </div>
+
+      {/* Modal de mapa expandido */}
+      {showMapModal && match && match.latitud && match.longitud && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl overflow-hidden max-w-2xl w-full max-h-[80vh] flex flex-col">
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-gray-900">Ubicación del partido</h3>
+              <button
+                onClick={() => setShowMapModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+            
+            <div className="flex-1 min-h-[400px]">
+              <CompressedMap
+                location={match.nombreUbicacion}
+                lat={match.latitud}
+                lng={match.longitud}
+                className="h-full"
+              />
+            </div>
+            
+            <div className="p-4 border-t border-gray-200">
+              <div className="flex items-center space-x-2 text-gray-700">
+                <MapPin className="w-5 h-5 text-green-600" />
+                <span className="font-medium">{match.nombreUbicacion}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

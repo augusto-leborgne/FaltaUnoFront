@@ -306,13 +306,21 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
             </button>
             <h1 className="text-xl font-bold text-gray-900">Detalle del partido</h1>
           </div>
-          {isOrganizer && !isMatchCancelled && (
+          {isOrganizer && !isMatchCancelled ? (
             <button
               onClick={() => setShowCancelModal(true)}
               className="p-2 hover:bg-red-50 rounded-xl transition-colors"
               title="Cancelar partido"
             >
               <XCircle className="w-5 h-5 text-red-600" />
+            </button>
+          ) : (
+            <button
+              onClick={handleShareMatch}
+              className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+              title="Compartir partido"
+            >
+              <Share2 className="w-5 h-5 text-gray-600" />
             </button>
           )}
         </div>
@@ -413,22 +421,18 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
               </Avatar>
               <div>
                 <span className="font-semibold text-gray-900 block">
-                  {[
-                    (match as any).organizador?.nombre ?? "",
-                    (match as any).organizador?.apellido ?? ""
-                  ].filter(Boolean).join(" ")}
+                  {(match as any).organizador?.nombre} {(match as any).organizador?.apellido}
                 </span>
-                <div className="text-sm text-gray-600">Capitán</div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Players Section */}
+        {/* Players Section - Jugadores Inscriptos */}
         {jugadores.length > 0 && (
           <div className="mb-6">
             <h3 className="text-lg font-bold text-gray-900 mb-4">
-              Jugadores ({jugadores.filter((p: any) => p.id !== (match as any)?.organizadorId).length}/{getCantidadJugadores(match)})
+              Jugadores Inscriptos ({jugadores.filter((p: any) => p.id !== (match as any)?.organizadorId).length}/{getCantidadJugadores(match) - 1})
             </h3>
 
             <div className="space-y-3">

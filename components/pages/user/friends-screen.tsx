@@ -33,7 +33,7 @@ interface User {
   posicion?: string
 }
 
-type Tab = 'amigos' | 'todos'
+type Tab = 'amigos' | 'contactos'
 
 export function FriendsScreen() {
   const router = useRouter()
@@ -49,7 +49,7 @@ export function FriendsScreen() {
   }, [])
 
   useEffect(() => {
-    if (activeTab === 'todos' && allUsers.length === 0) {
+    if (activeTab === 'contactos' && allUsers.length === 0) {
       loadAllUsers()
     }
   }, [activeTab])
@@ -184,14 +184,14 @@ export function FriendsScreen() {
             )}
           </button>
           <button
-            onClick={() => setActiveTab('todos')}
+            onClick={() => setActiveTab('contactos')}
             className={`flex-1 py-2 px-4 rounded-xl font-medium transition-colors ${
-              activeTab === 'todos'
+              activeTab === 'contactos'
                 ? 'bg-green-600 text-white'
                 : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
-            Todos
+            Contactos
           </button>
         </div>
 
@@ -226,7 +226,7 @@ export function FriendsScreen() {
             </p>
             {activeTab === 'amigos' && !searchQuery && (
               <Button
-                onClick={() => setActiveTab('todos')}
+                onClick={() => setActiveTab('contactos')}
                 className="bg-green-600 hover:bg-green-700"
               >
                 <UserPlus className="w-4 h-4 mr-2" />
@@ -265,7 +265,7 @@ export function FriendsScreen() {
                       )}
                     </div>
                   </div>
-                  {isFriend && activeTab === 'todos' && (
+                  {isFriend && activeTab === 'contactos' && (
                     <Badge className="bg-green-100 text-green-800">Amigo</Badge>
                   )}
                 </div>

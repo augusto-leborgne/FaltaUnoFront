@@ -82,15 +82,15 @@ export function MatchesMap() {
             position: relative;
             transition: all 0.3s ease;
           ">
-            <!-- Número de cupos -->
+            <!-- Ícono de fútbol -->
             <div style="
               transform: rotate(45deg);
               color: white;
-              font-size: 14px;
+              font-size: 16px;
               font-weight: bold;
               text-shadow: 0 1px 3px rgba(0,0,0,0.3);
             ">
-              ${m.spotsLeft > 0 ? m.spotsLeft : '⚽'}
+              ⚽
             </div>
           </div>
           <!-- Sombra del pin -->
