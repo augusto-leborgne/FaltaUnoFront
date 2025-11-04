@@ -213,8 +213,8 @@ export function MatchesListing() {
   // ============================================
 
   const formatMatchType = (type?: string) => {
-    if (!type) return "Fútbol"
-    return type.replace("FUTBOL_", "F")
+    if (!type) return "Fútbol 5"
+    return type.replace("FUTBOL_", "Fútbol ")
   }
 
   const formatDate = (dateString: string, timeString: string) => {
@@ -236,11 +236,9 @@ export function MatchesListing() {
       } else if (compareDate.getTime() === tomorrow.getTime()) {
         return `Mañana ${time}`
       } else {
-        return `${date.toLocaleDateString("es-ES", {
-          weekday: "long",
-          day: "numeric",
-          month: "short",
-        })} ${time}`
+        const weekday = date.toLocaleDateString("es-ES", { weekday: "long" })
+        const formattedWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1)
+        return `${formattedWeekday} ${time}`
       }
     } catch {
       return `${dateString} ${timeString}`
@@ -458,6 +456,9 @@ export function MatchesListing() {
                         </Badge>
                         <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1">
                           {match.genero || 'Mixto'}
+                        </Badge>
+                        <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100 text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1">
+                          {match.nivel || 'Intermedio'}
                         </Badge>
                       </div>
                       <Badge className={`${getSpotsLeftColor(spotsLeft)} hover:bg-current text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1 whitespace-nowrap flex-shrink-0`}>

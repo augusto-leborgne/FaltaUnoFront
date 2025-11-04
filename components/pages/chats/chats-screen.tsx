@@ -3,11 +3,12 @@
 import { logger } from '@/lib/logger'
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { MessageCircle, Calendar, MapPin, Users, ChevronRight } from "lucide-react"
+import { MessageCircle, Calendar, MapPin, Users, ChevronRight, Plus } from "lucide-react"
 import { PartidoAPI, PartidoDTO, MensajeAPI } from "@/lib/api"
 import { AuthService } from "@/lib/auth"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
+import { Badge } from "@/components/ui/badge"
 
 interface PartidoWithUnread extends PartidoDTO {
   unreadCount?: number
@@ -57,16 +58,19 @@ export function ChatsScreen() {
               const messages = messagesResponse.data
               const lastMessage = messages[messages.length - 1]
               
-              // Simular mensajes no leídos: contar mensajes de las últimas 24h que no son del usuario
-              const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
-              const recentMessages = messages.filter(m => {
+              // Detectar mensajes no leídos: mensajes posteriores a la última visita
+              const lastVisitKey = `chat_last_visit_${partido.id}`
+              const lastVisitStr = localStorage.getItem(lastVisitKey)
+              const lastVisit = lastVisitStr ? new Date(lastVisitStr) : new Date(0) // Si nunca visitó, usar fecha antigua
+              
+              const unreadMessages = messages.filter(m => {
                 const messageDate = new Date(m.createdAt || '')
-                return messageDate > oneDayAgo && m.usuarioId !== currentUser.id
+                return messageDate > lastVisit && m.usuarioId !== currentUser.id
               })
               
               return {
                 ...partido,
-                unreadCount: recentMessages.length,
+                unreadCount: unreadMessages.length,
                 lastMessage: lastMessage.contenido?.substring(0, 50),
                 lastMessageTime: lastMessage.createdAt
               } as PartidoWithUnread
@@ -105,6 +109,11 @@ export function ChatsScreen() {
 
   const handleChatClick = (partidoId: string | undefined) => {
     if (!partidoId) return
+    
+    // Guardar en localStorage que visitó este chat
+    const lastVisitKey = `chat_last_visit_${partidoId}`
+    localStorage.setItem(lastVisitKey, new Date().toISOString())
+    
     router.push(`/matches/${partidoId}/chat`)
   }
 
@@ -119,20 +128,25 @@ export function ChatsScreen() {
       tomorrow.setHours(0, 0, 0, 0)
       date.setHours(0, 0, 0, 0)
 
+      const time = timeString.substring(0, 5)
+
       if (date.getTime() === today.getTime()) {
-        return `Hoy ${timeString.substring(0, 5)}`
+        return `Hoy ${time}`
       } else if (date.getTime() === tomorrow.getTime()) {
-        return `Mañana ${timeString.substring(0, 5)}`
+        return `Mañana ${time}`
       } else {
-        return date.toLocaleDateString("es-ES", { 
-          day: "numeric", 
-          month: "short",
-          year: date.getFullYear() !== today.getFullYear() ? "numeric" : undefined
-        }) + ` ${timeString.substring(0, 5)}`
+        const weekday = date.toLocaleDateString("es-ES", { weekday: "long" })
+        const formattedWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1)
+        return `${formattedWeekday} ${time}`
       }
     } catch {
-      return dateString
+      return `${dateString} ${timeString}`
     }
+  }
+
+  const formatMatchType = (type?: string) => {
+    if (!type) return "Fútbol 5"
+    return type.replace("FUTBOL_", "Fútbol ")
   }
 
   const formatMessageTime = (timestamp: string | undefined) => {
@@ -173,16 +187,23 @@ export function ChatsScreen() {
   // ============================================
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Header */}
-      <div className="pt-16 pb-4 sm:pb-6 text-center border-b border-gray-100">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Chats</h1>
-        <p className="text-xs sm:text-sm text-gray-500 mt-1">
-          Conversaciones de tus partidos
-        </p>
+      {/* Header Compacto como Partidos y Mis Partidos */}
+      <div className="pt-safe-top bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+        <div className="px-4 sm:px-6 md:px-8 py-3 sm:py-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Chats</h1>
+            <button
+              onClick={() => router.push('/create-match')}
+              className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-full p-2 sm:p-2.5 min-h-[36px] min-w-[36px] sm:min-h-[44px] sm:min-w-[44px] touch-manipulation shadow-md transition-transform active:scale-95"
+            >
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 px-3 sm:px-6 py-4 sm:py-6 overflow-y-auto pb-20 sm:pb-24">
+      <div className="flex-1 px-4 sm:px-6 md:px-8 py-4 overflow-y-auto pb-20 sm:pb-24">
         {/* Error Message */}
         {error && (
           <div className="mb-4">
@@ -210,80 +231,82 @@ export function ChatsScreen() {
           </div>
         ) : (
           // Lista de chats
-          <div className="space-y-3">
-            {partidos.map((partido) => (
-              <button
-                key={partido.id}
-                onClick={() => handleChatClick(partido.id)}
-                className={`w-full bg-white border rounded-xl p-4 transition-all text-left hover:shadow-md ${
-                  (partido.unreadCount || 0) > 0 
-                    ? 'border-blue-200 bg-blue-50' 
-                    : 'border-gray-200'
-                }`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    {/* Tipo de partido con badge de no leídos */}
-                    <div className="flex items-center space-x-2 mb-2">
-                      <div className="flex items-center space-x-1.5">
-                        <div className={`w-2 h-2 rounded-full ${
-                          (partido.unreadCount || 0) > 0 ? 'bg-blue-500' : 'bg-green-500'
-                        }`}></div>
-                        <span className="text-sm sm:text-base font-semibold text-gray-900">
-                          {partido.tipoPartido || partido.tipo_partido}
-                        </span>
-                      </div>
+          <div className="space-y-2 sm:space-y-3">
+            {partidos.map((partido) => {
+              const spotsLeft = (partido.cantidadJugadores ?? 0) - (partido.jugadoresActuales ?? 0)
+              
+              return (
+                <button
+                  key={partido.id}
+                  onClick={() => handleChatClick(partido.id)}
+                  className={`w-full bg-white border rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all text-left hover:shadow-lg hover:border-green-200 active:scale-[0.98] ${
+                    (partido.unreadCount || 0) > 0 
+                      ? 'border-blue-200 bg-blue-50' 
+                      : 'border-gray-200'
+                  }`}
+                >
+                  {/* Header row - Badges */}
+                  <div className="flex items-start justify-between mb-2 gap-2">
+                    <div className="flex gap-1.5 flex-wrap items-center">
+                      <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100 text-xs px-2 py-0.5">
+                        {formatMatchType(partido.tipoPartido || partido.tipo_partido)}
+                      </Badge>
+                      <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 text-xs px-2 py-0.5">
+                        {partido.genero || 'Mixto'}
+                      </Badge>
+                      <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100 text-xs px-2 py-0.5">
+                        {partido.nivel || 'Intermedio'}
+                      </Badge>
                       {(partido.unreadCount || 0) > 0 && (
-                        <div className="bg-blue-600 text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
-                          {partido.unreadCount}
-                        </div>
+                        <Badge className="bg-blue-600 text-white hover:bg-blue-600 text-xs px-2 py-0.5 ml-1">
+                          {partido.unreadCount} {partido.unreadCount === 1 ? 'nuevo' : 'nuevos'}
+                        </Badge>
                       )}
-                    </div>
-
-                    {/* Último mensaje si existe */}
-                    {partido.lastMessage && (
-                      <div className="mb-2">
-                        <p className={`text-xs sm:text-sm truncate ${
-                          (partido.unreadCount || 0) > 0 ? 'text-gray-900 font-medium' : 'text-gray-600'
-                        }`}>
-                          {partido.lastMessage}
-                        </p>
-                        <span className="text-[10px] sm:text-xs text-gray-400">
-                          {formatMessageTime(partido.lastMessageTime)}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Información del partido */}
-                    <div className="space-y-1">
-                      <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
-                        <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
-                        <span>{formatDate(partido.fecha || '', partido.hora || '')}</span>
-                      </div>
-                      
-                      <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
-                        <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
-                        <span className="truncate">{partido.nombreUbicacion || partido.nombre_ubicacion}</span>
-                      </div>
-
-                      <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
-                        <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
-                        <span>
-                          {partido.jugadoresActuales || partido.jugadores_actuales || 0}/{partido.cantidadJugadores || partido.cantidad_jugadores || 0} jugadores
-                        </span>
-                      </div>
                     </div>
                   </div>
 
-                  {/* Arrow icon */}
-                  <div className="ml-2 sm:ml-3 flex-shrink-0">
-                    <ChevronRight className={`w-4 h-4 sm:w-5 sm:h-5 transition-colors ${
+                  {/* Título principal: Fecha y hora */}
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-2">
+                    {formatDate(partido.fecha || '', partido.hora || '')}
+                  </h3>
+
+                  {/* Último mensaje si existe */}
+                  {partido.lastMessage && (
+                    <div className="mb-2">
+                      <p className={`text-xs sm:text-sm truncate ${
+                        (partido.unreadCount || 0) > 0 ? 'text-gray-900 font-medium' : 'text-gray-600'
+                      }`}>
+                        {partido.lastMessage}
+                      </p>
+                      <span className="text-[10px] sm:text-xs text-gray-400">
+                        {formatMessageTime(partido.lastMessageTime)}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Información del partido compacta */}
+                  <div className="flex items-center justify-between text-xs text-gray-600">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex items-center space-x-1">
+                        <MapPin className="w-3 h-3 flex-shrink-0" />
+                        <span className="truncate max-w-[120px] sm:max-w-[200px]">
+                          {partido.nombreUbicacion || partido.nombre_ubicacion}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Users className="w-3 h-3 flex-shrink-0" />
+                        <span>
+                          {partido.jugadoresActuales || 0}/{partido.cantidadJugadores || 0}
+                        </span>
+                      </div>
+                    </div>
+                    <ChevronRight className={`w-4 h-4 flex-shrink-0 ${
                       (partido.unreadCount || 0) > 0 ? 'text-blue-600' : 'text-gray-400'
                     }`} />
                   </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              )
+            })}
           </div>
         )}
       </div>

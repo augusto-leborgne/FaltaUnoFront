@@ -18,7 +18,7 @@ type Match = PartidoDTO
 export function MyMatchesScreen() {
   const router = useRouter()
   
-  const [activeTab, setActiveTab] = useState<"Creados" | "Inscriptos">("Creados")
+  const [activeTab, setActiveTab] = useState<"Creados" | "Inscritos">("Creados")
   const [createdMatches, setCreatedMatches] = useState<Match[]>([])
   const [joinedMatches, setJoinedMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(false) // Cambiar a false para UI inmediata
@@ -102,7 +102,7 @@ export function MyMatchesScreen() {
   }
 
   const formatMatchType = (type: string) => {
-    return type.replace("FUTBOL_", "F")
+    return type.replace("FUTBOL_", "Fútbol ")
   }
 
   const formatLevel = (level?: string) => {
@@ -235,7 +235,7 @@ export function MyMatchesScreen() {
         {/* Tabs - Better mobile spacing */}
         <div className="px-4 sm:px-6 md:px-8 pt-4 pb-3">
           <div className="flex bg-gray-100 rounded-xl sm:rounded-2xl p-1">
-            {(["Creados", "Inscriptos"] as const).map((tab) => (
+            {(["Creados", "Inscritos"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -261,7 +261,7 @@ export function MyMatchesScreen() {
               <p className="text-gray-700 font-medium mb-2 text-base sm:text-lg">
                 {activeTab === "Creados" 
                   ? "No has creado partidos aún" 
-                  : "No tienes partidos inscriptos"}
+                  : "No tienes partidos inscritos"}
               </p>
               <p className="text-sm sm:text-base text-gray-500 mb-6 px-4">
                 {activeTab === "Creados" 
@@ -300,9 +300,17 @@ export function MyMatchesScreen() {
                         <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100 text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1">
                           {formatMatchType(match.tipoPartido || 'FUTBOL_5')}
                         </Badge>
-                        {getStatusBadge(match.estado, match.fecha, match.hora)}
+                        <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1">
+                          {match.genero || 'Mixto'}
+                        </Badge>
+                        <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100 text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1">
+                          {formatLevel(match.nivel)}
+                        </Badge>
                       </div>
-                      {isActive && <div className="flex-shrink-0">{getSpotsLeftBadge(spotsLeft)}</div>}
+                      <div className="flex gap-1.5 flex-shrink-0">
+                        {getStatusBadge(match.estado, match.fecha, match.hora)}
+                        {isActive && getSpotsLeftBadge(spotsLeft)}
+                      </div>
                     </div>
 
                     {/* Date/Time - Bigger on mobile */}

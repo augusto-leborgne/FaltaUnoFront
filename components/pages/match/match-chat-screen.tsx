@@ -702,7 +702,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                       {/* Nombre compacto */}
                       {!isOwn && isFirstInGroup && (
                         <button
-                          className="text-[11px] font-bold mb-0.5 block text-blue-600 hover:text-blue-700 transition-colors"
+                          className="text-[11px] font-bold block text-blue-600 hover:text-blue-700 transition-colors"
                           onClick={() => handleUserClick(msg.usuarioId)}
                         >
                           {userName}
