@@ -13,6 +13,7 @@ import {
   Edit3,
   Check,
   X,
+  XCircle,
   MapPin,
   Users,
   DollarSign,
@@ -55,6 +56,8 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [showMapModal, setShowMapModal] = useState(false)
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
   
   const [editData, setEditData] = useState({
     fecha: "",
@@ -879,14 +882,13 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                 <MessageCircle className="w-4 h-4 mr-2" />
                 Chat grupal
               </Button>
-              <Button
-                onClick={handleCancelMatch}
-                variant="outline"
-                className="flex-1 border-red-200 text-red-600 hover:bg-red-50 py-3 rounded-xl bg-transparent"
+              <button
+                onClick={() => setShowCancelModal(true)}
+                className="p-2 hover:bg-red-50 rounded-xl transition-colors border border-red-200"
+                title="Cancelar partido"
               >
-                <X className="w-4 h-4 mr-2" />
-                Cancelar partido
-              </Button>
+                <XCircle className="w-5 h-5 text-red-600" />
+              </button>
             </div>
           )}
         </div>
@@ -913,7 +915,9 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
 
           {match.jugadores && match.jugadores.length > 0 ? (
             <div className="space-y-3">
-              {match.jugadores.map((player) => (
+              {match.jugadores
+                .filter((player) => player.id !== match.organizadorId)
+                .map((player) => (
                 <div 
                   key={player.id} 
                   className="flex items-center justify-between p-4 bg-gray-50 rounded-xl"
@@ -1068,6 +1072,40 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                 <MapPin className="w-5 h-5 text-green-600" />
                 <span className="font-medium">{match.nombreUbicacion}</span>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal cancelar partido */}
+      {showCancelModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+            <h3 className="text-lg font-bold text-gray-900 mb-2">¿Cancelar partido?</h3>
+            <p className="text-gray-600 mb-6">
+              Esta acción no se puede deshacer. Todos los jugadores inscriptos serán notificados de la cancelación.
+            </p>
+            <div className="flex gap-3">
+              <Button
+                onClick={() => setShowCancelModal(false)}
+                variant="outline"
+                className="flex-1"
+                disabled={isCancelling}
+              >
+                No, mantener
+              </Button>
+              <Button
+                onClick={async () => {
+                  setIsCancelling(true)
+                  await handleCancelMatch()
+                  setIsCancelling(false)
+                  setShowCancelModal(false)
+                }}
+                className="flex-1 bg-red-600 hover:bg-red-700"
+                disabled={isCancelling}
+              >
+                {isCancelling ? "Cancelando..." : "Sí, cancelar"}
+              </Button>
             </div>
           </div>
         </div>

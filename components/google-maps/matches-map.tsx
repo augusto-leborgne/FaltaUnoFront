@@ -138,7 +138,7 @@ export function MatchesMap() {
     
     // Si el usuario es el organizador, ir a página de gestión
     if (user && match.organizadorId === user.id) {
-      router.push(`/matches/${matchId}/manage`);
+      router.push(`/my-matches/${matchId}`);
     } else {
       // Si no es organizador, ir a página de detalles
       router.push(`/matches/${matchId}`);
