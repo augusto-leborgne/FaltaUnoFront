@@ -589,10 +589,10 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
       <div 
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="flex-1 px-4 py-4 space-y-2 overflow-y-auto"
+        className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          backgroundColor: '#f0f2f5'
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2398a6ad' fill-opacity='0.03'%3E%3Cpath d='M50 50c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10c0 5.523-4.477 10-10 10s-10-4.477-10-10 4.477-10 10-10zM10 10c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10c0 5.523-4.477 10-10 10S0 25.523 0 20s4.477-10 10-10zm10 8c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8zm40 40c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          backgroundColor: '#efeae2'
         }}
       >
         {messagesWithSeparators.length === 0 ? (
@@ -616,8 +616,8 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
             // Separador de fecha
             if (isDateSeparator(item)) {
               return (
-                <div key={`separator-${index}`} className="flex items-center justify-center my-6">
-                  <div className="bg-white/90 backdrop-blur-sm text-gray-600 text-[11px] font-medium px-4 py-1.5 rounded-full shadow-sm border border-gray-200">
+                <div key={`separator-${index}`} className="flex items-center justify-center my-5">
+                  <div className="bg-white/95 backdrop-blur-sm text-gray-700 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm">
                     {formatDateSeparator(item.date)}
                   </div>
                 </div>
@@ -631,90 +631,104 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
             const initials = getUserInitials(msg.usuario?.nombre, msg.usuario?.apellido)
             
             // Verificar si es el último mensaje del mismo usuario
+            const prevItem = index > 0 ? messagesWithSeparators[index - 1] : null
             const nextItem = messagesWithSeparators[index + 1]
+            
+            const isFirstInGroup = !prevItem || isDateSeparator(prevItem) || 
+              (prevItem as MensajeDTO).usuarioId !== msg.usuarioId
             const isLastInGroup = !nextItem || isDateSeparator(nextItem) || 
               (nextItem as MensajeDTO).usuarioId !== msg.usuarioId
 
             return (
               <div 
                 key={msg.id} 
-                className={`flex ${isOwn ? "justify-end" : "justify-start"} animate-in slide-in-from-bottom duration-200`}
+                className={`flex ${isOwn ? "justify-end" : "justify-start"} ${isFirstInGroup ? 'mt-4' : 'mt-1'}`}
               >
                 <div
-                  className={`group flex items-end space-x-2 max-w-[85%] relative ${
+                  className={`group flex items-end space-x-2 max-w-[80%] relative ${
                     isOwn ? "flex-row-reverse space-x-reverse" : ""
                   }`}
                 >
                   {/* Avatar solo en último mensaje del grupo */}
-                  {!isOwn && isLastInGroup && (
+                  {!isOwn && isLastInGroup ? (
                     <Avatar
-                      className="w-8 h-8 cursor-pointer hover:scale-110 transition-transform flex-shrink-0 ring-2 ring-white shadow-sm"
+                      className="w-8 h-8 cursor-pointer hover:scale-110 transition-transform flex-shrink-0 ring-2 ring-white shadow-sm mb-0.5"
                       onClick={() => handleUserClick(msg.usuarioId)}
                     >
                       {msg.usuario?.foto_perfil ? (
-                        <AvatarImage src={`data:image/jpeg;base64,${msg.usuario.foto_perfil}`} />
+                        <AvatarImage src={`data:image/jpeg;base64,${msg.usuario.foto_perfil}`} alt={userName} />
                       ) : (
-                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white text-xs font-semibold">
+                        <AvatarFallback className="bg-gradient-to-br from-green-500 to-green-600 text-white text-xs font-bold">
                           {initials}
                         </AvatarFallback>
                       )}
                     </Avatar>
-                  )}
-                  {!isOwn && !isLastInGroup && (
+                  ) : !isOwn ? (
                     <div className="w-8 flex-shrink-0" /> 
-                  )}
+                  ) : null}
                   
                   {/* Mensaje bubble */}
-                  <div className="relative">
+                  <div className="relative flex-1">
                     {/* Opciones de mensaje (aparecen al hover) */}
-                    <div className={`absolute top-0 ${isOwn ? 'left-0 -translate-x-full' : 'right-0 translate-x-full'} opacity-0 group-hover:opacity-100 transition-opacity flex items-center space-x-1 px-2`}>
+                    <div className={`absolute top-1 ${isOwn ? 'left-0 -translate-x-full' : 'right-0 translate-x-full'} opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center space-x-1 px-2`}>
                       <button
                         onClick={() => setReplyingTo(msg)}
-                        className="p-1.5 bg-white hover:bg-gray-100 rounded-full shadow-md transition-colors"
+                        className="p-1.5 bg-white hover:bg-gray-100 rounded-full shadow-lg transition-all hover:scale-110"
                         title="Responder"
                       >
-                        <svg className="w-3.5 h-3.5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                         </svg>
                       </button>
                       <button
-                        className="p-1.5 bg-white hover:bg-gray-100 rounded-full shadow-md transition-colors"
+                        className="p-1.5 bg-white hover:bg-gray-100 rounded-full shadow-lg transition-all hover:scale-110"
                         title="Más opciones"
                       >
-                        <MoreVertical className="w-3.5 h-3.5 text-gray-600" />
+                        <MoreVertical className="w-4 h-4 text-gray-600" />
                       </button>
                     </div>
 
                     <div
-                      className={`rounded-2xl px-4 py-2 shadow-sm transition-all hover:shadow-md ${
+                      className={`inline-block rounded-2xl px-3 py-2 shadow-sm transition-all group-hover:shadow-md ${
                         isOwn 
-                          ? "bg-gradient-to-br from-green-500 to-green-600 text-white rounded-br-md" 
-                          : "bg-white text-gray-900 border border-gray-200 rounded-bl-md"
+                          ? `bg-gradient-to-br from-green-500 to-green-600 text-white ${
+                              isLastInGroup ? 'rounded-br-sm' : ''
+                            } ${isFirstInGroup ? 'rounded-tr-2xl' : ''}` 
+                          : `bg-white text-gray-900 border border-gray-200 ${
+                              isLastInGroup ? 'rounded-bl-sm' : ''
+                            } ${isFirstInGroup ? 'rounded-tl-2xl' : ''}`
                       }`}
                     >
-                      {!isOwn && isLastInGroup && (
+                      {/* Nombre solo en primer mensaje del grupo (para mensajes de otros) */}
+                      {!isOwn && isFirstInGroup && (
                         <button
-                          className="text-xs font-semibold mb-1.5 opacity-80 hover:opacity-100 transition-opacity block text-green-600"
+                          className="text-xs font-bold mb-1.5 block text-green-600 hover:text-green-700 transition-colors"
                           onClick={() => handleUserClick(msg.usuarioId)}
                         >
                           {userName}
                         </button>
                       )}
-                      <p className="text-[15px] whitespace-pre-wrap break-words leading-relaxed">
+                      
+                      {/* Contenido del mensaje */}
+                      <p className="text-[15px] whitespace-pre-wrap break-words leading-[1.4] font-normal">
                         {msg.contenido}
                       </p>
-                      <div className="flex items-center justify-end space-x-1 mt-1">
-                        <p className={`text-[10px] ${
-                          isOwn ? "text-white/80" : "text-gray-400"
+                      
+                      {/* Footer con hora y check marks */}
+                      <div className="flex items-center justify-end space-x-1.5 mt-1 -mb-0.5">
+                        <span className={`text-[11px] font-medium ${
+                          isOwn ? "text-white/70" : "text-gray-500"
                         }`}>
                           {formatTime(msg.createdAt)}
-                        </p>
+                        </span>
                         {/* Check marks para mensajes propios */}
                         {isOwn && (
-                          <svg className="w-4 h-4 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 13l4 4L23 7" />
-                          </svg>
+                          <div className="flex-shrink-0">
+                            <svg className="w-4 h-4 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 13l4 4L23 7" />
+                            </svg>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -747,37 +761,39 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
       )}
 
       {/* Message Input Mejorado - Estilo WhatsApp/Telegram */}
-      <div className="border-t border-gray-200 bg-white">
+      <div className="border-t border-gray-300 bg-[#f0f0f0]">
         {/* Reply preview */}
         {replyingTo && (
-          <div className="px-4 pt-3 pb-2 border-b border-gray-100 bg-blue-50">
-            <div className="flex items-start justify-between">
+          <div className="px-4 pt-3 pb-2 bg-white/80 backdrop-blur-sm">
+            <div className="flex items-start justify-between bg-green-50 rounded-lg p-3 border-l-4 border-green-500">
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-blue-600 mb-1">
-                  Respondiendo a {getUserName(replyingTo.usuario?.nombre, replyingTo.usuario?.apellido)}
+                <p className="text-xs font-bold text-green-700 mb-1">
+                  {getUserName(replyingTo.usuario?.nombre, replyingTo.usuario?.apellido)}
                 </p>
-                <p className="text-sm text-gray-600 truncate">
+                <p className="text-sm text-gray-700 truncate">
                   {replyingTo.contenido}
                 </p>
               </div>
               <button
                 onClick={() => setReplyingTo(null)}
-                className="ml-2 text-gray-400 hover:text-gray-600 text-lg leading-none"
+                className="ml-3 text-gray-500 hover:text-gray-700 transition-colors"
               >
-                ✕
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
           </div>
         )}
         
-        <div className="p-3">
+        <div className="p-2">
           <div className="flex items-end space-x-2">
             {/* Emoji button */}
             <button
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
+              className="p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-full transition-colors flex-shrink-0 mb-1"
               title="Emojis (próximamente)"
             >
-              <Smile className="w-5 h-5" />
+              <Smile className="w-6 h-6" />
             </button>
             
             {/* Input container */}
@@ -787,39 +803,40 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                 value={message}
                 onChange={(e) => handleInputChange(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Escribe un mensaje..."
-                className="rounded-3xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 py-3 px-4 pr-12 bg-gray-50"
+                placeholder="Mensaje"
+                className="rounded-3xl border-none focus:ring-2 focus:ring-green-500 py-2.5 px-4 pr-12 bg-white shadow-sm text-[15px]"
                 disabled={sending}
                 maxLength={500}
               />
               {message.length > 400 && (
-                <div className="absolute right-3 bottom-3 text-[10px] font-medium text-gray-400 bg-white rounded-full px-1.5 py-0.5">
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-500 bg-gray-100 rounded-full px-2 py-0.5">
                   {500 - message.length}
                 </div>
               )}
             </div>
 
-            {/* Attach button (opcional, para futuro) */}
-            <button
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
-              title="Adjuntar imagen (próximamente)"
-            >
-              <ImageIcon className="w-5 h-5" />
-            </button>
-            
-            {/* Send button */}
-            <Button
-              onClick={handleSendMessage}
-              disabled={!message.trim() || sending}
-              size="lg"
-              className="bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-full p-0 min-h-[44px] min-w-[44px] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all flex-shrink-0"
-            >
-              {sending ? (
-                <InlineSpinner variant="white" />
-              ) : (
-                <Send className="w-5 h-5" />
-              )}
-            </Button>
+            {/* Attach/Send button */}
+            {message.trim() ? (
+              <Button
+                onClick={handleSendMessage}
+                disabled={sending}
+                size="lg"
+                className="bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-full p-0 min-h-[48px] min-w-[48px] disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition-all flex-shrink-0 mb-1"
+              >
+                {sending ? (
+                  <InlineSpinner variant="white" />
+                ) : (
+                  <Send className="w-5 h-5" />
+                )}
+              </Button>
+            ) : (
+              <button
+                className="p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-full transition-colors flex-shrink-0 mb-1"
+                title="Adjuntar imagen (próximamente)"
+              >
+                <ImageIcon className="w-6 h-6" />
+              </button>
+            )}
           </div>
         </div>
       </div>
