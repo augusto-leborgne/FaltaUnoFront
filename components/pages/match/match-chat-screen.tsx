@@ -527,40 +527,41 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   // ============================================
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
-      {/* Header Moderno - Estilo WhatsApp */}
-      <div className="pt-16 pb-3 px-4 bg-gradient-to-r from-green-600 to-green-700 shadow-lg">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex flex-col">
+      {/* Header Personalizado - Paleta de tu app */}
+      <div className="pt-16 pb-4 px-4 bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 shadow-lg">
         <div className="flex items-center space-x-3">
           <button 
             onClick={handleBack} 
-            className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors"
+            className="p-2 -ml-2 hover:bg-white/10 rounded-xl transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-white" />
           </button>
           
-          {/* Match avatar/icon */}
-          <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-            <Users className="w-5 h-5 text-white" />
-          </div>
-          
+          {/* Match info compacto */}
           <div className="flex-1 min-w-0">
-            <h1 className="text-base font-semibold text-white truncate">
-              Grupo del partido
+            <h1 className="text-base font-bold text-white truncate">
+              Chat del Partido
             </h1>
             {matchInfo && (
-              <div className="flex items-center space-x-2 text-xs text-white/90">
-                <Clock className="w-3 h-3" />
-                <span className="truncate">
-                  {formatDate(matchInfo.fecha, matchInfo.hora)} • {matchInfo.jugadores_actuales}/{matchInfo.jugadores_necesarios} jugadores
-                </span>
+              <div className="flex items-center space-x-3 text-xs text-blue-100 mt-0.5">
+                <div className="flex items-center space-x-1">
+                  <Clock className="w-3 h-3" />
+                  <span>{formatDate(matchInfo.fecha, matchInfo.hora)}</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Users className="w-3 h-3" />
+                  <span>{matchInfo.jugadores_actuales}/{matchInfo.jugadores_necesarios}</span>
+                </div>
               </div>
             )}
           </div>
 
-          {/* More options button */}
+          {/* Info button */}
           <button 
-            className="p-2 hover:bg-white/10 rounded-full transition-colors"
-            title="Más opciones"
+            className="p-2 hover:bg-white/10 rounded-xl transition-colors"
+            title="Información del partido"
+            onClick={() => router.push(`/matches/${matchId}`)}
           >
             <MoreVertical className="w-5 h-5 text-white" />
           </button>
@@ -585,29 +586,25 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         </div>
       )}
 
-      {/* Messages Container con wallpaper */}
+      {/* Messages Container - Fondo limpio */}
       <div 
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="flex-1 px-3 py-3 space-y-0.5 overflow-y-auto"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2398a6ad' fill-opacity='0.03'%3E%3Cpath d='M50 50c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10c0 5.523-4.477 10-10 10s-10-4.477-10-10 4.477-10 10-10zM10 10c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10c0 5.523-4.477 10-10 10S0 25.523 0 20s4.477-10 10-10zm10 8c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8zm40 40c4.418 0 8-3.582 8-8s-3.582-8-8-8-8 3.582-8 8 3.582 8 8 8z' /%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-          backgroundColor: '#efeae2'
-        }}
+        className="flex-1 px-4 py-4 space-y-0.5 overflow-y-auto bg-gradient-to-b from-gray-50 to-white"
       >
         {messagesWithSeparators.length === 0 ? (
           <div className="flex items-center justify-center h-full">
-            <div className="text-center bg-white rounded-2xl p-8 shadow-sm max-w-sm mx-auto">
-              <div className="w-20 h-20 bg-gradient-to-br from-green-100 to-green-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Send className="w-10 h-10 text-green-600" />
+            <div className="text-center bg-white rounded-3xl p-10 shadow-xl max-w-sm mx-auto border-2 border-blue-100">
+              <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                <Send className="w-12 h-12 text-white" />
               </div>
-              <p className="text-gray-700 font-semibold mb-2 text-lg">¡Comienza la conversación!</p>
-              <p className="text-sm text-gray-500 mb-4">
-                Este es el inicio del chat del grupo. Saluda a tus compañeros de juego.
+              <p className="text-gray-900 font-bold mb-3 text-xl">¡Empieza la conversación!</p>
+              <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+                Este es el chat del grupo del partido. Coordina con tus compañeros, pregunta dudas y organízate mejor.
               </p>
-              <div className="inline-flex items-center space-x-2 text-xs text-gray-400 bg-gray-50 px-3 py-2 rounded-full">
-                <Users className="w-3.5 h-3.5" />
-                <span>Grupo del partido</span>
+              <div className="inline-flex items-center space-x-2 text-xs font-semibold text-blue-600 bg-blue-50 px-4 py-2.5 rounded-full">
+                <Users className="w-4 h-4" />
+                <span>{matchInfo?.jugadores_actuales || 0} jugadores en el chat</span>
               </div>
             </div>
           </div>
@@ -616,8 +613,8 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
             // Separador de fecha
             if (isDateSeparator(item)) {
               return (
-                <div key={`separator-${index}`} className="flex items-center justify-center my-5">
-                  <div className="bg-white/95 backdrop-blur-sm text-gray-700 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm">
+                <div key={`separator-${index}`} className="flex items-center justify-center my-6">
+                  <div className="bg-blue-100 text-blue-700 text-xs font-bold px-4 py-2 rounded-full shadow-sm">
                     {formatDateSeparator(item.date)}
                   </div>
                 </div>
@@ -642,46 +639,46 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
             return (
               <div 
                 key={msg.id} 
-                className={`flex ${isOwn ? "justify-end" : "justify-start"} ${isFirstInGroup ? 'mt-4' : 'mt-1'}`}
+                className={`flex ${isOwn ? "justify-end" : "justify-start"} ${isFirstInGroup ? 'mt-4' : 'mt-1.5'}`}
               >
                 <div
-                  className={`group flex items-end space-x-2 max-w-[80%] relative ${
+                  className={`group flex items-end space-x-2.5 max-w-[75%] relative ${
                     isOwn ? "flex-row-reverse space-x-reverse" : ""
                   }`}
                 >
-                  {/* Avatar solo en último mensaje del grupo */}
+                  {/* Avatar mejorado */}
                   {!isOwn && isLastInGroup ? (
                     <Avatar
-                      className="w-8 h-8 cursor-pointer hover:scale-110 transition-transform flex-shrink-0 ring-2 ring-white shadow-sm mb-0.5"
+                      className="w-9 h-9 cursor-pointer hover:ring-4 hover:ring-blue-100 transition-all flex-shrink-0 shadow-md"
                       onClick={() => handleUserClick(msg.usuarioId)}
                     >
                       {msg.usuario?.foto_perfil ? (
                         <AvatarImage src={`data:image/jpeg;base64,${msg.usuario.foto_perfil}`} alt={userName} />
                       ) : (
-                        <AvatarFallback className="bg-gradient-to-br from-green-500 to-green-600 text-white text-xs font-bold">
+                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white text-xs font-bold">
                           {initials}
                         </AvatarFallback>
                       )}
                     </Avatar>
                   ) : !isOwn ? (
-                    <div className="w-8 flex-shrink-0" /> 
+                    <div className="w-9 flex-shrink-0" /> 
                   ) : null}
                   
-                  {/* Mensaje bubble */}
+                  {/* Mensaje bubble mejorado */}
                   <div className="relative flex-1">
-                    {/* Opciones de mensaje (aparecen al hover) */}
-                    <div className={`absolute top-1 ${isOwn ? 'left-0 -translate-x-full' : 'right-0 translate-x-full'} opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center space-x-1 px-2`}>
+                    {/* Opciones de mensaje (aparecen al hover) - Mejoradas */}
+                    <div className={`absolute top-2 ${isOwn ? 'left-0 -translate-x-full pl-2' : 'right-0 translate-x-full pr-2'} opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center space-x-1.5`}>
                       <button
                         onClick={() => setReplyingTo(msg)}
-                        className="p-1.5 bg-white hover:bg-gray-100 rounded-full shadow-lg transition-all hover:scale-110"
+                        className="p-2 bg-white hover:bg-blue-50 rounded-lg shadow-lg border border-gray-200 transition-all hover:scale-110"
                         title="Responder"
                       >
-                        <svg className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                        <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                         </svg>
                       </button>
                       <button
-                        className="p-1.5 bg-white hover:bg-gray-100 rounded-full shadow-lg transition-all hover:scale-110"
+                        className="p-2 bg-white hover:bg-blue-50 rounded-lg shadow-lg border border-gray-200 transition-all hover:scale-110"
                         title="Más opciones"
                       >
                         <MoreVertical className="w-4 h-4 text-gray-600" />
@@ -689,44 +686,53 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                     </div>
 
                     <div
-                      className={`inline-block rounded-2xl px-3 py-2 shadow-sm transition-all group-hover:shadow-md ${
+                      className={`inline-block px-4 py-2.5 transition-all group-hover:scale-[1.02] ${
                         isOwn 
-                          ? `bg-gradient-to-br from-green-500 to-green-600 text-white ${
-                              isLastInGroup ? 'rounded-br-sm' : ''
-                            } ${isFirstInGroup ? 'rounded-tr-2xl' : ''}` 
-                          : `bg-white text-gray-900 border border-gray-200 ${
-                              isLastInGroup ? 'rounded-bl-sm' : ''
-                            } ${isFirstInGroup ? 'rounded-tl-2xl' : ''}`
+                          ? `bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white shadow-md hover:shadow-lg ${
+                              isFirstInGroup && isLastInGroup ? 'rounded-2xl' :
+                              isFirstInGroup ? 'rounded-t-2xl rounded-bl-2xl rounded-br-md' :
+                              isLastInGroup ? 'rounded-b-2xl rounded-tl-2xl rounded-tr-md' :
+                              'rounded-l-2xl rounded-r-md'
+                            }` 
+                          : `bg-white text-gray-900 border-2 border-gray-200 shadow-sm hover:shadow-md ${
+                              isFirstInGroup && isLastInGroup ? 'rounded-2xl' :
+                              isFirstInGroup ? 'rounded-t-2xl rounded-br-2xl rounded-bl-md' :
+                              isLastInGroup ? 'rounded-b-2xl rounded-tr-2xl rounded-tl-md' :
+                              'rounded-r-2xl rounded-l-md'
+                            }`
                       }`}
                     >
-                      {/* Nombre solo en primer mensaje del grupo (para mensajes de otros) */}
+                      {/* Nombre mejorado */}
                       {!isOwn && isFirstInGroup && (
                         <button
-                          className="text-xs font-bold mb-1.5 block text-green-600 hover:text-green-700 transition-colors"
+                          className="text-xs font-extrabold mb-2 block text-blue-600 hover:text-blue-700 transition-colors tracking-wide"
                           onClick={() => handleUserClick(msg.usuarioId)}
                         >
                           {userName}
                         </button>
                       )}
                       
-                      {/* Contenido del mensaje */}
-                      <p className="text-[15px] whitespace-pre-wrap break-words leading-[1.4] font-normal">
+                      {/* Contenido del mensaje mejorado */}
+                      <p className={`text-[15px] whitespace-pre-wrap break-words leading-[1.5] ${
+                        isOwn ? 'font-normal' : 'font-normal'
+                      }`}>
                         {msg.contenido}
                       </p>
                       
-                      {/* Footer con hora y check marks */}
-                      <div className="flex items-center justify-end space-x-1.5 mt-1 -mb-0.5">
-                        <span className={`text-[11px] font-medium ${
-                          isOwn ? "text-white/70" : "text-gray-500"
+                      {/* Footer con hora y check marks mejorado */}
+                      <div className={`flex items-center space-x-1.5 mt-2 ${
+                        isOwn ? 'justify-end' : 'justify-start'
+                      }`}>
+                        <span className={`text-[10px] font-semibold tracking-wide ${
+                          isOwn ? "text-blue-200" : "text-gray-500"
                         }`}>
                           {formatTime(msg.createdAt)}
                         </span>
-                        {/* Check marks para mensajes propios */}
+                        {/* Check marks para mensajes propios - Mejorados */}
                         {isOwn && (
                           <div className="flex-shrink-0">
-                            <svg className="w-4 h-4 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg className="w-[18px] h-[18px] text-blue-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 13l4 4L23 7" />
                             </svg>
                           </div>
                         )}
@@ -741,18 +747,18 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Botón flotante para scroll al final - Estilo WhatsApp */}
+      {/* Botón flotante mejorado */}
       {showScrollButton && (
-        <div className="absolute bottom-28 right-4 z-10 animate-in slide-in-from-bottom duration-200">
+        <div className="absolute bottom-28 right-5 z-10 animate-in slide-in-from-bottom duration-200">
           <button
             onClick={scrollToBottomQuick}
-            className="bg-white hover:bg-gray-50 text-gray-700 rounded-full p-3 shadow-xl hover:shadow-2xl transition-all relative border border-gray-200"
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-3.5 shadow-2xl hover:shadow-blue-500/50 transition-all hover:scale-110 relative border-2 border-blue-400"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
             </svg>
             {unreadCount > 0 && (
-              <div className="absolute -top-2 -right-2 bg-green-500 text-white text-[10px] font-bold rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5 shadow-lg">
+              <div className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[22px] h-[22px] flex items-center justify-center px-1.5 shadow-lg ring-2 ring-white">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </div>
             )}
@@ -760,14 +766,14 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         </div>
       )}
 
-      {/* Message Input Mejorado - Estilo WhatsApp/Telegram */}
-      <div className="border-t border-gray-300 bg-[#f0f0f0]">
-        {/* Reply preview */}
+      {/* Message Input - Con paleta personalizada */}
+      <div className="border-t-2 border-blue-100 bg-white shadow-lg">
+        {/* Reply preview mejorado */}
         {replyingTo && (
-          <div className="px-4 pt-3 pb-2 bg-white/80 backdrop-blur-sm">
-            <div className="flex items-start justify-between bg-green-50 rounded-lg p-3 border-l-4 border-green-500">
+          <div className="px-4 pt-3 pb-2 bg-blue-50">
+            <div className="flex items-start justify-between bg-white rounded-xl p-3 border-l-4 border-blue-600 shadow-sm">
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-green-700 mb-1">
+                <p className="text-xs font-extrabold text-blue-700 mb-1">
                   {getUserName(replyingTo.usuario?.nombre, replyingTo.usuario?.apellido)}
                 </p>
                 <p className="text-sm text-gray-700 truncate">
@@ -776,52 +782,51 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
               </div>
               <button
                 onClick={() => setReplyingTo(null)}
-                className="ml-3 text-gray-500 hover:text-gray-700 transition-colors"
+                className="ml-3 text-gray-400 hover:text-gray-600 transition-colors hover:bg-gray-100 rounded-full p-1"
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
           </div>
         )}
         
-        <div className="p-2">
-          <div className="flex items-end space-x-2">
+        <div className="p-3">
+          <div className="flex items-center space-x-2.5">
             {/* Emoji button */}
             <button
-              className="p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-full transition-colors flex-shrink-0 mb-1"
+              className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors flex-shrink-0"
               title="Emojis (próximamente)"
             >
               <Smile className="w-6 h-6" />
             </button>
             
-            {/* Input container */}
+            {/* Input container mejorado */}
             <div className="flex-1 relative">
               <Input
                 ref={inputRef}
                 value={message}
                 onChange={(e) => handleInputChange(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="Mensaje"
-                className="rounded-3xl border-none focus:ring-2 focus:ring-green-500 py-2.5 px-4 pr-12 bg-white shadow-sm text-[15px]"
+                placeholder="Escribe tu mensaje..."
+                className="rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 py-3 px-4 pr-12 bg-gray-50 hover:bg-white transition-colors text-[15px] shadow-sm"
                 disabled={sending}
                 maxLength={500}
               />
               {message.length > 400 && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-gray-500 bg-gray-100 rounded-full px-2 py-0.5">
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-white bg-blue-600 rounded-full px-2 py-1">
                   {500 - message.length}
                 </div>
               )}
             </div>
 
-            {/* Attach/Send button */}
+            {/* Send/Attach button mejorado */}
             {message.trim() ? (
               <Button
                 onClick={handleSendMessage}
                 disabled={sending}
-                size="lg"
-                className="bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-full p-0 min-h-[48px] min-w-[48px] disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg transition-all flex-shrink-0 mb-1"
+                className="bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-full p-0 min-h-[50px] min-w-[50px] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all hover:scale-105 flex-shrink-0"
               >
                 {sending ? (
                   <InlineSpinner variant="white" />
@@ -831,7 +836,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
               </Button>
             ) : (
               <button
-                className="p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-200 rounded-full transition-colors flex-shrink-0 mb-1"
+                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors flex-shrink-0"
                 title="Adjuntar imagen (próximamente)"
               >
                 <ImageIcon className="w-6 h-6" />
