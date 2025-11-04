@@ -152,7 +152,7 @@ export function LoginScreen() {
         <div className="fixed inset-0 bg-white/90 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="text-center">
             <div className="mb-4">
-              <LoadingSpinner size="xl" variant="green" />
+              <LoadingSpinner size="xl" variant="green" text="Iniciando sesión..." />
             </div>
             <p className="text-lg font-medium text-gray-900">Redirigiendo a Google...</p>
             <p className="text-sm text-gray-500 mt-1">Por favor espera</p>

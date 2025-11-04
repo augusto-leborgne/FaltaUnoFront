@@ -230,15 +230,17 @@ export function MatchesListing() {
       compareDate.setHours(0, 0, 0, 0)
 
       const time = timeString.substring(0, 5)
+      const day = date.getDate().toString().padStart(2, '0')
+      const month = (date.getMonth() + 1).toString().padStart(2, '0')
 
       if (compareDate.getTime() === today.getTime()) {
-        return `Hoy ${time}`
+        return `Hoy ${day}/${month} ${time}`
       } else if (compareDate.getTime() === tomorrow.getTime()) {
-        return `Mañana ${time}`
+        return `Mañana ${day}/${month} ${time}`
       } else {
         const weekday = date.toLocaleDateString("es-ES", { weekday: "long" })
         const formattedWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1)
-        return `${formattedWeekday} ${time}`
+        return `${formattedWeekday} ${day}/${month} ${time}`
       }
     } catch {
       return `${dateString} ${timeString}`
@@ -456,9 +458,6 @@ export function MatchesListing() {
                         </Badge>
                         <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1">
                           {match.genero || 'Mixto'}
-                        </Badge>
-                        <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100 text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1">
-                          {match.nivel || 'Intermedio'}
                         </Badge>
                       </div>
                       <Badge className={`${getSpotsLeftColor(spotsLeft)} hover:bg-current text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1 whitespace-nowrap flex-shrink-0`}>

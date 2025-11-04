@@ -166,7 +166,7 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
   if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <LoadingSpinner size="xl" variant="green" />
+        <LoadingSpinner size="xl" variant="green" text="Cargando reseña..." />
       </div>
     )
   }

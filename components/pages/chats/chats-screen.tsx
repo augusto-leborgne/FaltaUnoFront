@@ -19,7 +19,7 @@ interface PartidoWithUnread extends PartidoDTO {
 export function ChatsScreen() {
   const router = useRouter()
   const [partidos, setPartidos] = useState<PartidoWithUnread[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false) // Cambiar a false para mostrar UI inmediatamente
   const [error, setError] = useState("")
 
   const currentUser = AuthService.getUser()
@@ -36,7 +36,10 @@ export function ChatsScreen() {
     }
 
     try {
-      setLoading(true)
+      // Solo mostrar loading si no hay datos previos
+      if (partidos.length === 0) {
+        setLoading(true)
+      }
       setError("")
       
       const response = await PartidoAPI.misPartidos(currentUser.id)
@@ -47,7 +50,7 @@ export function ChatsScreen() {
 
       const partidosInscritos = response.data
       
-      // Cargar mensajes para cada partido para detectar no leídos
+      // Cargar mensajes para cada partido en paralelo (optimizado)
       const partidosWithMessages = await Promise.all(
         partidosInscritos.map(async (partido) => {
           try {
@@ -129,15 +132,17 @@ export function ChatsScreen() {
       date.setHours(0, 0, 0, 0)
 
       const time = timeString.substring(0, 5)
+      const day = date.getDate().toString().padStart(2, '0')
+      const month = (date.getMonth() + 1).toString().padStart(2, '0')
 
       if (date.getTime() === today.getTime()) {
-        return `Hoy ${time}`
+        return `Hoy ${day}/${month} ${time}`
       } else if (date.getTime() === tomorrow.getTime()) {
-        return `Mañana ${time}`
+        return `Mañana ${day}/${month} ${time}`
       } else {
         const weekday = date.toLocaleDateString("es-ES", { weekday: "long" })
         const formattedWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1)
-        return `${formattedWeekday} ${time}`
+        return `${formattedWeekday} ${day}/${month} ${time}`
       }
     } catch {
       return `${dateString} ${timeString}`
@@ -177,7 +182,7 @@ export function ChatsScreen() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center pb-20">
-        <LoadingSpinner size="lg" variant="green" />
+        <LoadingSpinner size="lg" variant="green" text="Cargando chats..." />
       </div>
     )
   }
@@ -253,9 +258,6 @@ export function ChatsScreen() {
                       </Badge>
                       <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 text-xs px-2 py-0.5">
                         {partido.genero || 'Mixto'}
-                      </Badge>
-                      <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100 text-xs px-2 py-0.5">
-                        {partido.nivel || 'Intermedio'}
                       </Badge>
                       {(partido.unreadCount || 0) > 0 && (
                         <Badge className="bg-blue-600 text-white hover:bg-blue-600 text-xs px-2 py-0.5 ml-1">

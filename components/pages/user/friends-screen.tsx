@@ -114,7 +114,7 @@ export function FriendsScreen() {
       <div className="flex-1 px-6 py-6 pb-24">
         {loading ? (
           <div className="text-center py-12">
-            <LoadingSpinner size="lg" variant="green" />
+            <LoadingSpinner size="lg" variant="green" text="Cargando amigos..." />
           </div>
         ) : filteredFriends.length === 0 ? (
           <div className="text-center py-12">

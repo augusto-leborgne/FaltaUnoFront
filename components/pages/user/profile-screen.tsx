@@ -51,12 +51,15 @@ function ProfileScreenInner() {
   const [reviews, setReviews] = useState<Review[]>([])
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([])
   const [contacts, setContacts] = useState<Contact[]>([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false) // Cambiar a false para mostrar UI inmediatamente
   const [error, setError] = useState<string | null>(null)
 
   const loadProfileData = useCallback(async () => {
     try {
-      setLoading(true)
+      // Solo mostrar loading si no hay datos previos
+      if (reviews.length === 0 && friendRequests.length === 0 && contacts.length === 0) {
+        setLoading(true)
+      }
       setError(null)
 
       const token = AuthService.getToken()
@@ -125,7 +128,7 @@ function ProfileScreenInner() {
     } finally {
       setLoading(false)
     }
-  }, [user?.id])
+  }, [user?.id, reviews.length, friendRequests.length, contacts.length])
 
   useEffect(() => {
     if (user?.id) {

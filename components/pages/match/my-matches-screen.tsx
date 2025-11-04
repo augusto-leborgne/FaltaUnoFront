@@ -18,7 +18,7 @@ type Match = PartidoDTO
 export function MyMatchesScreen() {
   const router = useRouter()
   
-  const [activeTab, setActiveTab] = useState<"Creados" | "Inscritos">("Creados")
+  const [activeTab, setActiveTab] = useState<"Creados" | "Inscriptos">("Creados")
   const [createdMatches, setCreatedMatches] = useState<Match[]>([])
   const [joinedMatches, setJoinedMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(false) // Cambiar a false para UI inmediata
@@ -130,16 +130,18 @@ export function MyMatchesScreen() {
       compareDate.setHours(0, 0, 0, 0)
 
       const time = timeString.substring(0, 5)
+      const day = date.getDate().toString().padStart(2, '0')
+      const month = (date.getMonth() + 1).toString().padStart(2, '0')
 
       if (compareDate.getTime() === today.getTime()) {
-        return `Hoy ${time}`
+        return `Hoy ${day}/${month} ${time}`
       } else if (compareDate.getTime() === tomorrow.getTime()) {
-        return `Mañana ${time}`
+        return `Mañana ${day}/${month} ${time}`
       } else {
         const weekday = date.toLocaleDateString("es-ES", { weekday: "long" })
         // ✅ Capitalize first letter
         const formattedWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1)
-        return `${formattedWeekday} ${time}`
+        return `${formattedWeekday} ${day}/${month} ${time}`
       }
     } catch {
       return `${dateString} ${timeString}`
@@ -235,7 +237,7 @@ export function MyMatchesScreen() {
         {/* Tabs - Better mobile spacing */}
         <div className="px-4 sm:px-6 md:px-8 pt-4 pb-3">
           <div className="flex bg-gray-100 rounded-xl sm:rounded-2xl p-1">
-            {(["Creados", "Inscritos"] as const).map((tab) => (
+            {(["Creados", "Inscriptos"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -261,7 +263,7 @@ export function MyMatchesScreen() {
               <p className="text-gray-700 font-medium mb-2 text-base sm:text-lg">
                 {activeTab === "Creados" 
                   ? "No has creado partidos aún" 
-                  : "No tienes partidos inscritos"}
+                  : "No tienes partidos inscriptos"}
               </p>
               <p className="text-sm sm:text-base text-gray-500 mb-6 px-4">
                 {activeTab === "Creados" 
@@ -302,9 +304,6 @@ export function MyMatchesScreen() {
                         </Badge>
                         <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1">
                           {match.genero || 'Mixto'}
-                        </Badge>
-                        <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100 text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1">
-                          {formatLevel(match.nivel)}
                         </Badge>
                       </div>
                       <div className="flex gap-1.5 flex-shrink-0">
