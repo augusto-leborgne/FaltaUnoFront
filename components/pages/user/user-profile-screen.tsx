@@ -51,6 +51,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
   const [user, setUser] = useState<Usuario | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [friendStatus, setFriendStatus] = useState<'none' | 'friends' | 'pending-sent' | 'pending-received'>('none')
+  const [mutualFriends, setMutualFriends] = useState<Usuario[]>([])
   const [loading, setLoading] = useState(false) // Cambiar a false para UI inmediata
   const [error, setError] = useState<string | null>(null)
 
@@ -104,6 +105,33 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       const amigosResponse = await AmistadAPI.listarAmigos()
       const pendientesEnviadasResponse = await AmistadAPI.listarSolicitudesEnviadas()
       const pendientesRecibidasResponse = await AmistadAPI.listarSolicitudesPendientes()
+
+      // Obtener amigos del usuario actual
+      const misAmigos = amigosResponse.success && amigosResponse.data ? 
+        amigosResponse.data.map((amistad: any) => amistad.amigo?.id || amistad.amigoId) : []
+
+      // Obtener amigos del usuario que estamos viendo
+      if (misAmigos.length > 0) {
+        try {
+          const userFriendsRes = await fetch(`${API_BASE}/api/amistad/amigos/${userId}`, {
+            headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          })
+          if (userFriendsRes.ok) {
+            const userFriendsJson = await userFriendsRes.json()
+            const susAmigos = userFriendsJson?.data || []
+            
+            // Encontrar amigos en común
+            const amigosEnComun = susAmigos.filter((amigo: any) => 
+              misAmigos.includes(amigo.amigo?.id || amigo.amigoId)
+            ).map((amistad: any) => amistad.amigo)
+            
+            setMutualFriends(amigosEnComun)
+            logger.log("[UserProfile] Amigos en común encontrados:", amigosEnComun.length)
+          }
+        } catch (error) {
+          logger.error("[UserProfile] Error cargando amigos en común:", error)
+        }
+      }
 
       // Verificar si ya son amigos
       if (amigosResponse.success && amigosResponse.data) {
@@ -178,6 +206,40 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
     } catch (error) {
       logger.error("Error sending friend request:", error)
       alert("Error al enviar solicitud")
+    }
+  }
+
+  const handleRemoveFriend = async () => {
+    if (!confirm("¿Estás seguro de eliminar este amigo?")) {
+      return
+    }
+
+    try {
+      // Primero necesitamos encontrar el amistadId
+      const amigosResponse = await AmistadAPI.listarAmigos()
+      if (!amigosResponse.success || !amigosResponse.data) {
+        throw new Error("No se pudo obtener la lista de amigos")
+      }
+
+      const amistad = amigosResponse.data.find((a: any) => 
+        (a.amigo?.id === userId) || (a.amigoId === userId)
+      )
+
+      if (!amistad || !amistad.id) {
+        throw new Error("No se encontró la amistad")
+      }
+
+      const response = await AmistadAPI.eliminarAmistad(amistad.id)
+      
+      if (response.success) {
+        setFriendStatus('none')
+        setMutualFriends([]) // Limpiar amigos en común
+      } else {
+        alert(response.message || "Error al eliminar amigo")
+      }
+    } catch (error) {
+      logger.error("Error removing friend:", error)
+      alert("Error al eliminar amigo")
     }
   }
 
@@ -284,15 +346,49 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
             </div>
           </div>
 
+          {/* Amigos en común */}
+          {mutualFriends.length > 0 && (
+            <div className="mb-6 p-4 bg-gray-50 rounded-xl">
+              <div className="text-sm font-semibold text-gray-900 mb-3">
+                Amigos en común ({mutualFriends.length})
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {mutualFriends.slice(0, 5).map((friend) => (
+                  <div
+                    key={friend.id}
+                    onClick={() => router.push(`/users/${friend.id}`)}
+                    className="flex items-center space-x-2 bg-white px-3 py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors"
+                  >
+                    <Avatar className="w-6 h-6">
+                      {friend.foto_perfil || friend.fotoPerfil ? (
+                        <AvatarImage src={`data:image/jpeg;base64,${friend.foto_perfil || friend.fotoPerfil}`} />
+                      ) : (
+                        <AvatarFallback className="bg-gray-200 text-xs">
+                          {friend.nombre?.[0]}{friend.apellido?.[0]}
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                    <span className="text-sm text-gray-700">{friend.nombre}</span>
+                  </div>
+                ))}
+                {mutualFriends.length > 5 && (
+                  <div className="flex items-center px-3 py-2 text-sm text-gray-600">
+                    +{mutualFriends.length - 5} más
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Friend Request Button */}
           <div className="space-y-3">
             {friendStatus === 'friends' ? (
               <Button
-                disabled
-                className="w-full bg-green-100 text-green-700 py-3 rounded-xl cursor-not-allowed"
+                onClick={handleRemoveFriend}
+                variant="outline"
+                className="w-full border-red-200 text-red-600 hover:bg-red-50 py-3 rounded-xl"
               >
-                <UserPlus className="w-4 h-4 mr-2" />
-                Ya son amigos
+                Eliminar amigo
               </Button>
             ) : friendStatus === 'pending-sent' ? (
               <Button
