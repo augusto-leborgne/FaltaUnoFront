@@ -4,6 +4,8 @@ import type { Metadata } from "next"
 // import { GeistSans } from "geist/font/sans"
 // import { GeistMono } from "geist/font/mono"
 import "./globals.css"
+import "react-phone-number-input/style.css"
+import "react-image-crop/dist/ReactCrop.css"
 import { AuthProvider } from "@/components/auth/auth-provider"
 import { ErrorBoundary } from "@/components/error-boundary"
 
