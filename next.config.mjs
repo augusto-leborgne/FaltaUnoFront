@@ -28,14 +28,6 @@ const nextConfig = {
   poweredByHeader: false,
   generateEtags: true,
   
-  // ⚡ Enable modularized imports to reduce bundle size
-  modularizeImports: {
-    'lucide-react': {
-      transform: 'lucide-react/dist/esm/icons/{{kebabCase member}}',
-      skipDefaultConversion: true,
-    },
-  },
-  
   // ❌ NO SE NECESITA PROXY - Cloud Run backend tiene HTTPS
   // El frontend se comunica directamente con https://faltauno-backend-169771742214.us-central1.run.app
   // Sin Mixed Content errors porque ambos usan HTTPS

@@ -1,13 +1,12 @@
 // ✅ SERVER COMPONENT - App Router Pattern
-// Testing with minimal component to isolate the undefined issue
 import dynamicImport from 'next/dynamic'
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-const MinimalHome = dynamicImport(
-  () => import('./minimal-home'),
+const HomeClient = dynamicImport(
+  () => import('./home-client'),
   {
     ssr: false,
     loading: () => (
@@ -30,5 +29,5 @@ const MinimalHome = dynamicImport(
 )
 
 export default function HomePage() {
-  return <MinimalHome />
+  return <HomeClient />
 }
