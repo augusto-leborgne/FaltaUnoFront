@@ -43,7 +43,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
 
   // Estado
   const [match, setMatch] = useState<PartidoDTO | null>(null)
-  const [jugadores, setJugadores] = useState<any[]>([]) // ✅ NUEVO: Lista de jugadores inscritos
+  const [jugadores, setJugadores] = useState<any[]>([]) // ✅ NUEVO: Lista de jugadores inscriptos
   const [userInscriptionStatus, setUserInscriptionStatus] = useState<string | null>(null) // ✅ NUEVO: Estado de inscripción del usuario
   const [isJoining, setIsJoining] = useState(false)
   const [isLoading, setIsLoading] = useState(false) // Cambiar a false para UI inmediata
@@ -86,7 +86,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
       
       // ✅ Cargar jugadores y estado en background (no bloquear UI)
       Promise.all([
-        // Cargar jugadores inscritos (ACEPTADOS)
+        // Cargar jugadores inscriptos (ACEPTADOS)
         PartidoAPI.getJugadores(matchId).then(jugadoresResponse => {
           if (jugadoresResponse.success && jugadoresResponse.data) {
             setJugadores(jugadoresResponse.data)
@@ -555,7 +555,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
               ¿Cancelar partido?
             </h3>
             <p className="text-gray-600 mb-6">
-              Esta acción no se puede deshacer. Todos los jugadores inscritos serán notificados de la cancelación.
+              Esta acción no se puede deshacer. Todos los jugadores inscriptos serán notificados de la cancelación.
             </p>
             
             <div className="space-y-3">

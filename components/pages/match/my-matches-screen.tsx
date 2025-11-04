@@ -58,7 +58,7 @@ export function MyMatchesScreen() {
 
       const partidos = response.data || []
 
-      // Separar en creados vs inscritos
+      // Separar en creados vs inscriptos
       const created = partidos.filter((p: Match) => p.organizadorId === user.id)
       const joined = partidos.filter((p: Match) => p.organizadorId !== user.id)
 
@@ -73,7 +73,7 @@ export function MyMatchesScreen() {
         }
       }
 
-      logger.log("[MyMatches] Creados:", created.length, "Inscritos:", joined.length)
+      logger.log("[MyMatches] Creados:", created.length, "Inscriptos:", joined.length)
 
       setCreatedMatches(created.sort(sortByDate))
       setJoinedMatches(joined.sort(sortByDate))

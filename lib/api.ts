@@ -1197,7 +1197,7 @@ export const PartidoAPI = {
   },
 
   /**
-   * Obtener partidos del usuario (creados e inscritos)
+   * Obtener partidos del usuario (creados e inscriptos)
    */
   misPartidos: async (usuarioId: string) => {
     logger.log("[PartidoAPI.misPartidos] Usuario:", usuarioId);

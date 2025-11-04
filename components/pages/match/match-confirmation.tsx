@@ -53,7 +53,7 @@ export function MatchConfirmation({ matchId }: MatchConfirmationProps) {
       
       if (estadoResponse.data.inscrito) {
         toast({
-          title: "Ya inscrito",
+          title: "Ya inscripto",
           description: "Ya tienes una solicitud para este partido",
           variant: "default"
         })

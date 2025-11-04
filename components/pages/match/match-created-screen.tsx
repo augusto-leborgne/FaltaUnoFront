@@ -107,9 +107,9 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
           errorMessage = "Este amigo ya tiene una invitación pendiente para este partido"
           // Marcar como invitado aunque sea error 409
           setInvitados(prev => ({ ...prev, [friendId]: true }))
-        } else if (error.message.includes("ya está inscrito")) {
-          errorTitle = "Ya inscrito"
-          errorMessage = "Este amigo ya está inscrito en el partido"
+        } else if (error.message.includes("ya está inscripto")) {
+          errorTitle = "Ya inscripto"
+          errorMessage = "Este amigo ya está inscripto en el partido"
           setInvitados(prev => ({ ...prev, [friendId]: true }))
         } else if (error.message.includes("partido está completo")) {
           errorTitle = "Partido completo"
@@ -125,7 +125,7 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
       toast({
         title: errorTitle,
         description: errorMessage,
-        variant: errorTitle === "Invitación ya enviada" || errorTitle === "Ya inscrito" ? "default" : "destructive"
+        variant: errorTitle === "Invitación ya enviada" || errorTitle === "Ya inscripto" ? "default" : "destructive"
       })
     } finally {
       setInvitando(prev => ({ ...prev, [friendId]: false }))

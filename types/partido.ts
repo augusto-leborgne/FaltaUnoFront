@@ -45,7 +45,7 @@ export interface Partido {
 
   organizador_id?: string;
   organizador?: UsuarioMin;    // cuando el backend devuelve objeto
-  jugadores?: UsuarioMin[];    // lista de jugadores inscritos
+  jugadores?: UsuarioMin[];    // lista de jugadores inscriptos
 
   descripcion?: string;
   created_at?: string;

@@ -29,7 +29,7 @@ const faqs: FAQItem[] = [
   },
   {
     question: "¿Cómo cancelo mi inscripción a un partido?",
-    answer: "Ve a 'Mis Partidos', selecciona el partido al que estás inscrito y toca 'Cancelar inscripción'. Hazlo con tiempo para que otros puedan unirse."
+    answer: "Ve a 'Mis Partidos', selecciona el partido al que estás inscripto y toca 'Cancelar inscripción'. Hazlo con tiempo para que otros puedan unirse."
   },
   {
     question: "¿Qué hago si un jugador no se presenta?",
@@ -41,7 +41,7 @@ const faqs: FAQItem[] = [
   },
   {
     question: "¿Puedo editar un partido después de crearlo?",
-    answer: "Sí, como organizador puedes editar los detalles del partido desde 'Mis Partidos' > 'Gestionar'. Los cambios notificarán a los jugadores inscritos."
+    answer: "Sí, como organizador puedes editar los detalles del partido desde 'Mis Partidos' > 'Gestionar'. Los cambios notificarán a los jugadores inscriptos."
   },
   {
     question: "¿Cómo funciona el pago?",

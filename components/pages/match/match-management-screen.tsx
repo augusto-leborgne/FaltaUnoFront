@@ -180,7 +180,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
     if (editData.cantidadJugadores < (match.jugadoresActuales || 0)) {
       toast({
         title: "Error",
-        description: `No puedes reducir la cantidad de jugadores por debajo de ${match.jugadoresActuales || 0} (actuales inscritos)`,
+        description: `No puedes reducir la cantidad de jugadores por debajo de ${match.jugadoresActuales || 0} (actuales inscriptos)`,
         variant: "destructive",
       })
       return
@@ -365,7 +365,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
 
       toast({
         title: "¡Partido confirmado!",
-        description: "El partido ha sido confirmado. Se notificó a todos los inscritos.",
+        description: "El partido ha sido confirmado. Se notificó a todos los inscriptos.",
       })
 
       await loadMatchData()
@@ -769,7 +769,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                     max={22}
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Mínimo: {match.jugadoresActuales} (actuales inscritos)
+                    Mínimo: {match.jugadoresActuales} (actuales inscriptos)
                   </p>
                 </div>
                 <div>
@@ -871,7 +871,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
         {/* Registered Players */}
         <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
           <h3 className="text-lg font-bold text-gray-900 mb-4">
-            Jugadores inscritos ({match.jugadores?.length || 0})
+            Jugadores inscriptos ({match.jugadores?.length || 0})
           </h3>
 
           {match.jugadores && match.jugadores.length > 0 ? (
@@ -920,7 +920,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
           ) : (
             <div className="text-center py-8">
               <Users className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-500">No hay jugadores inscritos aún</p>
+              <p className="text-gray-500">No hay jugadores inscriptos aún</p>
             </div>
           )}
         </div>
