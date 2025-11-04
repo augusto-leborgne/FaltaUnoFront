@@ -172,58 +172,53 @@ export function ChatsScreen() {
   // RENDER - MAIN
   // ============================================
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white border-b border-gray-200 shadow-sm">
-        <div className="px-4 py-4 pt-16">
-          <h1 className="text-2xl font-bold text-gray-900">Chats</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Conversaciones de tus partidos
-          </p>
-        </div>
+      <div className="pt-16 pb-4 sm:pb-6 text-center border-b border-gray-100">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Chats</h1>
+        <p className="text-xs sm:text-sm text-gray-500 mt-1">
+          Conversaciones de tus partidos
+        </p>
       </div>
 
-      {/* Error Message */}
-      {error && (
-        <div className="px-4 pt-4">
-          <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
-            {error}
-          </div>
-        </div>
-      )}
-
       {/* Content */}
-      <div className="px-4 py-4">
+      <div className="flex-1 px-3 sm:px-6 py-4 sm:py-6 overflow-y-auto pb-20 sm:pb-24">
+        {/* Error Message */}
+        {error && (
+          <div className="mb-4">
+            <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+              {error}
+            </div>
+          </div>
+        )}
         {partidos.length === 0 ? (
           // Estado vacío
-          <div className="flex flex-col items-center justify-center py-16 px-6">
-            <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-              <MessageCircle className="w-10 h-10 text-blue-600" />
-            </div>
+          <div className="bg-gray-50 rounded-2xl border border-gray-200 p-12 text-center">
+            <MessageCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               No tienes chats activos
             </h3>
-            <p className="text-sm text-gray-500 text-center mb-6">
+            <p className="text-sm text-gray-500 mb-6">
               Únete a un partido para empezar a conversar con otros jugadores
             </p>
             <button
               onClick={() => router.push('/matches')}
-              className="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-medium hover:from-green-700 hover:to-green-800 transition-all shadow-md"
+              className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium transition-all"
             >
               Buscar Partidos
             </button>
           </div>
         ) : (
           // Lista de chats
-          <div className="space-y-2">
+          <div className="space-y-3">
             {partidos.map((partido) => (
               <button
                 key={partido.id}
                 onClick={() => handleChatClick(partido.id)}
-                className={`w-full bg-white rounded-xl p-4 border transition-all text-left group relative ${
+                className={`w-full bg-white border rounded-xl p-4 transition-all text-left hover:shadow-md ${
                   (partido.unreadCount || 0) > 0 
-                    ? 'border-blue-400 shadow-md hover:shadow-lg' 
-                    : 'border-gray-200 hover:border-blue-300 hover:shadow-md'
+                    ? 'border-blue-200 bg-blue-50' 
+                    : 'border-gray-200'
                 }`}
               >
                 <div className="flex items-start justify-between">
@@ -232,16 +227,14 @@ export function ChatsScreen() {
                     <div className="flex items-center space-x-2 mb-2">
                       <div className="flex items-center space-x-1.5">
                         <div className={`w-2 h-2 rounded-full ${
-                          (partido.unreadCount || 0) > 0 ? 'bg-blue-500 animate-pulse' : 'bg-green-500'
+                          (partido.unreadCount || 0) > 0 ? 'bg-blue-500' : 'bg-green-500'
                         }`}></div>
-                        <span className={`text-sm font-bold ${
-                          (partido.unreadCount || 0) > 0 ? 'text-gray-900' : 'text-gray-800'
-                        }`}>
+                        <span className="text-sm sm:text-base font-semibold text-gray-900">
                           {partido.tipoPartido || partido.tipo_partido}
                         </span>
                       </div>
                       {(partido.unreadCount || 0) > 0 && (
-                        <div className="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                        <div className="bg-blue-600 text-white text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
                           {partido.unreadCount}
                         </div>
                       )}
@@ -250,31 +243,31 @@ export function ChatsScreen() {
                     {/* Último mensaje si existe */}
                     {partido.lastMessage && (
                       <div className="mb-2">
-                        <p className={`text-sm truncate ${
+                        <p className={`text-xs sm:text-sm truncate ${
                           (partido.unreadCount || 0) > 0 ? 'text-gray-900 font-medium' : 'text-gray-600'
                         }`}>
                           {partido.lastMessage}
                         </p>
-                        <span className="text-[10px] text-gray-400">
+                        <span className="text-[10px] sm:text-xs text-gray-400">
                           {formatMessageTime(partido.lastMessageTime)}
                         </span>
                       </div>
                     )}
 
                     {/* Información del partido */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center space-x-2 text-xs text-gray-600">
-                        <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
+                        <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
                         <span>{formatDate(partido.fecha || '', partido.hora || '')}</span>
                       </div>
                       
-                      <div className="flex items-center space-x-2 text-xs text-gray-600">
-                        <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                      <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
+                        <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
                         <span className="truncate">{partido.nombreUbicacion || partido.nombre_ubicacion}</span>
                       </div>
 
-                      <div className="flex items-center space-x-2 text-xs text-gray-600">
-                        <Users className="w-3.5 h-3.5 flex-shrink-0" />
+                      <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-600">
+                        <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5 flex-shrink-0" />
                         <span>
                           {partido.jugadoresActuales || partido.jugadores_actuales || 0}/{partido.cantidadJugadores || partido.cantidad_jugadores || 0} jugadores
                         </span>
@@ -283,9 +276,9 @@ export function ChatsScreen() {
                   </div>
 
                   {/* Arrow icon */}
-                  <div className="ml-3 flex-shrink-0">
-                    <ChevronRight className={`w-5 h-5 transition-colors ${
-                      (partido.unreadCount || 0) > 0 ? 'text-blue-600' : 'text-gray-400 group-hover:text-blue-600'
+                  <div className="ml-2 sm:ml-3 flex-shrink-0">
+                    <ChevronRight className={`w-4 h-4 sm:w-5 sm:h-5 transition-colors ${
+                      (partido.unreadCount || 0) > 0 ? 'text-blue-600' : 'text-gray-400'
                     }`} />
                   </div>
                 </div>
