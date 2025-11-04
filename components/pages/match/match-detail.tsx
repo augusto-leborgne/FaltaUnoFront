@@ -467,7 +467,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
           ) : userInscriptionStatus === InscripcionEstado.ACEPTADO ? (
             // ✅ Usuario ya está aceptado → botón para ver chat
             <Button
-              onClick={() => router.push(`/my-matches/${matchId}`)}
+              onClick={() => router.push(`/matches/${matchId}/chat`)}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 text-lg font-semibold rounded-2xl"
             >
               Ver chat del partido
