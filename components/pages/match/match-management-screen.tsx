@@ -1056,7 +1056,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
             
             <div className="flex-1 min-h-[400px]">
               <CompressedMap
-                location={match.nombreUbicacion}
+                location={match.nombreUbicacion || ''}
                 lat={match.latitud}
                 lng={match.longitud}
                 className="h-full"
