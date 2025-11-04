@@ -44,20 +44,34 @@ interface Contact {
   isOnApp: boolean
 }
 
+interface Friend {
+  id: string
+  usuario1Id: string
+  usuario2Id: string
+  estado: string
+  amigo?: {
+    id: string
+    nombre: string
+    apellido: string
+    foto_perfil?: string
+    fotoPerfil?: string
+  }
+}
+
 function ProfileScreenInner() {
   const router = useRouter()
   const { user, loading: userLoading, refreshUser } = useAuth()
 
   const [reviews, setReviews] = useState<Review[]>([])
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([])
-  const [contacts, setContacts] = useState<Contact[]>([])
+  const [friends, setFriends] = useState<Friend[]>([])
   const [loading, setLoading] = useState(false) // Cambiar a false para mostrar UI inmediatamente
   const [error, setError] = useState<string | null>(null)
 
   const loadProfileData = useCallback(async () => {
     try {
       // Solo mostrar loading si no hay datos previos
-      if (reviews.length === 0 && friendRequests.length === 0 && contacts.length === 0) {
+      if (reviews.length === 0 && friendRequests.length === 0 && friends.length === 0) {
         setLoading(true)
       }
       setError(null)
@@ -74,17 +88,17 @@ function ProfileScreenInner() {
       }
 
       // ⚡ OPTIMIZACIÓN: Cargar todos los datos en paralelo
-      const [reviewsResult, frResult, contactsResult] = await Promise.allSettled([
+      const [reviewsResult, frResult, friendsResult] = await Promise.allSettled([
         // Reviews
         fetch(normalizeUrl(`${API_BASE}/api/reviews/usuario/${user.id}`), { headers: authHeaders })
           .then(res => res.ok ? res.json() : null),
         
-        // Friend requests
+        // Friend requests pendientes
         fetch(normalizeUrl(`${API_BASE}/api/amistades/pendientes`), { headers: authHeaders })
           .then(res => res.ok ? res.json() : null),
         
-        // Contacts
-        fetch(normalizeUrl(`${API_BASE}/api/usuarios`), { headers: authHeaders })
+        // Amigos aceptados
+        fetch(normalizeUrl(`${API_BASE}/api/amistades`), { headers: authHeaders })
           .then(res => res.ok ? res.json() : null)
       ])
 
@@ -98,29 +112,11 @@ function ProfileScreenInner() {
         setFriendRequests(frResult.value.data || [])
       }
 
-      // Procesar contacts
-      if (contactsResult.status === 'fulfilled' && contactsResult.value) {
-        const contactsData = contactsResult.value
-        const allUsers = contactsData.data || []
-
-        const filteredContacts: Contact[] = allUsers
-          .filter((u: any) => 
-            u && 
-            u.id && 
-            u.id !== user.id &&
-            u.nombre &&
-            u.apellido
-          )
-          .map((u: any) => ({
-            id: u.id,
-            nombre: u.nombre || "",
-            apellido: u.apellido || "",
-            celular: u.celular,
-            foto_perfil: u.foto_perfil || u.fotoPerfil,
-            isOnApp: true,
-          }))
-
-        setContacts(filteredContacts)
+      // Procesar amigos
+      if (friendsResult.status === 'fulfilled' && friendsResult.value) {
+        const friendsData = friendsResult.value
+        const allFriends = friendsData.data || []
+        setFriends(allFriends)
       }
     } catch (e) {
       logger.error("[ProfileScreen] Error cargando datos del perfil:", e)
@@ -128,7 +124,7 @@ function ProfileScreenInner() {
     } finally {
       setLoading(false)
     }
-  }, [user?.id, reviews.length, friendRequests.length, contacts.length])
+  }, [user?.id, reviews.length, friendRequests.length, friends.length])
 
   useEffect(() => {
     if (user?.id) {
@@ -145,23 +141,13 @@ function ProfileScreenInner() {
   }
 
   const handleSettingsClick = () => router.push("/settings")
-  const handleContactsClick = () => router.push("/contacts")
+  const handleSearchUsersClick = () => router.push("/search") // Redirigir a búsqueda de usuarios
+  const handleFriendsClick = () => router.push("/friends") // Ver todos los amigos
 
   const handleLogout = () => {
     if (confirm("¿Estás seguro de que quieres cerrar sesión?")) {
       AuthService.logout()
       // redirección manejada dentro de AuthService.logout()
-    }
-  }
-
-  const handlePhoneClick = (telefono: string, e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (telefono) window.location.href = `tel:${telefono}`
-  }
-
-  const handleContactClick = (contact: Contact) => {
-    if (contact.isOnApp && contact.id) {
-      router.push(`/users/${contact.id}`)
     }
   }
 
@@ -377,58 +363,51 @@ function ProfileScreenInner() {
           )}
         </div>
 
-        {/* Contacts Section */}
-        <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-20 sm:mb-24">
+        {/* Friends Section */}
+        <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
           <div className="flex items-center justify-between mb-3 sm:mb-4">
-            <h3 className="text-base sm:text-lg font-bold text-gray-900">Contactos</h3>
-            <Button variant="outline" size="sm" onClick={handleContactsClick} className="bg-transparent text-xs sm:text-sm">
+            <h3 className="text-base sm:text-lg font-bold text-gray-900">Amigos</h3>
+            <Button variant="outline" size="sm" onClick={handleFriendsClick} className="bg-transparent text-xs sm:text-sm">
               <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
               Ver todos
             </Button>
           </div>
 
-          {contacts.length === 0 ? (
+          {friends.length === 0 ? (
             <div className="text-center py-6 sm:py-8">
-              <p className="text-gray-500 mb-3 sm:mb-4 text-sm">No hay contactos</p>
-              <Button onClick={handleContactsClick} className="bg-green-600 hover:bg-green-700 text-xs sm:text-sm">
+              <p className="text-gray-500 mb-3 sm:mb-4 text-sm">No tienes amigos todavía</p>
+              <Button onClick={handleSearchUsersClick} className="bg-green-600 hover:bg-green-700 text-xs sm:text-sm">
                 <UserPlus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 Buscar usuarios
               </Button>
             </div>
           ) : (
             <div className="space-y-2 sm:space-y-3">
-              {contacts.slice(0, 5).map((contact) => {
-                const contactName = `${contact.nombre} ${contact.apellido}`.trim() || "Usuario"
+              {friends.slice(0, 5).map((friendship) => {
+                const friend = friendship.amigo
+                if (!friend) return null
+                
+                const friendName = `${friend.nombre} ${friend.apellido}`.trim() || "Usuario"
 
                 return (
                   <div
-                    key={contact.id}
-                    onClick={() => handleContactClick(contact)}
+                    key={friendship.id}
+                    onClick={() => router.push(`/users/${friend.id}`)}
                     className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl cursor-pointer hover:bg-gray-100 transition-colors"
                   >
                     <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
-                      {/* ✅ OPTIMIZADO: Usar userId + lazy loading para contactos */}
                       <UserAvatar 
-                        userId={contact.id}
-                        name={contact.nombre} 
-                        surname={contact.apellido} 
+                        userId={friend.id}
+                        name={friend.nombre} 
+                        surname={friend.apellido} 
                         className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0"
                         lazy
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{contactName}</p>
-                        {contact.celular && (
-                          <button
-                            className="text-xs sm:text-sm text-gray-500 hover:text-green-600 transition-colors truncate block"
-                            onClick={(e) => handlePhoneClick(contact.celular!, e)}
-                          >
-                            <Phone className="w-2.5 h-2.5 sm:w-3 sm:h-3 inline mr-1" />
-                            {contact.celular}
-                          </button>
-                        )}
+                        <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{friendName}</p>
                       </div>
                     </div>
-                    {contact.isOnApp && <Badge className="bg-green-100 text-green-800">En la app</Badge>}
+                    <Badge className="bg-green-100 text-green-800 text-xs">Amigo</Badge>
                   </div>
                 )
               })}
@@ -437,10 +416,10 @@ function ProfileScreenInner() {
         </div>
 
         {/* Logout Section */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-24">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Sesión</h3>
-          <Button onClick={handleLogout} variant="destructive" className="w-full py-3 rounded-xl">
-            <LogOut className="w-4 h-4 mr-2" />
+        <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-6 mb-20 sm:mb-24">
+          <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">Sesión</h3>
+          <Button onClick={handleLogout} variant="destructive" className="w-full py-2 sm:py-3 rounded-lg sm:rounded-xl text-sm sm:text-base">
+            <LogOut className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
             Cerrar sesión
           </Button>
         </div>

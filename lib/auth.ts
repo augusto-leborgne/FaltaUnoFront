@@ -495,13 +495,30 @@ export class AuthService {
 
   static async updateProfile(data: Partial<Usuario>): Promise<boolean> {
     try {
+      // ⚡ CRÍTICO: Filtrar campos undefined/null para evitar borrar datos
+      const cleanData = Object.entries(data).reduce((acc, [key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          acc[key] = value
+        }
+        return acc
+      }, {} as Record<string, any>)
+
+      logger?.debug?.("[AuthService] Actualizando perfil con:", cleanData)
+
       const url = normalizeUrl(`${API_BASE}/api/usuarios/me`)
       const res = await fetchWithTimeout(url, {
         method: "PUT",
         headers: this.getAuthHeaders(),
-        body: JSON.stringify(data),
+        body: JSON.stringify(cleanData),
       }, 30000) // 30s timeout
-      if (!res.ok) throw new Error(`Error ${res.status}: ${await res.text()}`)
+      
+      if (!res.ok) {
+        const errorText = await res.text()
+        logger?.error?.("[AuthService] Error actualizando perfil:", res.status, errorText)
+        throw new Error(`Error ${res.status}: ${errorText}`)
+      }
+      
+      // Refrescar usuario desde servidor
       await this.fetchCurrentUser()
       return true
     } catch (e) {
