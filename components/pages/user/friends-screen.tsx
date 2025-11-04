@@ -142,7 +142,7 @@ export function FriendsScreen() {
   const getFilteredData = () => {
     const data = activeTab === 'amigos' ? friends : allUsers
     
-    return data.filter((item: Friend | User) => {
+    return (data as (Friend | User)[]).filter((item) => {
       const fullName = `${item.nombre} ${item.apellido}`.toLowerCase()
       return fullName.includes(searchQuery.toLowerCase())
     })
