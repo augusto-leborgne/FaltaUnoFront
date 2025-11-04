@@ -134,15 +134,33 @@ const nextConfig = {
     NEXT_PUBLIC_BUILD_ID: process.env.BUILD_ID || `build-${Date.now()}`,
   },
   
-  // Experimental features - TEMPORARILY DISABLED TO DEBUG SSR ERRORS
+  // Experimental features - OPTIMIZED SAFELY
   experimental: {
-    // All experimental optimizations disabled to isolate SSR undefined component error
+    // ⚡ SAFE: Optimize package imports for libraries that work well with transformation
+    // EXCLUDED: lucide-react, @radix-ui (caused SSR undefined component errors)
+    optimizePackageImports: [
+      'date-fns',        // ✅ Safe - pure functions, no SSR issues
+      'recharts',        // ✅ Safe - chart library, works well with optimization
+    ],
+    
+    // ❌ DISABLED: serverComponentsExternalPackages
+    // Conflicted with optimizePackageImports causing module resolution errors
+    
+    // ❌ DISABLED: turbo mode
+    // Still experimental, caused SSR issues with custom loaders
+    
+    // ⚡ SAFE: Optimize client-side navigation
+    optimisticClientCache: false, // Keep disabled as we have custom caching
+    
+    // ⚡ SAFE: Partial prerendering - keep disabled for stability
+    ppr: false,
   },
   
-  // Ensure lucide-react is properly transpiled - TEMPORARILY DISABLED
-  // transpilePackages: ['lucide-react'],
+  // ❌ DISABLED: transpilePackages for lucide-react
+  // Caused double-transformation conflict with optimizePackageImports
+  // lucide-react works fine without transpilation in Next.js 14.2.16 + React 18.3.1
   
-  // ⚡ Webpack optimizations for production - SIMPLIFIED to fix SSR issues
+  // ⚡ Webpack optimizations for production - SAFE MINIMAL CONFIG
   webpack: (config, { dev, isServer }) => {
     // Minimal optimizations to avoid breaking SSR
     if (!dev && !isServer) {
