@@ -202,6 +202,28 @@ export function RegisterScreen() {
         }),
       })
 
+      // ✅ Verificar si la respuesta es OK antes de parsear JSON
+      if (!response.ok) {
+        // Intentar parsear error del backend
+        let errorMsg = "Error al crear la cuenta"
+        try {
+          const errorData = await response.json()
+          errorMsg = errorData.message || errorData.error || errorMsg
+        } catch {
+          // Si no se puede parsear, usar mensaje por status code
+          if (response.status === 409) {
+            errorMsg = "Este email ya está registrado"
+          } else if (response.status === 400) {
+            errorMsg = "Datos inválidos. Verifica tu email y contraseña"
+          } else if (response.status >= 500) {
+            errorMsg = "Error del servidor. Intenta nuevamente"
+          }
+        }
+        
+        logger.error("[RegisterScreen] ❌ Error HTTP:", response.status, errorMsg)
+        throw new Error(errorMsg)
+      }
+
       const data = await response.json()
 
       if (data.success) {
@@ -210,7 +232,7 @@ export function RegisterScreen() {
         // Redirigir a página de verificación con el email
         router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`)
       } else {
-        const errorMsg = data.message || "Error al crear la cuenta"
+        const errorMsg = data.message || data.error || "Error al crear la cuenta"
         logger.error("[RegisterScreen] ❌ Error en respuesta:", errorMsg)
         
         // ✅ Detectar si el email ya está registrado pero no verificado
