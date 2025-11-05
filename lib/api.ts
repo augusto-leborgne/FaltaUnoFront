@@ -134,6 +134,7 @@ export interface Usuario {
   cedula?: string;
   perfilCompleto?: boolean;
   cedulaVerificada?: boolean;
+  emailVerified?: boolean; // ✅ Nuevo campo
   provider?: string;
   created_at?: string;
 }

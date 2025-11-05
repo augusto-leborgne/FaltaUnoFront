@@ -212,7 +212,17 @@ export function RegisterScreen() {
       } else {
         const errorMsg = data.message || "Error al crear la cuenta"
         logger.error("[RegisterScreen] ❌ Error en respuesta:", errorMsg)
-        setError(errorMsg)
+        
+        // ✅ Detectar si el email ya está registrado pero no verificado
+        if (errorMsg.includes("ya está registrado") || errorMsg.includes("already registered")) {
+          setError("Ya existe una cuenta con este email. ¿No la verificaste? Haz clic en 'Reenviar código'")
+          // Mostrar botón para reenviar código
+          setTimeout(() => {
+            router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`)
+          }, 3000)
+        } else {
+          setError(errorMsg)
+        }
       }
     } catch (err: any) {
       logger.error("[RegisterScreen] ❌ Error en registro:", err)

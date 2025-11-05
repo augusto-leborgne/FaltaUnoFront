@@ -9,11 +9,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle2, XCircle, Mail, ArrowLeft } from 'lucide-react';
 import { InlineSpinner, LoadingSpinner } from '@/components/ui/loading-spinner';
 import { logger } from '@/lib/logger';
+import { AuthService } from '@/lib/auth';
+import { useAuth } from '@/hooks/use-auth';
 
 function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get('email');
+  const { setUser } = useAuth(); // ✅ Para actualizar el contexto después de verificar
 
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -25,6 +28,9 @@ function VerifyEmailContent() {
   const [resendCooldown, setResendCooldown] = useState(0);
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // ✅ Detectar si el usuario viene de login (ya tiene token)
+  const isFromLogin = useRef(!!AuthService.getToken());
 
   // Redirect si no hay email
   useEffect(() => {
@@ -155,14 +161,34 @@ function VerifyEmailContent() {
         setSuccess(true);
         setError(''); // Limpiar cualquier error previo
         
-        // Guardar info en localStorage para el siguiente paso
-        localStorage.setItem('verifiedEmail', email!);
-        localStorage.setItem('passwordHash', data.data.passwordHash);
-        
-        // Redirigir a configurar perfil después de 2.5 segundos
-        setTimeout(() => {
-          router.push('/profile-setup');
-        }, 2500);
+        // ✅ Si viene de login, actualizar el usuario en localStorage y contexto
+        if (isFromLogin.current) {
+          const currentUser = AuthService.getUser();
+          if (currentUser) {
+            const updatedUser = { ...currentUser, emailVerified: true };
+            AuthService.setUser(updatedUser);
+            setUser(updatedUser);
+            logger.log('[VerifyEmail] Usuario actualizado con emailVerified=true');
+          }
+          
+          // Redirigir según el estado del perfil
+          setTimeout(() => {
+            if (currentUser?.perfilCompleto) {
+              router.push('/home');
+            } else {
+              router.push('/profile-setup');
+            }
+          }, 2500);
+        } else {
+          // ✅ Si viene de registro, guardar info para profile-setup
+          localStorage.setItem('verifiedEmail', email!);
+          localStorage.setItem('passwordHash', data.data.passwordHash);
+          
+          // Redirigir a configurar perfil después de 2.5 segundos
+          setTimeout(() => {
+            router.push('/profile-setup');
+          }, 2500);
+        }
       } else {
         setError(data.message || 'Código inválido o expirado');
         setSuccess(false); // Asegurar que success esté en false
@@ -266,6 +292,13 @@ function VerifyEmailContent() {
           <p className="text-gray-600">
             {success ? (
               'Tu email ha sido confirmado exitosamente'
+            ) : isFromLogin.current ? (
+              <>
+                Para continuar, verifica tu email con el código enviado a
+                <span className="block text-green-600 font-semibold mt-1">
+                  {email}
+                </span>
+              </>
             ) : (
               <>
                 Hemos enviado un código de 6 dígitos a

@@ -88,6 +88,13 @@ export function LoginScreen() {
           logger.log("[LoginScreen] Usuario guardado y contexto actualizado")
         }
 
+        // ✅ Verificar si el email está verificado
+        if (user && !user.emailVerified) {
+          logger.log("[LoginScreen] Email no verificado, redirigiendo a verify-email")
+          router.push(`/verify-email?email=${encodeURIComponent(user.email)}`)
+          return
+        }
+
         // Redirección correcta: validar returnTo contra estado del usuario
         if (returnTo) {
           // Solo redirigir a returnTo si el usuario tiene perfil completo y verificado
@@ -105,7 +112,20 @@ export function LoginScreen() {
           postAuthRedirect(user)
         }
       } else {
-        setError(res?.message || res?.error || "Credenciales inválidas")
+        const errorMsg = res?.message || res?.error || "Credenciales inválidas"
+        
+        // ✅ Detectar si el email no está verificado
+        if (errorMsg.toLowerCase().includes("no autorizado") || 
+            errorMsg.toLowerCase().includes("unauthorized") ||
+            errorMsg.toLowerCase().includes("not verified")) {
+          logger.log("[LoginScreen] Usuario no autorizado, posiblemente email no verificado")
+          setError("Tu cuenta aún no ha sido verificada. Redirigiendo a verificación...")
+          setTimeout(() => {
+            router.push(`/verify-email?email=${encodeURIComponent(email)}`)
+          }, 2000)
+        } else {
+          setError(errorMsg)
+        }
       }
     } catch (err) {
       logger.error("[LoginScreen] Error login:", err)
