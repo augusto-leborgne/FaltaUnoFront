@@ -39,6 +39,14 @@ export function SettingsScreen() {
     weight: "",
   })
 
+  // ✅ NUEVO: Guardar datos originales para detectar cambios reales
+  const [originalFormData, setOriginalFormData] = useState({
+    phone: "",
+    position: "",
+    height: "",
+    weight: "",
+  })
+
   const [avatar, setAvatar] = useState<string>("")
   const [photoFile, setPhotoFile] = useState<File | null>(null)
 
@@ -119,6 +127,14 @@ export function SettingsScreen() {
         weight: user.peso?.toString() || "",
       })
 
+      // ✅ CRÍTICO: Guardar datos originales para comparar después
+      setOriginalFormData({
+        phone: user.celular || "",
+        position: user.posicion || "",
+        height: user.altura?.toString() || "",
+        weight: user.peso?.toString() || "",
+      })
+
       setAuthMethod(user.provider === "GOOGLE" ? "google" : "email")
 
     } catch (error) {
@@ -164,6 +180,7 @@ export function SettingsScreen() {
     
     try {
       logger.log("[Settings] Guardando cambios...")
+      let hasProfileChanges = false
 
       // 1. Subir foto si hay una nueva
       if (photoFile) {
@@ -182,25 +199,42 @@ export function SettingsScreen() {
           PhotoCache.invalidate(currentUser.id)
           logger.log("[Settings] Cache de foto invalidado")
         }
+        
+        hasProfileChanges = true
       }
 
-      // 2. Actualizar perfil (sin nombre, apellido, email)
-      logger.log("[Settings] Actualizando perfil...")
+      // 2. Actualizar perfil SOLO si hay cambios REALES en los campos editables
+      const perfilData: Record<string, any> = {}
       
-      const perfilData = {
-        celular: formData.phone,
-        posicion: formData.position,
-        altura: formData.height ? parseInt(formData.height) : undefined,
-        peso: formData.weight ? parseInt(formData.weight) : undefined,
+      // ✅ CRÍTICO: Solo incluir campos que cambiaron respecto a los originales
+      if (formData.phone && formData.phone !== originalFormData.phone) {
+        perfilData.celular = formData.phone
       }
-
-      const success = await AuthService.updateProfile(perfilData)
+      if (formData.position && formData.position !== originalFormData.position) {
+        perfilData.posicion = formData.position
+      }
+      if (formData.height && formData.height !== originalFormData.height) {
+        perfilData.altura = parseInt(formData.height)
+      }
+      if (formData.weight && formData.weight !== originalFormData.weight) {
+        perfilData.peso = parseInt(formData.weight)
+      }
       
-      if (!success) {
-        throw new Error("Error al actualizar el perfil")
+      // Solo hacer el PUT si hay datos de perfil que cambiaron
+      if (Object.keys(perfilData).length > 0) {
+        logger.log("[Settings] Actualizando perfil con cambios:", perfilData)
+        
+        const success = await AuthService.updateProfile(perfilData)
+        
+        if (!success) {
+          throw new Error("Error al actualizar el perfil")
+        }
+        
+        logger.log("[Settings] Perfil actualizado exitosamente")
+        hasProfileChanges = true
+      } else {
+        logger.log("[Settings] No hay cambios en el perfil para actualizar")
       }
-
-      logger.log("[Settings] Perfil actualizado exitosamente")
 
       // 3. Guardar preferencias de notificación
       logger.log("[Settings] Guardando preferencias de notificación...")
@@ -213,8 +247,11 @@ export function SettingsScreen() {
         // No fallar el guardado completo por esto
       }
 
-      // 4. Refrescar contexto
-      await refreshUser()
+      // 4. Refrescar contexto SOLO si hubo cambios en el perfil
+      if (hasProfileChanges) {
+        logger.log("[Settings] Refrescando datos del usuario...")
+        await refreshUser()
+      }
 
       // 5. Actualizar avatar con la nueva foto desde cache (después de invalidar)
       if (photoFile) {
