@@ -22,6 +22,7 @@ export function ProfileSetupForm() {
   const { user, setUser } = useAuth()
   const postAuthRedirect = usePostAuthRedirect()
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const cameraInputRef = useRef<HTMLInputElement | null>(null) // ⚡ NUEVO: Input para cámara
 
   const [formData, setFormData] = useState({
     name: "",
@@ -117,8 +118,9 @@ export function ProfileSetupForm() {
       
       case 'photo':
         if (!value) return "Foto obligatoria"
-        if (value instanceof File && value.size > 5 * 1024 * 1024) {
-          return "Máx 5MB"
+        // ⚡ LÍMITES COMO INSTAGRAM: 30MB (antes era 5MB)
+        if (value instanceof File && value.size > 30 * 1024 * 1024) {
+          return "Máx 30MB"
         }
         if (value instanceof File && !value.type.startsWith('image/')) {
           return "Solo imágenes"
@@ -150,21 +152,33 @@ export function ProfileSetupForm() {
   }, [formData.photoPreviewUrl])
 
   const openFilePicker = () => fileInputRef.current?.click()
+  const openCamera = () => cameraInputRef.current?.click() // ⚡ NUEVO: Abrir cámara
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0] ?? null
     if (!f) return
     
-    // Validar tamaño antes de abrir crop
-    if (f.size > 5 * 1024 * 1024) {
-      alert("La imagen no puede superar 5MB")
+    // ⚡ LÍMITES COMO INSTAGRAM: 30MB, 8K resolution (8192x8192)
+    const MAX_SIZE = 30 * 1024 * 1024 // 30MB
+    const MAX_DIMENSION = 8192
+    
+    if (f.size > MAX_SIZE) {
+      alert("La imagen no puede superar 30MB")
       return
     }
     
     const reader = new FileReader()
     reader.onload = () => {
-      setImageToCrop(reader.result as string)
-      setShowCropModal(true)
+      const img = document.createElement('img')
+      img.onload = () => {
+        if (img.width > MAX_DIMENSION || img.height > MAX_DIMENSION) {
+          alert(`La imagen no puede superar ${MAX_DIMENSION}x${MAX_DIMENSION} píxeles`)
+          return
+        }
+        setImageToCrop(reader.result as string)
+        setShowCropModal(true)
+      }
+      img.src = reader.result as string
     }
     reader.readAsDataURL(f)
     
@@ -241,8 +255,24 @@ export function ProfileSetupForm() {
 
     setIsUploading(true)
     try {
-      const verifiedEmail = typeof window !== 'undefined' ? localStorage.getItem('verifiedEmail') : null
-      const passwordHash = typeof window !== 'undefined' ? localStorage.getItem('passwordHash') : null
+      // ⚡ CORREGIDO: Leer de sessionStorage (verify-email ahora guarda ahí)
+      let verifiedEmail: string | null = null
+      let passwordHash: string | null = null
+      
+      if (typeof window !== 'undefined') {
+        const pendingData = sessionStorage.getItem('pendingVerification')
+        if (pendingData) {
+          try {
+            const parsed = JSON.parse(pendingData)
+            verifiedEmail = parsed.email
+            passwordHash = parsed.passwordHash
+            logger.log("[ProfileSetup] ✅ Datos leídos de sessionStorage:", { email: verifiedEmail })
+          } catch (e) {
+            logger.error("[ProfileSetup] Error parseando pendingVerification:", e)
+          }
+        }
+      }
+      
       const isNewRegistration = !!(verifiedEmail && passwordHash)
 
       // Construir teléfono completo con código de país
@@ -295,20 +325,31 @@ export function ProfileSetupForm() {
           throw new Error(data.message || 'Error al completar el registro')
         }
 
-        localStorage.removeItem('verifiedEmail')
-        localStorage.removeItem('passwordHash')
+        // ⚡ CORREGIDO: Limpiar sessionStorage (no localStorage)
+        sessionStorage.removeItem('pendingVerification')
 
         const { token, usuario } = data.data
         
         if (token) {
+          logger.log("[ProfileSetup] ✅ Token recibido, guardando...")
           AuthService.setToken(token)
+        } else {
+          logger.warn("[ProfileSetup] ⚠️ No se recibió token del servidor")
         }
 
         const userWithProfile = { ...usuario, perfilCompleto: true }
+        logger.log("[ProfileSetup] ✅ Guardando usuario con perfil completo:", {
+          id: userWithProfile.id,
+          email: userWithProfile.email,
+          perfilCompleto: userWithProfile.perfilCompleto
+        })
         AuthService.setUser(userWithProfile)
         setUser(userWithProfile)
 
-        logger.log("[ProfileSetup] ✅ Registro completado exitosamente")
+        logger.log("[ProfileSetup] ✅ Registro completado exitosamente, redirigiendo a phone-verification")
+        
+        // ⚡ IMPORTANTE: Pequeño delay para asegurar que localStorage se actualice
+        await new Promise(resolve => setTimeout(resolve, 100))
         
         // Redirigir a verificación de celular
         router.push('/phone-verification')
@@ -381,6 +422,11 @@ export function ProfileSetupForm() {
         AuthService.setUser(merged)
         setUser(merged)
 
+        logger.log("[ProfileSetup] ✅ Perfil actualizado, redirigiendo a phone-verification")
+        
+        // ⚡ IMPORTANTE: Pequeño delay para asegurar que localStorage se actualice
+        await new Promise(resolve => setTimeout(resolve, 100))
+
         // Redirigir a verificación de celular
         router.push('/phone-verification')
 
@@ -442,24 +488,46 @@ export function ProfileSetupForm() {
               <p className="text-sm text-gray-500 mb-3">
                 {formData.photo ? "¡Foto cargada! Puedes cambiarla" : "Agrega una foto para que te reconozcan"}
               </p>
-              <Button
-                type="button"
-                onClick={openFilePicker}
-                className="bg-primary hover:bg-primary/90 text-white shadow-md"
-              >
-                <Upload className="w-4 h-4 mr-2" />
-                {formData.photo ? "Cambiar foto" : "Subir foto"}
-              </Button>
+              {/* ⚡ NUEVO: Dos botones - Cámara + Galería (como Instagram) */}
+              <div className="flex gap-3 w-full max-w-sm">
+                <Button
+                  type="button"
+                  onClick={openCamera}
+                  className="flex-1 bg-primary hover:bg-primary/90 text-white shadow-md"
+                >
+                  <Camera className="w-4 h-4 mr-2" />
+                  Cámara
+                </Button>
+                <Button
+                  type="button"
+                  onClick={openFilePicker}
+                  variant="outline"
+                  className="flex-1 hover:bg-gray-50"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Galería
+                </Button>
+              </div>
               {fieldErrors.photo && (
                 <p className="text-sm text-red-500 mt-2 flex items-center gap-1">
                   <AlertCircle className="w-4 h-4" />
                   {fieldErrors.photo}
                 </p>
               )}
+              {/* Input para galería */}
               <input 
                 ref={fileInputRef} 
                 type="file" 
                 accept="image/*" 
+                onChange={handlePhotoChange} 
+                className="hidden"
+              />
+              {/* ⚡ NUEVO: Input para cámara */}
+              <input 
+                ref={cameraInputRef} 
+                type="file" 
+                accept="image/*" 
+                capture="environment"
                 onChange={handlePhotoChange} 
                 className="hidden"
               />
