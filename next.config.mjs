@@ -29,7 +29,7 @@ const nextConfig = {
   generateEtags: true,
   
   // ❌ NO SE NECESITA PROXY - Cloud Run backend tiene HTTPS
-  // El frontend se comunica directamente con https://faltauno-backend-169771742214.us-central1.run.app
+  // El frontend se comunica directamente con https://faltauno-backend-pg4rwegknq-uc.a.run.app
   // Sin Mixed Content errors porque ambos usan HTTPS
   
   // Configure Next.js Image optimization
