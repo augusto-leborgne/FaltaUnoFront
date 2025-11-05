@@ -37,7 +37,7 @@ jobs:
       - name: Build with Cloud Build
         run: |
           # Backend URL - ACTUALIZADO para Cloud Run
-          BACKEND_URL="https://faltauno-backend-pg4rwegknq-uc.a.run.app"
+          BACKEND_URL="https://faltauno-backend-169771742214.us-central1.run.app"
           
           # Generate commit SHA
           COMMIT_SHA=${{ github.sha }}
@@ -78,7 +78,7 @@ jobs:
         run: |
           COMMIT_SHA=${{ github.sha }}
           SHORT_SHA=$(echo $COMMIT_SHA | cut -c1-7)
-          BACKEND_URL="https://faltauno-backend-pg4rwegknq-uc.a.run.app"
+          BACKEND_URL="https://faltauno-backend-169771742214.us-central1.run.app"
           
           # Deploy usando la imagen construida con Cloud Build
           gcloud run deploy ${{ env.SERVICE_NAME }} \

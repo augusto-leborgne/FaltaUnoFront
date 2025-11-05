@@ -90,10 +90,10 @@ export const BRANDING = {
   // ============================================
   urls: {
     // Frontend
-    frontend: process.env.NEXT_PUBLIC_FRONTEND_URL || "https://faltauno.vercel.app",
+    frontend: process.env.NEXT_PUBLIC_FRONTEND_URL || "https://faltauno-frontend-169771742214.us-central1.run.app",
     
     // Backend
-    backend: process.env.NEXT_PUBLIC_API_BASE || "https://faltauno-backend-pg4rwegknq-uc.a.run.app",
+    backend: process.env.NEXT_PUBLIC_API_BASE || "https://faltauno-backend-169771742214.us-central1.run.app",
     
     // Redes sociales (placeholder - actualizar cuando estén disponibles)
     social: {

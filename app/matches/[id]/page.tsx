@@ -2,8 +2,8 @@ import MatchDetail from "@/components/pages/match/match-detail"
 import type { Metadata } from "next"
 import { logger } from "@/lib/logger"
 
-const FRONTEND_URL = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://faltauno.vercel.app'
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-pg4rwegknq-uc.a.run.app'
+const FRONTEND_URL = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://faltauno-frontend-169771742214.us-central1.run.app'
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-169771742214.us-central1.run.app'
 
 interface MatchDetailPageProps {
   params: {

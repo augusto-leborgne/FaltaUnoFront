@@ -68,7 +68,7 @@ Es **MUY IMPORTANTE** restringir tu API key para evitar uso no autorizado.
      http://localhost:3000/*
      http://localhost:3001/*
      https://tu-dominio-produccion.com/*
-     https://*.vercel.app/*
+     https://*.run.app/*
      ```
 
 #### Restricciones de API
@@ -185,19 +185,13 @@ Con el tier gratuito, puedes hacer aproximadamente:
 
 ## Producción
 
-Para deployment en Vercel/Cloud Run:
-
-### Vercel
-```bash
-# Configurar secret
-vercel env add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY production
-# Pega tu API key cuando se solicite
-```
+Para deployment en Google Cloud Run:
 
 ### Google Cloud Run
 ```bash
-# Actualizar cloudbuild.yaml para incluir la API key
-# O configurarla como secret en Google Secret Manager
+# La API key se configura en cloudbuild-prod.yaml
+# Se pasa como build argument: _NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+# El secret debe estar configurado en GitHub Secrets
 ```
 
 ## Referencias
