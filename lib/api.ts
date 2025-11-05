@@ -386,21 +386,36 @@ async function apiFetch<T>(
             logger.warn('[API] 401 Unauthorized - Token expirado');
             logger.warn('[API] 🚪 LOGOUT INMEDIATO - Redirigiendo a login...');
             AuthService.logout(); // window.location.replace("/login") inmediato
-            throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.');
+            throw new Error('Tu sesión ha expirado. Por favor inicia sesión nuevamente.');
           } else {
             // Token válido pero backend dice 401 - podría ser error transitorio
             logger.warn('[API] 401 pero token aún válido - NO haciendo logout automático');
-            throw new Error('Error de autenticación. Por favor intenta nuevamente.');
+            throw new Error('Error de autenticación. Si acabas de registrarte, verifica tu email primero.');
           }
         } else {
           logger.warn('[API] 401 recibido - no se hace logout automático');
-          throw new Error('No autorizado. Es posible que no tengas permisos para esta acción.');
+          throw new Error('Email o contraseña incorrectos. Si acabas de registrarte, verifica tu email primero.');
         }
       }
 
       // Manejo de 403 - Sin permisos
       if (response.status === 403) {
-        throw new Error('No tienes permisos para realizar esta acción');
+        throw new Error('No tienes permisos para realizar esta acción. Contacta al administrador si crees que es un error.');
+      }
+
+      // Manejo de 404 - Recurso no encontrado
+      if (response.status === 404) {
+        throw new Error('El recurso solicitado no existe o ha sido eliminado.');
+      }
+
+      // Manejo de 409 - Conflicto (ej: email ya registrado)
+      if (response.status === 409) {
+        throw new Error('Este email ya está registrado. Intenta iniciar sesión o recuperar tu contraseña.');
+      }
+
+      // Manejo de 429 - Rate limiting
+      if (response.status === 429) {
+        throw new Error('Demasiados intentos. Por favor espera unos minutos antes de intentar nuevamente.');
       }
 
       // Check if status code is retryable

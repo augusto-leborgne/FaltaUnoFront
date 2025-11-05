@@ -190,17 +190,33 @@ function VerifyEmailContent() {
           }, 2500);
         }
       } else {
-        setError(data.message || 'Código inválido o expirado');
-        setSuccess(false); // Asegurar que success esté en false
+        // Mensajes de error específicos del backend
+        const errorMsg = data.message || 'Código inválido o expirado'
+        
+        if (errorMsg.toLowerCase().includes('expirado') || errorMsg.toLowerCase().includes('expired')) {
+          setError('El código ha expirado. Por favor solicita uno nuevo haciendo clic en "Reenviar código".')
+        } else if (errorMsg.toLowerCase().includes('incorrecto') || errorMsg.toLowerCase().includes('incorrect') || errorMsg.toLowerCase().includes('invalid')) {
+          setError('El código ingresado es incorrecto. Verifica los 6 dígitos y vuelve a intentar.')
+        } else if (errorMsg.toLowerCase().includes('no encontrado') || errorMsg.toLowerCase().includes('not found')) {
+          setError('No se encontró una solicitud de verificación. Por favor regístrate nuevamente.')
+        } else {
+          setError(errorMsg)
+        }
+        
+        setSuccess(false);
         setCode(['', '', '', '', '', '']);
         inputRefs.current[0]?.focus();
       }
     } catch (err: any) {
       logger.error('Error verificando código:', err);
+      
+      // ✅ Mensajes de error mejorados
       if (err.name === 'AbortError') {
-        setError('La solicitud tardó demasiado. Por favor intenta de nuevo.');
+        setError('La conexión tardó demasiado. Verifica tu internet e intenta nuevamente.');
+      } else if (err.message?.toLowerCase().includes('network') || err.message?.toLowerCase().includes('failed to fetch')) {
+        setError('No se pudo conectar al servidor. Verifica tu conexión a internet.');
       } else {
-        setError('Error al verificar el código. Por favor intenta de nuevo.');
+        setError('Error al verificar el código. Por favor intenta nuevamente o solicita un código nuevo.');
       }
     } finally {
       setIsVerifying(false);
@@ -245,14 +261,26 @@ function VerifyEmailContent() {
         setSuccess(true);
         setTimeout(() => setSuccess(false), 3000);
       } else {
-        setError(data.message || 'Error al reenviar el código');
+        const errorMsg = data.message || 'Error al reenviar el código'
+        
+        if (errorMsg.toLowerCase().includes('no encontrado') || errorMsg.toLowerCase().includes('not found')) {
+          setError('No se encontró tu solicitud de registro. Por favor regístrate nuevamente.');
+        } else if (errorMsg.toLowerCase().includes('cooldown') || errorMsg.toLowerCase().includes('wait')) {
+          setError('Debes esperar antes de solicitar otro código. Por favor intenta en unos momentos.');
+        } else {
+          setError(errorMsg);
+        }
       }
     } catch (err: any) {
       logger.error('Error reenviando código:', err);
+      
+      // ✅ Mensajes de error mejorados
       if (err.name === 'AbortError') {
-        setError('La solicitud tardó demasiado. Por favor intenta de nuevo.');
+        setError('La conexión tardó demasiado. Verifica tu internet e intenta nuevamente.');
+      } else if (err.message?.toLowerCase().includes('network') || err.message?.toLowerCase().includes('failed to fetch')) {
+        setError('No se pudo conectar al servidor. Verifica tu conexión a internet.');
       } else {
-        setError('Error al reenviar el código. Por favor intenta de nuevo.');
+        setError('Error al reenviar el código. Por favor intenta nuevamente en unos momentos.');
       }
     } finally {
       setIsResending(false);

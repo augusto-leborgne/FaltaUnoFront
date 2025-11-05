@@ -129,7 +129,26 @@ export function LoginScreen() {
       }
     } catch (err) {
       logger.error("[LoginScreen] Error login:", err)
-      const errorMessage = err instanceof Error ? err.message : "Error al iniciar sesión. Verifica tus credenciales."
+      
+      // ✅ Mensajes de error mejorados y específicos
+      let errorMessage = "Error al iniciar sesión"
+      
+      if (err instanceof Error) {
+        const errMsg = err.message.toLowerCase()
+        
+        if (errMsg.includes("unauthorized") || errMsg.includes("no autorizado")) {
+          errorMessage = "Email o contraseña incorrectos. Si acabas de registrarte, verifica tu email primero."
+        } else if (errMsg.includes("network") || errMsg.includes("failed to fetch")) {
+          errorMessage = "No se pudo conectar al servidor. Verifica tu conexión a internet."
+        } else if (errMsg.includes("timeout")) {
+          errorMessage = "La conexión tardó demasiado. Por favor intenta nuevamente."
+        } else if (errMsg.includes("blocked") || errMsg.includes("rate limit")) {
+          errorMessage = "Demasiados intentos. Por favor espera unos minutos antes de intentar nuevamente."
+        } else {
+          errorMessage = err.message
+        }
+      }
+      
       setError(errorMessage)
     } finally {
       setIsLoading(false)

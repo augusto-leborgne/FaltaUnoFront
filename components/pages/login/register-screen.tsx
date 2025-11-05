@@ -227,17 +227,28 @@ export function RegisterScreen() {
     } catch (err: any) {
       logger.error("[RegisterScreen] ❌ Error en registro:", err)
       
+      // ✅ Mensajes de error mejorados y específicos
       let errorMessage = "Error al crear la cuenta"
       
-      // ✅ MEJORADO: Detección de errores CORS
-      if (err.message?.includes("Failed to fetch") || err.message?.includes("NetworkError")) {
-        errorMessage = "Error de conexión con el servidor. Verifica tu internet e intenta nuevamente."
-      } else if (err.message?.includes("CORS") || err.name === "TypeError") {
-        errorMessage = "Error de configuración del servidor. Por favor intenta usar 'Continuar con Google'."
-      } else if (err.message?.includes("409") || err.message?.includes("email ya está registrado")) {
-        errorMessage = "Este email ya está registrado. Intenta iniciar sesión."
-      } else if (err.message?.includes("500")) {
-        errorMessage = "Error del servidor. Por favor intenta nuevamente en unos segundos o usa 'Continuar con Google'."
+      const errMsg = err.message?.toLowerCase() || ""
+      
+      if (errMsg.includes("failed to fetch") || errMsg.includes("networkerror")) {
+        errorMessage = "No se pudo conectar al servidor. Verifica tu conexión a internet e intenta nuevamente."
+      } else if (errMsg.includes("cors")) {
+        errorMessage = "Error de configuración del servidor. Por favor intenta usar 'Continuar con Google' o contacta soporte."
+      } else if (errMsg.includes("409") || errMsg.includes("ya está registrado") || errMsg.includes("already registered")) {
+        errorMessage = "Este email ya está registrado. Si no verificaste tu cuenta, redirigiendo a verificación..."
+        setTimeout(() => {
+          router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`)
+        }, 2000)
+      } else if (errMsg.includes("500") || errMsg.includes("internal server")) {
+        errorMessage = "Error del servidor. Por favor intenta nuevamente en unos segundos."
+      } else if (errMsg.includes("timeout")) {
+        errorMessage = "La conexión tardó demasiado. Por favor intenta nuevamente."
+      } else if (errMsg.includes("email") && errMsg.includes("invalid")) {
+        errorMessage = "El email ingresado no es válido. Por favor verifica el formato."
+      } else if (errMsg.includes("password") && errMsg.includes("weak")) {
+        errorMessage = "La contraseña es muy débil. Debe tener al menos 8 caracteres."
       } else if (err.message) {
         errorMessage = err.message
       }
