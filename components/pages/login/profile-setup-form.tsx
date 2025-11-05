@@ -146,6 +146,50 @@ export function ProfileSetupForm() {
   const generos = ["Masculino", "Femenino", "Otro"]
 
   useEffect(() => {
+    // Prefill form data from existing authenticated user to avoid losing inputs
+    // This helps when the app redirects back to profile-setup (e.g., after phone verify)
+    try {
+      if (user) {
+        setFormData((prev) => {
+          // Only prefill when fields are still empty to avoid overwriting user edits
+          const shouldPrefill = !prev.name && !prev.surname && !prev.photoPreviewUrl && !prev.address;
+          if (!shouldPrefill) return prev;
+
+          // Extract phone without country code if possible
+          let phoneOnly = prev.phone;
+          let countryCode = prev.countryCode;
+          if ((user as any).celular) {
+            const cleaned = (user as any).celular.trim();
+            const match = cleaned.match(/^(\+\d{1,4})\s*(.*)$/);
+            if (match) {
+              countryCode = match[1];
+              phoneOnly = match[2];
+            } else {
+              phoneOnly = cleaned;
+            }
+          }
+
+          return {
+            ...prev,
+            name: (user as any).nombre ?? (user as any).name ?? prev.name,
+            surname: (user as any).apellido ?? (user as any).apellido ?? prev.surname,
+            phone: phoneOnly ?? prev.phone,
+            countryCode: countryCode ?? prev.countryCode,
+            fechaNacimiento: (user as any).fechaNacimiento ?? (user as any).fecha_nacimiento ?? prev.fechaNacimiento,
+            genero: (user as any).genero ?? prev.genero,
+            position: (user as any).posicion ?? (user as any).position ?? prev.position,
+            height: (user as any).altura ? String((user as any).altura) : prev.height,
+            weight: (user as any).peso ? String((user as any).peso) : prev.weight,
+            address: (user as any).direccion ?? (user as any).ubicacion ?? prev.address,
+          }
+        })
+      }
+    } catch (e) {
+      logger.error('[ProfileSetup] Error prefill desde user:', e)
+    }
+  }, [user])
+
+  useEffect(() => {
     return () => {
       if (formData.photoPreviewUrl) URL.revokeObjectURL(formData.photoPreviewUrl)
     }
