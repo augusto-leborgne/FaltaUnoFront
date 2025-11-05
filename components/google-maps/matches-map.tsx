@@ -7,6 +7,7 @@ import { ArrowLeft, MapPin, List } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useGoogleMaps } from "@/lib/google-maps-loader";
 import { useAuth } from "@/hooks/use-auth";
+import { logger } from "@/lib/logger";
 
 const mapMatches = [
   { id: 1, type: "Fútbol 7", time: "Hoy 20:00", location: "Centro Deportivo Sur", spotsLeft: 2, lat: -34.9011, lng: -56.1645, organizadorId: "user123" },
@@ -34,7 +35,7 @@ export function MatchesMap() {
           });
         },
         (err) => {
-          console.error("Error obteniendo ubicación:", err);
+          logger.error("Error obteniendo ubicación:", err);
           // Fallback a Montevideo por defecto
           setUserLocation({ lat: -34.9011, lng: -56.1645 });
         }

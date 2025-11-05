@@ -161,6 +161,7 @@ export class TokenPersistence {
    */
   static debugTokenState(): void {
     if (typeof window === "undefined") return
+    if (process.env.NODE_ENV === "production") return
     
     try {
       const mainToken = AuthService.getToken()
@@ -168,29 +169,28 @@ export class TokenPersistence {
       const recoveryToken = localStorage.getItem(TOKEN_RECOVERY_KEY)
       const lastCheck = localStorage.getItem(LAST_TOKEN_CHECK)
       
-      console.group("🔍 Token Debug State")
-      console.log("Main Token:", mainToken ? `Exists (${mainToken.length} chars)` : "Missing")
-      console.log("Backup Token:", backupToken ? `Exists (${backupToken.length} chars)` : "Missing")
-      console.log("Recovery Token:", recoveryToken ? `Exists (${recoveryToken.length} chars)` : "Missing")
-      console.log("Last Check:", lastCheck ? new Date(parseInt(lastCheck)).toISOString() : "Never")
+      logger.log("🔍 Token Debug State")
+      logger.log("Main Token:", mainToken ? `Exists (${mainToken.length} chars)` : "Missing")
+      logger.log("Backup Token:", backupToken ? `Exists (${backupToken.length} chars)` : "Missing")
+      logger.log("Recovery Token:", recoveryToken ? `Exists (${recoveryToken.length} chars)` : "Missing")
+      logger.log("Last Check:", lastCheck ? new Date(parseInt(lastCheck)).toISOString() : "Never")
       
       if (mainToken) {
-        console.log("Main Token Valid:", !AuthService.isTokenExpired(mainToken))
+        logger.log("Main Token Valid:", !AuthService.isTokenExpired(mainToken))
         try {
           const payload = JSON.parse(atob(mainToken.split('.')[1]))
-          console.log("Token Expires:", new Date(payload.exp * 1000).toISOString())
-          console.log("Token User ID:", payload.userId)
-          console.log("Token Email:", payload.sub)
+          logger.log("Token Expires:", new Date(payload.exp * 1000).toISOString())
+          logger.log("Token User ID:", payload.userId)
+          logger.log("Token Email:", payload.sub)
         } catch (e) {
-          console.log("Cannot decode token")
+          logger.log("Cannot decode token")
         }
       }
       
       const consistency = this.verifyTokenConsistency()
-      console.log("Consistency Check:", consistency)
-      console.groupEnd()
+      logger.log("Consistency Check:", consistency)
     } catch (error) {
-      console.error("Error in debugTokenState:", error)
+      logger.error("Error in debugTokenState:", error)
     }
   }
 }

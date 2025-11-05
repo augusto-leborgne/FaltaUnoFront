@@ -7,6 +7,7 @@ import { googleMapsLoader } from "@/lib/google-maps-loader"
 import { PartidoDTO } from "@/lib/api"
 import { MapPin, Navigation, AlertCircle } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { logger } from "@/lib/logger"
 
 interface MatchesMapViewProps {
   matches: PartidoDTO[]
@@ -87,7 +88,7 @@ export function MatchesMapView({
         setIsMapReady(true)
         setIsLoading(false)
       } catch (err) {
-        console.error("[MatchesMapView] Error inicializando mapa:", err)
+        logger.error("[MatchesMapView] Error inicializando mapa:", err)
         if (mounted) {
           setError(err instanceof Error ? err.message : "Error al cargar el mapa")
           setIsLoading(false)

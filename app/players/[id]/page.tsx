@@ -1,5 +1,6 @@
 import PlayerProfile from "@/components/pages/user/player-profile"
 import type { Metadata } from "next"
+import { logger } from "@/lib/logger"
 
 interface PlayerProfilePageProps {
   params: {
@@ -57,7 +58,7 @@ export async function generateMetadata({ params }: PlayerProfilePageProps): Prom
       }
     }
   } catch (error: any) {
-    console.error("Error fetching player metadata:", error?.name === 'AbortError' ? 'Timeout' : error)
+    logger.error("Error fetching player metadata:", error?.name === 'AbortError' ? 'Timeout' : error)
   }
   
   // Fallback metadata

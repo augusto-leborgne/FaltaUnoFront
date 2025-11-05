@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { googleMapsLoader } from "@/lib/google-maps-loader";
 import { MapPin, AlertCircle } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { logger } from "@/lib/logger";
 
 interface Marker {
   lat: number;
@@ -171,7 +172,7 @@ export function GoogleMapsEmbed({
 
         setIsLoading(false);
       } catch (err) {
-        console.error("❌ [GoogleMapsEmbed] Error inicializando mapa:", err);
+        logger.error("❌ [GoogleMapsEmbed] Error inicializando mapa:", err);
         if (mounted) {
           setError(err instanceof Error ? err.message : "Error al cargar el mapa");
           setIsLoading(false);

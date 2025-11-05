@@ -72,7 +72,7 @@ export function SearchScreen() {
         }
       }
     } catch (error) {
-      console.error('Error loading recent searches:', error)
+      logger.error('Error loading recent searches:', error)
       localStorage.removeItem("recentSearches")
     }
   }, [])

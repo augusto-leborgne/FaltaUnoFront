@@ -1,5 +1,6 @@
 import MatchDetail from "@/components/pages/match/match-detail"
 import type { Metadata } from "next"
+import { logger } from "@/lib/logger"
 
 interface MatchDetailPageProps {
   params: {
@@ -56,7 +57,7 @@ export async function generateMetadata({ params }: MatchDetailPageProps): Promis
       }
     }
   } catch (error: any) {
-    console.error("Error fetching match metadata:", error?.name === 'AbortError' ? 'Timeout' : error)
+    logger.error("Error fetching match metadata:", error?.name === 'AbortError' ? 'Timeout' : error)
   }
   
   // Fallback metadata

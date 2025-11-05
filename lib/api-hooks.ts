@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { PartidoAPI, PartidoDTO, UsuarioMinDTO, InscripcionAPI } from './api'
 import { useToast } from '@/hooks/use-toast'
+import { logger } from './logger'
 
 export function usePartido(id: string) {
   const [partido, setPartido] = useState<PartidoDTO | null>(null)
@@ -91,7 +92,7 @@ export function useInscripcionEstado(partidoId: string, usuarioId: string) {
           setEstado(response.data)
         }
       } catch (err) {
-        console.error('Error cargando estado inscripción:', err)
+        logger.error('Error cargando estado inscripción:', err)
       } finally {
         setLoading(false)
       }

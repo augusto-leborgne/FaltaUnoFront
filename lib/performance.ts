@@ -3,6 +3,8 @@
  * Track and optimize app performance
  */
 
+import { logger } from "./logger";
+
 interface PerformanceMetrics {
   name: string;
   duration: number;
@@ -35,7 +37,7 @@ class PerformanceMonitor {
     
     const startTime = this.marks.get(name);
     if (!startTime) {
-      console.warn(`[Performance] No start mark found for: ${name}`);
+      logger.warn(`[Performance] No start mark found for: ${name}`);
       return null;
     }
 
@@ -61,9 +63,9 @@ class PerformanceMonitor {
 
     // Log slow operations (> 1 second)
     if (duration > 1000) {
-      console.warn(`[Performance] Slow operation: ${name} took ${duration.toFixed(2)}ms`);
-    } else if (duration > 100) {
-      console.log(`[Performance] ${name}: ${duration.toFixed(2)}ms`);
+      logger.warn(`[Performance] Slow operation: ${name} took ${duration.toFixed(2)}ms`);
+    } else if (duration > 100 && process.env.NODE_ENV !== 'production') {
+      logger.log(`[Performance] ${name}: ${duration.toFixed(2)}ms`);
     }
 
     return duration;
@@ -101,11 +103,12 @@ class PerformanceMonitor {
    */
   reportWebVitals(): void {
     if (typeof window === 'undefined') return;
+    if (process.env.NODE_ENV === 'production') return;
 
     // First Contentful Paint (FCP)
     const fcp = performance.getEntriesByName('first-contentful-paint')[0];
     if (fcp) {
-      console.log(`[Web Vitals] FCP: ${fcp.startTime.toFixed(2)}ms`);
+      logger.log(`[Web Vitals] FCP: ${fcp.startTime.toFixed(2)}ms`);
     }
 
     // Largest Contentful Paint (LCP)
@@ -114,7 +117,7 @@ class PerformanceMonitor {
         const lcpObserver = new PerformanceObserver((list) => {
           const entries = list.getEntries();
           const lastEntry = entries[entries.length - 1] as any;
-          console.log(`[Web Vitals] LCP: ${lastEntry.renderTime || lastEntry.loadTime}ms`);
+          logger.log(`[Web Vitals] LCP: ${lastEntry.renderTime || lastEntry.loadTime}ms`);
         });
         lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
       } catch (e) {
@@ -128,7 +131,7 @@ class PerformanceMonitor {
         const fidObserver = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
             const fid = (entry as any).processingStart - entry.startTime;
-            console.log(`[Web Vitals] FID: ${fid.toFixed(2)}ms`);
+            logger.log(`[Web Vitals] FID: ${fid.toFixed(2)}ms`);
           }
         });
         fidObserver.observe({ entryTypes: ['first-input'] });
@@ -147,7 +150,7 @@ class PerformanceMonitor {
               clsScore += (entry as any).value;
             }
           }
-          console.log(`[Web Vitals] CLS: ${clsScore.toFixed(4)}`);
+          logger.log(`[Web Vitals] CLS: ${clsScore.toFixed(4)}`);
         });
         clsObserver.observe({ entryTypes: ['layout-shift'] });
       } catch (e) {

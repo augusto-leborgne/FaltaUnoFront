@@ -37,7 +37,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
     // ✅ FIX: Solo verificar perfil completo si NO estamos ya en profile-setup
     // Esto previene loops infinitos si profile-setup tiene errores
-    if (pathname !== '/profile-setup' && pathname !== '/complete-profile') {
+    if (pathname !== '/profile-setup') {
       const user = AuthService.getUser()
       
       // ⚡ CRÍTICO: Validación de perfil incompleto

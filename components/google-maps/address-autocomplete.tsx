@@ -5,6 +5,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { googleMapsLoader } from "@/lib/google-maps-loader";
 import { X, MapPin } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { logger } from "@/lib/logger";
 
 type Props = {
   value?: string;
@@ -55,7 +56,7 @@ export function AddressAutocomplete({
 
     const loadMaps = async () => {
       try {
-        console.log("[AddressAutocomplete] 🔄 Iniciando carga de Google Maps...");
+        logger.log("[AddressAutocomplete] 🔄 Iniciando carga de Google Maps...");
         
         // ✅ Explícitamente solicitar Places API con timeout generoso
         await googleMapsLoader.load({ 
@@ -65,30 +66,30 @@ export function AddressAutocomplete({
         
         if (!mounted) return;
 
-        console.log("[AddressAutocomplete] ✅ Google Maps loader completado");
+        logger.log("[AddressAutocomplete] ✅ Google Maps loader completado");
 
         // ✅ Verificar que Places esté disponible
         if (window.google?.maps?.places) {
-          console.log("[AddressAutocomplete] ✅ Places API detectada, inicializando servicios...");
+          logger.log("[AddressAutocomplete] ✅ Places API detectada, inicializando servicios...");
           
           // ✅ MODERNO: Solo crear session token (no necesitamos PlacesService)
           sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
           
-          console.log("✅ [AddressAutocomplete] Servicios de Google Maps inicializados correctamente");
+          logger.log("✅ [AddressAutocomplete] Servicios de Google Maps inicializados correctamente");
           setIsLoadingMaps(false);
         } else {
           // ❌ Places API no está disponible después de esperar
-          console.error("❌ [AddressAutocomplete] Places API NO disponible después de cargar");
-          console.error("Verificar:");
-          console.error("- API key en NEXT_PUBLIC_GOOGLE_MAPS_API_KEY");
-          console.error("- Places API habilitada en Google Cloud Console");
-          console.error("- Restricciones de API key permiten el dominio");
+          logger.error("❌ [AddressAutocomplete] Places API NO disponible después de cargar");
+          logger.error("Verificar:");
+          logger.error("- API key en NEXT_PUBLIC_GOOGLE_MAPS_API_KEY");
+          logger.error("- Places API habilitada en Google Cloud Console");
+          logger.error("- Restricciones de API key permiten el dominio");
           
           setMapsError("Places API no disponible. Verifica la configuración de la API key.");
           setIsLoadingMaps(false);
         }
       } catch (error) {
-        console.error("❌ [AddressAutocomplete] Error cargando Google Maps:", error);
+        logger.error("❌ [AddressAutocomplete] Error cargando Google Maps:", error);
         if (mounted) {
           const errorMsg = error instanceof Error ? error.message : "Error desconocido";
           setMapsError(`Error al cargar Google Maps: ${errorMsg}`);
@@ -134,7 +135,7 @@ export function AddressAutocomplete({
 
       const autocompleteSuggestions = response.suggestions || [];
 
-      console.log("[AddressAutocomplete] 🔍 Suggestions raw:", autocompleteSuggestions);
+      logger.log("[AddressAutocomplete] 🔍 Suggestions raw:", autocompleteSuggestions);
 
       // Convertir AutocompleteSuggestion[] a AutocompletePrediction[] para compatibilidad
       const predictions: any[] = autocompleteSuggestions.map((suggestion: any) => {
@@ -142,7 +143,7 @@ export function AddressAutocomplete({
         const mainText = placePred?.structuredFormat?.mainText?.text || placePred?.text?.text || '';
         const secondaryText = placePred?.structuredFormat?.secondaryText?.text || '';
         
-        console.log("[AddressAutocomplete] 📍", {
+        logger.log("[AddressAutocomplete] 📍", {
           mainText,
           secondaryText,
           placeId: placePred?.placeId,
@@ -164,12 +165,12 @@ export function AddressAutocomplete({
         };
       });
 
-      console.log("[AddressAutocomplete] ✅ Predictions procesadas:", predictions);
+      logger.log("[AddressAutocomplete] ✅ Predictions procesadas:", predictions);
 
       setSuggestions(predictions);
       setIsSearching(false);
     } catch (error) {
-      console.warn("[AddressAutocomplete] Error en predicciones:", error);
+      logger.warn("[AddressAutocomplete] Error en predicciones:", error);
       setSuggestions([]);
       setIsSearching(false);
     }
@@ -219,7 +220,7 @@ export function AddressAutocomplete({
   const isAddressSpecific = (place: any): boolean => {
     const addressComponents = place.address_components || [];
     
-    console.log("[AddressAutocomplete] 🔍 Validando dirección:", {
+    logger.log("[AddressAutocomplete] 🔍 Validando dirección:", {
       name: place.name,
       formatted_address: place.formatted_address,
       types: place.types,
@@ -254,7 +255,7 @@ export function AddressAutocomplete({
       ['route', 'locality', 'administrative_area_level_1', 'administrative_area_level_2', 'country', 'neighborhood', 'political'].includes(type)
     );
     
-    console.log("[AddressAutocomplete] ✅ Validación:", {
+    logger.log("[AddressAutocomplete] ✅ Validación:", {
       hasStreetNumber,
       isNamedPlace,
       hasEstablishmentType,
@@ -264,7 +265,7 @@ export function AddressAutocomplete({
     });
     
     if (allTypesInvalid) {
-      console.warn("[AddressAutocomplete] ❌ RECHAZADO: Todos los tipos son inválidos (calle/barrio/ciudad)");
+      logger.warn("[AddressAutocomplete] ❌ RECHAZADO: Todos los tipos son inválidos (calle/barrio/ciudad)");
       return false;
     }
     
@@ -274,7 +275,7 @@ export function AddressAutocomplete({
     const isValid = hasStreetNumber || isNamedPlace;
     
     if (!isValid) {
-      console.warn("[AddressAutocomplete] ❌ RECHAZADO: No tiene número de calle ni es lugar con nombre");
+      logger.warn("[AddressAutocomplete] ❌ RECHAZADO: No tiene número de calle ni es lugar con nombre");
     }
     
     return isValid;
@@ -321,7 +322,7 @@ export function AddressAutocomplete({
 
       // Validar que sea una dirección específica
       if (!isAddressSpecific(placeResult)) {
-        console.warn("[AddressAutocomplete] ❌ Dirección rechazada - no es específica");
+        logger.warn("[AddressAutocomplete] ❌ Dirección rechazada - no es específica");
         setValidationError("Debes seleccionar una dirección completa con número de calle o un lugar específico de Google Maps");
         setQuery("");
         setHasSelectedAddress(false);
@@ -337,7 +338,7 @@ export function AddressAutocomplete({
         sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
       }
     } catch (error) {
-      console.warn("[AddressAutocomplete] Error obteniendo detalles:", error);
+      logger.warn("[AddressAutocomplete] Error obteniendo detalles:", error);
       onChange(prediction.description, null);
     } finally {
       isSelectingRef.current = false; // Siempre limpiar el flag

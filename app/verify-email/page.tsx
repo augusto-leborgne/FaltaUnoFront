@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle2, XCircle, Mail, ArrowLeft } from 'lucide-react';
 import { InlineSpinner, LoadingSpinner } from '@/components/ui/loading-spinner';
+import { logger } from '@/lib/logger';
 
 function VerifyEmailContent() {
   const router = useRouter();
@@ -167,7 +168,7 @@ function VerifyEmailContent() {
         inputRefs.current[0]?.focus();
       }
     } catch (err: any) {
-      console.error('Error verificando código:', err);
+      logger.error('Error verificando código:', err);
       if (err.name === 'AbortError') {
         setError('La solicitud tardó demasiado. Por favor intenta de nuevo.');
       } else {
@@ -219,7 +220,7 @@ function VerifyEmailContent() {
         setError(data.message || 'Error al reenviar el código');
       }
     } catch (err: any) {
-      console.error('Error reenviando código:', err);
+      logger.error('Error reenviando código:', err);
       if (err.name === 'AbortError') {
         setError('La solicitud tardó demasiado. Por favor intenta de nuevo.');
       } else {
