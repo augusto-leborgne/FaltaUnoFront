@@ -23,7 +23,7 @@ const COUNTRY_CODES = [
 
 export function PhoneVerificationScreen() {
   const router = useRouter();
-  const { refreshUser } = useAuth();
+  const { refreshUser, setUser } = useAuth();
   const [countryCode, setCountryCode] = React.useState("+598");
   const [phoneNumber, setPhoneNumber] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -76,8 +76,15 @@ export function PhoneVerificationScreen() {
           currentUser.celular = fullPhone;
           // marcar perfil como completo ahora que tiene celular
           currentUser.perfilCompleto = true;
-          AuthService.setUser(currentUser);
-          logger.log("[PhoneVerification] Usuario actualizado en localStorage (optimistic)");
+          // Actualizar contexto y localStorage de forma consistente
+          try {
+            setUser(currentUser)
+            logger.log("[PhoneVerification] Usuario actualizado en contexto (optimistic)");
+          } catch (e) {
+            // Fallback: si setUser falla, al menos persistir en localStorage
+            AuthService.setUser(currentUser);
+            logger.warn("[PhoneVerification] setUser falló, usando AuthService.setUser como fallback:", e);
+          }
         } catch (e) {
           logger.warn("[PhoneVerification] No se pudo actualizar usuario local optimistically:", e);
         }

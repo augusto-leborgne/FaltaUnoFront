@@ -36,7 +36,8 @@ function hasBasicProfile(u: any): boolean {
   // Ajustá estos campos a tu modelo si querés ser más estricto
   const nombre = u?.nombre
   const apellido = u?.apellido
-  const foto = u?.fotoPerfil ?? u?.foto_perfil
+  // AuthService may strip foto fields to save quota and expose `hasFotoPerfil`
+  const foto = u?.hasFotoPerfil ?? u?.fotoPerfil ?? u?.foto_perfil
   return Boolean(nombre && apellido && foto)
 }
 
