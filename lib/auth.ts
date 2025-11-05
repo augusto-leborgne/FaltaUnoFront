@@ -228,21 +228,16 @@ export class AuthService {
     
     if (typeof window !== "undefined") {
       try {
-        // Limpieza completa de storage
-        const keys = Object.keys(localStorage)
-        for (const k of keys) {
-          if (k.startsWith("match_") || k.startsWith("user_") || k.startsWith("cache_")) {
-            localStorage.removeItem(k)
-          }
-        }
+        // ⚡ CRÍTICO: Limpieza COMPLETA de todo el storage
+        localStorage.clear()
+        sessionStorage.clear()
         
-        // Limpiar también sessionStorage excepto el flag
-        const sessionKeys = Object.keys(sessionStorage).filter(k => k !== "isLoggingOut")
-        for (const k of sessionKeys) {
-          sessionStorage.removeItem(k)
-        }
+        // Volver a setear solo el flag de logout
+        sessionStorage.setItem("isLoggingOut", "true")
+        
+        logger?.debug?.("[AuthService] Storage completamente limpiado")
       } catch (e) {
-        logger?.error?.("[AuthService] Error limpiando storage extra:", e)
+        logger?.error?.("[AuthService] Error limpiando storage:", e)
       }
       
       // Disparar evento para que otros componentes sepan del logout

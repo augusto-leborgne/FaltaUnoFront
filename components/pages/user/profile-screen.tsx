@@ -66,6 +66,7 @@ function ProfileScreenInner() {
   const [reviews, setReviews] = useState<Review[]>([])
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([])
   const [friends, setFriends] = useState<Friend[]>([])
+  const [contacts, setContacts] = useState<Contact[]>([]) // ⚡ NUEVO: Contactos importados
   const [loading, setLoading] = useState(true) // ⚡ Mostrar spinner mientras carga primera vez
   const [error, setError] = useState<string | null>(null)
 
@@ -85,7 +86,7 @@ function ProfileScreenInner() {
       }
 
       // ⚡ OPTIMIZACIÓN: Cargar todos los datos en paralelo CON CACHÉ
-      const [reviewsResult, frResult, friendsResult] = await Promise.allSettled([
+      const [reviewsResult, frResult, friendsResult, contactsResult] = await Promise.allSettled([
         // Reviews (CACHED - 5 min)
         apiCache.get(
           `reviews-usuario-${user.id}`,
@@ -108,6 +109,14 @@ function ProfileScreenInner() {
           () => fetch(normalizeUrl(`${API_BASE}/api/amistades`), { headers: authHeaders })
             .then(res => res.ok ? res.json() : null),
           { ttl: 2 * 60 * 1000 } // 2 minutos
+        ),
+        
+        // ⚡ NUEVO: Contactos importados (CACHED - 5 min)
+        apiCache.get(
+          `contactos-${user.id}`,
+          () => fetch(normalizeUrl(`${API_BASE}/api/contactos`), { headers: authHeaders })
+            .then(res => res.ok ? res.json() : null),
+          { ttl: 5 * 60 * 1000 } // 5 minutos
         )
       ])
 
@@ -124,8 +133,34 @@ function ProfileScreenInner() {
       // Procesar amigos
       if (friendsResult.status === 'fulfilled' && friendsResult.value) {
         const friendsData = friendsResult.value
-        const allFriends = friendsData.data || []
+        logger.log("[ProfileScreen] Raw friends data:", friendsData)
+        
+        // El backend devuelve { success: true, data: [...] }
+        let allFriends = []
+        if (friendsData?.data && Array.isArray(friendsData.data)) {
+          allFriends = friendsData.data
+        } else if (Array.isArray(friendsData)) {
+          allFriends = friendsData
+        }
+        
+        logger.log("[ProfileScreen] Processed friends:", allFriends)
         setFriends(allFriends)
+      }
+      
+      // ⚡ NUEVO: Procesar contactos
+      if (contactsResult.status === 'fulfilled' && contactsResult.value) {
+        const contactsData = contactsResult.value
+        logger.log("[ProfileScreen] Raw contacts data:", contactsData)
+        
+        let allContacts = []
+        if (contactsData?.data && Array.isArray(contactsData.data)) {
+          allContacts = contactsData.data
+        } else if (Array.isArray(contactsData)) {
+          allContacts = contactsData
+        }
+        
+        logger.log("[ProfileScreen] Processed contacts:", allContacts)
+        setContacts(allContacts)
       }
     } catch (e) {
       logger.error("[ProfileScreen] Error cargando datos del perfil:", e)
@@ -428,6 +463,61 @@ function ProfileScreenInner() {
             </div>
           )}
         </div>
+
+        {/* ⚡ NUEVO: Contacts Section */}
+        {contacts.length > 0 && (
+          <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-base sm:text-lg font-bold text-gray-900">Contactos Importados</h3>
+              <Button variant="outline" size="sm" onClick={() => router.push('/contacts')} className="bg-transparent text-xs sm:text-sm">
+                <Phone className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                Ver todos
+              </Button>
+            </div>
+
+            <div className="space-y-2 sm:space-y-3">
+              {contacts.slice(0, 5).map((contact) => {
+                const contactName = `${contact.nombre} ${contact.apellido}`.trim() || "Contacto"
+
+                return (
+                  <div
+                    key={contact.id}
+                    onClick={() => {
+                      if (contact.isOnApp && contact.id) {
+                        router.push(`/users/${contact.id}`)
+                      }
+                    }}
+                    className={`flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl ${
+                      contact.isOnApp ? 'cursor-pointer hover:bg-gray-100' : ''
+                    } transition-colors`}
+                  >
+                    <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
+                      <UserAvatar 
+                        userId={contact.isOnApp ? contact.id : undefined}
+                        name={contact.nombre} 
+                        surname={contact.apellido} 
+                        className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0"
+                        lazy
+                      />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{contactName}</p>
+                        {contact.celular && (
+                          <p className="text-xs text-gray-500">{contact.celular}</p>
+                        )}
+                      </div>
+                    </div>
+                    <Badge className={contact.isOnApp 
+                      ? "bg-green-100 text-green-800 text-xs" 
+                      : "bg-gray-100 text-gray-600 text-xs"
+                    }>
+                      {contact.isOnApp ? 'En la app' : 'Invitar'}
+                    </Badge>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Logout Section */}
         <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-6 mb-20 sm:mb-24">

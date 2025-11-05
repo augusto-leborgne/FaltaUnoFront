@@ -180,9 +180,12 @@ function VerifyEmailContent() {
             }
           }, 2500);
         } else {
-          // ✅ Si viene de registro, guardar info para profile-setup
-          localStorage.setItem('verifiedEmail', email!);
-          localStorage.setItem('passwordHash', data.data.passwordHash);
+          // ✅ Si viene de registro, usar sessionStorage (se limpia al cerrar pestaña)
+          sessionStorage.setItem('pendingVerification', JSON.stringify({
+            email: email!,
+            passwordHash: data.data.passwordHash,
+            timestamp: Date.now()
+          }));
           
           // Redirigir a configurar perfil después de 2.5 segundos
           setTimeout(() => {
