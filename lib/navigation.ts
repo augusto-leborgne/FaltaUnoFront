@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 
 const PROFILE_SETUP_ROUTE = "/profile-setup"
 const VERIFICATION_ROUTE = "/verification"
+const PHONE_VERIFICATION_ROUTE = "/phone-verification"
 const HOME_ROUTE = "/home"
 
 // Helpers -------------------------------------------------------------
@@ -80,11 +81,20 @@ function needsIdVerification(user?: Usuario | null): boolean {
   */
 }
 
+function needsPhoneVerification(user?: Usuario | null): boolean {
+  if (!user) return false
+  
+  // Verificar si el usuario tiene celular
+  const celular = (user as any)?.celular
+  return !celular || celular.trim() === ""
+}
+
 // API pública ---------------------------------------------------------
 
 export function decidePostAuthRoute(user?: Usuario | null): string {
   if (!user) return PROFILE_SETUP_ROUTE
   if (isProfileIncomplete(user)) return PROFILE_SETUP_ROUTE
+  if (needsPhoneVerification(user)) return PHONE_VERIFICATION_ROUTE
   if (needsIdVerification(user)) return VERIFICATION_ROUTE
   return HOME_ROUTE
 }

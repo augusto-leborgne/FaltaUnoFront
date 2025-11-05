@@ -84,11 +84,7 @@ export function ProfileSetupForm() {
         if (value.trim().length > 50) return "Máximo 50 caracteres"
         return null
       
-      case 'phone':
-        if (!value) return "Requerido"
-        const phoneRegex = /^[0-9]{6,15}$/
-        if (!phoneRegex.test(value.replace(/\s/g, ''))) return "6-15 dígitos"
-        return null
+      // Phone no es requerido - se pedirá en paso posterior
       
       case 'fechaNacimiento':
         if (!value) return "Requerido"
@@ -270,7 +266,7 @@ export function ProfileSetupForm() {
           password: passwordHash,
           nombre: formData.name,
           apellido: formData.surname,
-          celular: fullPhone,
+          // celular no se envía aquí - se pedirá en paso posterior
           fechaNacimiento: formData.fechaNacimiento,
           genero: formData.genero,
           posicion: formData.position,
@@ -278,6 +274,8 @@ export function ProfileSetupForm() {
           peso: parseFloat(formData.weight),
           fotoPerfil: photoBase64,
           emailVerified: true,
+          direccion: formData.address,
+          placeDetails: formData.placeDetails ? JSON.stringify(formData.placeDetails) : null,
         }
 
         logger.log("[ProfileSetup] Enviando a /auth/complete-register...")
@@ -312,8 +310,8 @@ export function ProfileSetupForm() {
 
         logger.log("[ProfileSetup] ✅ Registro completado exitosamente")
         
-        // Cédula es opcional - ir directo a home
-        router.push('/home')
+        // Redirigir a verificación de celular
+        router.push('/phone-verification')
 
       } else {
         const token = AuthService.getToken()
@@ -343,7 +341,7 @@ export function ProfileSetupForm() {
         const payload: any = {
           nombre: formData.name,
           apellido: formData.surname,
-          celular: fullPhone,
+          // celular no se envía aquí - se pedirá en paso posterior  
           fecha_nacimiento: formData.fechaNacimiento,
           genero: formData.genero,
           posicion: formData.position,
@@ -383,7 +381,8 @@ export function ProfileSetupForm() {
         AuthService.setUser(merged)
         setUser(merged)
 
-        postAuthRedirect(merged)
+        // Redirigir a verificación de celular
+        router.push('/phone-verification')
 
         setTimeout(() => AuthService.fetchCurrentUser(), 1500)
       }
@@ -507,52 +506,6 @@ export function ProfileSetupForm() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-1.5 block">Celular *</label>
-                <div className="flex gap-2">
-                  <div className="relative w-32">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setShowCountryCodeDropdown(!showCountryCodeDropdown)}
-                      className="w-full justify-between px-3 h-10"
-                    >
-                      <span className="text-sm">{countryCodes.find(c => c.code === formData.countryCode)?.flag} {formData.countryCode}</span>
-                      <ChevronDown className="w-4 h-4" />
-                    </Button>
-                    {showCountryCodeDropdown && (
-                      <div className="absolute mt-1 w-64 bg-white border border-gray-300 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto">
-                        {countryCodes.map((item) => (
-                          <div
-                            key={item.code}
-                            onClick={() => {
-                              setFormData(prev => ({ ...prev, countryCode: item.code }))
-                              setShowCountryCodeDropdown(false)
-                            }}
-                            className="p-3 hover:bg-primary/10 cursor-pointer flex items-center gap-2 text-sm"
-                          >
-                            <span>{item.flag}</span>
-                            <span className="font-medium">{item.code}</span>
-                            <span className="text-gray-600">{item.country.replace(item.flag, '').trim()}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <Input
-                    type="tel"
-                    placeholder="91234567"
-                    value={formData.phone}
-                    onChange={(e) => handleFieldChange('phone', e.target.value.replace(/\D/g, ''))}
-                    className={`flex-1 ${fieldErrors.phone ? 'border-red-500' : 'focus:ring-primary'}`}
-                    maxLength={15}
-                  />
-                </div>
-                {fieldErrors.phone && (
-                  <p className="text-xs text-red-500 mt-1">{fieldErrors.phone}</p>
-                )}
-              </div>
-
-              <div>
                 <label className="text-sm font-medium text-gray-700 mb-1.5 block">Fecha de nacimiento *</label>
                 <DateSelector
                   value={formData.fechaNacimiento}
@@ -596,6 +549,23 @@ export function ProfileSetupForm() {
                 </div>
                 {fieldErrors.genero && (
                   <p className="text-xs text-red-500 mt-1">{fieldErrors.genero}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1.5 block">Ubicación *</label>
+                <AddressAutocomplete
+                  value={formData.address}
+                  onChange={(address, placeDetails) => {
+                    setFormData(prev => ({ ...prev, address: address ?? "", placeDetails: placeDetails ?? null }))
+                    const addressError = validateField('address', address)
+                    setFieldErrors(prev => ({ ...prev, address: addressError || undefined }))
+                  }}
+                  placeholder="Ingresa tu dirección"
+                  hasError={!!fieldErrors.address}
+                />
+                {fieldErrors.address && (
+                  <p className="text-xs text-red-500 mt-1">{fieldErrors.address}</p>
                 )}
               </div>
             </div>
@@ -678,23 +648,6 @@ export function ProfileSetupForm() {
                     <p className="text-xs text-red-500 mt-1">{fieldErrors.weight}</p>
                   )}
                 </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1.5 block">Ubicación *</label>
-                <AddressAutocomplete
-                  value={formData.address}
-                  onChange={(address, placeDetails) => {
-                    setFormData(prev => ({ ...prev, address: address ?? "", placeDetails: placeDetails ?? null }))
-                    const addressError = validateField('address', address)
-                    setFieldErrors(prev => ({ ...prev, address: addressError || undefined }))
-                  }}
-                  placeholder="Ingresa tu dirección"
-                  hasError={!!fieldErrors.address}
-                />
-                {fieldErrors.address && (
-                  <p className="text-xs text-red-500 mt-1">{fieldErrors.address}</p>
-                )}
               </div>
             </div>
           </div>

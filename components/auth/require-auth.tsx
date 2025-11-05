@@ -14,12 +14,15 @@ type Props = {
   allowIncomplete?: boolean
   /** Permite ver la página aunque no haya verificado cédula */
   allowUnverified?: boolean
+  /** Permite ver la página aunque no tenga celular */
+  allowNoPhone?: boolean
 }
 
 export default function RequireAuth({
   children,
   allowIncomplete = false,
   allowUnverified = true,
+  allowNoPhone = false,
 }: Props) {
   const router = useRouter()
   const pathname = usePathname()
@@ -48,9 +51,11 @@ export default function RequireAuth({
     logger.log(`[RequireAuth:${pathname}] Usuario:`, {
       email: user.email,
       perfilCompleto: user.perfilCompleto,
+      celular: user.celular,
       cedulaVerificada: user.cedulaVerificada,
       allowIncomplete,
-      allowUnverified
+      allowUnverified,
+      allowNoPhone
     })
 
     // ⚡ CRÍTICO: Validación mejorada de perfil incompleto
@@ -83,6 +88,16 @@ export default function RequireAuth({
       return
     }
 
+    // ⚡ NUEVO: Verificar que tenga celular (obligatorio)
+    const hasCelular = user.celular && user.celular.trim() !== ""
+    if (!allowNoPhone && !hasCelular) {
+      if (pathname !== "/phone-verification") {
+        logger.log(`[RequireAuth:${pathname}] Celular faltante, redirigiendo a /phone-verification`)
+        router.replace("/phone-verification")
+      }
+      return
+    }
+
     if (!allowUnverified && user.perfilCompleto && !user.cedulaVerificada) {
       // TODO: Verificación de cédula deshabilitada temporalmente - no redirigir a /verification
       /*
@@ -96,7 +111,7 @@ export default function RequireAuth({
 
     logger.log(`[RequireAuth:${pathname}] ✓ Verificación completa, permitiendo acceso`)
     // Importante: no redirigir a "/" nunca acá.
-  }, [user, loading, router, pathname, allowIncomplete, allowUnverified, refreshUser])
+  }, [user, loading, router, pathname, allowIncomplete, allowUnverified, allowNoPhone, refreshUser])
 
   if (loading || !user) {
     return (

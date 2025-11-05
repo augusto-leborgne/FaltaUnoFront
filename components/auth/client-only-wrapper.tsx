@@ -18,16 +18,19 @@ export function ClientOnlyWrapper({ children }: { children: React.ReactNode }) {
 export function RequireAuthClientOnly({ 
   children,
   allowIncomplete = false,
-  allowUnverified = true
+  allowUnverified = true,
+  allowNoPhone = false
 }: { 
   children: React.ReactNode
   allowIncomplete?: boolean
   allowUnverified?: boolean
+  allowNoPhone?: boolean
 }) {
   return (
     <RequireAuth 
       allowIncomplete={allowIncomplete} 
       allowUnverified={allowUnverified}
+      allowNoPhone={allowNoPhone}
     >
       {children}
     </RequireAuth>
