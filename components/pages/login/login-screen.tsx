@@ -114,15 +114,26 @@ export function LoginScreen() {
       } else {
         const errorMsg = res?.message || res?.error || "Credenciales inválidas"
         
-        // ✅ Detectar si el email no está verificado
+        // ✅ NUEVO: Detectar respuesta específica de email no verificado desde backend
+        if (res?.data?.emailNotVerified === true) {
+          logger.log("[LoginScreen] Email no verificado detectado desde backend")
+          setError("Tu cuenta aún no ha sido verificada. Redirigiendo a verificación...")
+          setTimeout(() => {
+            router.push(`/verify-email?email=${encodeURIComponent(res.data.email || email)}`)
+          }, 1500)
+          return
+        }
+        
+        // ✅ Detectar si el email no está verificado (fallback)
         if (errorMsg.toLowerCase().includes("no autorizado") || 
             errorMsg.toLowerCase().includes("unauthorized") ||
-            errorMsg.toLowerCase().includes("not verified")) {
+            errorMsg.toLowerCase().includes("not verified") ||
+            errorMsg.toLowerCase().includes("no verificado")) {
           logger.log("[LoginScreen] Usuario no autorizado, posiblemente email no verificado")
           setError("Tu cuenta aún no ha sido verificada. Redirigiendo a verificación...")
           setTimeout(() => {
             router.push(`/verify-email?email=${encodeURIComponent(email)}`)
-          }, 2000)
+          }, 1500)
         } else {
           setError(errorMsg)
         }
