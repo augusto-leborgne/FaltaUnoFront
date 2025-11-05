@@ -157,9 +157,9 @@ function VerifyEmailContent() {
         localStorage.setItem('verifiedEmail', email!);
         localStorage.setItem('passwordHash', data.data.passwordHash);
         
-        // Redirigir a completar perfil después de 1 segundo
+        // Redirigir a configurar perfil después de 1 segundo
         setTimeout(() => {
-          router.push('/complete-profile');
+          router.push('/profile-setup');
         }, 1000);
       } else {
         setError(data.message || 'Código inválido o expirado');

@@ -2,7 +2,7 @@
 
 
 import { logger } from '@/lib/logger'
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
@@ -35,6 +35,48 @@ export function RegisterScreen() {
     password?: string
     confirmPassword?: string
   }>({})
+
+  // ✅ NUEVO: Estado de verificación de email
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false)
+  const [emailCheckDebounce, setEmailCheckDebounce] = useState<NodeJS.Timeout | null>(null)
+
+  // ✅ NUEVO: Verificar si email ya existe
+  const checkEmailAvailability = useCallback(async (email: string) => {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return // No validar si email está vacío o mal formado
+    }
+
+    setIsCheckingEmail(true)
+    try {
+      const response = await fetch(`${API_URL}/auth/check-email?email=${encodeURIComponent(email)}`)
+      const data = await response.json()
+
+      if (data.success && data.data) {
+        if (data.data.exists) {
+          setFieldErrors(prev => ({ 
+            ...prev, 
+            email: "Este email ya está registrado. Intenta iniciar sesión." 
+          }))
+        } else if (data.data.hasDeletedRecoverable) {
+          setFieldErrors(prev => ({ 
+            ...prev, 
+            email: "Cuenta eliminada disponible para recuperar. Contacta soporte." 
+          }))
+        } else {
+          // Email disponible, limpiar error
+          setFieldErrors(prev => {
+            const { email, ...rest } = prev
+            return rest
+          })
+        }
+      }
+    } catch (err) {
+      logger.error("[RegisterScreen] Error checking email:", err)
+      // No mostrar error al usuario, solo loggear
+    } finally {
+      setIsCheckingEmail(false)
+    }
+  }, [])
 
   // ✅ NUEVO: Validar campos individuales
   const validateField = (field: keyof FormData, value: string): string | null => {
@@ -73,9 +115,22 @@ export function RegisterScreen() {
     const fieldError = validateField(field, value)
     setFieldErrors(prev => ({ ...prev, [field]: fieldError || undefined }))
     
-    // ✅ NUEVO: Mostrar advertencia de Gmail
+    // ✅ NUEVO: Verificar disponibilidad de email con debounce
     if (field === 'email') {
       setShowGmailWarning(isGmail(value))
+      
+      // Limpiar timeout anterior
+      if (emailCheckDebounce) {
+        clearTimeout(emailCheckDebounce)
+      }
+      
+      // Verificar disponibilidad después de 800ms sin escribir
+      if (value && !fieldError) {
+        const timeout = setTimeout(() => {
+          checkEmailAvailability(value)
+        }, 800)
+        setEmailCheckDebounce(timeout)
+      }
     }
     
     // Re-validar confirmPassword si cambió password
@@ -86,6 +141,15 @@ export function RegisterScreen() {
     
     if (error) setError("")
   }
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (emailCheckDebounce) {
+        clearTimeout(emailCheckDebounce)
+      }
+    }
+  }, [emailCheckDebounce])
 
   // Social OAuth - Registro con Google
   const handleSocialAuth = (provider: "google" | "facebook" | "apple") => {
@@ -102,6 +166,12 @@ export function RegisterScreen() {
 
   const handleEmailRegistration = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // ✅ NUEVO: Prevenir submit si hay errores de validación
+    if (fieldErrors.email) {
+      setError("Por favor corrige los errores antes de continuar")
+      return
+    }
 
     // Validaciones
     if (formData.password !== formData.confirmPassword) {
@@ -193,7 +263,9 @@ export function RegisterScreen() {
         {/* Formulario */}
         <form onSubmit={handleEmailRegistration} className="space-y-4 mb-6">
           <div>
-            <label htmlFor="register-email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label htmlFor="register-email" className="block text-sm font-medium text-gray-700 mb-1">
+              Email {isCheckingEmail && <span className="text-xs text-gray-400">(verificando...)</span>}
+            </label>
             <Input
               id="register-email"
               name="email"
@@ -207,7 +279,10 @@ export function RegisterScreen() {
               autoComplete="email"
             />
             {fieldErrors.email && (
-              <p className="text-xs text-red-600 mt-1">{fieldErrors.email}</p>
+              <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                <span className="text-red-600">⚠️</span>
+                {fieldErrors.email}
+              </p>
             )}
             
             {/* ✅ NUEVO: Advertencia de Gmail */}

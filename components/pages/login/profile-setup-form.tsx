@@ -273,82 +273,162 @@ export function ProfileSetupForm() {
 
     setIsUploading(true)
     try {
-      const token = AuthService.getToken()
-      logger.log("[ProfileSetup] Token disponible:", token ? "SÍ" : "NO")
-      if (!token) {
-        alert("No estás autenticado. Por favor, inicia sesión nuevamente.")
-        router.replace("/login")
-        return
-      }
-      if (AuthService.isTokenExpired(token)) {
-        alert("Tu sesión ha expirado. Por favor, inicia sesión nuevamente.")
-        AuthService.logout()
-        router.replace("/login")
-        return
-      }
+      // ✅ Detectar si es nuevo registro (viene desde verify-email) o actualización de perfil
+      const verifiedEmail = typeof window !== 'undefined' ? localStorage.getItem('verifiedEmail') : null
+      const passwordHash = typeof window !== 'undefined' ? localStorage.getItem('passwordHash') : null
+      const isNewRegistration = !!(verifiedEmail && passwordHash)
 
-      // 1) Subir foto vía API unificada
-      logger.log("[ProfileSetup] Subiendo foto...")
-      const fotoRes = await UsuarioAPI.subirFoto(formData.photo)
-      logger.log("[ProfileSetup] Respuesta subir foto:", fotoRes)
-      if (!fotoRes?.success) {
-        const errorMsg = fotoRes?.message || "No se pudo subir la foto"
-        logger.error("[ProfileSetup] Error subiendo foto:", errorMsg)
-        throw new Error(errorMsg)
-      }
+      logger.log("[ProfileSetup] Modo:", isNewRegistration ? "NUEVO REGISTRO" : "ACTUALIZACIÓN DE PERFIL")
 
-      // 2) Actualizar perfil
-      logger.log("[ProfileSetup] Actualizando perfil...")
-      const payload: any = {
-        nombre: formData.name,
-        apellido: formData.surname,
-        celular: formData.phone,
-        fecha_nacimiento: formData.fechaNacimiento,
-        genero: formData.genero,
-        posicion: formData.position,
-        altura: String(formData.height),  // Backend espera string
-        peso: String(formData.weight),    // Backend espera string
-        direccion: formData.address,
-        placeDetails: formData.placeDetails ? JSON.stringify(formData.placeDetails) : null,
-      }
-      logger.log("[ProfileSetup] Payload a enviar:", payload)
-      const perfilRes = await UsuarioAPI.actualizarPerfil(payload)
-      logger.log("[ProfileSetup] Respuesta actualizar perfil:", perfilRes)
-      if (!perfilRes?.success) {
-        const errorMsg = perfilRes?.message || "No se pudo actualizar el perfil"
-        logger.error("[ProfileSetup] Error actualizando perfil:", errorMsg)
-        throw new Error(errorMsg)
-      }
+      if (isNewRegistration) {
+        // ====================================
+        // FLUJO 1: NUEVO REGISTRO
+        // ====================================
+        logger.log("[ProfileSetup] Completando registro para:", verifiedEmail)
+        
+        // Convertir foto a base64
+        const photoBase64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onloadend = () => resolve((reader.result as string).split(',')[1]) // Quitar prefijo data:image/...
+          reader.onerror = reject
+          reader.readAsDataURL(formData.photo!)
+        })
 
-      // 3) Actualizar user local inmediatamente (clave para salir del loop)
-      const serverUser: any = perfilRes.data || {}
-      const currentUser: any = AuthService.getUser() || {}
-      
-      // ⚡ CRÍTICO: Preservar TODOS los campos importantes
-      const merged: any = {
-        ...currentUser,           // Empezar con usuario actual
-        ...serverUser,            // Sobrescribir con datos del servidor
-        perfilCompleto: true,     // <<<< FORZAR perfilCompleto=true después de completar setup
-        cedulaVerificada: serverUser.cedulaVerificada ?? currentUser.cedulaVerificada ?? false,
-        // Asegurar que campos críticos no se pierdan
-        email: serverUser.email ?? currentUser.email,
-        id: serverUser.id ?? currentUser.id,
+        const payload = {
+          email: verifiedEmail,
+          verificationCode: 'already-verified', // Ya verificado
+          password: passwordHash, // Password hash del pre-registro
+          nombre: formData.name,
+          apellido: formData.surname,
+          celular: formData.phone,
+          fechaNacimiento: formData.fechaNacimiento,
+          genero: formData.genero,
+          posicion: formData.position,
+          altura: parseFloat(formData.height),
+          peso: parseFloat(formData.weight),
+          fotoPerfil: photoBase64,
+          emailVerified: true,
+        }
+
+        logger.log("[ProfileSetup] Enviando a /auth/complete-register...")
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/complete-register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({ message: 'Error del servidor' }))
+          throw new Error(errorData.message || `Error ${response.status}`)
+        }
+
+        const data = await response.json()
+        if (!data.success || !data.data) {
+          throw new Error(data.message || 'Error al completar el registro')
+        }
+
+        // Limpiar localStorage
+        localStorage.removeItem('verifiedEmail')
+        localStorage.removeItem('passwordHash')
+
+        // Extraer token y usuario de la respuesta
+        const { token, usuario } = data.data
+        
+        if (token) {
+          AuthService.setToken(token)
+        }
+
+        // Guardar usuario con perfilCompleto=true
+        const userWithProfile = { ...usuario, perfilCompleto: true }
+        AuthService.setUser(userWithProfile)
+        setUser(userWithProfile)
+
+        logger.log("[ProfileSetup] ✅ Registro completado exitosamente")
+        
+        // Redirigir a verificación de cédula o home
+        router.push(usuario.cedulaVerificada ? '/home' : '/verification')
+
+      } else {
+        // ====================================
+        // FLUJO 2: ACTUALIZACIÓN DE PERFIL
+        // ====================================
+        const token = AuthService.getToken()
+        logger.log("[ProfileSetup] Token disponible:", token ? "SÍ" : "NO")
+        if (!token) {
+          alert("No estás autenticado. Por favor, inicia sesión nuevamente.")
+          router.replace("/login")
+          return
+        }
+        if (AuthService.isTokenExpired(token)) {
+          alert("Tu sesión ha expirado. Por favor, inicia sesión nuevamente.")
+          AuthService.logout()
+          router.replace("/login")
+          return
+        }
+
+        // 1) Subir foto vía API unificada
+        logger.log("[ProfileSetup] Subiendo foto...")
+        const fotoRes = await UsuarioAPI.subirFoto(formData.photo)
+        logger.log("[ProfileSetup] Respuesta subir foto:", fotoRes)
+        if (!fotoRes?.success) {
+          const errorMsg = fotoRes?.message || "No se pudo subir la foto"
+          logger.error("[ProfileSetup] Error subiendo foto:", errorMsg)
+          throw new Error(errorMsg)
+        }
+
+        // 2) Actualizar perfil
+        logger.log("[ProfileSetup] Actualizando perfil...")
+        const payload: any = {
+          nombre: formData.name,
+          apellido: formData.surname,
+          celular: formData.phone,
+          fecha_nacimiento: formData.fechaNacimiento,
+          genero: formData.genero,
+          posicion: formData.position,
+          altura: String(formData.height),  // Backend espera string
+          peso: String(formData.weight),    // Backend espera string
+          direccion: formData.address,
+          placeDetails: formData.placeDetails ? JSON.stringify(formData.placeDetails) : null,
+        }
+        logger.log("[ProfileSetup] Payload a enviar:", payload)
+        const perfilRes = await UsuarioAPI.actualizarPerfil(payload)
+        logger.log("[ProfileSetup] Respuesta actualizar perfil:", perfilRes)
+        if (!perfilRes?.success) {
+          const errorMsg = perfilRes?.message || "No se pudo actualizar el perfil"
+          logger.error("[ProfileSetup] Error actualizando perfil:", errorMsg)
+          throw new Error(errorMsg)
+        }
+
+        // 3) Actualizar user local inmediatamente (clave para salir del loop)
+        const serverUser: any = perfilRes.data || {}
+        const currentUser: any = AuthService.getUser() || {}
+        
+        // ⚡ CRÍTICO: Preservar TODOS los campos importantes
+        const merged: any = {
+          ...currentUser,           // Empezar con usuario actual
+          ...serverUser,            // Sobrescribir con datos del servidor
+          perfilCompleto: true,     // <<<< FORZAR perfilCompleto=true después de completar setup
+          cedulaVerificada: serverUser.cedulaVerificada ?? currentUser.cedulaVerificada ?? false,
+          // Asegurar que campos críticos no se pierdan
+          email: serverUser.email ?? currentUser.email,
+          id: serverUser.id ?? currentUser.id,
+        }
+        
+        logger.log("[ProfileSetup] ✅ Perfil completado, guardando usuario:", {
+          email: merged.email,
+          perfilCompleto: merged.perfilCompleto,
+          cedulaVerificada: merged.cedulaVerificada,
+        })
+        
+        AuthService.setUser(merged)
+        setUser(merged)
+
+        // 4) Redirigir según regla global (profile-setup / verification / home)
+        postAuthRedirect(merged) // si cedulaVerificada=false → /verification, si true → /home
+
+        // (opcional) refrescar en background
+        setTimeout(() => AuthService.fetchCurrentUser(), 1500)
       }
-      
-      logger.log("[ProfileSetup] ✅ Perfil completado, guardando usuario:", {
-        email: merged.email,
-        perfilCompleto: merged.perfilCompleto,
-        cedulaVerificada: merged.cedulaVerificada,
-      })
-      
-      AuthService.setUser(merged)
-      setUser(merged)
-
-      // 4) Redirigir según regla global (profile-setup / verification / home)
-      postAuthRedirect(merged) // si cedulaVerificada=false → /verification, si true → /home
-
-      // (opcional) refrescar en background
-      setTimeout(() => AuthService.fetchCurrentUser(), 1500)
     } catch (err: any) {
       logger.error("[ProfileSetup] Error al guardar perfil:", err)
       alert(`Error al guardar perfil: ${err?.message ?? "Intenta nuevamente"}`)
