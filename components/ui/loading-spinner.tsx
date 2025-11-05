@@ -2,64 +2,47 @@ import { cn } from "@/lib/utils"
 import React from "react"
 
 /**
- * Modern green circular spinner with gradient effect
- * This is a sophisticated spinner with a thicker, more visible border
+ * Modern smooth circular spinner - always animating
+ * Ultra-modern design with clean gradient effect
  */
-const ModernGreenSpinner = React.memo(({ className, size }: { className?: string; size: string }) => (
-  <div className={cn("relative", className)}>
-    {/* Inline styles with animation */}
+const ModernSpinner = React.memo(({ className, size }: { className?: string; size: string }) => (
+  <div className={cn("relative flex items-center justify-center", className)}>
+    {/* Keyframes inyectados globalmente */}
     <style dangerouslySetInnerHTML={{__html: `
-      @keyframes spinner-spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
+      @keyframes spin-smooth {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      @keyframes fade-pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
       }
     `}} />
     
-    {/* Base circle (light green, more visible) */}
+    {/* Base circle - más delgado y moderno */}
     <div 
       className={cn(
-        "rounded-full border-[3px] border-green-300",
+        "rounded-full border-2 border-gray-200",
         size
       )} 
     />
-    {/* Animated segment (thick green) */}
+    
+    {/* Gradient spinner - siempre rotando suavemente */}
     <div 
       className={cn(
-        "absolute inset-0 rounded-full border-[4px] border-transparent border-t-green-600",
+        "absolute inset-0 rounded-full",
         size
       )}
       style={{
-        background: 'conic-gradient(from 0deg, transparent 0%, transparent 70%, #16a34a 70%, #16a34a 100%)',
-        WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 4px), black calc(100% - 4px))',
-        mask: 'radial-gradient(farthest-side, transparent calc(100% - 4px), black calc(100% - 4px))',
-        animation: 'spinner-spin 1s linear infinite'
+        background: 'conic-gradient(from 90deg, transparent 0deg, #10b981 90deg, #059669 180deg, transparent 180deg)',
+        WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 2px), black calc(100% - 2px))',
+        mask: 'radial-gradient(farthest-side, transparent calc(100% - 2px), black calc(100% - 2px))',
+        animation: 'spin-smooth 0.8s cubic-bezier(0.4, 0.0, 0.2, 1) infinite'
       }}
     />
   </div>
 ))
-
-/**
- * Simple thin-border circular spinner (fallback/alternative)
- */
-const CircleSpinner = React.memo(({ className }: { className?: string }) => (
-  <>
-    <style dangerouslySetInnerHTML={{__html: `
-      @keyframes spinner-spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-      }
-    `}} />
-    <div 
-      className={cn(
-        "rounded-full border-2 border-t-transparent",
-        className
-      )}
-      style={{
-        animation: 'spinner-spin 1s linear infinite'
-      }}
-    />
-  </>
-))
+ModernSpinner.displayName = 'ModernSpinner'
 
 interface LoadingSpinnerProps {
   /**
@@ -140,16 +123,7 @@ export function LoadingSpinner({
   
   return (
     <div className={cn("flex flex-col items-center gap-3", centered && "mx-auto", className)}>
-      {variant === "green" ? (
-        <ModernGreenSpinner size={sizeClass} className={sizeClass} />
-      ) : (
-        <CircleSpinner 
-          className={cn(
-            sizeClass,
-            variantClasses[variant]
-          )} 
-        />
-      )}
+      <ModernSpinner size={sizeClass} className={sizeClass} />
       {text && (
         <p className={cn(
           "text-sm font-medium",

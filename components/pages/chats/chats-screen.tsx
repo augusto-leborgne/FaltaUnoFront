@@ -20,7 +20,7 @@ interface PartidoWithUnread extends PartidoDTO {
 export function ChatsScreen() {
   const router = useRouter()
   const [partidos, setPartidos] = useState<PartidoWithUnread[]>([])
-  const [loading, setLoading] = useState(false) // Cambiar a false para mostrar UI inmediatamente
+  const [loading, setLoading] = useState(true) // ⚡ Mostrar spinner mientras carga primera vez
   const [error, setError] = useState("")
 
   const currentUser = AuthService.getUser()
@@ -37,17 +37,13 @@ export function ChatsScreen() {
     }
 
     try {
-      // Solo mostrar loading si no hay datos previos
-      if (partidos.length === 0) {
-        setLoading(true)
-      }
       setError("")
       
-      // ⚡ OPTIMIZACIÓN: Usar caché para partidos con TTL corto (1 min)
+      // ⚡ OPTIMIZACIÓN: Usar caché para partidos con TTL corto (30s)
       const response = await apiCache.get(
         `mis-partidos-${currentUser.id}`,
         () => PartidoAPI.misPartidos(currentUser.id),
-        { ttl: 1 * 60 * 1000 } // 1 minuto - se actualiza frecuente
+        { ttl: 30 * 1000 } // 30 segundos - más frecuente para chats
       )
       
       if (!response.success || !response.data) {
@@ -56,17 +52,17 @@ export function ChatsScreen() {
 
       const partidosInscritos = response.data
       
-      // Cargar mensajes para cada partido en paralelo con caché
+      // ⚡ Cargar mensajes en paralelo con Promise.all (más rápido)
       const partidosWithMessages = await Promise.all(
         partidosInscritos.map(async (partido) => {
           try {
             if (!partido.id) return partido
             
-            // ⚡ Caché de mensajes por partido (30 segundos)
+            // ⚡ Caché de mensajes por partido (15 segundos)
             const messagesResponse = await apiCache.get(
               `mensajes-partido-${partido.id}`,
               () => MensajeAPI.list(partido.id!),
-              { ttl: 30 * 1000 } // 30 segundos - muy dinámico
+              { ttl: 15 * 1000 } // 15 segundos - muy dinámico
             )
             
             if (messagesResponse.success && messagesResponse.data && messagesResponse.data.length > 0) {

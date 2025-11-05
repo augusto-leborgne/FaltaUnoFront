@@ -66,15 +66,11 @@ function ProfileScreenInner() {
   const [reviews, setReviews] = useState<Review[]>([])
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([])
   const [friends, setFriends] = useState<Friend[]>([])
-  const [loading, setLoading] = useState(false) // Cambiar a false para mostrar UI inmediatamente
+  const [loading, setLoading] = useState(true) // ⚡ Mostrar spinner mientras carga primera vez
   const [error, setError] = useState<string | null>(null)
 
   const loadProfileData = useCallback(async () => {
     try {
-      // Solo mostrar loading si no hay datos previos
-      if (reviews.length === 0 && friendRequests.length === 0 && friends.length === 0) {
-        setLoading(true)
-      }
       setError(null)
 
       const token = AuthService.getToken()
@@ -90,28 +86,28 @@ function ProfileScreenInner() {
 
       // ⚡ OPTIMIZACIÓN: Cargar todos los datos en paralelo CON CACHÉ
       const [reviewsResult, frResult, friendsResult] = await Promise.allSettled([
-        // Reviews (CACHED)
+        // Reviews (CACHED - 5 min)
         apiCache.get(
           `reviews-usuario-${user.id}`,
           () => fetch(normalizeUrl(`${API_BASE}/api/reviews/usuario/${user.id}`), { headers: authHeaders })
             .then(res => res.ok ? res.json() : null),
-          { ttl: 10 * 60 * 1000 } // 10 minutos - las reviews no cambian tan seguido
+          { ttl: 5 * 60 * 1000 } // 5 minutos
         ),
         
-        // Friend requests pendientes (CACHED)
+        // Friend requests pendientes (CACHED - 30s)
         apiCache.get(
           `amistades-pendientes-${user.id}`,
           () => fetch(normalizeUrl(`${API_BASE}/api/amistades/pendientes`), { headers: authHeaders })
             .then(res => res.ok ? res.json() : null),
-          { ttl: 1 * 60 * 1000 } // 1 minuto - más frecuente porque pueden cambiar
+          { ttl: 30 * 1000 } // 30 segundos
         ),
         
-        // Amigos aceptados (CACHED)
+        // Amigos aceptados (CACHED - 2 min)
         apiCache.get(
           `amigos-${user.id}`,
           () => fetch(normalizeUrl(`${API_BASE}/api/amistades`), { headers: authHeaders })
             .then(res => res.ok ? res.json() : null),
-          { ttl: 5 * 60 * 1000 } // 5 minutos
+          { ttl: 2 * 60 * 1000 } // 2 minutos
         )
       ])
 
@@ -143,8 +139,7 @@ function ProfileScreenInner() {
     if (user?.id) {
       loadProfileData()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id]) // ✅ Solo ejecutar cuando cambie el ID del usuario
+  }, [user?.id, loadProfileData])
 
   const handleReviewClick = (reviewId: string) => {
     const review = reviews.find((r) => r.id === reviewId)
