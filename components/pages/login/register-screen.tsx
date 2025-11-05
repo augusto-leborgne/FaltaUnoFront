@@ -223,7 +223,8 @@ export function RegisterScreen() {
         logger.error("[RegisterScreen] ❌ Error en respuesta:", {
           status: response.status,
           message: errorMsg,
-          data
+          data,
+          fullResponse: data
         })
         
         // ✅ Detectar casos específicos
@@ -237,8 +238,13 @@ export function RegisterScreen() {
           // Error de validación del backend
           setError(errorMsg)
         } else if (response.status >= 500) {
-          // Error del servidor
-          setError("Error del servidor. Por favor intenta nuevamente en unos momentos.")
+          // Error del servidor - más detalles en consola
+          logger.error("[RegisterScreen] Error 500 del servidor:", {
+            status: response.status,
+            data,
+            errorMsg
+          })
+          setError(`Error del servidor: ${errorMsg}. Por favor intenta nuevamente.`)
         } else {
           // Otros errores
           setError(errorMsg)
