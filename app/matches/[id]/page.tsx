@@ -2,6 +2,9 @@ import MatchDetail from "@/components/pages/match/match-detail"
 import type { Metadata } from "next"
 import { logger } from "@/lib/logger"
 
+const FRONTEND_URL = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://faltauno.vercel.app'
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-pg4rwegknq-uc.a.run.app'
+
 interface MatchDetailPageProps {
   params: {
     id: string
@@ -27,7 +30,7 @@ export async function generateMetadata({ params }: MatchDetailPageProps): Promis
       const match = await response.json()
       const title = `${match.nombre || 'Partido'} - Falta Uno`
       const description = `${match.descripcion || 'Únete a este partido'} - ${match.ubicacion?.direccion || 'Ubicación por definir'}`
-      const url = `https://faltauno-frontend-169771742214.us-central1.run.app/matches/${id}`
+      const url = `${FRONTEND_URL}/matches/${id}`
       
       return {
         title,
@@ -41,7 +44,7 @@ export async function generateMetadata({ params }: MatchDetailPageProps): Promis
           type: "website",
           images: [
             {
-              url: "https://faltauno-frontend-169771742214.us-central1.run.app/og-image.png",
+              url: `${FRONTEND_URL}/og-image.png`,
               width: 1200,
               height: 630,
               alt: title,
@@ -52,7 +55,7 @@ export async function generateMetadata({ params }: MatchDetailPageProps): Promis
           card: "summary_large_image",
           title,
           description,
-          images: ["https://faltauno-frontend-169771742214.us-central1.run.app/og-image.png"],
+          images: [`${FRONTEND_URL}/og-image.png`],
         },
       }
     }
@@ -67,13 +70,13 @@ export async function generateMetadata({ params }: MatchDetailPageProps): Promis
     openGraph: {
       title: "Partido - Falta Uno",
       description: "Únete a este partido de fútbol",
-      url: `https://faltauno-frontend-169771742214.us-central1.run.app/matches/${id}`,
+      url: `${FRONTEND_URL}/matches/${id}`,
       siteName: "Falta Uno",
       locale: "es_UY",
       type: "website",
       images: [
         {
-          url: "https://faltauno-frontend-169771742214.us-central1.run.app/og-image.png",
+          url: `${FRONTEND_URL}/og-image.png`,
           width: 1200,
           height: 630,
           alt: "Falta Uno",
@@ -84,7 +87,7 @@ export async function generateMetadata({ params }: MatchDetailPageProps): Promis
       card: "summary_large_image",
       title: "Partido - Falta Uno",
       description: "Únete a este partido de fútbol",
-      images: ["https://faltauno-frontend-169771742214.us-central1.run.app/og-image.png"],
+      images: [`${FRONTEND_URL}/og-image.png`],
     },
   }
 }

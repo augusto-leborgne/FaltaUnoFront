@@ -2,6 +2,9 @@ import PlayerProfile from "@/components/pages/user/player-profile"
 import type { Metadata } from "next"
 import { logger } from "@/lib/logger"
 
+const FRONTEND_URL = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://faltauno.vercel.app'
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-pg4rwegknq-uc.a.run.app'
+
 interface PlayerProfilePageProps {
   params: {
     id: string
@@ -28,7 +31,7 @@ export async function generateMetadata({ params }: PlayerProfilePageProps): Prom
       const name = `${player.nombre || ''} ${player.apellido || ''}`.trim() || 'Jugador'
       const title = `${name} - Falta Uno`
       const description = `Perfil de ${name} en Falta Uno. ${player.descripcion || 'Jugador de fútbol'}`
-      const url = `https://faltauno-frontend-169771742214.us-central1.run.app/players/${id}`
+      const url = `${FRONTEND_URL}/players/${id}`
       
       return {
         title,
@@ -42,7 +45,7 @@ export async function generateMetadata({ params }: PlayerProfilePageProps): Prom
           type: "profile",
           images: [
             {
-              url: "https://faltauno-frontend-169771742214.us-central1.run.app/og-image.png",
+              url: `${FRONTEND_URL}/og-image.png`,
               width: 1200,
               height: 630,
               alt: name,
@@ -53,7 +56,7 @@ export async function generateMetadata({ params }: PlayerProfilePageProps): Prom
           card: "summary_large_image",
           title,
           description,
-          images: ["https://faltauno-frontend-169771742214.us-central1.run.app/og-image.png"],
+          images: [`${FRONTEND_URL}/og-image.png`],
         },
       }
     }
@@ -68,13 +71,13 @@ export async function generateMetadata({ params }: PlayerProfilePageProps): Prom
     openGraph: {
       title: "Jugador - Falta Uno",
       description: "Perfil de jugador en Falta Uno",
-      url: `https://faltauno-frontend-169771742214.us-central1.run.app/players/${id}`,
+      url: `${FRONTEND_URL}/players/${id}`,
       siteName: "Falta Uno",
       locale: "es_UY",
       type: "profile",
       images: [
         {
-          url: "https://faltauno-frontend-169771742214.us-central1.run.app/og-image.png",
+          url: `${FRONTEND_URL}/og-image.png`,
           width: 1200,
           height: 630,
           alt: "Falta Uno",
@@ -85,7 +88,7 @@ export async function generateMetadata({ params }: PlayerProfilePageProps): Prom
       card: "summary_large_image",
       title: "Jugador - Falta Uno",
       description: "Perfil de jugador en Falta Uno",
-      images: ["https://faltauno-frontend-169771742214.us-central1.run.app/og-image.png"],
+      images: [`${FRONTEND_URL}/og-image.png`],
     },
   }
 }

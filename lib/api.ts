@@ -13,7 +13,7 @@ import { fetchWithTimeout, fetchWithRetry } from "./fetch-with-timeout";
  */
 const getApiBase = (): string => {
   // ✅ Backend en Cloud Run con HTTPS - Comunicación directa sin proxy
-  const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-169771742214.us-central1.run.app';
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-pg4rwegknq-uc.a.run.app';
   
   logger.debug('[API Config] Using Cloud Run backend URL:', backendUrl);
   logger.debug('[API Config] Environment:', typeof window === 'undefined' ? 'SERVER (SSR)' : 'BROWSER');
