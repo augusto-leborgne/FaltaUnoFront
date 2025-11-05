@@ -203,13 +203,19 @@ export function MatchesMapView({
         title: match.nombreUbicacion || "Partido",
       })
 
-      const infoWindow = new window.google.maps.InfoWindow({
-        content: createInfoWindowContent(match),
-      })
-
+      // ✅ Click en marker: animación + redirección (sin InfoWindow)
       marker.addListener("click", () => {
+        // Aplicar animación de bounce al marker clickeado
+        const pinElement = markerContent.querySelector('div > div') as HTMLElement
+        if (pinElement) {
+          pinElement.style.animation = 'bounce 0.75s'
+          setTimeout(() => {
+            pinElement.style.animation = ''
+          }, 750)
+        }
+        
+        // Redirigir (lógica original)
         if (onMarkerClick && match.id) onMarkerClick(match.id)
-        infoWindow.open(googleMapRef.current!, marker)
       })
 
       markersRef.current.push(marker)
@@ -242,48 +248,6 @@ export function MatchesMapView({
     const avgLat = valid.reduce((s, m) => s + Number(m.latitud || 0), 0) / valid.length
     const avgLng = valid.reduce((s, m) => s + Number(m.longitud || 0), 0) / valid.length
     return { lat: avgLat, lng: avgLng }
-  }
-
-  const createInfoWindowContent = (match: PartidoDTO): string => {
-    const spotsLeft =
-      (match.cantidadJugadores || 0) - (match.jugadoresActuales || 0)
-    const pricePerPlayer =
-      match.precioPorJugador ||
-      (match.precioTotal && match.cantidadJugadores
-        ? Math.round(match.precioTotal / match.cantidadJugadores)
-        : 0)
-
-    return `
-      <div style="padding: 8px; min-width: 200px;">
-        <h3 style="margin: 0 0 8px 0; font-weight: 600; color: #111827;">
-          ${match.nombreUbicacion || "Partido"}
-        </h3>
-        <div style="font-size: 14px; color: #6b7280; margin-bottom: 4px;">
-          ${match.tipoPartido?.replace("FUTBOL_", "F") || "Fútbol"} • ${formatDate(
-            match.fecha,
-            match.hora
-          )}
-        </div>
-        <div style="font-size: 14px; color: #6b7280; margin-bottom: 8px;">
-          <strong>${spotsLeft}</strong> ${
-      spotsLeft === 1 ? "lugar" : "lugares"
-    } disponible${spotsLeft === 1 ? "" : "s"}
-        </div>
-        <div style="font-size: 14px; font-weight: 600; color: #059669;">
-          $${pricePerPlayer} por jugador
-        </div>
-      </div>
-    `
-  }
-
-  const formatDate = (dateString: string, timeString: string) => {
-    try {
-      const date = new Date(dateString)
-      const time = timeString.substring(0, 5)
-      return `${date.toLocaleDateString("es-ES", { day: "numeric", month: "short" })} ${time}`
-    } catch {
-      return `${dateString} ${timeString}`
-    }
   }
 
   // ============================================
