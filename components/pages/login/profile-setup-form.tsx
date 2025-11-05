@@ -390,13 +390,13 @@ export function ProfileSetupForm() {
         AuthService.setUser(userWithProfile)
         setUser(userWithProfile)
 
-        logger.log("[ProfileSetup] ✅ Registro completado exitosamente, redirigiendo a phone-verification")
+  logger.log("[ProfileSetup] ✅ Registro completado exitosamente, redirigiendo a phone-verification")
         
-        // ⚡ IMPORTANTE: Pequeño delay para asegurar que localStorage se actualice
-        await new Promise(resolve => setTimeout(resolve, 100))
+  // ⚡ IMPORTANTE: Pequeño delay para asegurar que localStorage se actualice
+  await new Promise(resolve => setTimeout(resolve, 100))
         
-        // Redirigir a verificación de celular
-        router.push('/phone-verification')
+  // Redirigir a verificación de celular
+  router.push('/phone-verification')
 
       } else {
         const token = AuthService.getToken()
@@ -466,7 +466,10 @@ export function ProfileSetupForm() {
         AuthService.setUser(merged)
         setUser(merged)
 
-        logger.log("[ProfileSetup] ✅ Perfil actualizado, redirigiendo a phone-verification")
+        logger.log("[ProfileSetup] ✅ Perfil completado, guardando usuario:", {
+          email: merged.email,
+          perfilCompleto: merged.perfilCompleto,
+        })
         
         // ⚡ IMPORTANTE: Pequeño delay para asegurar que localStorage se actualice
         await new Promise(resolve => setTimeout(resolve, 100))

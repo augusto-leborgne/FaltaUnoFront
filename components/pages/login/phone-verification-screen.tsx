@@ -70,35 +70,35 @@ export function PhoneVerificationScreen() {
 
       if (res.success && res.data) {
         logger.log("[PhoneVerification] Celular actualizado exitosamente");
-
-        // Actualizar usuario en localStorage
-        const currentUser = AuthService.getUser();
-        if (currentUser) {
+        // Optimisticamente actualizar usuario en localStorage para evitar condiciones de carrera
+        try {
+          const currentUser = AuthService.getUser() || ({} as any);
           currentUser.celular = fullPhone;
+          // marcar perfil como completo ahora que tiene celular
+          currentUser.perfilCompleto = true;
           AuthService.setUser(currentUser);
-          logger.log("[PhoneVerification] Usuario actualizado en localStorage");
+          logger.log("[PhoneVerification] Usuario actualizado en localStorage (optimistic)");
+        } catch (e) {
+          logger.warn("[PhoneVerification] No se pudo actualizar usuario local optimistically:", e);
         }
 
         // Mostrar mensaje de éxito
         setIsSuccess(true);
 
-        // Refrescar contexto desde el servidor
+        // Intentar refrescar contexto desde el servidor, pero no borrar el usuario local si falla
         try {
           logger.log("[PhoneVerification] Refrescando usuario desde servidor...");
-          await refreshUser();
-          
-          const refreshedUser = AuthService.getUser();
-          logger.log("[PhoneVerification] Usuario después del refresh:", {
-            email: refreshedUser?.email,
-            celular: refreshedUser?.celular,
-          });
+          const refreshed = await refreshUser();
+          if (refreshed) {
+            logger.log("[PhoneVerification] Usuario refrescado desde servidor:", { email: refreshed.email, celular: refreshed.celular });
+          } else {
+            logger.warn("[PhoneVerification] refreshUser devolvió null - preservando usuario local");
+          }
         } catch (refreshError) {
-          logger.warn("[PhoneVerification] Error al refrescar usuario:", refreshError);
+          logger.warn("[PhoneVerification] Error al refrescar usuario (se preserva user local):", refreshError);
         }
 
-        // Esperar 1.5 segundos antes de redirigir
-        await new Promise(resolve => setTimeout(resolve, 1500));
-
+        // Redirigir inmediatamente a home (perfil ya marcado como completo localmente)
         logger.log("[PhoneVerification] Redirigiendo a /home");
         router.push("/home");
       } else {
@@ -113,10 +113,7 @@ export function PhoneVerificationScreen() {
     }
   };
 
-  const handleSkip = () => {
-    logger.log("[PhoneVerification] Usuario saltó la verificación de celular");
-    router.push("/home");
-  };
+  // Nota: se eliminó la opción de "Omitir". La verificación de celular es obligatoria en el flujo de onboarding.
 
   if (isSuccess) {
     return (
@@ -290,15 +287,7 @@ export function PhoneVerificationScreen() {
               )}
             </Button>
             
-            <Button
-              type="button"
-              onClick={handleSkip}
-              disabled={isSubmitting}
-              variant="outline"
-              className="w-full py-6 rounded-2xl border-2 border-gray-300 text-gray-700 hover:bg-gray-50 transition-all text-base font-semibold"
-            >
-              Omitir por ahora
-            </Button>
+            {/* Omitir eliminado: verificación de celular obligatoria */}
           </div>
           
           <p className="text-xs text-gray-500 text-center mt-4">
