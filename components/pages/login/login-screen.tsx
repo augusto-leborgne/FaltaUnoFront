@@ -262,6 +262,17 @@ export function LoginScreen() {
             )}
           </div>
 
+          {/* ✅ NUEVO: Link recuperar contraseña */}
+          <div className="text-right">
+            <button
+              type="button"
+              onClick={() => router.push("/forgot-password")}
+              className="text-sm text-green-600 hover:text-green-700 font-medium"
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+          </div>
+
           {error && (
             <div className="text-sm text-red-600 mt-2">{error}</div>
           )}
