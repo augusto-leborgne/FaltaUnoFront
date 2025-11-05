@@ -40,20 +40,23 @@ export function FriendsScreen() {
   const [activeTab, setActiveTab] = useState<Tab>('amigos')
   const [friends, setFriends] = useState<Friend[]>([])
   const [allUsers, setAllUsers] = useState<User[]>([])
+  const [contacts, setContacts] = useState<User[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [loading, setLoading] = useState(true)
   const [loadingUsers, setLoadingUsers] = useState(false)
+  const [loadingContacts, setLoadingContacts] = useState(false)
+  const [contactsPermissionDenied, setContactsPermissionDenied] = useState(false)
 
   useEffect(() => {
     loadFriends()
   }, [])
 
   useEffect(() => {
-    // Recargar usuarios cuando cambia a Contactos y los amigos ya están cargados
-    if (activeTab === 'contactos' && !loading) {
-      loadAllUsers()
+    // Cargar contactos del celular cuando cambia a la pestaña Contactos
+    if (activeTab === 'contactos' && contacts.length === 0 && !contactsPermissionDenied) {
+      loadPhoneContacts()
     }
-  }, [activeTab, loading])
+  }, [activeTab])
 
   const loadFriends = async () => {
     try {
@@ -114,55 +117,86 @@ export function FriendsScreen() {
     }
   }
 
-  const loadAllUsers = async () => {
+  const loadPhoneContacts = async () => {
     try {
-      setLoadingUsers(true)
-      const token = AuthService.getToken()
+      setLoadingContacts(true)
       
-      if (!token) {
-        router.push("/login")
+      // Verificar si la API de contactos está disponible
+      if (!('contacts' in navigator) || !('ContactsManager' in window)) {
+        logger.warn("[FriendsScreen] Contact Picker API no disponible en este navegador")
+        setContactsPermissionDenied(true)
         return
       }
 
-      // Asegurarse de tener los amigos cargados primero
-      if (friends.length === 0 && !loading) {
-        await loadFriends()
-      }
-
-      const response = await fetch(`${API_BASE}/api/usuarios`, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
+      // Solicitar permisos para acceder a contactos
+      const props = ['name', 'tel']
+      const opts = { multiple: true }
+      
+      try {
+        // @ts-ignore - Contact Picker API
+        const phoneContacts = await navigator.contacts.select(props, opts)
+        
+        logger.log("[FriendsScreen] Contactos del teléfono:", phoneContacts.length)
+        
+        // Extraer números de teléfono
+        const phoneNumbers = phoneContacts.flatMap((contact: any) => 
+          contact.tel ? contact.tel.map((t: string) => {
+            // Limpiar formato del número: quitar espacios, guiones, paréntesis
+            return t.replace(/[\s\-\(\)]/g, '')
+          }) : []
+        )
+        
+        logger.log("[FriendsScreen] Números extraídos:", phoneNumbers.length)
+        
+        if (phoneNumbers.length === 0) {
+          setContacts([])
+          return
         }
-      })
 
-      if (response.ok) {
-        const result = await response.json()
-        const usuarios = result.data || []
-        
-        // Excluir al usuario actual y a los amigos
-        const currentUser = AuthService.getUser()
-        const currentUserId = currentUser?.id
-        const friendIds = new Set(friends.map(f => f.id))
-        
-        logger.log("[FriendsScreen] Total usuarios:", usuarios.length)
-        logger.log("[FriendsScreen] IDs de amigos:", Array.from(friendIds))
-        
-        const filteredUsers = usuarios.filter((user: User) => {
-          const isCurrentUser = user.id === currentUserId
-          const isFriend = friendIds.has(user.id)
-          
-          // Excluir usuario actual y amigos
-          return !isCurrentUser && !isFriend
+        // Buscar usuarios por números de teléfono
+        const token = AuthService.getToken()
+        if (!token) {
+          router.push("/login")
+          return
+        }
+
+        const response = await fetch(`${API_BASE}/api/usuarios/buscar-por-telefonos`, {
+          method: 'POST',
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ telefonos: phoneNumbers })
         })
+
+        if (response.ok) {
+          const result = await response.json()
+          const usuariosEncontrados = result.data || []
+          
+          // Excluir al usuario actual
+          const currentUser = AuthService.getUser()
+          const filteredContacts = usuariosEncontrados.filter((user: User) => 
+            user.id !== currentUser?.id
+          )
+          
+          logger.log("[FriendsScreen] Contactos encontrados en la app:", filteredContacts.length)
+          setContacts(filteredContacts)
+        } else {
+          logger.error("[FriendsScreen] Error al buscar usuarios por teléfono:", response.status)
+          setContacts([])
+        }
         
-        logger.log("[FriendsScreen] Contactos (no amigos):", filteredUsers.length)
-        setAllUsers(filteredUsers)
+      } catch (err) {
+        logger.warn("[FriendsScreen] Usuario canceló o denegó acceso a contactos:", err)
+        setContactsPermissionDenied(true)
+        setContacts([])
       }
+      
     } catch (error) {
-      logger.error("Error cargando usuarios:", error)
+      logger.error("[FriendsScreen] Error cargando contactos:", error)
+      setContacts([])
     } finally {
-      setLoadingUsers(false)
+      setLoadingContacts(false)
     }
   }
 
@@ -173,7 +207,7 @@ export function FriendsScreen() {
   }
 
   const getFilteredData = () => {
-    const data = activeTab === 'amigos' ? friends : allUsers
+    const data = activeTab === 'amigos' ? friends : contacts
     
     return (data as (Friend | User)[]).filter((item) => {
       const fullName = `${item.nombre} ${item.apellido}`.toLowerCase()
@@ -182,7 +216,7 @@ export function FriendsScreen() {
   }
 
   const filteredData = getFilteredData()
-  const isLoading = activeTab === 'amigos' ? loading : loadingUsers
+  const isLoading = activeTab === 'amigos' ? loading : loadingContacts
   const friendIds = new Set(friends.map(f => f.id))
 
   return (
@@ -244,17 +278,19 @@ export function FriendsScreen() {
       <div className="flex-1 px-4 sm:px-6 py-4 sm:py-6 pb-24 overflow-y-auto">
         {isLoading ? (
           <div className="text-center py-12">
-            <LoadingSpinner size="lg" variant="green" text={`Cargando ${activeTab === 'amigos' ? 'amigos' : 'usuarios'}...`} />
+            <LoadingSpinner size="lg" variant="green" text={`Cargando ${activeTab === 'amigos' ? 'amigos' : 'contactos'}...`} />
           </div>
         ) : filteredData.length === 0 ? (
           <div className="text-center py-12">
             <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500 mb-4">
               {searchQuery 
-                ? `No se encontraron ${activeTab === 'amigos' ? 'amigos' : 'usuarios'}`
+                ? `No se encontraron ${activeTab === 'amigos' ? 'amigos' : 'contactos'}`
                 : activeTab === 'amigos'
                   ? "Aún no tienes amigos"
-                  : "No hay usuarios disponibles"
+                  : contactsPermissionDenied
+                    ? "No se pudo acceder a tus contactos"
+                    : "No hay contactos en la app"
               }
             </p>
             {activeTab === 'amigos' && !searchQuery && (
@@ -263,8 +299,31 @@ export function FriendsScreen() {
                 className="bg-green-600 hover:bg-green-700"
               >
                 <UserPlus className="w-4 h-4 mr-2" />
-                Ver todos los usuarios
+                Buscar en contactos
               </Button>
+            )}
+            {activeTab === 'contactos' && !searchQuery && (
+              <div className="space-y-3">
+                {contactsPermissionDenied ? (
+                  <p className="text-sm text-gray-400">
+                    Necesitas dar permiso para acceder a tus contactos. 
+                    La Contact Picker API puede no estar disponible en este navegador.
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-sm text-gray-400">
+                      Ninguno de tus contactos está en la app todavía.
+                    </p>
+                    <Button
+                      onClick={loadPhoneContacts}
+                      className="bg-green-600 hover:bg-green-700"
+                    >
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Volver a intentar
+                    </Button>
+                  </>
+                )}
+              </div>
             )}
           </div>
         ) : (
