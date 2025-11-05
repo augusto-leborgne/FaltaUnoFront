@@ -153,17 +153,19 @@ function VerifyEmailContent() {
 
       if (data.success && data.data?.verified) {
         setSuccess(true);
+        setError(''); // Limpiar cualquier error previo
         
         // Guardar info en localStorage para el siguiente paso
         localStorage.setItem('verifiedEmail', email!);
         localStorage.setItem('passwordHash', data.data.passwordHash);
         
-        // Redirigir a configurar perfil después de 1 segundo
+        // Redirigir a configurar perfil después de 2.5 segundos
         setTimeout(() => {
           router.push('/profile-setup');
-        }, 1000);
+        }, 2500);
       } else {
         setError(data.message || 'Código inválido o expirado');
+        setSuccess(false); // Asegurar que success esté en false
         setCode(['', '', '', '', '', '']);
         inputRefs.current[0]?.focus();
       }
@@ -247,17 +249,31 @@ function VerifyEmailContent() {
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-            <Mail className="w-8 h-8 text-green-600" />
+          <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 transition-all ${
+            success 
+              ? 'bg-green-500 animate-in zoom-in-50' 
+              : 'bg-green-100'
+          }`}>
+            {success ? (
+              <CheckCircle2 className="w-8 h-8 text-white" />
+            ) : (
+              <Mail className="w-8 h-8 text-green-600" />
+            )}
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Verifica tu email
+            {success ? '¡Verificado!' : 'Verifica tu email'}
           </h1>
           <p className="text-gray-600">
-            Hemos enviado un código de 6 dígitos a
-          </p>
-          <p className="text-green-600 font-semibold mt-1">
-            {email}
+            {success ? (
+              'Tu email ha sido confirmado exitosamente'
+            ) : (
+              <>
+                Hemos enviado un código de 6 dígitos a
+                <span className="block text-green-600 font-semibold mt-1">
+                  {email}
+                </span>
+              </>
+            )}
           </p>
         </div>
 
@@ -279,7 +295,11 @@ function VerifyEmailContent() {
                   value={digit}
                   onChange={(e) => handleCodeChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
-                  className="w-12 h-14 text-center text-2xl font-bold border-2 focus:border-green-500 focus:ring-green-500"
+                  className={`w-12 h-14 text-center text-2xl font-bold border-2 transition-all ${
+                    success 
+                      ? 'border-green-500 bg-green-50 text-green-700' 
+                      : 'focus:border-green-500 focus:ring-green-500'
+                  }`}
                   disabled={isVerifying || success}
                 />
               ))}
@@ -307,18 +327,28 @@ function VerifyEmailContent() {
           </div>
 
           {/* Mensajes de error/éxito */}
-          {error && (
-            <Alert variant="destructive">
+          {error && !success && (
+            <Alert variant="destructive" className="animate-in fade-in-50 slide-in-from-top-2">
               <XCircle className="h-4 w-4" />
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription className="font-medium">{error}</AlertDescription>
             </Alert>
           )}
 
-          {success && !error && (
+          {success && !error && !isResending && (
+            <Alert className="border-green-500 bg-green-50 text-green-900 shadow-lg animate-in fade-in-50 slide-in-from-top-2">
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              <AlertDescription className="space-y-1">
+                <div className="font-bold text-base">¡Email verificado correctamente! ✨</div>
+                <div className="text-sm text-green-700">Redirigiendo a configurar tu perfil...</div>
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {success && !error && isResending && (
             <Alert className="border-green-200 bg-green-50 text-green-800">
               <CheckCircle2 className="h-4 w-4 text-green-600" />
               <AlertDescription>
-                {isResending ? '¡Código reenviado! Revisa tu email.' : '¡Email verificado! Redirigiendo...'}
+                ¡Código reenviado! Revisa tu email.
               </AlertDescription>
             </Alert>
           )}
@@ -346,28 +376,30 @@ function VerifyEmailContent() {
           </Button>
 
           {/* Botón de reenviar */}
-          <div className="text-center space-y-2">
-            <p className="text-sm text-gray-600">
-              ¿No recibiste el código?
-            </p>
-            <Button
-              onClick={handleResend}
-              disabled={!canResend && resendCooldown === 0 || isResending || resendCooldown > 0}
-              variant="outline"
-              size="sm"
-            >
-              {isResending ? (
-                <div className="flex items-center">
-                  <InlineSpinner />
-                  <span className="ml-2">Reenviando...</span>
-                </div>
-              ) : resendCooldown > 0 ? (
-                <>Reenviar en {resendCooldown}s</>
-              ) : (
-                'Reenviar código'
-              )}
-            </Button>
-          </div>
+          {!success && (
+            <div className="text-center space-y-2">
+              <p className="text-sm text-gray-600">
+                ¿No recibiste el código?
+              </p>
+              <Button
+                onClick={handleResend}
+                disabled={!canResend && resendCooldown === 0 || isResending || resendCooldown > 0}
+                variant="outline"
+                size="sm"
+              >
+                {isResending ? (
+                  <div className="flex items-center">
+                    <InlineSpinner />
+                    <span className="ml-2">Reenviando...</span>
+                  </div>
+                ) : resendCooldown > 0 ? (
+                  <>Reenviar en {resendCooldown}s</>
+                ) : (
+                  'Reenviar código'
+                )}
+              </Button>
+            </div>
+          )}
 
           {/* Consejos */}
           <div className="bg-gray-50 rounded-lg p-4 space-y-2">
