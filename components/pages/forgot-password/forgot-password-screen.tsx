@@ -20,19 +20,29 @@ export function ForgotPasswordScreen() {
     setIsLoading(true)
 
     try {
-      // TODO: Implementar endpoint de recuperación de contraseña
       logger.info("[ForgotPassword] Solicitando recuperación para:", email)
       
-      // Simulación temporal
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/auth/password/forgot`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || 'Error al enviar el email')
+      }
       
       setSuccess(true)
       logger.info("[ForgotPassword] ✅ Email de recuperación enviado")
       
-      // Redirigir después de 3 segundos
+      // Redirigir después de 5 segundos
       setTimeout(() => {
         router.push("/login")
-      }, 3000)
+      }, 5000)
 
     } catch (err: any) {
       logger.error("[ForgotPassword] ❌ Error:", err)
