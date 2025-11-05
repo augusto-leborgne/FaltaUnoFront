@@ -377,25 +377,41 @@ async function apiFetch<T>(
       }, 30000); // 30 segundos timeout
 
       // Manejo de 401 - Sesión expirada
-      if (response.status === 401) {
-        // CRÍTICO: Solo hacer logout si tenemos certeza de que el token es inválido
-        // NO hacer logout por errores de red o timing
-        if (hadToken && !skipAutoLogout) {
-          // Verificar si el token realmente está expirado antes de hacer logout
-          if (token && AuthService.isTokenExpired(token)) {
-            logger.warn('[API] 401 Unauthorized - Token expirado');
-            logger.warn('[API] 🚪 LOGOUT INMEDIATO - Redirigiendo a login...');
-            AuthService.logout(); // window.location.replace("/login") inmediato
-            throw new Error('Tu sesión ha expirado. Por favor inicia sesión nuevamente.');
-          } else {
-            // Token válido pero backend dice 401 - podría ser error transitorio
-            logger.warn('[API] 401 pero token aún válido - NO haciendo logout automático');
-            throw new Error('Error de autenticación. Si acabas de registrarte, verifica tu email primero.');
-          }
-        } else {
-          logger.warn('[API] 401 recibido - no se hace logout automático');
-          throw new Error('Email o contraseña incorrectos. Si acabas de registrarte, verifica tu email primero.');
-        }
+          if (response.status === 401) {
+            // Intentar parsear el body para obtener mensajes estructurados (útil en login)
+            try {
+              const rawText = await response.clone().text();
+              const parsed = rawText ? JSON.parse(rawText) : {};
+              const parsedMessage = parsed?.message || parsed?.error || parsed?.data?.message || parsed?.data?.error;
+
+              // Si tenemos token y no queremos evitar logout automático, revisar expiración
+              if (hadToken && !skipAutoLogout) {
+                if (token && AuthService.isTokenExpired(token)) {
+                  logger.warn('[API] 401 Unauthorized - Token expirado');
+                  logger.warn('[API] 🚪 LOGOUT INMEDIATO - Redirigiendo a login...');
+                  AuthService.logout();
+                  throw new Error(parsedMessage || 'Tu sesión ha expirado. Por favor inicia sesión nuevamente.');
+                } else {
+                  logger.warn('[API] 401 pero token aún válido - NO haciendo logout automático');
+                  throw new Error(parsedMessage || 'Error de autenticación. Si acabas de registrarte, verifica tu email primero.');
+                }
+              }
+
+              // No hay token (por ejemplo: endpoint de login). Si el backend devolvió un mensaje, úsalo.
+              logger.warn('[API] 401 recibido - no se hace logout automático');
+              throw new Error(parsedMessage || 'Email o contraseña incorrectos. Si acabas de registrarte, verifica tu email primero.');
+            } catch (parseErr) {
+              // Si falla el parseo, volver al comportamiento genérico
+              if (hadToken && !skipAutoLogout) {
+                if (token && AuthService.isTokenExpired(token)) {
+                  AuthService.logout();
+                  throw new Error('Tu sesión ha expirado. Por favor inicia sesión nuevamente.');
+                } else {
+                  throw new Error('Error de autenticación. Si acabas de registrarte, verifica tu email primero.');
+                }
+              }
+              throw new Error('Email o contraseña incorrectos. Si acabas de registrarte, verifica tu email primero.');
+            }
       }
 
       // Manejo de 403 - Sin permisos

@@ -160,9 +160,32 @@ function VerifyEmailContent() {
       if (data.success && data.data?.verified) {
         setSuccess(true);
         setError(''); // Limpiar cualquier error previo
-        
-        // ✅ Si viene de login, actualizar el usuario en localStorage y contexto
-        if (isFromLogin.current) {
+
+        // If backend returned a token + usuario we can auto-login
+        const returnedToken = data.data.token as string | undefined;
+        const returnedUser = data.data.usuario || data.data.user;
+
+        if (returnedToken) {
+          // Persist token and user in AuthService and context
+          try {
+            AuthService.setToken(returnedToken);
+          } catch (e) {
+            logger.warn('[VerifyEmail] Failed to set token in AuthService', e);
+          }
+        }
+
+        if (returnedUser) {
+          try {
+            AuthService.setUser(returnedUser);
+            setUser(returnedUser);
+            logger.log('[VerifyEmail] Usuario recibido desde backend y almacenado en contexto');
+          } catch (e) {
+            logger.warn('[VerifyEmail] Failed to set user in AuthService/context', e);
+          }
+        }
+
+        // If user came from login flow, prefer updating existing user flag when no usuario was returned
+        if (isFromLogin.current && !returnedUser) {
           const currentUser = AuthService.getUser();
           if (currentUser) {
             const updatedUser = { ...currentUser, emailVerified: true };
@@ -170,28 +193,26 @@ function VerifyEmailContent() {
             setUser(updatedUser);
             logger.log('[VerifyEmail] Usuario actualizado con emailVerified=true');
           }
-          
-          // Redirigir según el estado del perfil
-          setTimeout(() => {
-            if (currentUser?.perfilCompleto) {
-              router.push('/home');
-            } else {
-              router.push('/profile-setup');
-            }
-          }, 2500);
-        } else {
-          // ✅ Si viene de registro, usar sessionStorage (se limpia al cerrar pestaña)
-          sessionStorage.setItem('pendingVerification', JSON.stringify({
-            email: email!,
-            passwordHash: data.data.passwordHash,
-            timestamp: Date.now()
-          }));
-          
-          // Redirigir a configurar perfil después de 2.5 segundos
-          setTimeout(() => {
-            router.push('/profile-setup');
-          }, 2500);
         }
+
+        // Redirect: if we have a user object prefer to read perfilCompleto from it
+        setTimeout(() => {
+          const userForRedirect = returnedUser || AuthService.getUser();
+          if (userForRedirect?.perfilCompleto) {
+            router.push('/home');
+          } else {
+            // Fallback: if we don't have a token/usuario (older backend), keep compatibility
+            if (!returnedToken && !returnedUser) {
+              // ✅ Si viene de registro, usar sessionStorage (se limpia al cerrar pestaña)
+              sessionStorage.setItem('pendingVerification', JSON.stringify({
+                email: email!,
+                passwordHash: data.data.passwordHash,
+                timestamp: Date.now()
+              }));
+            }
+            router.push('/profile-setup');
+          }
+        }, 2500);
       } else {
         // Mensajes de error específicos del backend
         const errorMsg = data.message || 'Código inválido o expirado'
