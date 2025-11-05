@@ -49,10 +49,11 @@ export function FriendsScreen() {
   }, [])
 
   useEffect(() => {
-    if (activeTab === 'contactos' && allUsers.length === 0) {
+    // Recargar usuarios cuando cambia a Contactos y los amigos ya están cargados
+    if (activeTab === 'contactos' && !loading) {
       loadAllUsers()
     }
-  }, [activeTab])
+  }, [activeTab, loading])
 
   const loadFriends = async () => {
     try {
@@ -76,10 +77,22 @@ export function FriendsScreen() {
         
         // Extraer datos del amigo de cada amistad
         const currentUser = AuthService.getUser()
+        const currentUserId = currentUser?.id
+        
+        logger.log("[FriendsScreen] Procesando amistades:", amistades.length)
+        logger.log("[FriendsScreen] Usuario actual ID:", currentUserId)
+        
         const amigos = amistades.map((amistad: any) => {
           // Determinar cuál es el amigo (el que no es el usuario actual)
-          const esSolicitante = amistad.usuarioId === currentUser?.id
+          const esSolicitante = amistad.usuarioId === currentUserId
           const amigoData = esSolicitante ? amistad.amigo : amistad.usuario
+          
+          logger.log("[FriendsScreen] Amistad:", {
+            usuarioId: amistad.usuarioId,
+            amigoId: amistad.amigoId,
+            esSolicitante,
+            amigoDataId: amigoData?.id
+          })
           
           return {
             id: amigoData?.id,
@@ -88,8 +101,10 @@ export function FriendsScreen() {
             foto_perfil: amigoData?.fotoPerfil,
             posicion: amigoData?.posicion
           }
-        }).filter((amigo: any) => amigo.id) // Filtrar amigos sin datos
+        })
+        .filter((amigo: any) => amigo.id && amigo.id !== currentUserId) // Filtrar amigos sin datos y al usuario actual
         
+        logger.log("[FriendsScreen] Amigos procesados:", amigos.length)
         setFriends(amigos)
       }
     } catch (error) {
@@ -109,6 +124,11 @@ export function FriendsScreen() {
         return
       }
 
+      // Asegurarse de tener los amigos cargados primero
+      if (friends.length === 0 && !loading) {
+        await loadFriends()
+      }
+
       const response = await fetch(`${API_BASE}/api/usuarios`, {
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -120,10 +140,23 @@ export function FriendsScreen() {
         const result = await response.json()
         const usuarios = result.data || []
         
-        // Excluir al usuario actual
+        // Excluir al usuario actual y a los amigos
         const currentUser = AuthService.getUser()
-        const filteredUsers = usuarios.filter((user: User) => user.id !== currentUser?.id)
+        const currentUserId = currentUser?.id
+        const friendIds = new Set(friends.map(f => f.id))
         
+        logger.log("[FriendsScreen] Total usuarios:", usuarios.length)
+        logger.log("[FriendsScreen] IDs de amigos:", Array.from(friendIds))
+        
+        const filteredUsers = usuarios.filter((user: User) => {
+          const isCurrentUser = user.id === currentUserId
+          const isFriend = friendIds.has(user.id)
+          
+          // Excluir usuario actual y amigos
+          return !isCurrentUser && !isFriend
+        })
+        
+        logger.log("[FriendsScreen] Contactos (no amigos):", filteredUsers.length)
         setAllUsers(filteredUsers)
       }
     } catch (error) {
