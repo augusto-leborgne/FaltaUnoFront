@@ -318,9 +318,19 @@ export function MatchesListing() {
           <MatchesMapView
             matches={matches}
             selectedMatchId={selectedMatchId}
+            currentUserId={AuthService.getUser()?.id} // NUEVO: Pasar ID del usuario
             onMarkerClick={(matchId) => {
-              setSelectedMatchId(matchId)
-              router.push(`/matches/${matchId}`)
+              const match = matches.find(m => m.id === matchId)
+              const currentUser = AuthService.getUser()
+              
+              // Si es organizador, ir directo a gestión
+              if (match && currentUser?.id && (match as any).organizadorId === currentUser.id) {
+                router.push(`/my-matches/${matchId}`)
+              } else {
+                // Si no es organizador, ir a detalle
+                setSelectedMatchId(matchId)
+                router.push(`/matches/${matchId}`)
+              }
             }}
             className="h-[250px] sm:h-[300px] md:h-[350px] mb-4 sm:mb-6 rounded-xl sm:rounded-2xl overflow-hidden shadow-sm"
           />

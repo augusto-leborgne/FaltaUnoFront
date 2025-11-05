@@ -13,6 +13,7 @@ interface MatchesMapViewProps {
   matches: PartidoDTO[]
   selectedMatchId?: string
   onMarkerClick?: (matchId: string) => void
+  currentUserId?: string // NUEVO: Para detectar si es organizador
   className?: string
 }
 
@@ -20,6 +21,7 @@ export function MatchesMapView({
   matches,
   selectedMatchId,
   onMarkerClick,
+  currentUserId, // NUEVO
   className = "",
 }: MatchesMapViewProps) {
   // 🔒 Usamos callback ref para saber cuándo el contenedor existe realmente

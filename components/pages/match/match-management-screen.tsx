@@ -29,6 +29,7 @@ import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { AuthService } from "@/lib/auth"
 import { CompressedMap } from "@/components/google-maps/compressed-map"
+import { GoogleMapsModal } from "@/components/google-maps/google-maps-modal"
 import { formatMatchType } from "@/lib/utils"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { 
@@ -1067,35 +1068,13 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
 
       {/* Modal de mapa expandido */}
       {showMapModal && match && match.latitud && match.longitud && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl overflow-hidden max-w-md w-full max-h-[60vh] flex flex-col">
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-gray-900">Ubicación del partido</h3>
-              <button
-                onClick={() => setShowMapModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-600" />
-              </button>
-            </div>
-            
-            <div className="flex-1 min-h-[300px]">
-              <CompressedMap
-                location={match.nombreUbicacion || ''}
-                lat={match.latitud}
-                lng={match.longitud}
-                className="h-full"
-              />
-            </div>
-            
-            <div className="p-4 border-t border-gray-200">
-              <div className="flex items-center space-x-2 text-gray-700">
-                <MapPin className="w-5 h-5 text-green-600" />
-                <span className="font-medium">{match.nombreUbicacion}</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        <GoogleMapsModal
+          isOpen={showMapModal}
+          onClose={() => setShowMapModal(false)}
+          location={match.nombreUbicacion || ''}
+          lat={Number(match.latitud)}
+          lng={Number(match.longitud)}
+        />
       )}
 
       {/* Modal cancelar partido */}
