@@ -98,11 +98,14 @@ function OAuthSuccessContent() {
           setMessage("✅ ¡Bienvenido! Completemos tu perfil")
           await new Promise(resolve => setTimeout(resolve, 2000))
           router.push("/profile-setup")
-        } else if (!user.cedulaVerificada) {
+        } else {
+          // TODO: Verificación de cédula deshabilitada temporalmente - ir directo a home
+          /*
+          } else if (!user.cedulaVerificada) {
           setMessage("✅ ¡Bienvenido! Verificá tu cédula")
           await new Promise(resolve => setTimeout(resolve, 2000))
           router.push("/verification")
-        } else {
+          */
           setMessage(`✅ ¡Bienvenido, ${user.nombre || user.email}!`)
           await new Promise(resolve => setTimeout(resolve, 2000))
           router.push("/home")

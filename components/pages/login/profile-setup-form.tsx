@@ -312,7 +312,8 @@ export function ProfileSetupForm() {
 
         logger.log("[ProfileSetup] ✅ Registro completado exitosamente")
         
-        router.push(usuario.cedulaVerificada ? '/home' : '/verification')
+        // Cédula es opcional - ir directo a home
+        router.push('/home')
 
       } else {
         const token = AuthService.getToken()
@@ -367,7 +368,8 @@ export function ProfileSetupForm() {
           ...currentUser,
           ...serverUser,
           perfilCompleto: true,
-          cedulaVerificada: serverUser.cedulaVerificada ?? currentUser.cedulaVerificada ?? false,
+          // TODO: Cédula deshabilitada temporalmente
+          // cedulaVerificada: serverUser.cedulaVerificada ?? currentUser.cedulaVerificada ?? false,
           email: serverUser.email ?? currentUser.email,
           id: serverUser.id ?? currentUser.id,
         }
@@ -375,7 +377,7 @@ export function ProfileSetupForm() {
         logger.log("[ProfileSetup] ✅ Perfil completado, guardando usuario:", {
           email: merged.email,
           perfilCompleto: merged.perfilCompleto,
-          cedulaVerificada: merged.cedulaVerificada,
+          // cedulaVerificada: merged.cedulaVerificada,
         })
         
         AuthService.setUser(merged)

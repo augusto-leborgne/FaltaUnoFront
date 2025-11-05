@@ -84,11 +84,14 @@ export default function RequireAuth({
     }
 
     if (!allowUnverified && user.perfilCompleto && !user.cedulaVerificada) {
+      // TODO: Verificación de cédula deshabilitada temporalmente - no redirigir a /verification
+      /*
       if (pathname !== "/verification") {
         logger.log(`[RequireAuth:${pathname}] Cédula no verificada, redirigiendo a /verification`)
         router.replace("/verification")
       }
       return
+      */
     }
 
     logger.log(`[RequireAuth:${pathname}] ✓ Verificación completa, permitiendo acceso`)

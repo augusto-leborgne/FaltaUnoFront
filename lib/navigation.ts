@@ -50,6 +50,11 @@ function isProfileIncomplete(user?: Usuario | null): boolean {
 function needsIdVerification(user?: Usuario | null): boolean {
   if (!user) return false
 
+  // TODO: Verificación de cédula deshabilitada temporalmente
+  // return false siempre - no requerir verificación
+  return false
+
+  /* CÓDIGO ORIGINAL - Mantener para futura implementación de badge verificado
   // Booleans directos
   const b1 = asBool((user as any)?.cedulaVerificada)
   if (b1 !== undefined) return !b1
@@ -72,6 +77,7 @@ function needsIdVerification(user?: Usuario | null): boolean {
   // ✅ FIX: Si no hay información explícita de verificación, NO requerimos verificación
   // (cedulaVerificada es opcional - si está undefined, asumimos que está OK)
   return false
+  */
 }
 
 // API pública ---------------------------------------------------------

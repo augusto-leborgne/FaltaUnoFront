@@ -52,11 +52,14 @@ export default function RootPage() {
         return;
       }
 
+      // TODO: Verificación de cédula deshabilitada temporalmente
+      /*
       if (!user.cedulaVerificada) {
         if (shouldLog) logger.debug("[RootPage] Cédula no verificada → /verification");
         router.replace("/verification");
         return;
       }
+      */
 
       // Todo completo → home
       if (shouldLog) logger.debug("[RootPage] Usuario completo → /home");
