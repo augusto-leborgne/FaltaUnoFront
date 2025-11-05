@@ -202,75 +202,62 @@ export function RegisterScreen() {
         }),
       })
 
-      // ✅ Verificar si la respuesta es OK antes de parsear JSON
-      if (!response.ok) {
-        // Intentar parsear error del backend
-        let errorMsg = "Error al crear la cuenta"
-        try {
-          const errorData = await response.json()
-          errorMsg = errorData.message || errorData.error || errorMsg
-        } catch {
-          // Si no se puede parsear, usar mensaje por status code
-          if (response.status === 409) {
-            errorMsg = "Este email ya está registrado"
-          } else if (response.status === 400) {
-            errorMsg = "Datos inválidos. Verifica tu email y contraseña"
-          } else if (response.status >= 500) {
-            errorMsg = "Error del servidor. Intenta nuevamente"
-          }
-        }
-        
-        logger.error("[RegisterScreen] ❌ Error HTTP:", response.status, errorMsg)
-        throw new Error(errorMsg)
+      // ✅ Intentar parsear respuesta JSON siempre
+      let data
+      try {
+        data = await response.json()
+      } catch (parseError) {
+        logger.error("[RegisterScreen] Error parseando JSON:", parseError)
+        throw new Error("Error de comunicación con el servidor")
       }
 
-      const data = await response.json()
-
-      if (data.success) {
+      // ✅ Verificar si fue exitoso
+      if (response.ok && data.success) {
         logger.log("[RegisterScreen] ✅ Pre-registro exitoso, redirigiendo a verificación")
         
         // Redirigir a página de verificación con el email
         router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`)
       } else {
+        // Extraer mensaje de error
         const errorMsg = data.message || data.error || "Error al crear la cuenta"
-        logger.error("[RegisterScreen] ❌ Error en respuesta:", errorMsg)
+        logger.error("[RegisterScreen] ❌ Error en respuesta:", {
+          status: response.status,
+          message: errorMsg,
+          data
+        })
         
-        // ✅ Detectar si el email ya está registrado pero no verificado
-        if (errorMsg.includes("ya está registrado") || errorMsg.includes("already registered")) {
-          setError("Ya existe una cuenta con este email. ¿No la verificaste? Haz clic en 'Reenviar código'")
-          // Mostrar botón para reenviar código
+        // ✅ Detectar casos específicos
+        if (response.status === 409 || errorMsg.toLowerCase().includes("ya está registrado") || errorMsg.toLowerCase().includes("already registered")) {
+          // Email ya existe - redirigir a verificación después de mostrar mensaje
+          setError("Este email ya tiene una cuenta. Redirigiendo a verificación...")
           setTimeout(() => {
             router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`)
-          }, 3000)
+          }, 2000)
+        } else if (response.status === 400) {
+          // Error de validación del backend
+          setError(errorMsg)
+        } else if (response.status >= 500) {
+          // Error del servidor
+          setError("Error del servidor. Por favor intenta nuevamente en unos momentos.")
         } else {
+          // Otros errores
           setError(errorMsg)
         }
+        
+        return // No lanzar error, ya lo manejamos
       }
     } catch (err: any) {
       logger.error("[RegisterScreen] ❌ Error en registro:", err)
       
       // ✅ Mensajes de error mejorados y específicos
-      let errorMessage = "Error al crear la cuenta"
+      let errorMessage = "Error de conexión. Verifica tu internet."
       
       const errMsg = err.message?.toLowerCase() || ""
       
       if (errMsg.includes("failed to fetch") || errMsg.includes("networkerror")) {
-        errorMessage = "No se pudo conectar al servidor. Verifica tu conexión a internet e intenta nuevamente."
-      } else if (errMsg.includes("cors")) {
-        errorMessage = "Error de configuración del servidor. Por favor intenta usar 'Continuar con Google' o contacta soporte."
-      } else if (errMsg.includes("409") || errMsg.includes("ya está registrado") || errMsg.includes("already registered")) {
-        errorMessage = "Este email ya está registrado. Si no verificaste tu cuenta, redirigiendo a verificación..."
-        setTimeout(() => {
-          router.push(`/verify-email?email=${encodeURIComponent(formData.email)}`)
-        }, 2000)
-      } else if (errMsg.includes("500") || errMsg.includes("internal server")) {
-        errorMessage = "Error del servidor. Por favor intenta nuevamente en unos segundos."
+        errorMessage = "No se pudo conectar al servidor. Verifica tu conexión."
       } else if (errMsg.includes("timeout")) {
-        errorMessage = "La conexión tardó demasiado. Por favor intenta nuevamente."
-      } else if (errMsg.includes("email") && errMsg.includes("invalid")) {
-        errorMessage = "El email ingresado no es válido. Por favor verifica el formato."
-      } else if (errMsg.includes("password") && errMsg.includes("weak")) {
-        errorMessage = "La contraseña es muy débil. Debe tener al menos 8 caracteres."
+        errorMessage = "La conexión tardó demasiado. Intenta nuevamente."
       } else if (err.message) {
         errorMessage = err.message
       }
