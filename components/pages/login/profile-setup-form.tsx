@@ -352,8 +352,8 @@ export function ProfileSetupForm() {
           placeDetails: formData.placeDetails ? JSON.stringify(formData.placeDetails) : null,
         }
 
-        logger.log("[ProfileSetup] Enviando a /auth/complete-register...")
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/complete-register`, {
+        logger.log("[ProfileSetup] Enviando a /api/auth/complete-register...")
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/complete-register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
@@ -387,8 +387,8 @@ export function ProfileSetupForm() {
           email: userWithProfile.email,
           perfilCompleto: userWithProfile.perfilCompleto
         })
-        AuthService.setUser(userWithProfile)
-        setUser(userWithProfile)
+  AuthService.setUser(userWithProfile)
+  setUser(userWithProfile)
 
   logger.log("[ProfileSetup] ✅ Registro completado exitosamente, redirigiendo a phone-verification")
         
@@ -463,8 +463,8 @@ export function ProfileSetupForm() {
           // cedulaVerificada: merged.cedulaVerificada,
         })
         
-        AuthService.setUser(merged)
-        setUser(merged)
+  AuthService.setUser(merged)
+  setUser(merged)
 
         logger.log("[ProfileSetup] ✅ Perfil completado, guardando usuario:", {
           email: merged.email,

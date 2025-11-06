@@ -133,6 +133,9 @@ export interface Usuario {
   ubicacion?: string;
   cedula?: string;
   perfilCompleto?: boolean;
+  hasFotoPerfil?: boolean;
+  // Timestamp ms desde epoch que indica la última vez que la app actualizó localmente el usuario
+  userLastUpdatedAt?: number;
   cedulaVerificada?: boolean;
   emailVerified?: boolean; // ✅ Nuevo campo
   provider?: string;

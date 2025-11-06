@@ -149,6 +149,8 @@ export class AuthService {
         perfilCompleto: user.perfilCompleto ?? true, // Default a true si no está definido
         cedulaVerificada: user.cedulaVerificada ?? false, // Default a false
       }
+      // timestamp para soportar una "grace window" tras actualizaciones optimistas
+      ;(normalized as any).userLastUpdatedAt = Date.now()
       
       localStorage.setItem(USER_KEY, JSON.stringify(normalized))
       logger?.debug?.("[AuthService] Usuario guardado (sin foto):", normalized?.email)
@@ -446,24 +448,54 @@ export class AuthService {
         const data = json?.data ?? json
         const currentUser = this.getUser()
         
-        // ⚡ CRÍTICO: Preservar perfilCompleto si ya estaba en true localmente
-        // Esto evita que un backend response incompleto borre el estado
-        const normalized: any = {
-          ...data,
-          foto_perfil: data?.foto_perfil ?? data?.fotoPerfil ?? undefined,
-          // ⚡ PRESERVAR perfilCompleto - solo cambiar si backend explícitamente lo actualiza
-          perfilCompleto: data?.perfilCompleto ?? currentUser?.perfilCompleto ?? true,
-          cedulaVerificada: data?.cedulaVerificada ?? currentUser?.cedulaVerificada ?? false,
+        // Defensive merge: prefer server values when present, but NEVER
+        // overwrite valid local fields with empty/null server values.
+        const merged: any = {
+          // Start from local user to preserve existing fields
+          ...(currentUser ?? {}),
+          // Then overlay server-provided fields
+          ...(data ?? {}),
         }
-        delete normalized.fotoPerfil
-        
-        this.setUser(normalized)
-        logger?.debug?.("[AuthService] ✅ Usuario actualizado desde servidor:", {
-          email: normalized.email,
-          perfilCompleto: normalized.perfilCompleto,
-          cedulaVerificada: normalized.cedulaVerificada,
+
+        // Normalize foto field (server may use fotoPerfil or foto_perfil)
+        merged.foto_perfil = data?.foto_perfil ?? data?.fotoPerfil ?? currentUser?.foto_perfil ?? undefined
+
+        // Preserve perfilCompleto unless server explicitly provides a value
+        merged.perfilCompleto = (data && Object.prototype.hasOwnProperty.call(data, 'perfilCompleto'))
+          ? data.perfilCompleto
+          : (currentUser?.perfilCompleto ?? true)
+
+        // Preserve cedulaVerificada unless server provides one
+        merged.cedulaVerificada = (data && Object.prototype.hasOwnProperty.call(data, 'cedulaVerificada'))
+          ? data.cedulaVerificada
+          : (currentUser?.cedulaVerificada ?? false)
+
+        // Preserve nombre/apellido if server returned empty/null values
+        merged.nombre = (data && data.nombre) ? data.nombre : currentUser?.nombre ?? merged.nombre
+        merged.apellido = (data && data.apellido) ? data.apellido : currentUser?.apellido ?? merged.apellido
+
+        // Preserve celular: if server sends a non-empty celular use it, otherwise keep local
+        merged.celular = (data && data.celular && String(data.celular).trim() !== '')
+          ? data.celular
+          : (currentUser?.celular ?? merged.celular)
+
+        // Preserve/normalize photo flag (server may return explicit hasFotoPerfil)
+        merged.hasFotoPerfil = (data && Object.prototype.hasOwnProperty.call(data, 'hasFotoPerfil'))
+          ? data.hasFotoPerfil
+          : (currentUser?.hasFotoPerfil ?? Boolean(merged.foto_perfil))
+
+        // Remove alias fotoPerfil if present
+        delete merged.fotoPerfil
+
+        // Persist merged user
+        this.setUser(merged)
+        logger?.debug?.("[AuthService] ✅ Usuario actualizado desde servidor (merged):", {
+          email: merged.email,
+          perfilCompleto: merged.perfilCompleto,
+          cedulaVerificada: merged.cedulaVerificada,
+          celular: merged.celular,
         })
-        return normalized as Usuario
+        return merged as Usuario
         
       } catch (e) {
         logger?.error?.(`[AuthService] Error en fetchCurrentUser (intento ${attempt}/${retries}):`, e)
