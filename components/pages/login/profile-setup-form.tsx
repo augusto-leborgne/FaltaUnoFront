@@ -19,7 +19,7 @@ import 'react-image-crop/dist/ReactCrop.css'
 
 export function ProfileSetupForm() {
   const router = useRouter()
-  const { user, setUser } = useAuth()
+  const { user, setUser, refreshUser } = useAuth()
   const postAuthRedirect = usePostAuthRedirect()
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const cameraInputRef = useRef<HTMLInputElement | null>(null) // ⚡ NUEVO: Input para cámara
@@ -381,22 +381,26 @@ export function ProfileSetupForm() {
           logger.warn("[ProfileSetup] ⚠️ No se recibió token del servidor")
         }
 
-        const userWithProfile = { ...usuario, perfilCompleto: true }
-        logger.log("[ProfileSetup] ✅ Guardando usuario con perfil completo:", {
-          id: userWithProfile.id,
-          email: userWithProfile.email,
-          perfilCompleto: userWithProfile.perfilCompleto
+        // ⚡ NUEVO: Usar el usuario devuelto por el backend directamente
+        logger.log("[ProfileSetup] ✅ Usuario recibido del backend:", {
+          id: usuario.id,
+          email: usuario.email,
+          nombre: usuario.nombre,
+          apellido: usuario.apellido,
+          perfilCompleto: usuario.perfilCompleto
         })
-  AuthService.setUser(userWithProfile)
-  setUser(userWithProfile)
+        
+        // Guardar usuario con los datos del backend
+        AuthService.setUser(usuario)
+        setUser(usuario)
 
-  logger.log("[ProfileSetup] ✅ Registro completado exitosamente, redirigiendo a phone-verification")
+        logger.log("[ProfileSetup] ✅ Registro completado exitosamente, redirigiendo a phone-verification")
         
-  // ⚡ IMPORTANTE: Pequeño delay para asegurar que localStorage se actualice
-  await new Promise(resolve => setTimeout(resolve, 100))
+        // Pequeño delay para asegurar que localStorage se actualice
+        await new Promise(resolve => setTimeout(resolve, 300))
         
-  // Redirigir a verificación de celular
-  router.push('/phone-verification')
+        // Redirigir a verificación de celular (replace para no permitir volver atrás)
+        router.replace('/phone-verification')
 
       } else {
         const token = AuthService.getToken()
@@ -444,40 +448,30 @@ export function ProfileSetupForm() {
           throw new Error(errorMsg)
         }
 
-        const serverUser: any = perfilRes.data || {}
-        const currentUser: any = AuthService.getUser() || {}
+        // ⚡ NUEVO: Refrescar usuario INMEDIATAMENTE desde el servidor después de actualizar
+        logger.log("[ProfileSetup] ✅ Perfil actualizado en backend, refrescando desde servidor...")
+        const refreshed = await refreshUser()
         
-        const merged: any = {
-          ...currentUser,
-          ...serverUser,
-          perfilCompleto: true,
-          // TODO: Cédula deshabilitada temporalmente
-          // cedulaVerificada: serverUser.cedulaVerificada ?? currentUser.cedulaVerificada ?? false,
-          email: serverUser.email ?? currentUser.email,
-          id: serverUser.id ?? currentUser.id,
+        if (refreshed) {
+          logger.log("[ProfileSetup] ✅ Usuario refrescado desde servidor:", {
+            email: refreshed.email,
+            nombre: refreshed.nombre,
+            apellido: refreshed.apellido,
+            perfilCompleto: refreshed.perfilCompleto,
+          })
+          
+          // Actualizar contexto con datos del servidor
+          setUser(refreshed)
+          
+          // Pequeño delay para asegurar que localStorage se actualice
+          await new Promise(resolve => setTimeout(resolve, 300))
+
+          // Redirigir a verificación de celular (replace para no permitir volver atrás)
+          router.replace('/phone-verification')
+        } else {
+          logger.error("[ProfileSetup] ❌ Error: no se pudo refrescar usuario desde servidor")
+          throw new Error("No se pudo verificar la actualización. Por favor, intenta nuevamente.")
         }
-        
-        logger.log("[ProfileSetup] ✅ Perfil completado, guardando usuario:", {
-          email: merged.email,
-          perfilCompleto: merged.perfilCompleto,
-          // cedulaVerificada: merged.cedulaVerificada,
-        })
-        
-  AuthService.setUser(merged)
-  setUser(merged)
-
-        logger.log("[ProfileSetup] ✅ Perfil completado, guardando usuario:", {
-          email: merged.email,
-          perfilCompleto: merged.perfilCompleto,
-        })
-        
-        // ⚡ IMPORTANTE: Pequeño delay para asegurar que localStorage se actualice
-        await new Promise(resolve => setTimeout(resolve, 100))
-
-        // Redirigir a verificación de celular
-        router.push('/phone-verification')
-
-        setTimeout(() => AuthService.fetchCurrentUser(), 1500)
       }
     } catch (err: any) {
       logger.error("[ProfileSetup] Error al guardar perfil:", err)

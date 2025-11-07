@@ -13,6 +13,7 @@ export function ForgotPasswordScreen() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
+  const [resetLink, setResetLink] = useState<string | null>(null) // ⚡ NUEVO: Para modo desarrollo
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -36,13 +37,21 @@ export function ForgotPasswordScreen() {
         throw new Error(data.message || 'Error al enviar el email')
       }
       
+      // ⚡ NUEVO: Si el backend devuelve resetLink, estamos en modo desarrollo
+      if (data.data && data.data.resetLink) {
+        logger.warn("[ForgotPassword] ⚠️ Modo desarrollo - Link recibido del backend")
+        setResetLink(data.data.resetLink)
+      }
+      
       setSuccess(true)
       logger.info("[ForgotPassword] ✅ Email de recuperación enviado")
       
-      // Redirigir después de 5 segundos
-      setTimeout(() => {
-        router.push("/login")
-      }, 5000)
+      // Solo redirigir automáticamente si NO hay link (modo producción)
+      if (!data.data?.resetLink) {
+        setTimeout(() => {
+          router.push("/login")
+        }, 5000)
+      }
 
     } catch (err: any) {
       logger.error("[ForgotPassword] ❌ Error:", err)
@@ -75,9 +84,32 @@ export function ForgotPasswordScreen() {
                 Revisa tu bandeja de entrada y sigue las instrucciones para restablecer tu contraseña.
               </p>
             </div>
-            <p className="text-sm text-gray-500">
-              Redirigiendo al login...
-            </p>
+            
+            {/* ⚡ NUEVO: Mostrar link directo en modo desarrollo */}
+            {resetLink && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                <p className="text-sm font-semibold text-yellow-800 mb-2">
+                  🔧 Modo Desarrollo - Link directo:
+                </p>
+                <a 
+                  href={resetLink}
+                  className="text-sm text-blue-600 hover:text-blue-800 underline break-all"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {resetLink}
+                </a>
+                <p className="text-xs text-yellow-700 mt-2">
+                  Haz clic en el link o cópialo en tu navegador
+                </p>
+              </div>
+            )}
+            
+            {!resetLink && (
+              <p className="text-sm text-gray-500">
+                Redirigiendo al login...
+              </p>
+            )}
           </div>
         </div>
       </div>

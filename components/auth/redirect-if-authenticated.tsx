@@ -15,6 +15,10 @@ function isProfileIncomplete(u: any | null | undefined) {
 
 function needsIdVerification(u: any | null | undefined) {
   if (!u) return false
+  // TODO: Verificación de cédula deshabilitada temporalmente
+  return false
+  
+  /* CÓDIGO ORIGINAL - Mantener para futura implementación
   // Campos comunes
   if (u.cedulaVerificada === false) return true
   if (u.documentoVerificado === false) return true
@@ -25,6 +29,13 @@ function needsIdVerification(u: any | null | undefined) {
     return true
   }
   return false
+  */
+}
+
+function needsPhoneVerification(u: any | null | undefined) {
+  if (!u) return false
+  const celular = u?.celular
+  return !celular || celular.trim() === ""
 }
 
 export function RedirectIfAuthenticated({ children }: { children: React.ReactNode }) {
@@ -52,6 +63,8 @@ export function RedirectIfAuthenticated({ children }: { children: React.ReactNod
         redirectedRef.current = true
         if (isProfileIncomplete(user)) {
           router.replace("/profile-setup")
+        } else if (needsPhoneVerification(user)) {
+          router.replace("/phone-verification")
         } else if (needsIdVerification(user)) {
           router.replace("/verification")
         } else {

@@ -69,45 +69,35 @@ export function PhoneVerificationScreen() {
       logger.log("[PhoneVerification] Respuesta:", res);
 
       if (res.success && res.data) {
-        logger.log("[PhoneVerification] Celular actualizado exitosamente");
-        // Optimisticamente actualizar usuario en localStorage para evitar condiciones de carrera
-        try {
-          const currentUser = AuthService.getUser() || ({} as any);
-          currentUser.celular = fullPhone;
-          // marcar perfil como completo ahora que tiene celular
-          currentUser.perfilCompleto = true;
-          // Actualizar contexto y localStorage de forma consistente
-          try {
-            setUser(currentUser)
-            logger.log("[PhoneVerification] Usuario actualizado en contexto (optimistic)");
-          } catch (e) {
-            // Fallback: si setUser falla, al menos persistir en localStorage
-            AuthService.setUser(currentUser);
-            logger.warn("[PhoneVerification] setUser falló, usando AuthService.setUser como fallback:", e);
-          }
-        } catch (e) {
-          logger.warn("[PhoneVerification] No se pudo actualizar usuario local optimistically:", e);
+        logger.log("[PhoneVerification] ✅ Celular actualizado exitosamente en backend");
+        
+        // ⚡ CRÍTICO: Refrescar usuario INMEDIATAMENTE desde el servidor para obtener el estado actualizado
+        logger.log("[PhoneVerification] Refrescando usuario desde servidor...");
+        const refreshed = await refreshUser();
+        
+        if (refreshed && refreshed.celular) {
+          logger.log("[PhoneVerification] ✅ Usuario refrescado desde servidor:", { 
+            email: refreshed.email, 
+            celular: refreshed.celular,
+            perfilCompleto: refreshed.perfilCompleto 
+          });
+          
+          // Actualizar contexto con datos del servidor
+          setUser(refreshed);
+          
+          // Mostrar mensaje de éxito
+          setIsSuccess(true);
+          
+          // Pequeño delay para que el usuario vea el mensaje de éxito
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // Redirigir a home con el estado actualizado del servidor
+          logger.log("[PhoneVerification] ✅ Redirigiendo a /home");
+          router.replace("/home");
+        } else {
+          logger.error("[PhoneVerification] ❌ Error: no se pudo refrescar usuario desde servidor");
+          throw new Error("No se pudo verificar la actualización. Por favor, intenta nuevamente.");
         }
-
-        // Mostrar mensaje de éxito
-        setIsSuccess(true);
-
-        // Intentar refrescar contexto desde el servidor, pero no borrar el usuario local si falla
-        try {
-          logger.log("[PhoneVerification] Refrescando usuario desde servidor...");
-          const refreshed = await refreshUser();
-          if (refreshed) {
-            logger.log("[PhoneVerification] Usuario refrescado desde servidor:", { email: refreshed.email, celular: refreshed.celular });
-          } else {
-            logger.warn("[PhoneVerification] refreshUser devolvió null - preservando usuario local");
-          }
-        } catch (refreshError) {
-          logger.warn("[PhoneVerification] Error al refrescar usuario (se preserva user local):", refreshError);
-        }
-
-        // Redirigir inmediatamente a home (perfil ya marcado como completo localmente)
-        logger.log("[PhoneVerification] Redirigiendo a /home");
-        router.push("/home");
       } else {
         logger.log("[PhoneVerification] Error en actualización:", res.message);
         setError(res.message ?? "No se pudo actualizar el número de celular");
