@@ -86,7 +86,9 @@ export function ProfileSetupForm() {
         if (value.trim().length > 50) return "Máximo 50 caracteres"
         return null
       
-      // Phone no es requerido - se pedirá en paso posterior
+      case 'phone':
+        // Phone no es requerido - se pedirá en paso posterior
+        return null
       
       case 'fechaNacimiento':
         if (!value) return "Requerido"
@@ -275,20 +277,21 @@ export function ProfileSetupForm() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
+    // ⚡ CRÍTICO: preventDefault ANTES de cualquier otra cosa
+    e.preventDefault()
+    e.stopPropagation()
+    
     try {
-      e.preventDefault()
-      e.stopPropagation()
       setGeneralError("")
-
       logger.log("[ProfileSetup] 🚀 Form submitted, iniciando validación...")
 
-      // Validación completa
+      // Validación completa - SOLO campos que tienen validación
       const errors: Record<string, string> = {}
-      Object.keys(formData).forEach(key => {
-        if (key !== 'placeDetails' && key !== 'photoPreviewUrl' && key !== 'countryCode') {
-          const error = validateField(key, formData[key as keyof typeof formData])
-          if (error) errors[key] = error
-        }
+      const fieldsToValidate = ['name', 'surname', 'fechaNacimiento', 'genero', 'position', 'height', 'weight', 'photo', 'address']
+      
+      fieldsToValidate.forEach(key => {
+        const error = validateField(key, formData[key as keyof typeof formData])
+        if (error) errors[key] = error
       })
 
       if (Object.keys(errors).length > 0) {
