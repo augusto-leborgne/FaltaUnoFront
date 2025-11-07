@@ -431,7 +431,7 @@ export function ProfileSetupForm() {
           nombre: formData.name,
           apellido: formData.surname,
           // celular no se envía aquí - se pedirá en paso posterior  
-          fecha_nacimiento: formData.fechaNacimiento,
+          fechaNacimiento: formData.fechaNacimiento,
           genero: formData.genero,
           posicion: formData.position,
           altura: String(formData.height),
@@ -563,12 +563,12 @@ export function ProfileSetupForm() {
                 onChange={handlePhotoChange} 
                 className="hidden"
               />
-              {/* ⚡ NUEVO: Input para cámara */}
+              {/* ⚡ Input para cámara - capture sin valor para forzar cámara del dispositivo */}
               <input 
                 ref={cameraInputRef} 
                 type="file" 
                 accept="image/*" 
-                capture="environment"
+                capture
                 onChange={handlePhotoChange} 
                 className="hidden"
               />
