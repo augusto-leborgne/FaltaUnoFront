@@ -275,25 +275,35 @@ export function ProfileSetupForm() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setGeneralError("")
+    try {
+      e.preventDefault()
+      e.stopPropagation()
+      setGeneralError("")
 
-    // Validación completa
-    const errors: Record<string, string> = {}
-    Object.keys(formData).forEach(key => {
-      if (key !== 'placeDetails' && key !== 'photoPreviewUrl' && key !== 'countryCode') {
-        const error = validateField(key, formData[key as keyof typeof formData])
-        if (error) errors[key] = error
+      logger.log("[ProfileSetup] 🚀 Form submitted, iniciando validación...")
+
+      // Validación completa
+      const errors: Record<string, string> = {}
+      Object.keys(formData).forEach(key => {
+        if (key !== 'placeDetails' && key !== 'photoPreviewUrl' && key !== 'countryCode') {
+          const error = validateField(key, formData[key as keyof typeof formData])
+          if (error) errors[key] = error
+        }
+      })
+
+      if (Object.keys(errors).length > 0) {
+        setFieldErrors(errors)
+        setGeneralError("Por favor completa todos los campos correctamente")
+        logger.warn("[ProfileSetup] ❌ Errores de validación:", errors)
+        return
       }
-    })
 
-    if (Object.keys(errors).length > 0) {
-      setFieldErrors(errors)
-      setGeneralError("Por favor completa todos los campos correctamente")
-      return
+      logger.log("[ProfileSetup] ✅ Validación exitosa, procediendo a guardar...")
+      await handleUploadAndSaveProfile()
+    } catch (err: any) {
+      logger.error("[ProfileSetup] ❌ Error crítico en handleSubmit:", err)
+      setGeneralError(`Error inesperado: ${err?.message ?? "Por favor intenta nuevamente"}`)
     }
-
-    await handleUploadAndSaveProfile()
   }
 
   async function handleUploadAndSaveProfile() {
@@ -775,6 +785,7 @@ export function ProfileSetupForm() {
                 <p className="text-sm font-medium text-red-900">{generalError}</p>
               </div>
               <button
+                type="button"
                 onClick={() => setGeneralError("")}
                 className="text-red-400 hover:text-red-600"
               >
@@ -808,6 +819,7 @@ export function ProfileSetupForm() {
             <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary/10 to-orange-50">
               <h3 className="text-lg font-bold text-gray-900">Ajusta tu foto</h3>
               <button
+                type="button"
                 onClick={() => {
                   setShowCropModal(false)
                   setImageToCrop('')
@@ -841,6 +853,7 @@ export function ProfileSetupForm() {
 
             <div className="p-4 border-t border-gray-200 flex gap-3 bg-white">
               <Button
+                type="button"
                 onClick={() => {
                   setShowCropModal(false)
                   setImageToCrop('')
@@ -851,6 +864,7 @@ export function ProfileSetupForm() {
                 Cancelar
               </Button>
               <Button
+                type="button"
                 onClick={handleCropComplete}
                 className="flex-1 bg-primary hover:bg-primary/90 text-white"
                 disabled={!completedCrop}
