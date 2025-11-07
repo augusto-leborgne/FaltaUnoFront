@@ -44,6 +44,7 @@ export function ProfileSetupForm() {
   const [showGeneroDropdown, setShowGeneroDropdown] = useState(false)
   const [showCountryCodeDropdown, setShowCountryCodeDropdown] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
+  const [generalError, setGeneralError] = useState<string>("")
 
   // Image crop states
   const [showCropModal, setShowCropModal] = useState(false)
@@ -275,6 +276,7 @@ export function ProfileSetupForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setGeneralError("")
 
     // Validación completa
     const errors: Record<string, string> = {}
@@ -287,7 +289,7 @@ export function ProfileSetupForm() {
 
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors)
-      alert("Por favor completa todos los campos correctamente")
+      setGeneralError("Por favor completa todos los campos correctamente")
       return
     }
 
@@ -295,9 +297,13 @@ export function ProfileSetupForm() {
   }
 
   async function handleUploadAndSaveProfile() {
-    if (!formData.photo) return alert("Foto requerida")
+    if (!formData.photo) {
+      setGeneralError("Foto requerida")
+      return
+    }
 
     setIsUploading(true)
+    setGeneralError("")
     try {
       // ⚡ CORREGIDO: Leer de sessionStorage (verify-email ahora guarda ahí)
       let verifiedEmail: string | null = null
@@ -406,14 +412,14 @@ export function ProfileSetupForm() {
         const token = AuthService.getToken()
         logger.log("[ProfileSetup] Token disponible:", token ? "SÍ" : "NO")
         if (!token) {
-          alert("No estás autenticado. Por favor, inicia sesión nuevamente.")
-          router.replace("/login")
+          setGeneralError("No estás autenticado. Por favor, inicia sesión nuevamente.")
+          setTimeout(() => router.replace("/login"), 2000)
           return
         }
         if (AuthService.isTokenExpired(token)) {
-          alert("Tu sesión ha expirado. Por favor, inicia sesión nuevamente.")
+          setGeneralError("Tu sesión ha expirado. Por favor, inicia sesión nuevamente.")
           AuthService.logout()
-          router.replace("/login")
+          setTimeout(() => router.replace("/login"), 2000)
           return
         }
 
@@ -475,7 +481,7 @@ export function ProfileSetupForm() {
       }
     } catch (err: any) {
       logger.error("[ProfileSetup] Error al guardar perfil:", err)
-      alert(`Error al guardar perfil: ${err?.message ?? "Intenta nuevamente"}`)
+      setGeneralError(`Error al guardar perfil: ${err?.message ?? "Intenta nuevamente"}`)
     } finally {
       setIsUploading(false)
     }
@@ -760,6 +766,22 @@ export function ProfileSetupForm() {
               </div>
             </div>
           </div>
+
+          {/* Mensaje de error general */}
+          {generalError && (
+            <div className="bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-red-900">{generalError}</p>
+              </div>
+              <button
+                onClick={() => setGeneralError("")}
+                className="text-red-400 hover:text-red-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
 
           {/* Botón de submit */}
           <Button 
