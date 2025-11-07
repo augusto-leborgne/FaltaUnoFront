@@ -208,7 +208,7 @@ export function ProfileSetupForm() {
     const MAX_DIMENSION = 8192
     
     if (f.size > MAX_SIZE) {
-      alert("La imagen no puede superar 30MB")
+      setGeneralError("La imagen no puede superar 30MB")
       return
     }
     
@@ -217,7 +217,7 @@ export function ProfileSetupForm() {
       const img = document.createElement('img')
       img.onload = () => {
         if (img.width > MAX_DIMENSION || img.height > MAX_DIMENSION) {
-          alert(`La imagen no puede superar ${MAX_DIMENSION}x${MAX_DIMENSION} píxeles`)
+          setGeneralError(`La imagen no puede superar ${MAX_DIMENSION}x${MAX_DIMENSION} píxeles`)
           return
         }
         setImageToCrop(reader.result as string)
@@ -437,7 +437,7 @@ export function ProfileSetupForm() {
           nombre: formData.name,
           apellido: formData.surname,
           // celular no se envía aquí - se pedirá en paso posterior  
-          fechaNacimiento: formData.fechaNacimiento,
+          fecha_nacimiento: formData.fechaNacimiento, // ⚡ Backend espera snake_case
           genero: formData.genero,
           posicion: formData.position,
           altura: String(formData.height),
