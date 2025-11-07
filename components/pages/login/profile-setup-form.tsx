@@ -23,6 +23,7 @@ export function ProfileSetupForm() {
   const postAuthRedirect = usePostAuthRedirect()
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const cameraInputRef = useRef<HTMLInputElement | null>(null) // ⚡ NUEVO: Input para cámara
+  const formRef = useRef<HTMLFormElement | null>(null) // ⚡ Ref para el form
 
   const [formData, setFormData] = useState({
     name: "",
@@ -45,6 +46,24 @@ export function ProfileSetupForm() {
   const [showCountryCodeDropdown, setShowCountryCodeDropdown] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [generalError, setGeneralError] = useState<string>("")
+
+  // ⚡ CRÍTICO: Prevenir submit por defecto como fallback
+  useEffect(() => {
+    const form = formRef.current
+    if (!form) return
+
+    const preventDefaultSubmit = (e: Event) => {
+      console.log("🛡️ FALLBACK: Previniendo submit por defecto")
+      e.preventDefault()
+      e.stopPropagation()
+    }
+
+    form.addEventListener('submit', preventDefaultSubmit, { capture: true })
+    
+    return () => {
+      form.removeEventListener('submit', preventDefaultSubmit, { capture: true })
+    }
+  }, [])
 
   // Image crop states
   const [showCropModal, setShowCropModal] = useState(false)
@@ -517,7 +536,14 @@ export function ProfileSetupForm() {
       </div>
 
       <div className="max-w-2xl mx-auto px-6 py-8 pb-20">
-        <form onSubmit={handleSubmit} className="space-y-6" onReset={(e) => e.preventDefault()}>
+        <form 
+          ref={formRef}
+          onSubmit={handleSubmit} 
+          action="javascript:void(0);"
+          method="post"
+          className="space-y-6" 
+          onReset={(e) => e.preventDefault()}
+        >
           {/* Foto de perfil - Diseño destacado */}
           <div className="bg-white rounded-3xl shadow-lg p-8 border border-gray-100">
             <div className="flex flex-col items-center text-center">
