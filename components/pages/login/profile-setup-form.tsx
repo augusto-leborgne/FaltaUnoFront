@@ -278,8 +278,10 @@ export function ProfileSetupForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     // ⚡ CRÍTICO: preventDefault ANTES de cualquier otra cosa
+    console.log("🔥🔥🔥 HANDLESUBMIT LLAMADO - ANTES DE PREVENTDEFAULT 🔥🔥🔥")
     e.preventDefault()
     e.stopPropagation()
+    console.log("✅ preventDefault ejecutado exitosamente")
     
     try {
       setGeneralError("")
@@ -515,7 +517,7 @@ export function ProfileSetupForm() {
       </div>
 
       <div className="max-w-2xl mx-auto px-6 py-8 pb-20">
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6" onReset={(e) => e.preventDefault()}>
           {/* Foto de perfil - Diseño destacado */}
           <div className="bg-white rounded-3xl shadow-lg p-8 border border-gray-100">
             <div className="flex flex-col items-center text-center">
@@ -797,11 +799,14 @@ export function ProfileSetupForm() {
             </div>
           )}
 
-          {/* Botón de submit */}
-          <Button 
-            type="submit" 
-            className="w-full bg-primary hover:bg-primary/90 text-white py-6 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all" 
+          {/* Botón de submit - USANDO BUTTON NATIVO PARA DESCARTAR PROBLEMAS CON EL COMPONENTE */}
+          <button
+            type="submit"
             disabled={isUploading}
+            onClick={(e) => {
+              console.log("🔴 CLICK EN BOTÓN SUBMIT DETECTADO")
+            }}
+            className="w-full bg-primary hover:bg-primary/90 text-white py-6 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isUploading ? (
               <span className="flex items-center justify-center">
@@ -811,7 +816,7 @@ export function ProfileSetupForm() {
             ) : (
               "Completar perfil"
             )}
-          </Button>
+          </button>
         </form>
       </div>
 
