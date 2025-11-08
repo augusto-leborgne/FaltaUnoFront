@@ -8,7 +8,7 @@ import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { UserAvatar } from "@/components/ui/user-avatar"
-import { Settings, Star, UserPlus, Phone, Users, LogOut } from "lucide-react"
+import { Settings, Star, Phone, Users, LogOut } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useRouter } from "next/navigation"
 import { calcularEdad } from "@/lib/utils"
@@ -184,7 +184,6 @@ function ProfileScreenInner() {
   }
 
   const handleSettingsClick = () => router.push("/settings")
-  const handleSearchUsersClick = () => router.push("/search") // Redirigir a búsqueda de usuarios
   const handleFriendsClick = () => router.push("/friends") // Ver todos los amigos
 
   const handleLogout = () => {
@@ -424,11 +423,7 @@ function ProfileScreenInner() {
 
           {friends.length === 0 ? (
             <div className="text-center py-6 sm:py-8">
-              <p className="text-gray-500 mb-3 sm:mb-4 text-sm">No tienes amigos todavía</p>
-              <Button onClick={handleSearchUsersClick} className="bg-green-600 hover:bg-green-700 text-xs sm:text-sm">
-                <UserPlus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                Buscar usuarios
-              </Button>
+              <p className="text-gray-500 text-sm">No tienes amigos todavía</p>
             </div>
           ) : (
             <div className="space-y-2 sm:space-y-3">
