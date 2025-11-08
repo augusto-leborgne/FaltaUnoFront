@@ -30,6 +30,8 @@ const isIncomplete = (u:any)=>{
 }
 
 export default function RequireIncompleteProfile({children}:{children:React.ReactNode}) {
+  console.log("🛡️🛡️🛡️ RequireIncompleteProfile RENDERIZADO 🛡️🛡️🛡️")
+  
   const router = useRouter()
   const { user, loading } = useAuth()
 

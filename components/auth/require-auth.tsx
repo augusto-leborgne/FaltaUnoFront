@@ -24,6 +24,12 @@ export default function RequireAuth({
   allowUnverified = true,
   allowNoPhone = false,
 }: Props) {
+  console.log("🔐🔐🔐 RequireAuth RENDERIZADO 🔐🔐🔐", {
+    allowIncomplete,
+    allowUnverified,
+    allowNoPhone
+  })
+  
   const router = useRouter()
   const pathname = usePathname()
   const { user, loading, refreshUser } = useAuth()
