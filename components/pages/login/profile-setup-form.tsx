@@ -278,17 +278,20 @@ export function ProfileSetupForm() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    console.log("🔥🔥🔥 HANDLESUBMIT LLAMADO 🔥🔥🔥")
+    console.log("🔥🔥🔥 [1] HANDLESUBMIT LLAMADO 🔥🔥🔥")
+    console.log("🔥🔥🔥 [1] Event type:", e.type)
+    console.log("🔥🔥🔥 [1] Target:", e.target)
     
     // ⚡ CRÍTICO: preventDefault ANTES de cualquier otra cosa
     e.preventDefault()
-    console.log("✅ preventDefault ejecutado")
+    console.log("✅ [2] preventDefault ejecutado")
     
     e.stopPropagation()
-    console.log("✅ stopPropagation ejecutado")
+    console.log("✅ [3] stopPropagation ejecutado")
     
     try {
       setGeneralError("")
+      console.log("✅ [4] Iniciando validación...")
       logger.log("[ProfileSetup] 🚀 Form submitted, iniciando validación...")
 
       // Validación completa - SOLO campos que tienen validación
@@ -300,30 +303,41 @@ export function ProfileSetupForm() {
         if (error) errors[key] = error
       })
 
+      console.log("✅ [5] Validación completada, errores:", Object.keys(errors).length)
+
       if (Object.keys(errors).length > 0) {
+        console.log("❌ [6] HAY ERRORES DE VALIDACIÓN:", errors)
         setFieldErrors(errors)
         setGeneralError("Por favor completa todos los campos correctamente")
         logger.warn("[ProfileSetup] ❌ Errores de validación:", errors)
         return
       }
 
+      console.log("✅ [7] Validación exitosa, llamando handleUploadAndSaveProfile...")
       logger.log("[ProfileSetup] ✅ Validación exitosa, procediendo a guardar...")
       await handleUploadAndSaveProfile()
+      console.log("✅ [8] handleUploadAndSaveProfile completado")
     } catch (err: any) {
+      console.error("❌ [ERROR] Error crítico en handleSubmit:", err)
       logger.error("[ProfileSetup] ❌ Error crítico en handleSubmit:", err)
       setGeneralError(`Error inesperado: ${err?.message ?? "Por favor intenta nuevamente"}`)
     }
   }
 
   async function handleUploadAndSaveProfile() {
+    console.log("🚀 [9] handleUploadAndSaveProfile INICIADO")
+    
     if (!formData.photo) {
+      console.log("❌ [10] NO HAY FOTO")
       setGeneralError("Foto requerida")
       return
     }
 
+    console.log("✅ [11] Foto presente, setIsUploading(true)")
     setIsUploading(true)
     setGeneralError("")
     try {
+      console.log("✅ [12] Entrando en try block")
       // ⚡ CORREGIDO: Leer de sessionStorage (verify-email ahora guarda ahí)
       let verifiedEmail: string | null = null
       let passwordHash: string | null = null
@@ -486,21 +500,27 @@ export function ProfileSetupForm() {
 
         // ⚡ CRÍTICO: NO refrescar usuario aquí para evitar race conditions con guards
         // El usuario se cargará automáticamente en la siguiente página por AuthProvider.init
+        console.log("✅ [ACTUALIZACIÓN-1] Perfil actualizado en backend")
         logger.log("[ProfileSetup] ✅ Perfil actualizado en backend")
         
         // ⚡ CRÍTICO: Marcar que estamos navegando para que RequireIncompleteProfile no interfiera
+        console.log("✅ [ACTUALIZACIÓN-2] Seteando flag profileSetupNavigating")
         sessionStorage.setItem('profileSetupNavigating', 'true')
         
         // Pequeño delay para asegurar sincronización
+        console.log("✅ [ACTUALIZACIÓN-3] Esperando 300ms...")
         await new Promise(resolve => setTimeout(resolve, 300))
 
         // ⚡ DECISIÓN DE FLUJO: Verificar si tiene celular configurado
         // Como NO refrescamos usuario, debemos verificar llamando al backend directamente
+        console.log("✅ [ACTUALIZACIÓN-4] Verificando estado del perfil con getMe()...")
         logger.log("[ProfileSetup] Verificando estado del perfil...")
         const checkRes = await UsuarioAPI.getMe()
+        console.log("✅ [ACTUALIZACIÓN-5] Respuesta de getMe():", checkRes)
         
         if (checkRes?.success && checkRes.data) {
           const updatedUser = checkRes.data
+          console.log("✅ [ACTUALIZACIÓN-6] Usuario verificado:", updatedUser)
           logger.log("[ProfileSetup] ✅ Estado verificado:", {
             email: updatedUser.email,
             perfilCompleto: updatedUser.perfilCompleto,
@@ -508,15 +528,19 @@ export function ProfileSetupForm() {
           })
           
           const hasCelular = updatedUser.celular && updatedUser.celular.trim() !== ""
+          console.log("✅ [ACTUALIZACIÓN-7] hasCelular:", hasCelular)
           
           if (hasCelular) {
+            console.log("🏠 [ACTUALIZACIÓN-8] Redirigiendo a /home...")
             logger.log("[ProfileSetup] ✅ Usuario tiene celular configurado, redirigiendo a /home")
             router.replace('/home')
           } else {
+            console.log("📱 [ACTUALIZACIÓN-9] Redirigiendo a /phone-verification...")
             logger.log("[ProfileSetup] ⚠️ Usuario sin celular, redirigiendo a /phone-verification")
             router.replace('/phone-verification')
           }
         } else {
+          console.error("❌ [ACTUALIZACIÓN-ERROR] Error en respuesta getMe:", checkRes)
           logger.error("[ProfileSetup] ❌ Error verificando estado del usuario")
           throw new Error("No se pudo verificar la actualización. Por favor, intenta nuevamente.")
         }
