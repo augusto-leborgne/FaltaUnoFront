@@ -18,12 +18,17 @@ import ReactCrop, { type Crop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
 
 export function ProfileSetupForm() {
+  console.log("🎨 ProfileSetupForm RENDERIZADO")
+  
   const router = useRouter()
   const { user, setUser, refreshUser } = useAuth()
   const postAuthRedirect = usePostAuthRedirect()
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const cameraInputRef = useRef<HTMLInputElement | null>(null) // ⚡ NUEVO: Input para cámara
   const formRef = useRef<HTMLFormElement | null>(null) // ⚡ Ref para el form
+
+  console.log("🎨 ProfileSetupForm - user:", user?.email)
+  console.log("🎨 ProfileSetupForm - formRef:", formRef.current)
 
   const [formData, setFormData] = useState({
     name: "",
@@ -861,7 +866,10 @@ export function ProfileSetupForm() {
             type="submit"
             disabled={isUploading}
             onClick={(e) => {
-              console.log("🔴 CLICK EN BOTÓN SUBMIT DETECTADO")
+              console.log("🔴🔴🔴 CLICK EN BOTÓN SUBMIT DETECTADO 🔴🔴🔴")
+              console.log("🔴 Event:", e)
+              console.log("🔴 isUploading:", isUploading)
+              console.log("🔴 disabled:", isUploading)
             }}
             className="w-full bg-primary hover:bg-primary/90 text-white py-6 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
