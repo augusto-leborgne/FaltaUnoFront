@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 import { Smartphone, CheckCircle, AlertCircle, Shield, Users } from "lucide-react";
-import { UsuarioAPI } from "@/lib/api";
+import { UsuarioAPI, API_URL } from "@/lib/api";
 import { AuthService } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
 import { logger } from "@/lib/logger";
@@ -32,6 +32,43 @@ export function PhoneVerificationScreen() {
   const [error, setError] = React.useState("");
   const [fieldError, setFieldError] = React.useState("");
   const [showCountryDropdown, setShowCountryDropdown] = React.useState(false);
+  const [isCheckingPhone, setIsCheckingPhone] = React.useState(false);
+  const [phoneCheckDebounce, setPhoneCheckDebounce] = React.useState<NodeJS.Timeout | null>(null);
+
+  // Verificar si el teléfono ya está registrado
+  const checkPhoneAvailability = React.useCallback(async (fullPhone: string) => {
+    if (!fullPhone || fullPhone.length < 10) return;
+
+    setIsCheckingPhone(true);
+    try {
+      const response = await fetch(`${API_URL}/auth/check-phone?phone=${encodeURIComponent(fullPhone)}`);
+      const data = await response.json();
+
+      if (data.success && data.data) {
+        if (data.data.exists) {
+          setFieldError("Este número ya está registrado por otro usuario");
+        } else {
+          // Teléfono disponible, limpiar error de existencia
+          if (fieldError === "Este número ya está registrado por otro usuario") {
+            setFieldError("");
+          }
+        }
+      }
+    } catch (err) {
+      logger.error("[PhoneVerification] Error checking phone:", err);
+    } finally {
+      setIsCheckingPhone(false);
+    }
+  }, [fieldError]);
+
+  // Cleanup debounce
+  React.useEffect(() => {
+    return () => {
+      if (phoneCheckDebounce) {
+        clearTimeout(phoneCheckDebounce);
+      }
+    };
+  }, [phoneCheckDebounce]);
 
   // Validar número de teléfono
   const validatePhoneNumber = (value: string): string | null => {
@@ -55,6 +92,19 @@ export function PhoneVerificationScreen() {
     setPhoneNumber(cleaned);
     const validationError = validatePhoneNumber(cleaned);
     setFieldError(validationError || "");
+
+    // Verificar disponibilidad con debounce
+    if (phoneCheckDebounce) {
+      clearTimeout(phoneCheckDebounce);
+    }
+
+    if (!validationError && cleaned) {
+      const timeout = setTimeout(() => {
+        const fullPhone = `${countryCode}${cleaned.replace(/\s/g, '')}`;
+        checkPhoneAvailability(fullPhone);
+      }, 800);
+      setPhoneCheckDebounce(timeout);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

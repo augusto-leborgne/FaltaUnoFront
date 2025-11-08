@@ -14,6 +14,7 @@ import { AuthService } from "@/lib/auth"
 import { useAuth } from "@/hooks/use-auth"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { PhotoCache } from "@/lib/photo-cache"
+import { API_URL } from "@/lib/api"
 
 const positions = ["Arquero", "Defensa", "Mediocampista", "Delantero"]
 
@@ -65,6 +66,48 @@ export function SettingsScreen() {
     height?: string
     weight?: string
   }>({})
+
+  const [isCheckingPhone, setIsCheckingPhone] = useState(false)
+  const [phoneCheckDebounce, setPhoneCheckDebounce] = useState<NodeJS.Timeout | null>(null)
+
+  // Verificar si el teléfono ya está registrado
+  const checkPhoneAvailability = async (phone: string) => {
+    if (!phone || phone.length < 8) return;
+
+    setIsCheckingPhone(true);
+    try {
+      const response = await fetch(`${API_URL}/auth/check-phone?phone=${encodeURIComponent(phone)}`);
+      const data = await response.json();
+
+      if (data.success && data.data) {
+        if (data.data.exists) {
+          setFieldErrors(prev => ({ ...prev, phone: "Este número ya está registrado por otro usuario" }));
+        } else {
+          // Teléfono disponible, limpiar error de existencia
+          setFieldErrors(prev => {
+            if (prev.phone === "Este número ya está registrado por otro usuario") {
+              const { phone, ...rest } = prev;
+              return rest;
+            }
+            return prev;
+          });
+        }
+      }
+    } catch (err) {
+      logger.error("[Settings] Error checking phone:", err);
+    } finally {
+      setIsCheckingPhone(false);
+    }
+  };
+
+  // Cleanup debounce
+  useEffect(() => {
+    return () => {
+      if (phoneCheckDebounce) {
+        clearTimeout(phoneCheckDebounce);
+      }
+    };
+  }, [phoneCheckDebounce]);
 
   // ✅ NUEVO: Validar campos
   const validateField = (field: string, value: any): string | null => {
@@ -164,6 +207,20 @@ export function SettingsScreen() {
     if (field === 'phone' || field === 'height' || field === 'weight') {
       const fieldError = validateField(field, value)
       setFieldErrors(prev => ({ ...prev, [field]: fieldError || undefined }))
+      
+      // Verificar disponibilidad de teléfono con debounce
+      if (field === 'phone') {
+        if (phoneCheckDebounce) {
+          clearTimeout(phoneCheckDebounce);
+        }
+        
+        if (!fieldError && value && value !== originalFormData.phone) {
+          const timeout = setTimeout(() => {
+            checkPhoneAvailability(value);
+          }, 800);
+          setPhoneCheckDebounce(timeout);
+        }
+      }
     }
   }
 
