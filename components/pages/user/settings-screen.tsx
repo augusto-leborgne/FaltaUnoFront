@@ -15,7 +15,7 @@ import { useAuth } from "@/hooks/use-auth"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { PhotoCache } from "@/lib/photo-cache"
 
-const positions = ["Portero", "Defensa", "Mediocampista", "Delantero"]
+const positions = ["Arquero", "Defensa", "Mediocampista", "Delantero"]
 
 export function SettingsScreen() {
   const router = useRouter()
