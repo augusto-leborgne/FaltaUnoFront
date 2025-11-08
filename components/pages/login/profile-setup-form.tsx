@@ -73,6 +73,7 @@ export function ProfileSetupForm() {
   const imageRef = useRef<HTMLImageElement | null>(null)
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({})
+  const hasPrefilled = useRef(false) // ⚡ Track if we already prefilled from user data
 
   // Códigos de país más comunes en Latinoamérica
   const countryCodes = [
@@ -164,43 +165,46 @@ export function ProfileSetupForm() {
   useEffect(() => {
     // Prefill form data from existing authenticated user to avoid losing inputs
     // This helps when the app redirects back to profile-setup (e.g., after phone verify)
+    // ⚡ ONLY RUN ONCE to prevent infinite re-renders
+    if (hasPrefilled.current || !user) return;
+    
     try {
-      if (user) {
-        setFormData((prev) => {
-          // ⚡ CAMBIO: Pre-rellenar campos individuales que estén vacíos
-          // NO usar shouldPrefill global porque si un campo tiene valor pero otro no,
-          // hay que rellenar solo el que falta
-          
-          // Extract phone without country code if possible
-          let phoneOnly = prev.phone;
-          let countryCode = prev.countryCode;
-          if ((user as any).celular) {
-            const cleaned = (user as any).celular.trim();
-            const match = cleaned.match(/^(\+\d{1,4})\s*(.*)$/);
-            if (match) {
-              countryCode = match[1];
-              phoneOnly = match[2];
-            } else {
-              phoneOnly = cleaned;
-            }
+      hasPrefilled.current = true; // Mark as prefilled
+      
+      setFormData((prev) => {
+        // ⚡ CAMBIO: Pre-rellenar campos individuales que estén vacíos
+        // NO usar shouldPrefill global porque si un campo tiene valor pero otro no,
+        // hay que rellenar solo el que falta
+        
+        // Extract phone without country code if possible
+        let phoneOnly = prev.phone;
+        let countryCode = prev.countryCode;
+        if ((user as any).celular) {
+          const cleaned = (user as any).celular.trim();
+          const match = cleaned.match(/^(\+\d{1,4})\s*(.*)$/);
+          if (match) {
+            countryCode = match[1];
+            phoneOnly = match[2];
+          } else {
+            phoneOnly = cleaned;
           }
+        }
 
-          return {
-            ...prev,
-            // Pre-rellenar cada campo SI está vacío
-            name: prev.name || (user as any).nombre || (user as any).name || "",
-            surname: prev.surname || (user as any).apellido || "",
-            phone: phoneOnly || prev.phone,
-            countryCode: countryCode || prev.countryCode,
-            fechaNacimiento: prev.fechaNacimiento || (user as any).fechaNacimiento || (user as any).fecha_nacimiento || "",
-            genero: prev.genero || (user as any).genero || "",
-            position: prev.position || (user as any).posicion || (user as any).position || "",
-            height: prev.height || ((user as any).altura ? String((user as any).altura) : ""),
-            weight: prev.weight || ((user as any).peso ? String((user as any).peso) : ""),
-            address: prev.address || (user as any).direccion || (user as any).ubicacion || "",
-          }
-        })
-      }
+        return {
+          ...prev,
+          // Pre-rellenar cada campo SI está vacío
+          name: prev.name || (user as any).nombre || (user as any).name || "",
+          surname: prev.surname || (user as any).apellido || "",
+          phone: phoneOnly || prev.phone,
+          countryCode: countryCode || prev.countryCode,
+          fechaNacimiento: prev.fechaNacimiento || (user as any).fechaNacimiento || (user as any).fecha_nacimiento || "",
+          genero: prev.genero || (user as any).genero || "",
+          position: prev.position || (user as any).posicion || (user as any).position || "",
+          height: prev.height || ((user as any).altura ? String((user as any).altura) : ""),
+          weight: prev.weight || ((user as any).peso ? String((user as any).peso) : ""),
+          address: prev.address || (user as any).direccion || (user as any).ubicacion || "",
+        }
+      })
     } catch (e) {
       logger.error('[ProfileSetup] Error prefill desde user:', e)
     }
