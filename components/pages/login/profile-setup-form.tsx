@@ -20,6 +20,13 @@ import 'react-image-crop/dist/ReactCrop.css'
 export function ProfileSetupForm() {
   console.log("🎨 ProfileSetupForm RENDERIZADO")
   
+  // ⚡ ALERTA VISIBLE PARA CONFIRMAR QUE EL CÓDIGO SE EJECUTA
+  if (typeof window !== 'undefined') {
+    setTimeout(() => {
+      console.log("🚨🚨🚨 COMPONENTE MONTADO - SI VES ESTO, LOS LOGS FUNCIONAN 🚨🚨🚨")
+    }, 100)
+  }
+  
   const router = useRouter()
   const { user, setUser, refreshUser } = useAuth()
   const postAuthRedirect = usePostAuthRedirect()
