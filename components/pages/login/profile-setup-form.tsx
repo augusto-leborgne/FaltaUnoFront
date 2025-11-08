@@ -74,6 +74,7 @@ export function ProfileSetupForm() {
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({})
   const hasPrefilled = useRef(false) // ⚡ Track if we already prefilled from user data
+  const isInitialMount = useRef(true) // ⚡ Track first mount
 
   // Códigos de país más comunes en Latinoamérica
   const countryCodes = [
@@ -165,12 +166,17 @@ export function ProfileSetupForm() {
   useEffect(() => {
     // Prefill form data from existing authenticated user to avoid losing inputs
     // This helps when the app redirects back to profile-setup (e.g., after phone verify)
-    // ⚡ ONLY RUN ONCE to prevent infinite re-renders
-    if (hasPrefilled.current || !user) return;
+    // ⚡ CRITICAL FIX: Run ONLY ONCE on initial mount to prevent infinite re-renders
+    if (!isInitialMount.current) return; // Not first mount
+    if (hasPrefilled.current) return; // Already prefilled
+    if (!user) return; // No user data
+    
+    isInitialMount.current = false; // Mark that we've run once
+    hasPrefilled.current = true; // Mark as prefilled
+    
+    console.log("🔧 [PREFILL] Running ONCE on initial mount");
     
     try {
-      hasPrefilled.current = true; // Mark as prefilled
-      
       setFormData((prev) => {
         // ⚡ CAMBIO: Pre-rellenar campos individuales que estén vacíos
         // NO usar shouldPrefill global porque si un campo tiene valor pero otro no,
@@ -208,7 +214,8 @@ export function ProfileSetupForm() {
     } catch (e) {
       logger.error('[ProfileSetup] Error prefill desde user:', e)
     }
-  }, [user])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // ⚡ EMPTY DEPS - Run ONLY on mount
 
   useEffect(() => {
     return () => {
