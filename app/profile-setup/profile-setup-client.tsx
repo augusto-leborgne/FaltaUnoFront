@@ -6,7 +6,7 @@ import RequireIncompleteProfile from "@/components/auth/require-incomplete-profi
 
 export default function ProfileSetupClient() {
   return (
-    <RequireAuthClientOnly>
+    <RequireAuthClientOnly allowIncomplete allowUnverified allowNoPhone>
       <RequireIncompleteProfile>
         <ProfileSetupForm/>
       </RequireIncompleteProfile>
