@@ -34,8 +34,8 @@ export default function RequireIncompleteProfile({children}:{children:React.Reac
   const { user, loading } = useAuth()
 
   useEffect(()=>{
-    // ⚡ CRITICAL FIX: Only run on initial mount to avoid render loops
-    // Do NOT run when user changes
+    // ⚡ CRITICAL FIX v4: Run when user changes BUT guard against redirect loops
+    // Only redirect if we're NOT already on the target page
     if (loading) {
       return
     }
@@ -53,11 +53,15 @@ export default function RequireIncompleteProfile({children}:{children:React.Reac
     
     const incomplete = isIncomplete(user)
     
-    if (!incomplete) { 
-      router.replace("/home"); 
+    if (!incomplete) {
+      // ⚡ GUARD: Only redirect if we're currently ON /profile-setup
+      // This prevents redirecting when user updates their profile elsewhere
+      if (typeof window !== 'undefined' && window.location.pathname === '/profile-setup') {
+        router.replace("/home")
+      }
       return 
     }
-  },[loading]) // ⚡ REMOVED: user, router
+  },[user, loading, router]) // ⚡ FIX v4: Re-added all deps
 
   if (loading) return null
   return <>{children}</>

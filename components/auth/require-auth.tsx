@@ -29,8 +29,8 @@ export default function RequireAuth({
   const { user, loading } = useAuth()
 
   useEffect(() => {
-    // ⚡ CRITICAL FIX: Only run on initial mount or when pathname changes
-    // Do NOT run when user changes to avoid render loops
+    // ⚡ CRITICAL FIX v4: Run when user changes BUT only redirect if NECESSARY
+    // Use guards to prevent redirecting FROM the page we're trying to send them TO
     if (loading) {
       logger.log(`[RequireAuth:${pathname}] Loading...`)
       return
@@ -91,7 +91,7 @@ export default function RequireAuth({
     }
 
     logger.log(`[RequireAuth:${pathname}] ✓ Verificación completa, permitiendo acceso`)
-  }, [loading, pathname]) // ⚡ REMOVED: user, router, allowIncomplete, allowUnverified, allowNoPhone
+  }, [user, loading, pathname, router, allowIncomplete, allowUnverified, allowNoPhone]) // ⚡ FIX v4: Re-added all deps
 
   if (loading || !user) {
     return (
