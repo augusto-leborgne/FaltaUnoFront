@@ -30,48 +30,34 @@ const isIncomplete = (u:any)=>{
 }
 
 export default function RequireIncompleteProfile({children}:{children:React.ReactNode}) {
-  console.log("🛡️🛡️🛡️ RequireIncompleteProfile RENDERIZADO 🛡️🛡️🛡️")
-  
   const router = useRouter()
   const { user, loading } = useAuth()
 
   useEffect(()=>{
-    console.log("🛡️ [RequireIncompleteProfile] useEffect disparado:", { 
-      loading, 
-      hasUser: !!user,
-      userEmail: user?.email,
-      perfilCompleto: user?.perfilCompleto 
-    })
-    
+    // ⚡ CRITICAL FIX: Only run on initial mount to avoid render loops
+    // Do NOT run when user changes
     if (loading) {
-      console.log("🛡️ [RequireIncompleteProfile] Loading... retornando")
       return
     }
     
     if (!user) { 
-      console.log("🛡️ [RequireIncompleteProfile] No user, redirigiendo a /login")
       router.replace("/login"); 
       return 
     }
     
     // ⚡ CRÍTICO: Si el formulario está navegando, NO interferir con el redirect
     if (typeof window !== 'undefined' && sessionStorage.getItem('profileSetupNavigating') === 'true') {
-      console.log("🛡️ [RequireIncompleteProfile] ⚡ FLAG DETECTADO - Form está navegando, permitiendo...")
-      sessionStorage.removeItem('profileSetupNavigating') // Limpiar flag
+      sessionStorage.removeItem('profileSetupNavigating')
       return
     }
     
     const incomplete = isIncomplete(user)
-    console.log("🛡️ [RequireIncompleteProfile] isIncomplete:", incomplete)
     
     if (!incomplete) { 
-      console.log("🛡️ [RequireIncompleteProfile] Perfil completo, redirigiendo a /home")
       router.replace("/home"); 
       return 
     }
-    
-    console.log("🛡️ [RequireIncompleteProfile] Todo OK, mostrando children")
-  },[user,loading,router])
+  },[loading]) // ⚡ REMOVED: user, router
 
   if (loading) return null
   return <>{children}</>

@@ -18,24 +18,12 @@ import ReactCrop, { type Crop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
 
 export function ProfileSetupForm() {
-  console.log("🎨 ProfileSetupForm RENDERIZADO")
-  
-  // ⚡ ALERTA VISIBLE PARA CONFIRMAR QUE EL CÓDIGO SE EJECUTA
-  if (typeof window !== 'undefined') {
-    setTimeout(() => {
-      console.log("🚨🚨🚨 COMPONENTE MONTADO - SI VES ESTO, LOS LOGS FUNCIONAN 🚨🚨🚨")
-    }, 100)
-  }
-  
   const router = useRouter()
   const { user, setUser, refreshUser } = useAuth()
   const postAuthRedirect = usePostAuthRedirect()
   const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const cameraInputRef = useRef<HTMLInputElement | null>(null) // ⚡ NUEVO: Input para cámara
-  const formRef = useRef<HTMLFormElement | null>(null) // ⚡ Ref para el form
-
-  console.log("🎨 ProfileSetupForm - user:", user?.email)
-  console.log("🎨 ProfileSetupForm - formRef:", formRef.current)
+  const cameraInputRef = useRef<HTMLInputElement | null>(null)
+  const formRef = useRef<HTMLFormElement | null>(null)
 
   const [formData, setFormData] = useState({
     name: "",
@@ -165,16 +153,13 @@ export function ProfileSetupForm() {
 
   useEffect(() => {
     // Prefill form data from existing authenticated user to avoid losing inputs
-    // This helps when the app redirects back to profile-setup (e.g., after phone verify)
     // ⚡ CRITICAL FIX: Run ONLY ONCE on initial mount to prevent infinite re-renders
-    if (!isInitialMount.current) return; // Not first mount
-    if (hasPrefilled.current) return; // Already prefilled
-    if (!user) return; // No user data
+    if (!isInitialMount.current) return;
+    if (hasPrefilled.current) return;
+    if (!user) return;
     
-    isInitialMount.current = false; // Mark that we've run once
-    hasPrefilled.current = true; // Mark as prefilled
-    
-    console.log("🔧 [PREFILL] Running ONCE on initial mount");
+    isInitialMount.current = false;
+    hasPrefilled.current = true;
     
     try {
       setFormData((prev) => {
@@ -308,17 +293,12 @@ export function ProfileSetupForm() {
     
     // ⚡ CRÍTICO: preventDefault ANTES de cualquier otra cosa
     e.preventDefault()
-    console.log("✅ [2] preventDefault ejecutado")
-    
     e.stopPropagation()
-    console.log("✅ [3] stopPropagation ejecutado")
     
     try {
       setGeneralError("")
-      console.log("✅ [4] Iniciando validación...")
-      logger.log("[ProfileSetup] 🚀 Form submitted, iniciando validación...")
+      logger.log("[ProfileSetup] Form submitted")
 
-      // Validación completa - SOLO campos que tienen validación
       const errors: Record<string, string> = {}
       const fieldsToValidate = ['name', 'surname', 'fechaNacimiento', 'genero', 'position', 'height', 'weight', 'photo', 'address']
       
@@ -327,41 +307,30 @@ export function ProfileSetupForm() {
         if (error) errors[key] = error
       })
 
-      console.log("✅ [5] Validación completada, errores:", Object.keys(errors).length)
-
       if (Object.keys(errors).length > 0) {
-        console.log("❌ [6] HAY ERRORES DE VALIDACIÓN:", errors)
         setFieldErrors(errors)
         setGeneralError("Por favor completa todos los campos correctamente")
-        logger.warn("[ProfileSetup] ❌ Errores de validación:", errors)
+        logger.warn("[ProfileSetup] Validation errors:", errors)
         return
       }
 
-      console.log("✅ [7] Validación exitosa, llamando handleUploadAndSaveProfile...")
-      logger.log("[ProfileSetup] ✅ Validación exitosa, procediendo a guardar...")
+      logger.log("[ProfileSetup] Validation OK, saving...")
       await handleUploadAndSaveProfile()
-      console.log("✅ [8] handleUploadAndSaveProfile completado")
     } catch (err: any) {
-      console.error("❌ [ERROR] Error crítico en handleSubmit:", err)
-      logger.error("[ProfileSetup] ❌ Error crítico en handleSubmit:", err)
+      logger.error("[ProfileSetup] Submit error:", err)
       setGeneralError(`Error inesperado: ${err?.message ?? "Por favor intenta nuevamente"}`)
     }
   }
 
   async function handleUploadAndSaveProfile() {
-    console.log("🚀 [9] handleUploadAndSaveProfile INICIADO")
-    
     if (!formData.photo) {
-      console.log("❌ [10] NO HAY FOTO")
       setGeneralError("Foto requerida")
       return
     }
 
-    console.log("✅ [11] Foto presente, setIsUploading(true)")
     setIsUploading(true)
     setGeneralError("")
     try {
-      console.log("✅ [12] Entrando en try block")
       // ⚡ CORREGIDO: Leer de sessionStorage (verify-email ahora guarda ahí)
       let verifiedEmail: string | null = null
       let passwordHash: string | null = null
@@ -373,26 +342,19 @@ export function ProfileSetupForm() {
             const parsed = JSON.parse(pendingData)
             verifiedEmail = parsed.email
             passwordHash = parsed.passwordHash
-            logger.log("[ProfileSetup] ✅ Datos leídos de sessionStorage:", { email: verifiedEmail })
           } catch (e) {
-            logger.error("[ProfileSetup] Error parseando pendingVerification:", e)
+            logger.error("[ProfileSetup] Error parsing pendingVerification:", e)
           }
         }
       }
       
       const isNewRegistration = !!(verifiedEmail && passwordHash)
-      
-      console.log("🔀 [BRANCH-1] isNewRegistration:", isNewRegistration)
-      console.log("🔀 [BRANCH-2] verifiedEmail:", verifiedEmail)
-      console.log("🔀 [BRANCH-3] passwordHash:", passwordHash ? "PRESENTE" : "NULL")
+      logger.log("[ProfileSetup] Mode:", isNewRegistration ? "NEW REGISTRATION" : "PROFILE UPDATE")
 
-      // Construir teléfono completo con código de país
       const fullPhone = `${formData.countryCode}${formData.phone}`
 
-      logger.log("[ProfileSetup] Modo:", isNewRegistration ? "NUEVO REGISTRO" : "ACTUALIZACIÓN DE PERFIL")
-
       if (isNewRegistration) {
-        logger.log("[ProfileSetup] Completando registro para:", verifiedEmail)
+        logger.log("[ProfileSetup] Completing registration for:", verifiedEmail)
         
         const photoBase64 = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader()
@@ -400,9 +362,6 @@ export function ProfileSetupForm() {
           reader.onerror = reject
           reader.readAsDataURL(formData.photo!)
         })
-        
-        console.log("📸 [FOTO-1] Foto convertida a Base64:", photoBase64 ? `${photoBase64.length} caracteres` : "NULL")
-        logger.log("[ProfileSetup] Foto Base64:", photoBase64 ? `${photoBase64.length} chars` : "NULL")
 
         const payload = {
           email: verifiedEmail,
@@ -410,7 +369,6 @@ export function ProfileSetupForm() {
           password: passwordHash,
           nombre: formData.name,
           apellido: formData.surname,
-          // celular no se envía aquí - se pedirá en paso posterior
           fechaNacimiento: formData.fechaNacimiento,
           genero: formData.genero,
           posicion: formData.position,
@@ -421,10 +379,6 @@ export function ProfileSetupForm() {
           direccion: formData.address,
           placeDetails: formData.placeDetails ? JSON.stringify(formData.placeDetails) : null,
         }
-
-        console.log("📸 [FOTO-2] Payload preparado con fotoPerfil:", payload.fotoPerfil ? `${payload.fotoPerfil.length} chars` : "NULL")
-        logger.log("[ProfileSetup] Enviando a /api/auth/complete-register...")
-        logger.log("[ProfileSetup] Payload (sin foto):", { ...payload, fotoPerfil: payload.fotoPerfil ? `${payload.fotoPerfil.length} chars` : null })
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/complete-register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -437,66 +391,36 @@ export function ProfileSetupForm() {
         }
 
         const data = await response.json()
-        console.log("📸 [FOTO-3] Respuesta del servidor:", data)
         
         if (!data.success || !data.data) {
           throw new Error(data.message || 'Error al completar el registro')
         }
 
-        // ⚡ CORREGIDO: Limpiar sessionStorage (no localStorage)
         sessionStorage.removeItem('pendingVerification')
 
         const { token, usuario } = data.data
         
-        console.log("📸 [FOTO-4] Usuario recibido del servidor:", {
-          email: usuario.email,
-          hasFotoPerfil: usuario.hasFotoPerfil,
-          fotoPerfil: usuario.fotoPerfil ? `${usuario.fotoPerfil.length} chars` : null,
-          perfilCompleto: usuario.perfilCompleto
-        })
-        
         if (token) {
-          logger.log("[ProfileSetup] ✅ Token recibido, guardando...")
           AuthService.setToken(token)
         } else {
-          logger.warn("[ProfileSetup] ⚠️ No se recibió token del servidor")
+          logger.warn("[ProfileSetup] No token received")
         }
 
-        // ⚡ CRÍTICO: NO actualizar usuario aquí para evitar que RequireIncompleteProfile 
-        // detecte cambios y redirija. El usuario se actualizará en la siguiente página.
-        logger.log("[ProfileSetup] ✅ Usuario recibido del backend (NO se actualiza contexto aún):", {
-          id: usuario.id,
-          email: usuario.email,
-          nombre: usuario.nombre,
-          apellido: usuario.apellido,
-          perfilCompleto: usuario.perfilCompleto,
-          celular: usuario.celular
-        })
+        logger.log("[ProfileSetup] Registration completed")
         
-        // NO HACER: AuthService.setUser(usuario) ni setUser(usuario)
-
-        logger.log("[ProfileSetup] ✅ Registro completado exitosamente")
-        
-        // ⚡ CRÍTICO: Marcar que estamos navegando para que RequireIncompleteProfile no interfiera
         sessionStorage.setItem('profileSetupNavigating', 'true')
-        
-        // Pequeño delay para asegurar que el token se guarde
         await new Promise(resolve => setTimeout(resolve, 300))
         
-        // ⚡ DECISIÓN DE FLUJO: Verificar si tiene celular configurado
         const hasCelular = usuario.celular && usuario.celular.trim() !== ""
         
         if (hasCelular) {
-          logger.log("[ProfileSetup] ✅ Usuario tiene celular configurado, redirigiendo a /home")
           router.replace('/home')
         } else {
-          logger.log("[ProfileSetup] ⚠️ Usuario sin celular, redirigiendo a /phone-verification")
           router.replace('/phone-verification')
         }
 
       } else {
         const token = AuthService.getToken()
-        logger.log("[ProfileSetup] Token disponible:", token ? "SÍ" : "NO")
         if (!token) {
           setGeneralError("No estás autenticado. Por favor, inicia sesión nuevamente.")
           setTimeout(() => router.replace("/login"), 2000)
@@ -509,21 +433,17 @@ export function ProfileSetupForm() {
           return
         }
 
-        logger.log("[ProfileSetup] Subiendo foto...")
         const fotoRes = await UsuarioAPI.subirFoto(formData.photo)
-        logger.log("[ProfileSetup] Respuesta subir foto:", fotoRes)
         if (!fotoRes?.success) {
           const errorMsg = fotoRes?.message || "No se pudo subir la foto"
-          logger.error("[ProfileSetup] Error subiendo foto:", errorMsg)
+          logger.error("[ProfileSetup] Photo upload error:", errorMsg)
           throw new Error(errorMsg)
         }
 
-        logger.log("[ProfileSetup] Actualizando perfil...")
         const payload: any = {
           nombre: formData.name,
           apellido: formData.surname,
-          // celular no se envía aquí - se pedirá en paso posterior  
-          fecha_nacimiento: formData.fechaNacimiento, // ⚡ Backend espera snake_case
+          fecha_nacimiento: formData.fechaNacimiento,
           genero: formData.genero,
           posicion: formData.position,
           altura: String(formData.height),
@@ -531,26 +451,16 @@ export function ProfileSetupForm() {
           direccion: formData.address,
           placeDetails: formData.placeDetails ? JSON.stringify(formData.placeDetails) : null,
         }
-        logger.log("[ProfileSetup] Payload a enviar:", payload)
         const perfilRes = await UsuarioAPI.actualizarPerfil(payload)
-        logger.log("[ProfileSetup] Respuesta actualizar perfil:", perfilRes)
         if (!perfilRes?.success) {
           const errorMsg = perfilRes?.message || "No se pudo actualizar el perfil"
-          logger.error("[ProfileSetup] Error actualizando perfil:", errorMsg)
+          logger.error("[ProfileSetup] Profile update error:", errorMsg)
           throw new Error(errorMsg)
         }
 
-        // ⚡ CRÍTICO: NO refrescar usuario aquí para evitar race conditions con guards
-        // El usuario se cargará automáticamente en la siguiente página por AuthProvider.init
-        console.log("✅ [ACTUALIZACIÓN-1] Perfil actualizado en backend")
-        logger.log("[ProfileSetup] ✅ Perfil actualizado en backend")
+        logger.log("[ProfileSetup] Profile updated")
         
-        // ⚡ CRÍTICO: Marcar que estamos navegando para que RequireIncompleteProfile no interfiera
-        console.log("✅ [ACTUALIZACIÓN-2] Seteando flag profileSetupNavigating")
         sessionStorage.setItem('profileSetupNavigating', 'true')
-        
-        // Pequeño delay para asegurar sincronización
-        console.log("✅ [ACTUALIZACIÓN-3] Esperando 300ms...")
         await new Promise(resolve => setTimeout(resolve, 300))
 
         // ⚡ DECISIÓN DE FLUJO: Verificar si tiene celular configurado
@@ -914,12 +824,6 @@ export function ProfileSetupForm() {
           <button
             type="submit"
             disabled={isUploading}
-            onClick={(e) => {
-              console.log("🔴🔴🔴 CLICK EN BOTÓN SUBMIT DETECTADO 🔴🔴🔴")
-              console.log("🔴 Event:", e)
-              console.log("🔴 isUploading:", isUploading)
-              console.log("🔴 disabled:", isUploading)
-            }}
             className="w-full bg-primary hover:bg-primary/90 text-white py-6 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isUploading ? (
