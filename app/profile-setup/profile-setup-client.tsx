@@ -2,14 +2,11 @@
 
 import { RequireAuthClientOnly } from "@/components/auth/client-only-wrapper";
 import { ProfileSetupForm } from "@/components/pages/login/profile-setup-form";
-import RequireIncompleteProfile from "@/components/auth/require-incomplete-profile";
 
 export default function ProfileSetupClient() {
   return (
     <RequireAuthClientOnly allowIncomplete allowUnverified allowNoPhone>
-      <RequireIncompleteProfile>
-        <ProfileSetupForm/>
-      </RequireIncompleteProfile>
+      <ProfileSetupForm/>
     </RequireAuthClientOnly>
   );
 }

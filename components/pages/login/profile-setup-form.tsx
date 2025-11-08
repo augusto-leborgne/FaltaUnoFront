@@ -410,16 +410,24 @@ export function ProfileSetupForm() {
 
         logger.log("[ProfileSetup] Registration completed")
         
+        // ⚡ CRITICAL FIX: Update context with user data from registration
+        setUser(usuario)
+        
         // Navigation flag already set at the beginning of function
         await new Promise(resolve => setTimeout(resolve, 200))
         
         const hasCelular = usuario.celular && usuario.celular.trim() !== ""
+        const isComplete = usuario.perfilCompleto === true
         
-        if (hasCelular) {
-          logger.log("[ProfileSetup] Has phone, redirecting to /home")
+        // ⚡ ROBUST FLOW: Only redirect to /home if BOTH profile is complete AND has phone
+        if (hasCelular && isComplete) {
+          logger.log("[ProfileSetup] Registration complete with phone, redirecting to /home")
           router.replace('/home')
+        } else if (hasCelular && !isComplete) {
+          logger.warn("[ProfileSetup] Registration has phone but profile incomplete - staying")
+          setGeneralError("Por favor completa todos los campos requeridos")
         } else {
-          logger.log("[ProfileSetup] No phone, redirecting to /phone-verification")
+          logger.log("[ProfileSetup] Registration complete, no phone - redirecting to /phone-verification")
           router.replace('/phone-verification')
         }
 
@@ -496,11 +504,19 @@ export function ProfileSetupForm() {
             celular: updatedUser.celular
           })
           
-          const hasCelular = updatedUser.celular && updatedUser.celular.trim() !== ""
+          // ⚡ CRITICAL FIX: Update context with latest user data to prevent redirect loops
+          setUser(updatedUser)
           
-          if (hasCelular) {
-            logger.log("[ProfileSetup] Has phone, redirecting to /home")
+          const hasCelular = updatedUser.celular && updatedUser.celular.trim() !== ""
+          const isComplete = updatedUser.perfilCompleto === true
+          
+          // ⚡ ROBUST FLOW: Only redirect to /home if BOTH profile is complete AND has phone
+          if (hasCelular && isComplete) {
+            logger.log("[ProfileSetup] Profile complete with phone, redirecting to /home")
             router.replace('/home')
+          } else if (hasCelular && !isComplete) {
+            logger.warn("[ProfileSetup] Has phone but profile incomplete - staying on /profile-setup")
+            setGeneralError("Por favor completa todos los campos requeridos")
           } else {
             logger.log("[ProfileSetup] No phone, redirecting to /phone-verification")
             router.replace('/phone-verification')

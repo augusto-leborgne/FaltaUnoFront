@@ -106,9 +106,16 @@ export function PhoneVerificationScreen() {
           // Small delay for user to see success message
           await new Promise(resolve => setTimeout(resolve, 500));
           
-          // Redirect to home with updated state
-          logger.log("[PhoneVerification] Redirecting to /home");
-          router.replace("/home");
+          // ⚡ CRITICAL FIX: Only redirect to /home if profile is COMPLETE
+          const isComplete = refreshed.perfilCompleto === true
+          
+          if (isComplete) {
+            logger.log("[PhoneVerification] Profile complete, redirecting to /home");
+            router.replace("/home");
+          } else {
+            logger.warn("[PhoneVerification] Phone updated but profile incomplete, redirecting to /profile-setup");
+            router.replace("/profile-setup");
+          }
         } else {
           logger.error("[PhoneVerification] Failed to refresh user from server");
           throw new Error("No se pudo verificar la actualización. Por favor, intenta nuevamente.");

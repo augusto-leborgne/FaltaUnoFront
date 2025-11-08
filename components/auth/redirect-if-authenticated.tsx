@@ -7,10 +7,14 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 function isProfileIncomplete(u: any | null | undefined) {
   if (!u) return true
-  if (u.perfilCompleto === false) return true
+  
+  // ⚡ CRITICAL: Use explicit perfilCompleto flag from backend
   if (u.perfilCompleto === true) return false
-  // heurística básica si no hay flag explícito
-  return !(u.nombre && u.apellido && (u.foto_perfil || u.fotoPerfil))
+  if (u.perfilCompleto === false) return true
+  
+  // Fallback heurística si no hay flag explícito
+  const hasPhoto = u.hasFotoPerfil ?? u.foto_perfil ?? u.fotoPerfil
+  return !(u.nombre && u.apellido && hasPhoto)
 }
 
 function needsIdVerification(u: any | null | undefined) {
