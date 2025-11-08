@@ -406,25 +406,26 @@ export function ProfileSetupForm() {
           logger.warn("[ProfileSetup] ⚠️ No se recibió token del servidor")
         }
 
-        // ⚡ NUEVO: Usar el usuario devuelto por el backend directamente
-        logger.log("[ProfileSetup] ✅ Usuario recibido del backend:", {
+        // ⚡ CRÍTICO: NO actualizar usuario aquí para evitar que RequireIncompleteProfile 
+        // detecte cambios y redirija. El usuario se actualizará en phone-verification.
+        logger.log("[ProfileSetup] ✅ Usuario recibido del backend (NO se actualiza contexto aún):", {
           id: usuario.id,
           email: usuario.email,
           nombre: usuario.nombre,
           apellido: usuario.apellido,
-          perfilCompleto: usuario.perfilCompleto
+          perfilCompleto: usuario.perfilCompleto,
+          celular: usuario.celular
         })
         
-        // Guardar usuario con los datos del backend
-        AuthService.setUser(usuario)
-        setUser(usuario)
+        // NO HACER: AuthService.setUser(usuario) ni setUser(usuario)
 
         logger.log("[ProfileSetup] ✅ Registro completado exitosamente, redirigiendo a phone-verification")
         
-        // Pequeño delay para asegurar que localStorage se actualice
+        // Pequeño delay para asegurar que el token se guarde
         await new Promise(resolve => setTimeout(resolve, 300))
         
         // Redirigir a verificación de celular (replace para no permitir volver atrás)
+        logger.log("[ProfileSetup] 🚀 Navegando a /phone-verification...")
         router.replace('/phone-verification')
 
       } else {
