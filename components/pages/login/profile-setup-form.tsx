@@ -374,6 +374,10 @@ export function ProfileSetupForm() {
       }
       
       const isNewRegistration = !!(verifiedEmail && passwordHash)
+      
+      console.log("🔀 [BRANCH-1] isNewRegistration:", isNewRegistration)
+      console.log("🔀 [BRANCH-2] verifiedEmail:", verifiedEmail)
+      console.log("🔀 [BRANCH-3] passwordHash:", passwordHash ? "PRESENTE" : "NULL")
 
       // Construir teléfono completo con código de país
       const fullPhone = `${formData.countryCode}${formData.phone}`
