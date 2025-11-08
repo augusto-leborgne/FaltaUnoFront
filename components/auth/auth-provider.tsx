@@ -206,27 +206,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setLoading(false); // ⚡ Desbloquear UI inmediatamente
         }
         
-        // ⚡ CRÍTICO: Revalidar desde servidor en background para sincronizar datos
+        // ⚡ Revalidar desde servidor en background solo si es necesario
         // Usar requestIdleCallback para no bloquear la renderización inicial
         const revalidate = async () => {
-          logger.log("[AuthProvider] Revalidating user in background...");
           try {
             const serverUser = await AuthService.fetchCurrentUser();
             if (serverUser && mountedRef.current) {
-              logger.log("[AuthProvider] User updated from server:", serverUser.email);
-              setUserState(serverUser);
+              // Solo actualizar si hubo cambios
+              if (JSON.stringify(serverUser) !== JSON.stringify(localUser)) {
+                setUserState(serverUser);
+              }
             }
           } catch (err) {
-            logger.warn("[AuthProvider] Revalidation failed (keeping cache):", err);
-            // No hacer nada - mantener usuario local
+            // Mantener usuario local en caso de error
           }
         }
         
-        // Use requestIdleCallback if available, otherwise setTimeout
+        // Esperar 2 segundos antes de revalidar en background
         if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-          (window as any).requestIdleCallback(revalidate, { timeout: 2000 });
+          (window as any).requestIdleCallback(revalidate, { timeout: 3000 });
         } else {
-          setTimeout(revalidate, 100);
+          setTimeout(revalidate, 2000);
         }
         
         return;
@@ -296,31 +296,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     window.addEventListener("storage", onStorage);
     
-    // ⚡ NUEVO: Revalidación periódica cada 10 minutos (aumentado de 5)
+    // ⚡ Revalidación periódica cada 15 minutos
     // Esto asegura que el perfil esté siempre sincronizado sin sobrecarga
     const revalidationInterval = setInterval(async () => {
-      if (!mountedRef.current) return; // ⚡ FIX: Verificar si el componente está montado
+      if (!mountedRef.current) return;
       
-      // CRÍTICO: No revalidar si estamos en proceso de logout
+      // No revalidar si estamos en proceso de logout
       if (typeof window !== "undefined" && sessionStorage.getItem("isLoggingOut") === "true") {
-        logger.log("[AuthProvider] Logout en progreso, saltando revalidación");
         return;
       }
       
       const token = AuthService.getToken();
       if (!token || isLoggingOut) return;
       
-      logger.log("[AuthProvider] Revalidación periódica del usuario...");
       try {
         const serverUser = await AuthService.fetchCurrentUser();
         if (serverUser && mountedRef.current) {
-          logger.log("[AuthProvider] Usuario revalidado exitosamente");
           setUserState(serverUser);
         }
       } catch (err) {
-        logger.warn("[AuthProvider] Error en revalidación periódica:", err);
+        // Silently fail - mantener usuario local
       }
-    }, 10 * 60 * 1000); // 10 minutos (aumentado de 5)
+    }, 15 * 60 * 1000); // 15 minutos
 
     return () => {
       mountedRef.current = false;

@@ -516,19 +516,6 @@ export function ProfileSetupForm() {
           const hasCelular = updatedUser.celular && updatedUser.celular.trim() !== ""
           const isComplete = updatedUser.perfilCompleto === true
           
-          console.log("🔍 [ProfileSetup] POST-UPDATE CHECK:", {
-            perfilCompleto: updatedUser.perfilCompleto,
-            hasCelular,
-            isComplete,
-            nextAction: (hasCelular && isComplete) ? "GO_HOME" : hasCelular ? "STAY" : "GO_PHONE",
-            // ⚡ DEBUG: Ver campos individuales
-            nombre: updatedUser.nombre,
-            apellido: updatedUser.apellido,
-            fechaNacimiento: updatedUser.fechaNacimiento,
-            hasFotoPerfil: updatedUser.hasFotoPerfil,
-            fotoPerfil: updatedUser.fotoPerfil ? `${updatedUser.fotoPerfil.substring(0, 20)}...` : null
-          })
-          
           // ⚡ ROBUST FLOW: Only redirect to /home if BOTH profile is complete AND has phone
           if (hasCelular && isComplete) {
             logger.log("[ProfileSetup] Profile complete with phone, redirecting to /home")
