@@ -40,6 +40,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     const ONBOARDING_ROUTES = ['/profile-setup', '/phone-verification', '/verification']
     const isOnboardingRoute = ONBOARDING_ROUTES.some(route => pathname?.startsWith(route))
     
+    console.log(`🔍 [ProtectedRoute:${pathname}] isOnboardingRoute: ${isOnboardingRoute}, ONBOARDING_ROUTES:`, ONBOARDING_ROUTES)
+    
     if (!isOnboardingRoute) {
       const user = AuthService.getUser()
       
