@@ -484,33 +484,30 @@ export function ProfileSetupForm() {
           throw new Error(errorMsg)
         }
 
-        // ⚡ NUEVO: Refrescar usuario INMEDIATAMENTE desde el servidor después de actualizar
-        logger.log("[ProfileSetup] ✅ Perfil actualizado en backend, refrescando desde servidor...")
+        // ⚡ CRÍTICO: NO refrescar usuario aquí para evitar race conditions con guards
+        // El usuario se cargará automáticamente en la siguiente página por AuthProvider.init
+        logger.log("[ProfileSetup] ✅ Perfil actualizado en backend")
         
-        // ⚡ CRÍTICO: Marcar que estamos navegando ANTES de refreshUser para evitar race condition
+        // ⚡ CRÍTICO: Marcar que estamos navegando para que RequireIncompleteProfile no interfiera
         sessionStorage.setItem('profileSetupNavigating', 'true')
         
-        const refreshed = await refreshUser()
+        // Pequeño delay para asegurar sincronización
+        await new Promise(resolve => setTimeout(resolve, 300))
+
+        // ⚡ DECISIÓN DE FLUJO: Verificar si tiene celular configurado
+        // Como NO refrescamos usuario, debemos verificar llamando al backend directamente
+        logger.log("[ProfileSetup] Verificando estado del perfil...")
+        const checkRes = await UsuarioAPI.getMe()
         
-        if (refreshed) {
-          logger.log("[ProfileSetup] ✅ Usuario refrescado desde servidor:", {
-            email: refreshed.email,
-            nombre: refreshed.nombre,
-            apellido: refreshed.apellido,
-            perfilCompleto: refreshed.perfilCompleto,
-            celular: refreshed.celular
+        if (checkRes?.success && checkRes.data) {
+          const updatedUser = checkRes.data
+          logger.log("[ProfileSetup] ✅ Estado verificado:", {
+            email: updatedUser.email,
+            perfilCompleto: updatedUser.perfilCompleto,
+            celular: updatedUser.celular
           })
           
-          // ⚡ CRÍTICO: NO actualizar contexto aquí para evitar que RequireIncompleteProfile 
-          // detecte el perfil completo y redirija a /home
-          // El usuario se actualizará cuando llegue a la siguiente página
-          // setUser(refreshed) <-- REMOVIDO
-          
-          // Pequeño delay para asegurar que el backend esté sincronizado
-          await new Promise(resolve => setTimeout(resolve, 300))
-
-          // ⚡ DECISIÓN DE FLUJO: Verificar si tiene celular configurado
-          const hasCelular = refreshed.celular && refreshed.celular.trim() !== ""
+          const hasCelular = updatedUser.celular && updatedUser.celular.trim() !== ""
           
           if (hasCelular) {
             logger.log("[ProfileSetup] ✅ Usuario tiene celular configurado, redirigiendo a /home")
@@ -520,7 +517,7 @@ export function ProfileSetupForm() {
             router.replace('/phone-verification')
           }
         } else {
-          logger.error("[ProfileSetup] ❌ Error: no se pudo refrescar usuario desde servidor")
+          logger.error("[ProfileSetup] ❌ Error verificando estado del usuario")
           throw new Error("No se pudo verificar la actualización. Por favor, intenta nuevamente.")
         }
       }
