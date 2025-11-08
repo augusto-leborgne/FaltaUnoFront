@@ -29,6 +29,18 @@ export default function RequireAuth({
   const { user, loading } = useAuth()
 
   useEffect(() => {
+    // ⚡ DEBUG: Log when useEffect runs
+    console.log(`🔍 [RequireAuth:${pathname}] useEffect EJECUTADO`, {
+      loading,
+      hasUser: !!user,
+      allowIncomplete,
+      allowUnverified,
+      allowNoPhone,
+      userEmail: user?.email,
+      perfilCompleto: user?.perfilCompleto,
+      celular: user?.celular
+    })
+    
     // ⚡ CRITICAL FIX v4: Run when user changes BUT only redirect if NECESSARY
     // Use guards to prevent redirecting FROM the page we're trying to send them TO
     if (loading) {

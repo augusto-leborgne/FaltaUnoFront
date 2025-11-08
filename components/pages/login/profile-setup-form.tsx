@@ -288,10 +288,6 @@ export function ProfileSetupForm() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    console.log("🔥🔥🔥 [1] HANDLESUBMIT LLAMADO 🔥🔥🔥")
-    console.log("🔥🔥🔥 [1] Event type:", e.type)
-    console.log("🔥🔥🔥 [1] Target:", e.target)
-    
     // ⚡ CRÍTICO: preventDefault ANTES de cualquier otra cosa
     e.preventDefault()
     e.stopPropagation()

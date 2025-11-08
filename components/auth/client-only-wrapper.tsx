@@ -26,12 +26,6 @@ export function RequireAuthClientOnly({
   allowUnverified?: boolean
   allowNoPhone?: boolean
 }) {
-  console.log("🔒🔒🔒 RequireAuthClientOnly RENDERIZADO 🔒🔒🔒", {
-    allowIncomplete,
-    allowUnverified,
-    allowNoPhone
-  })
-  
   return (
     <RequireAuth 
       allowIncomplete={allowIncomplete} 

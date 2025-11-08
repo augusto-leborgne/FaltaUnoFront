@@ -236,20 +236,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const serverUser = await AuthService.fetchCurrentUser();
         if (serverUser) {
-          logger.log("[AuthProvider] Usuario restaurado desde servidor:", serverUser.email);
-          console.log("🔄 [AuthProvider.init] setUserState llamado (init servidor) con:", {
-            email: serverUser.email,
-            perfilCompleto: serverUser.perfilCompleto,
-            celular: serverUser.celular
-          });
+          logger.log("[AuthProvider] User restored from server:", serverUser.email);
           if (mountedRef.current) setUserState(serverUser);
         } else {
-          logger.log("[AuthProvider] Token no validado por servidor, limpiando");
+          logger.log("[AuthProvider] Token not validated, cleaning up");
           AuthService.logout();
           if (mountedRef.current) setUserState(null);
         }
       } catch (err) {
-        logger.warn("[AuthProvider] Error al validar token con servidor:", err);
+        logger.warn("[AuthProvider] Validation error:", err);
         AuthService.logout();
         if (mountedRef.current) setUserState(null);
       } finally {
