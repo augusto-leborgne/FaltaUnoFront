@@ -537,10 +537,12 @@ export function ProfileSetupForm() {
         
         if (checkRes?.success && checkRes.data) {
           const updatedUser = checkRes.data
-          console.log("✅ [ACTUALIZACIÓN-6] Usuario verificado:", updatedUser)
+          console.log("✅ [ACTUALIZACIÓN-6] Usuario verificado (COMPLETO):", JSON.stringify(updatedUser, null, 2))
           logger.log("[ProfileSetup] ✅ Estado verificado:", {
             email: updatedUser.email,
             perfilCompleto: updatedUser.perfilCompleto,
+            hasFotoPerfil: updatedUser.hasFotoPerfil,
+            fotoPerfil: updatedUser.fotoPerfil ? `${updatedUser.fotoPerfil.substring(0, 20)}...` : null,
             celular: updatedUser.celular
           })
           
