@@ -534,15 +534,27 @@ export function ProfileSetupForm() {
           
           const hasCelular = updatedUser.celular && updatedUser.celular.trim() !== ""
           console.log("✅ [ACTUALIZACIÓN-7] hasCelular:", hasCelular)
+          console.log("✅ [ACTUALIZACIÓN-7.5] updatedUser.celular:", updatedUser.celular)
+          console.log("✅ [ACTUALIZACIÓN-7.6] Iniciando navegación...")
           
           if (hasCelular) {
-            console.log("🏠 [ACTUALIZACIÓN-8] Redirigiendo a /home...")
+            console.log("🏠 [ACTUALIZACIÓN-8] ANTES DE router.replace('/home')")
             logger.log("[ProfileSetup] ✅ Usuario tiene celular configurado, redirigiendo a /home")
+            
+            // ⚡ Agregar delay mínimo para asegurar que el flag se persista
+            await new Promise(resolve => setTimeout(resolve, 100))
+            console.log("🏠 [ACTUALIZACIÓN-8.5] EJECUTANDO router.replace('/home')")
             router.replace('/home')
+            console.log("🏠 [ACTUALIZACIÓN-8.9] DESPUÉS DE router.replace('/home') - esto NO debería ejecutarse inmediatamente")
           } else {
-            console.log("📱 [ACTUALIZACIÓN-9] Redirigiendo a /phone-verification...")
+            console.log("📱 [ACTUALIZACIÓN-9] ANTES DE router.replace('/phone-verification')")
             logger.log("[ProfileSetup] ⚠️ Usuario sin celular, redirigiendo a /phone-verification")
+            
+            // ⚡ Agregar delay mínimo para asegurar que el flag se persista
+            await new Promise(resolve => setTimeout(resolve, 100))
+            console.log("📱 [ACTUALIZACIÓN-9.5] EJECUTANDO router.replace('/phone-verification')")
             router.replace('/phone-verification')
+            console.log("📱 [ACTUALIZACIÓN-9.9] DESPUÉS DE router.replace - esto NO debería ejecutarse inmediatamente")
           }
         } else {
           console.error("❌ [ACTUALIZACIÓN-ERROR] Error en respuesta getMe:", checkRes)

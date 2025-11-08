@@ -29,14 +29,24 @@ export default function RequireAuth({
   const { user, loading, refreshUser } = useAuth()
 
   useEffect(() => {
+    console.log(`🔐 [RequireAuth:${pathname}] useEffect disparado`, {
+      loading,
+      hasUser: !!user,
+      userEmail: user?.email,
+      allowIncomplete,
+      allowNoPhone
+    })
+    
     if (loading) {
       logger.log(`[RequireAuth:${pathname}] Loading...`)
+      console.log(`🔐 [RequireAuth:${pathname}] Loading... retornando`)
       return
     }
 
     const token = AuthService.getToken()
     if (!token || AuthService.isTokenExpired(token)) {
       logger.log(`[RequireAuth:${pathname}] Token inválido o expirado, redirigiendo a /login`)
+      console.log(`🔐 [RequireAuth:${pathname}] Token inválido, redirigiendo a /login`)
       AuthService.logout()
       router.replace("/login")
       return
@@ -45,6 +55,7 @@ export default function RequireAuth({
     // Si no hay user todavía, quedate (render del loader abajo)
     if (!user) {
       logger.log(`[RequireAuth:${pathname}] Esperando usuario...`)
+      console.log(`🔐 [RequireAuth:${pathname}] No user, esperando...`)
       return
     }
 
@@ -57,14 +68,29 @@ export default function RequireAuth({
       allowUnverified,
       allowNoPhone
     })
+    
+    console.log(`🔐 [RequireAuth:${pathname}] Usuario verificado:`, {
+      email: user.email,
+      perfilCompleto: user.perfilCompleto,
+      celular: user.celular,
+      hasBasicFields: !!(user.nombre && user.apellido)
+    })
 
     // ⚡ CRÍTICO: Validación mejorada de perfil incompleto
     // Considerar incompleto si perfilCompleto no es true O faltan campos básicos
     const hasBasicFields = user.nombre && user.apellido
     const isProfileComplete = user.perfilCompleto === true
     
+    console.log(`🔐 [RequireAuth:${pathname}] Verificando perfil:`, {
+      hasBasicFields,
+      isProfileComplete,
+      allowIncomplete,
+      shouldCheckProfile: !allowIncomplete
+    })
+    
     if (!allowIncomplete && (!isProfileComplete || !hasBasicFields)) {
       if (pathname !== "/profile-setup") {
+        console.log(`🔐 [RequireAuth:${pathname}] ⚠️ Perfil incompleto, llamando refreshUser()...`)
         logger.log(`[RequireAuth:${pathname}] Perfil incompleto detectado, revalidando antes de redirigir...`, {
           perfilCompleto: user.perfilCompleto,
           hasBasicFields
@@ -74,10 +100,17 @@ export default function RequireAuth({
             const freshHasBasicFields = freshUser.nombre && freshUser.apellido
             const freshIsComplete = freshUser.perfilCompleto === true
             
+            console.log(`🔐 [RequireAuth:${pathname}] refreshUser resultado:`, {
+              freshHasBasicFields,
+              freshIsComplete
+            })
+            
             if (!freshIsComplete || !freshHasBasicFields) {
+              console.log(`🔐 [RequireAuth:${pathname}] 🚨 REDIRIGIENDO A /profile-setup`)
               logger.log(`[RequireAuth:${pathname}] Confirmado: perfil incompleto, redirigiendo a /profile-setup`)
               router.replace("/profile-setup")
             } else {
+              console.log(`🔐 [RequireAuth:${pathname}] ✅ Perfil completo tras revalidación`)
               logger.log(`[RequireAuth:${pathname}] ✓ Perfil completo tras revalidación, permitiendo acceso`)
             }
           }
@@ -90,8 +123,16 @@ export default function RequireAuth({
 
     // ⚡ NUEVO: Verificar que tenga celular (obligatorio)
     const hasCelular = user.celular && user.celular.trim() !== ""
+    console.log(`🔐 [RequireAuth:${pathname}] Verificando celular:`, {
+      hasCelular,
+      celular: user.celular,
+      allowNoPhone,
+      shouldCheckPhone: !allowNoPhone
+    })
+    
     if (!allowNoPhone && !hasCelular) {
       if (pathname !== "/phone-verification") {
+        console.log(`🔐 [RequireAuth:${pathname}] 🚨 REDIRIGIENDO A /phone-verification (sin celular)`)
         logger.log(`[RequireAuth:${pathname}] Celular faltante, redirigiendo a /phone-verification`)
         router.replace("/phone-verification")
       }
@@ -109,6 +150,7 @@ export default function RequireAuth({
       */
     }
 
+    console.log(`🔐 [RequireAuth:${pathname}] ✅ TODAS LAS VERIFICACIONES PASARON - Permitiendo acceso`)
     logger.log(`[RequireAuth:${pathname}] ✓ Verificación completa, permitiendo acceso`)
     // Importante: no redirigir a "/" nunca acá.
   }, [user, loading, router, pathname, allowIncomplete, allowUnverified, allowNoPhone, refreshUser])

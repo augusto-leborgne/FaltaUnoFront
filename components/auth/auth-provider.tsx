@@ -78,6 +78,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (serverUser) {
         logger.log("[AuthProvider] Usuario actualizado desde servidor:", serverUser.email);
+        console.log("🔄 [AuthProvider.refreshUser] setUserState llamado con:", {
+          email: serverUser.email,
+          perfilCompleto: serverUser.perfilCompleto,
+          celular: serverUser.celular
+        });
         setUserState(serverUser);
         return serverUser;
       }
@@ -86,6 +91,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const localUser = AuthService.getUser();
       if (localUser && !AuthService.isTokenExpired(token)) {
         logger.log("[AuthProvider] Usando usuario desde localStorage");
+        console.log("🔄 [AuthProvider.refreshUser] setUserState llamado (localStorage) con:", {
+          email: localUser.email,
+          perfilCompleto: localUser.perfilCompleto
+        });
         setUserState(localUser);
         return localUser;
       } else {
@@ -202,6 +211,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // No esperar validación del servidor para mostrar UI
       if (localUser && !AuthService.isTokenExpired(token)) {
         logger.log("[AuthProvider] Restaurando sesión desde localStorage:", localUser.email);
+        console.log("🔄 [AuthProvider.init] setUserState llamado (init localStorage) con:", {
+          email: localUser.email,
+          perfilCompleto: localUser.perfilCompleto,
+          celular: localUser.celular
+        });
         if (mountedRef.current) {
           setUserState(localUser);
           setLoading(false); // ⚡ Desbloquear UI inmediatamente
@@ -215,6 +229,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const serverUser = await AuthService.fetchCurrentUser();
             if (serverUser && mountedRef.current) {
               logger.log("[AuthProvider] ✅ Usuario actualizado desde servidor:", serverUser.email);
+              console.log("🔄 [AuthProvider.revalidate] setUserState llamado (revalidate) con:", {
+                email: serverUser.email,
+                perfilCompleto: serverUser.perfilCompleto,
+                celular: serverUser.celular
+              });
               setUserState(serverUser);
             }
           } catch (err) {
@@ -238,6 +257,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const serverUser = await AuthService.fetchCurrentUser();
         if (serverUser) {
           logger.log("[AuthProvider] Usuario restaurado desde servidor:", serverUser.email);
+          console.log("🔄 [AuthProvider.init] setUserState llamado (init servidor) con:", {
+            email: serverUser.email,
+            perfilCompleto: serverUser.perfilCompleto,
+            celular: serverUser.celular
+          });
           if (mountedRef.current) setUserState(serverUser);
         } else {
           logger.log("[AuthProvider] Token no validado por servidor, limpiando");
