@@ -452,6 +452,7 @@ export function ProfileSetupForm() {
           throw new Error(errorMsg)
         }
 
+        // ⚡ CRITICAL: Preserve celular if it exists to avoid backend overwriting with null
         const payload: any = {
           nombre: formData.name,
           apellido: formData.surname,
@@ -462,6 +463,11 @@ export function ProfileSetupForm() {
           peso: String(formData.weight),
           direccion: formData.address,
           placeDetails: formData.placeDetails ? JSON.stringify(formData.placeDetails) : null,
+        }
+        
+        // ⚡ CRITICAL FIX: Include existing celular to prevent backend from nullifying it
+        if (user?.celular) {
+          payload.celular = user.celular
         }
         
         // ⚡ IMPROVED: Use retry logic for critical profile update
