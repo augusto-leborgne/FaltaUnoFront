@@ -389,6 +389,9 @@ export function ProfileSetupForm() {
           reader.onerror = reject
           reader.readAsDataURL(formData.photo!)
         })
+        
+        console.log("📸 [FOTO-1] Foto convertida a Base64:", photoBase64 ? `${photoBase64.length} caracteres` : "NULL")
+        logger.log("[ProfileSetup] Foto Base64:", photoBase64 ? `${photoBase64.length} chars` : "NULL")
 
         const payload = {
           email: verifiedEmail,
@@ -408,7 +411,9 @@ export function ProfileSetupForm() {
           placeDetails: formData.placeDetails ? JSON.stringify(formData.placeDetails) : null,
         }
 
+        console.log("📸 [FOTO-2] Payload preparado con fotoPerfil:", payload.fotoPerfil ? `${payload.fotoPerfil.length} chars` : "NULL")
         logger.log("[ProfileSetup] Enviando a /api/auth/complete-register...")
+        logger.log("[ProfileSetup] Payload (sin foto):", { ...payload, fotoPerfil: payload.fotoPerfil ? `${payload.fotoPerfil.length} chars` : null })
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/complete-register`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -421,6 +426,8 @@ export function ProfileSetupForm() {
         }
 
         const data = await response.json()
+        console.log("📸 [FOTO-3] Respuesta del servidor:", data)
+        
         if (!data.success || !data.data) {
           throw new Error(data.message || 'Error al completar el registro')
         }
@@ -429,6 +436,13 @@ export function ProfileSetupForm() {
         sessionStorage.removeItem('pendingVerification')
 
         const { token, usuario } = data.data
+        
+        console.log("📸 [FOTO-4] Usuario recibido del servidor:", {
+          email: usuario.email,
+          hasFotoPerfil: usuario.hasFotoPerfil,
+          fotoPerfil: usuario.fotoPerfil ? `${usuario.fotoPerfil.length} chars` : null,
+          perfilCompleto: usuario.perfilCompleto
+        })
         
         if (token) {
           logger.log("[ProfileSetup] ✅ Token recibido, guardando...")
