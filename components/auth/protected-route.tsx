@@ -35,40 +35,15 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       return
     }
 
-    // ✅ FIX: Solo verificar perfil completo si NO estamos en rutas de onboarding
-    // Esto previene loops infinitos en el flujo de completar perfil
-    const ONBOARDING_ROUTES = ['/profile-setup', '/phone-verification', '/verification']
-    const isOnboardingRoute = ONBOARDING_ROUTES.some(route => pathname?.startsWith(route))
+    // ✅ IMPORTANTE: NO validar perfilCompleto aquí
+    // Cada página usa RequireAuth con sus propios props (allowIncomplete, etc.)
+    // Si validamos aquí, causamos loops infinitos en el flujo de onboarding
     
-    console.log(`🔍 [ProtectedRoute:${pathname}] isOnboardingRoute: ${isOnboardingRoute}, ONBOARDING_ROUTES:`, ONBOARDING_ROUTES)
-    
-    if (!isOnboardingRoute) {
-      const user = AuthService.getUser()
-      
-      // ⚡ CRÍTICO: Validación de perfil incompleto
-      // Considerar incompleto si:
-      // 1. perfilCompleto es explícitamente false
-      // 2. perfilCompleto es undefined/null (nuevo usuario)
-      // 3. Faltan campos críticos (nombre o apellido)
-      
-      const hasBasicFields = user?.nombre && user?.apellido
-      const isProfileComplete = user?.perfilCompleto === true
-      
-      if (user && (!isProfileComplete || !hasBasicFields)) {
-        logger.debug('[ProtectedRoute] Perfil incompleto, redirigiendo a profile-setup', {
-          perfilCompleto: user.perfilCompleto,
-          hasNombre: !!user.nombre,
-          hasApellido: !!user.apellido
-        })
-        router.push('/profile-setup')
-        return
-      }
-      
-      // ✅ NUEVO: Prefetch de datos comunes una vez autenticado
-      prefetchCommonData()
-      if (user?.id) {
-        prefetchUserData(user.id)
-      }
+    // ✅ Prefetch de datos comunes una vez autenticado
+    const user = AuthService.getUser()
+    prefetchCommonData()
+    if (user?.id) {
+      prefetchUserData(user.id)
     }
   }, [pathname, router])
 
