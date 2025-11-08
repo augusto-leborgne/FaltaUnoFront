@@ -32,7 +32,7 @@ export default function RequireAuth({
   
   const router = useRouter()
   const pathname = usePathname()
-  const { user, loading, refreshUser } = useAuth()
+  const { user, loading } = useAuth()
 
   useEffect(() => {
     console.log(`🔐 [RequireAuth:${pathname}] useEffect disparado`, {
@@ -94,35 +94,16 @@ export default function RequireAuth({
       shouldCheckProfile: !allowIncomplete
     })
     
+    // ⚡ SIMPLIFICADO: No llamar refreshUser() aquí - AuthProvider ya lo hace en background
+    // Evitamos race conditions y loops infinitos
     if (!allowIncomplete && (!isProfileComplete || !hasBasicFields)) {
       if (pathname !== "/profile-setup") {
-        console.log(`🔐 [RequireAuth:${pathname}] ⚠️ Perfil incompleto, llamando refreshUser()...`)
-        logger.log(`[RequireAuth:${pathname}] Perfil incompleto detectado, revalidando antes de redirigir...`, {
+        console.log(`🔐 [RequireAuth:${pathname}] 🚨 Perfil incompleto - REDIRIGIENDO A /profile-setup`)
+        logger.log(`[RequireAuth:${pathname}] Perfil incompleto, redirigiendo a /profile-setup`, {
           perfilCompleto: user.perfilCompleto,
           hasBasicFields
         })
-        refreshUser().then((freshUser) => {
-          if (freshUser) {
-            const freshHasBasicFields = freshUser.nombre && freshUser.apellido
-            const freshIsComplete = freshUser.perfilCompleto === true
-            
-            console.log(`🔐 [RequireAuth:${pathname}] refreshUser resultado:`, {
-              freshHasBasicFields,
-              freshIsComplete
-            })
-            
-            if (!freshIsComplete || !freshHasBasicFields) {
-              console.log(`🔐 [RequireAuth:${pathname}] 🚨 REDIRIGIENDO A /profile-setup`)
-              logger.log(`[RequireAuth:${pathname}] Confirmado: perfil incompleto, redirigiendo a /profile-setup`)
-              router.replace("/profile-setup")
-            } else {
-              console.log(`🔐 [RequireAuth:${pathname}] ✅ Perfil completo tras revalidación`)
-              logger.log(`[RequireAuth:${pathname}] ✓ Perfil completo tras revalidación, permitiendo acceso`)
-            }
-          }
-        }).catch(err => {
-          logger.error(`[RequireAuth:${pathname}] Error revalidando usuario:`, err)
-        })
+        router.replace("/profile-setup")
       }
       return
     }
@@ -159,7 +140,7 @@ export default function RequireAuth({
     console.log(`🔐 [RequireAuth:${pathname}] ✅ TODAS LAS VERIFICACIONES PASARON - Permitiendo acceso`)
     logger.log(`[RequireAuth:${pathname}] ✓ Verificación completa, permitiendo acceso`)
     // Importante: no redirigir a "/" nunca acá.
-  }, [user, loading, router, pathname, allowIncomplete, allowUnverified, allowNoPhone, refreshUser])
+  }, [user, loading, router, pathname, allowIncomplete, allowUnverified, allowNoPhone])
 
   if (loading || !user) {
     return (

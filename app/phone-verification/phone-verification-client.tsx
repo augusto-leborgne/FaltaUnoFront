@@ -5,7 +5,7 @@ import { PhoneVerificationScreen } from "@/components/pages/login/phone-verifica
 
 export default function PhoneVerificationClient() {
   return (
-    <RequireAuthClientOnly allowIncomplete={false} allowUnverified={true} allowNoPhone={true}>
+    <RequireAuthClientOnly allowIncomplete={true} allowUnverified={true} allowNoPhone={true}>
       <PhoneVerificationScreen />
     </RequireAuthClientOnly>
   )
