@@ -278,11 +278,14 @@ export function ProfileSetupForm() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log("🔥🔥🔥 HANDLESUBMIT LLAMADO 🔥🔥🔥")
+    
     // ⚡ CRÍTICO: preventDefault ANTES de cualquier otra cosa
-    console.log("🔥🔥🔥 HANDLESUBMIT LLAMADO - ANTES DE PREVENTDEFAULT 🔥🔥🔥")
     e.preventDefault()
+    console.log("✅ preventDefault ejecutado")
+    
     e.stopPropagation()
-    console.log("✅ preventDefault ejecutado exitosamente")
+    console.log("✅ stopPropagation ejecutado")
     
     try {
       setGeneralError("")
@@ -520,7 +523,9 @@ export function ProfileSetupForm() {
       <div className="max-w-2xl mx-auto px-6 py-8 pb-20">
         <form 
           ref={formRef}
-          onSubmit={handleSubmit} 
+          onSubmit={handleSubmit}
+          action="#"
+          method="post"
           className="space-y-6" 
         >
           {/* Foto de perfil - Diseño destacado */}
