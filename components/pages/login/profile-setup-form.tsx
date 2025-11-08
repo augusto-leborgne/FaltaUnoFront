@@ -328,6 +328,11 @@ export function ProfileSetupForm() {
       return
     }
 
+    // ⚡ IMPROVED: Set navigation flag IMMEDIATELY before any async operations
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('profileSetupNavigating', 'true')
+    }
+
     setIsUploading(true)
     setGeneralError("")
     try {
@@ -408,14 +413,16 @@ export function ProfileSetupForm() {
 
         logger.log("[ProfileSetup] Registration completed")
         
-        sessionStorage.setItem('profileSetupNavigating', 'true')
-        await new Promise(resolve => setTimeout(resolve, 300))
+        // Navigation flag already set at the beginning of function
+        await new Promise(resolve => setTimeout(resolve, 200))
         
         const hasCelular = usuario.celular && usuario.celular.trim() !== ""
         
         if (hasCelular) {
+          logger.log("[ProfileSetup] Has phone, redirecting to /home")
           router.replace('/home')
         } else {
+          logger.log("[ProfileSetup] No phone, redirecting to /phone-verification")
           router.replace('/phone-verification')
         }
 
@@ -460,60 +467,44 @@ export function ProfileSetupForm() {
 
         logger.log("[ProfileSetup] Profile updated")
         
-        sessionStorage.setItem('profileSetupNavigating', 'true')
-        await new Promise(resolve => setTimeout(resolve, 300))
+        // Navigation flag already set at the beginning of function
+        await new Promise(resolve => setTimeout(resolve, 200))
 
         // ⚡ DECISIÓN DE FLUJO: Verificar si tiene celular configurado
         // Como NO refrescamos usuario, debemos verificar llamando al backend directamente
-        console.log("✅ [ACTUALIZACIÓN-4] Verificando estado del perfil con getMe()...")
-        logger.log("[ProfileSetup] Verificando estado del perfil...")
+        logger.log("[ProfileSetup] Fetching updated profile state...")
         const checkRes = await UsuarioAPI.getMe()
-        console.log("✅ [ACTUALIZACIÓN-5] Respuesta de getMe():", checkRes)
         
         if (checkRes?.success && checkRes.data) {
           const updatedUser = checkRes.data
-          console.log("✅ [ACTUALIZACIÓN-6] Usuario verificado (COMPLETO):", JSON.stringify(updatedUser, null, 2))
-          logger.log("[ProfileSetup] ✅ Estado verificado:", {
+          logger.log("[ProfileSetup] Profile state verified:", {
             email: updatedUser.email,
             perfilCompleto: updatedUser.perfilCompleto,
             hasFotoPerfil: updatedUser.hasFotoPerfil,
-            fotoPerfil: updatedUser.fotoPerfil ? `${updatedUser.fotoPerfil.substring(0, 20)}...` : null,
             celular: updatedUser.celular
           })
           
           const hasCelular = updatedUser.celular && updatedUser.celular.trim() !== ""
-          console.log("✅ [ACTUALIZACIÓN-7] hasCelular:", hasCelular)
-          console.log("✅ [ACTUALIZACIÓN-7.5] updatedUser.celular:", updatedUser.celular)
-          console.log("✅ [ACTUALIZACIÓN-7.6] Iniciando navegación...")
           
           if (hasCelular) {
-            console.log("🏠 [ACTUALIZACIÓN-8] ANTES DE router.replace('/home')")
-            logger.log("[ProfileSetup] ✅ Usuario tiene celular configurado, redirigiendo a /home")
-            
-            // ⚡ Agregar delay mínimo para asegurar que el flag se persista
-            await new Promise(resolve => setTimeout(resolve, 100))
-            console.log("🏠 [ACTUALIZACIÓN-8.5] EJECUTANDO router.replace('/home')")
+            logger.log("[ProfileSetup] Has phone, redirecting to /home")
             router.replace('/home')
-            console.log("🏠 [ACTUALIZACIÓN-8.9] DESPUÉS DE router.replace('/home') - esto NO debería ejecutarse inmediatamente")
           } else {
-            console.log("📱 [ACTUALIZACIÓN-9] ANTES DE router.replace('/phone-verification')")
-            logger.log("[ProfileSetup] ⚠️ Usuario sin celular, redirigiendo a /phone-verification")
-            
-            // ⚡ Agregar delay mínimo para asegurar que el flag se persista
-            await new Promise(resolve => setTimeout(resolve, 100))
-            console.log("📱 [ACTUALIZACIÓN-9.5] EJECUTANDO router.replace('/phone-verification')")
+            logger.log("[ProfileSetup] No phone, redirecting to /phone-verification")
             router.replace('/phone-verification')
-            console.log("📱 [ACTUALIZACIÓN-9.9] DESPUÉS DE router.replace - esto NO debería ejecutarse inmediatamente")
           }
         } else {
-          console.error("❌ [ACTUALIZACIÓN-ERROR] Error en respuesta getMe:", checkRes)
-          logger.error("[ProfileSetup] ❌ Error verificando estado del usuario")
+          logger.error("[ProfileSetup] Failed to verify profile state:", checkRes)
           throw new Error("No se pudo verificar la actualización. Por favor, intenta nuevamente.")
         }
       }
     } catch (err: any) {
-      logger.error("[ProfileSetup] Error al guardar perfil:", err)
+      logger.error("[ProfileSetup] Error saving profile:", err)
       setGeneralError(`Error al guardar perfil: ${err?.message ?? "Intenta nuevamente"}`)
+      // ⚡ CLEANUP: Remove navigation flag on error
+      if (typeof window !== 'undefined') {
+        sessionStorage.removeItem('profileSetupNavigating')
+      }
     } finally {
       setIsUploading(false)
     }

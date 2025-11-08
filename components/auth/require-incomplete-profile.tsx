@@ -1,8 +1,9 @@
 // components/auth/require-incomplete-profile.tsx
 "use client"
 import { useEffect } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
+import { logger } from "@/lib/logger"
 
 const GRACE_WINDOW_MS = 2500 // 2.5s
 
@@ -31,37 +32,42 @@ const isIncomplete = (u:any)=>{
 
 export default function RequireIncompleteProfile({children}:{children:React.ReactNode}) {
   const router = useRouter()
+  const pathname = usePathname()
   const { user, loading } = useAuth()
 
   useEffect(()=>{
-    // ⚡ CRITICAL FIX v4: Run when user changes BUT guard against redirect loops
-    // Only redirect if we're NOT already on the target page
+    // ⚡ CRITICAL FIX v5: Use Next.js pathname instead of window.location for better routing
     if (loading) {
       return
     }
     
-    if (!user) { 
+    if (!user) {
+      logger.log("[RequireIncompleteProfile] No user, redirecting to login")
       router.replace("/login"); 
       return 
     }
     
     // ⚡ CRÍTICO: Si el formulario está navegando, NO interferir con el redirect
     if (typeof window !== 'undefined' && sessionStorage.getItem('profileSetupNavigating') === 'true') {
+      logger.log("[RequireIncompleteProfile] Navigation flag detected, clearing and allowing")
       sessionStorage.removeItem('profileSetupNavigating')
       return
     }
     
     const incomplete = isIncomplete(user)
+    logger.log("[RequireIncompleteProfile] Profile incomplete check:", { incomplete, pathname })
     
     if (!incomplete) {
-      // ⚡ GUARD: Only redirect if we're currently ON /profile-setup
-      // This prevents redirecting when user updates their profile elsewhere
-      if (typeof window !== 'undefined' && window.location.pathname === '/profile-setup') {
+      // ⚡ IMPROVED: Use Next.js pathname instead of window.location
+      if (pathname === '/profile-setup') {
+        logger.log("[RequireIncompleteProfile] Profile complete, redirecting to /home")
         router.replace("/home")
+      } else {
+        logger.log("[RequireIncompleteProfile] Profile complete but not on /profile-setup, no redirect needed")
       }
       return 
     }
-  },[user, loading, router]) // ⚡ FIX v4: Re-added all deps
+  },[user, loading, router, pathname]) // ⚡ FIX v5: Added pathname to deps
 
   if (loading) return null
   return <>{children}</>

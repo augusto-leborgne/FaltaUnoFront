@@ -63,49 +63,50 @@ export function PhoneVerificationScreen() {
     
     try {
       const fullPhone = `${countryCode} ${phoneNumber.replace(/\s/g, '')}`;
-      logger.log("[PhoneVerification] Actualizando celular:", fullPhone);
+      logger.log("[PhoneVerification] Updating phone:", fullPhone);
       
       const res = await UsuarioAPI.actualizarPerfil({ celular: fullPhone });
-      logger.log("[PhoneVerification] Respuesta:", res);
+      logger.log("[PhoneVerification] Update response:", res);
 
       if (res.success && res.data) {
-        logger.log("[PhoneVerification] ✅ Celular actualizado exitosamente en backend");
+        logger.log("[PhoneVerification] Phone updated successfully");
         
-        // ⚡ CRÍTICO: Refrescar usuario INMEDIATAMENTE desde el servidor para obtener el estado actualizado
-        logger.log("[PhoneVerification] Refrescando usuario desde servidor...");
+        // ⚡ CRITICAL: Refresh user IMMEDIATELY from server to get updated state
+        logger.log("[PhoneVerification] Refreshing user from server...");
         const refreshed = await refreshUser();
         
         if (refreshed && refreshed.celular) {
-          logger.log("[PhoneVerification] ✅ Usuario refrescado desde servidor:", { 
+          logger.log("[PhoneVerification] User refreshed successfully:", { 
             email: refreshed.email, 
             celular: refreshed.celular,
             perfilCompleto: refreshed.perfilCompleto 
           });
           
-          // Actualizar contexto con datos del servidor
+          // Update context with server data
           setUser(refreshed);
           
-          // Mostrar mensaje de éxito
+          // Show success message
           setIsSuccess(true);
           
-          // Pequeño delay para que el usuario vea el mensaje de éxito
+          // Small delay for user to see success message
           await new Promise(resolve => setTimeout(resolve, 500));
           
-          // Redirigir a home con el estado actualizado del servidor
-          logger.log("[PhoneVerification] ✅ Redirigiendo a /home");
+          // Redirect to home with updated state
+          logger.log("[PhoneVerification] Redirecting to /home");
           router.replace("/home");
         } else {
-          logger.error("[PhoneVerification] ❌ Error: no se pudo refrescar usuario desde servidor");
+          logger.error("[PhoneVerification] Failed to refresh user from server");
           throw new Error("No se pudo verificar la actualización. Por favor, intenta nuevamente.");
         }
       } else {
-        logger.log("[PhoneVerification] Error en actualización:", res.message);
+        logger.log("[PhoneVerification] Update failed:", res.message);
         setError(res.message ?? "No se pudo actualizar el número de celular");
       }
     } catch (err) {
       logger.error("[PhoneVerification] Error:", err);
       setError("Error al actualizar el celular. Intenta nuevamente.");
     } finally {
+      // ⚡ IMPROVED: Always reset submitting state, even on error
       setIsSubmitting(false);
     }
   };
