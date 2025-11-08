@@ -595,8 +595,6 @@ export function ProfileSetupForm() {
         <form 
           ref={formRef}
           onSubmit={handleSubmit}
-          action="#"
-          method="post"
           className="space-y-6" 
         >
           {/* Foto de perfil - Diseño destacado */}
