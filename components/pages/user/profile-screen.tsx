@@ -8,7 +8,7 @@ import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { UserAvatar } from "@/components/ui/user-avatar"
-import { Settings, Star, Phone, Users, LogOut } from "lucide-react"
+import { Settings, Star, Phone, Users, LogOut, UserPlus } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useRouter } from "next/navigation"
 import { calcularEdad } from "@/lib/utils"
@@ -67,6 +67,7 @@ function ProfileScreenInner() {
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([])
   const [friends, setFriends] = useState<Friend[]>([])
   const [contacts, setContacts] = useState<Contact[]>([]) // ⚡ NUEVO: Contactos importados
+  const [isSyncingContacts, setIsSyncingContacts] = useState(false)
   const [loading, setLoading] = useState(true) // ⚡ Mostrar spinner mientras carga primera vez
   const [error, setError] = useState<string | null>(null)
 
@@ -185,6 +186,69 @@ function ProfileScreenInner() {
 
   const handleSettingsClick = () => router.push("/settings")
   const handleFriendsClick = () => router.push("/friends") // Ver todos los amigos
+
+  const handleSyncContacts = async () => {
+    try {
+      setIsSyncingContacts(true)
+
+      // Verificar si el navegador soporta la API de Contacts
+      if (!('contacts' in navigator && 'ContactsManager' in window)) {
+        alert('Tu navegador no soporta la sincronización de contactos. Esta función solo está disponible en dispositivos Android con Chrome.')
+        setIsSyncingContacts(false)
+        return
+      }
+
+      // @ts-ignore - La API de Contacts aún no está en los tipos de TypeScript
+      const props = ['name', 'tel']
+      // @ts-ignore
+      const contacts = await navigator.contacts.select(props, { multiple: true })
+
+      if (!contacts || contacts.length === 0) {
+        alert('No se seleccionaron contactos')
+        setIsSyncingContacts(false)
+        return
+      }
+
+      logger.log('[ProfileScreen] Contactos seleccionados:', contacts.length)
+
+      // Formatear contactos para el backend
+      const formattedContacts = contacts.map((contact: any) => ({
+        nombre: contact.name?.[0]?.split(' ')[0] || 'Contacto',
+        apellido: contact.name?.[0]?.split(' ').slice(1).join(' ') || '',
+        celular: contact.tel?.[0] || ''
+      })).filter((c: any) => c.celular)
+
+      logger.log('[ProfileScreen] Contactos formateados:', formattedContacts.length)
+
+      // Enviar al backend
+      const token = AuthService.getToken()
+      const response = await fetch(normalizeUrl(`${API_BASE}/api/contactos/sincronizar`), {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ contactos: formattedContacts })
+      })
+
+      if (!response.ok) {
+        throw new Error('Error al sincronizar contactos')
+      }
+
+      const data = await response.json()
+      logger.log('[ProfileScreen] Contactos sincronizados:', data)
+
+      // Actualizar estado local
+      setContacts(data.data || [])
+
+      alert(`✅ Se sincronizaron ${data.data?.length || 0} contactos`)
+    } catch (error) {
+      logger.error('[ProfileScreen] Error al sincronizar contactos:', error)
+      alert('Error al sincronizar contactos. Por favor intenta nuevamente.')
+    } finally {
+      setIsSyncingContacts(false)
+    }
+  }
 
   const handleLogout = () => {
     if (confirm("¿Estás seguro de que quieres cerrar sesión?")) {
@@ -459,17 +523,32 @@ function ProfileScreenInner() {
           )}
         </div>
 
-        {/* ⚡ NUEVO: Contacts Section */}
-        {contacts.length > 0 && (
-          <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
-            <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <h3 className="text-base sm:text-lg font-bold text-gray-900">Contactos Importados</h3>
+        {/* Contacts Section */}
+        <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h3 className="text-base sm:text-lg font-bold text-gray-900">Contactos</h3>
+            {contacts.length > 0 && (
               <Button variant="outline" size="sm" onClick={() => router.push('/contacts')} className="bg-transparent text-xs sm:text-sm">
                 <Phone className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 Ver todos
               </Button>
-            </div>
+            )}
+          </div>
 
+          {contacts.length === 0 ? (
+            <div className="text-center py-6 sm:py-8">
+              <p className="text-gray-500 mb-3 sm:mb-4 text-sm">No tienes contactos sincronizados</p>
+              <Button 
+                onClick={handleSyncContacts} 
+                disabled={isSyncingContacts}
+                className="bg-green-600 hover:bg-green-700 text-xs sm:text-sm"
+              >
+                <UserPlus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                {isSyncingContacts ? 'Sincronizando...' : 'Sincronizar contactos'}
+              </Button>
+              <p className="text-xs text-gray-400 mt-2">Encuentra amigos que ya están en la app</p>
+            </div>
+          ) : (
             <div className="space-y-2 sm:space-y-3">
               {contacts.slice(0, 5).map((contact) => {
                 const contactName = `${contact.nombre} ${contact.apellido}`.trim() || "Contacto"
@@ -511,8 +590,8 @@ function ProfileScreenInner() {
                 )
               })}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Logout Section */}
         <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-6 mb-20 sm:mb-24">
