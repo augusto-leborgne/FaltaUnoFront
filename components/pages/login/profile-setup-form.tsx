@@ -150,7 +150,7 @@ export function ProfileSetupForm() {
   }
 
   const positions = ["Arquero", "Defensa", "Mediocampista", "Delantero"]
-  const generos = ["Masculino", "Femenino", "Otro"]
+  const generos = ["Hombre", "Mujer"]
 
   useEffect(() => {
     // Prefill form data from existing authenticated user to avoid losing inputs
@@ -660,8 +660,9 @@ export function ProfileSetupForm() {
                     placeholder="Juan"
                     value={formData.name}
                     onChange={(e) => handleFieldChange('name', e.target.value)}
-                    className={`${fieldErrors.name ? 'border-red-500 focus:ring-red-500' : 'focus:ring-primary'}`}
+                    className={`${fieldErrors.name ? 'border-red-500 focus:ring-red-500' : 'focus:ring-primary'} placeholder:text-gray-300`}
                     maxLength={50}
+                    required
                   />
                   {fieldErrors.name && (
                     <p className="text-xs text-red-500 mt-1">{fieldErrors.name}</p>
@@ -673,8 +674,9 @@ export function ProfileSetupForm() {
                     placeholder="Pérez"
                     value={formData.surname}
                     onChange={(e) => handleFieldChange('surname', e.target.value)}
-                    className={`${fieldErrors.surname ? 'border-red-500 focus:ring-red-500' : 'focus:ring-primary'}`}
+                    className={`${fieldErrors.surname ? 'border-red-500 focus:ring-red-500' : 'focus:ring-primary'} placeholder:text-gray-300`}
                     maxLength={50}
+                    required
                   />
                   {fieldErrors.surname && (
                     <p className="text-xs text-red-500 mt-1">{fieldErrors.surname}</p>
@@ -802,9 +804,10 @@ export function ProfileSetupForm() {
                     placeholder="175"
                     value={formData.height}
                     onChange={(e) => handleFieldChange('height', e.target.value)}
-                    className={`${fieldErrors.height ? 'border-red-500' : 'focus:ring-orange-500'}`}
+                    className={`${fieldErrors.height ? 'border-red-500' : 'focus:ring-orange-500'} placeholder:text-gray-300`}
                     min="100"
                     max="250"
+                    required
                   />
                   {fieldErrors.height && (
                     <p className="text-xs text-red-500 mt-1">{fieldErrors.height}</p>
@@ -817,9 +820,10 @@ export function ProfileSetupForm() {
                     placeholder="70"
                     value={formData.weight}
                     onChange={(e) => handleFieldChange('weight', e.target.value)}
-                    className={`${fieldErrors.weight ? 'border-red-500' : 'focus:ring-orange-500'}`}
+                    className={`${fieldErrors.weight ? 'border-red-500' : 'focus:ring-orange-500'} placeholder:text-gray-300`}
                     min="30"
                     max="200"
+                    required
                   />
                   {fieldErrors.weight && (
                     <p className="text-xs text-red-500 mt-1">{fieldErrors.weight}</p>

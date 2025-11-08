@@ -311,10 +311,6 @@ export function PhoneVerificationScreen() {
             
             {/* Omitir eliminado: verificación de celular obligatoria */}
           </div>
-          
-          <p className="text-xs text-gray-500 text-center mt-4">
-            Podrás agregar o cambiar tu número más tarde desde la configuración.
-          </p>
         </form>
       </div>
     </div>
