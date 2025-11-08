@@ -485,13 +485,16 @@ export function ProfileSetupForm() {
             perfilCompleto: refreshed.perfilCompleto,
           })
           
-          // Actualizar contexto con datos del servidor
-          setUser(refreshed)
+          // ⚡ CRÍTICO: NO actualizar contexto aquí para evitar que RequireIncompleteProfile 
+          // detecte el perfil completo y redirija a /home
+          // El usuario se actualizará cuando llegue a phone-verification
+          // setUser(refreshed) <-- REMOVIDO
           
-          // Pequeño delay para asegurar que localStorage se actualice
+          // Pequeño delay para asegurar que el backend esté sincronizado
           await new Promise(resolve => setTimeout(resolve, 300))
 
           // Redirigir a verificación de celular (replace para no permitir volver atrás)
+          logger.log("[ProfileSetup] 🚀 Redirigiendo a phone-verification...")
           router.replace('/phone-verification')
         } else {
           logger.error("[ProfileSetup] ❌ Error: no se pudo refrescar usuario desde servidor")
