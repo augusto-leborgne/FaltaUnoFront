@@ -76,6 +76,13 @@ export default function RequireAuth({
     const hasBasicFields = user.nombre && user.apellido
     const isProfileComplete = user.perfilCompleto === true
     
+    console.log(`🔍 [RequireAuth:${pathname}] VALIDACIONES:`, {
+      hasBasicFields,
+      isProfileComplete,
+      shouldCheckProfile: !allowIncomplete,
+      willRedirectToProfileSetup: !allowIncomplete && (!isProfileComplete || !hasBasicFields) && pathname !== "/profile-setup"
+    })
+    
     if (!allowIncomplete && (!isProfileComplete || !hasBasicFields)) {
       if (pathname !== "/profile-setup") {
         logger.log(`[RequireAuth:${pathname}] Perfil incompleto, redirigiendo a /profile-setup`, {
@@ -89,6 +96,13 @@ export default function RequireAuth({
 
     // ⚡ NUEVO: Verificar que tenga celular (obligatorio)
     const hasCelular = user.celular && user.celular.trim() !== ""
+    
+    console.log(`🔍 [RequireAuth:${pathname}] CELULAR CHECK:`, {
+      hasCelular,
+      celular: user.celular,
+      shouldCheckPhone: !allowNoPhone,
+      willRedirectToPhone: !allowNoPhone && !hasCelular && pathname !== "/phone-verification"
+    })
     
     if (!allowNoPhone && !hasCelular) {
       if (pathname !== "/phone-verification") {
