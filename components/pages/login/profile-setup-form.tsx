@@ -16,6 +16,7 @@ import { UsuarioAPI } from "@/lib/api"
 import { usePostAuthRedirect } from "@/lib/navigation"
 import ReactCrop, { type Crop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
+import { withRetry, formatErrorMessage } from '@/lib/api-utils'
 
 export function ProfileSetupForm() {
   const router = useRouter()
@@ -458,7 +459,22 @@ export function ProfileSetupForm() {
           direccion: formData.address,
           placeDetails: formData.placeDetails ? JSON.stringify(formData.placeDetails) : null,
         }
-        const perfilRes = await UsuarioAPI.actualizarPerfil(payload)
+        
+        // ⚡ IMPROVED: Use retry logic for critical profile update
+        const perfilRes = await withRetry(
+          () => UsuarioAPI.actualizarPerfil(payload),
+          {
+            maxRetries: 2,
+            delayMs: 1500,
+            shouldRetry: (error) => {
+              // Retry on network errors or 5xx
+              return error.name === 'AbortError' || 
+                     error.message?.includes('timeout') ||
+                     (error.status >= 500 && error.status < 600)
+            }
+          }
+        )
+        
         if (!perfilRes?.success) {
           const errorMsg = perfilRes?.message || "No se pudo actualizar el perfil"
           logger.error("[ProfileSetup] Profile update error:", errorMsg)
@@ -500,7 +516,8 @@ export function ProfileSetupForm() {
       }
     } catch (err: any) {
       logger.error("[ProfileSetup] Error saving profile:", err)
-      setGeneralError(`Error al guardar perfil: ${err?.message ?? "Intenta nuevamente"}`)
+      const userMessage = formatErrorMessage(err)
+      setGeneralError(userMessage)
       // ⚡ CLEANUP: Remove navigation flag on error
       if (typeof window !== 'undefined') {
         sessionStorage.removeItem('profileSetupNavigating')

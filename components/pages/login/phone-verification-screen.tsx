@@ -9,6 +9,7 @@ import { UsuarioAPI } from "@/lib/api";
 import { AuthService } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
 import { logger } from "@/lib/logger";
+import { withRetry, formatErrorMessage } from "@/lib/api-utils";
 
 // Códigos de país comunes en la región
 const COUNTRY_CODES = [
@@ -65,7 +66,21 @@ export function PhoneVerificationScreen() {
       const fullPhone = `${countryCode} ${phoneNumber.replace(/\s/g, '')}`;
       logger.log("[PhoneVerification] Updating phone:", fullPhone);
       
-      const res = await UsuarioAPI.actualizarPerfil({ celular: fullPhone });
+      // ⚡ IMPROVED: Use retry logic for critical phone update
+      const res = await withRetry(
+        () => UsuarioAPI.actualizarPerfil({ celular: fullPhone }),
+        {
+          maxRetries: 2,
+          delayMs: 1500,
+          shouldRetry: (error) => {
+            // Retry on network errors or 5xx
+            return error.name === 'AbortError' || 
+                   error.message?.includes('timeout') ||
+                   (error.status >= 500 && error.status < 600)
+          }
+        }
+      )
+      
       logger.log("[PhoneVerification] Update response:", res);
 
       if (res.success && res.data) {
@@ -102,9 +117,11 @@ export function PhoneVerificationScreen() {
         logger.log("[PhoneVerification] Update failed:", res.message);
         setError(res.message ?? "No se pudo actualizar el número de celular");
       }
-    } catch (err) {
+    } catch (err: any) {
       logger.error("[PhoneVerification] Error:", err);
-      setError("Error al actualizar el celular. Intenta nuevamente.");
+      const userMessage = formatErrorMessage(err)
+      setError(userMessage);
+      setIsSuccess(false);
     } finally {
       // ⚡ IMPROVED: Always reset submitting state, even on error
       setIsSubmitting(false);
