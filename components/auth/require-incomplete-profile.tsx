@@ -36,6 +36,14 @@ export default function RequireIncompleteProfile({children}:{children:React.Reac
   useEffect(()=>{
     if (loading) return
     if (!user) { router.replace("/login"); return }
+    
+    // ⚡ CRÍTICO: Si el formulario está navegando, NO interferir con el redirect
+    if (typeof window !== 'undefined' && sessionStorage.getItem('profileSetupNavigating') === 'true') {
+      console.log("[RequireIncompleteProfile] Form está navegando, permitiendo...")
+      sessionStorage.removeItem('profileSetupNavigating') // Limpiar flag
+      return
+    }
+    
     if (!isIncomplete(user)) { router.replace("/home"); return }
   },[user,loading,router])
 

@@ -407,7 +407,7 @@ export function ProfileSetupForm() {
         }
 
         // ⚡ CRÍTICO: NO actualizar usuario aquí para evitar que RequireIncompleteProfile 
-        // detecte cambios y redirija. El usuario se actualizará en phone-verification.
+        // detecte cambios y redirija. El usuario se actualizará en la siguiente página.
         logger.log("[ProfileSetup] ✅ Usuario recibido del backend (NO se actualiza contexto aún):", {
           id: usuario.id,
           email: usuario.email,
@@ -419,14 +419,24 @@ export function ProfileSetupForm() {
         
         // NO HACER: AuthService.setUser(usuario) ni setUser(usuario)
 
-        logger.log("[ProfileSetup] ✅ Registro completado exitosamente, redirigiendo a phone-verification")
+        logger.log("[ProfileSetup] ✅ Registro completado exitosamente")
+        
+        // ⚡ CRÍTICO: Marcar que estamos navegando para que RequireIncompleteProfile no interfiera
+        sessionStorage.setItem('profileSetupNavigating', 'true')
         
         // Pequeño delay para asegurar que el token se guarde
         await new Promise(resolve => setTimeout(resolve, 300))
         
-        // Redirigir a verificación de celular (replace para no permitir volver atrás)
-        logger.log("[ProfileSetup] 🚀 Navegando a /phone-verification...")
-        router.replace('/phone-verification')
+        // ⚡ DECISIÓN DE FLUJO: Verificar si tiene celular configurado
+        const hasCelular = usuario.celular && usuario.celular.trim() !== ""
+        
+        if (hasCelular) {
+          logger.log("[ProfileSetup] ✅ Usuario tiene celular configurado, redirigiendo a /home")
+          router.replace('/home')
+        } else {
+          logger.log("[ProfileSetup] ⚠️ Usuario sin celular, redirigiendo a /phone-verification")
+          router.replace('/phone-verification')
+        }
 
       } else {
         const token = AuthService.getToken()
@@ -476,6 +486,10 @@ export function ProfileSetupForm() {
 
         // ⚡ NUEVO: Refrescar usuario INMEDIATAMENTE desde el servidor después de actualizar
         logger.log("[ProfileSetup] ✅ Perfil actualizado en backend, refrescando desde servidor...")
+        
+        // ⚡ CRÍTICO: Marcar que estamos navegando ANTES de refreshUser para evitar race condition
+        sessionStorage.setItem('profileSetupNavigating', 'true')
+        
         const refreshed = await refreshUser()
         
         if (refreshed) {
@@ -484,19 +498,27 @@ export function ProfileSetupForm() {
             nombre: refreshed.nombre,
             apellido: refreshed.apellido,
             perfilCompleto: refreshed.perfilCompleto,
+            celular: refreshed.celular
           })
           
           // ⚡ CRÍTICO: NO actualizar contexto aquí para evitar que RequireIncompleteProfile 
           // detecte el perfil completo y redirija a /home
-          // El usuario se actualizará cuando llegue a phone-verification
+          // El usuario se actualizará cuando llegue a la siguiente página
           // setUser(refreshed) <-- REMOVIDO
           
           // Pequeño delay para asegurar que el backend esté sincronizado
           await new Promise(resolve => setTimeout(resolve, 300))
 
-          // Redirigir a verificación de celular (replace para no permitir volver atrás)
-          logger.log("[ProfileSetup] 🚀 Redirigiendo a phone-verification...")
-          router.replace('/phone-verification')
+          // ⚡ DECISIÓN DE FLUJO: Verificar si tiene celular configurado
+          const hasCelular = refreshed.celular && refreshed.celular.trim() !== ""
+          
+          if (hasCelular) {
+            logger.log("[ProfileSetup] ✅ Usuario tiene celular configurado, redirigiendo a /home")
+            router.replace('/home')
+          } else {
+            logger.log("[ProfileSetup] ⚠️ Usuario sin celular, redirigiendo a /phone-verification")
+            router.replace('/phone-verification')
+          }
         } else {
           logger.error("[ProfileSetup] ❌ Error: no se pudo refrescar usuario desde servidor")
           throw new Error("No se pudo verificar la actualización. Por favor, intenta nuevamente.")
