@@ -520,7 +520,13 @@ export function ProfileSetupForm() {
             perfilCompleto: updatedUser.perfilCompleto,
             hasCelular,
             isComplete,
-            nextAction: (hasCelular && isComplete) ? "GO_HOME" : hasCelular ? "STAY" : "GO_PHONE"
+            nextAction: (hasCelular && isComplete) ? "GO_HOME" : hasCelular ? "STAY" : "GO_PHONE",
+            // ⚡ DEBUG: Ver campos individuales
+            nombre: updatedUser.nombre,
+            apellido: updatedUser.apellido,
+            fechaNacimiento: updatedUser.fechaNacimiento,
+            hasFotoPerfil: updatedUser.hasFotoPerfil,
+            fotoPerfil: updatedUser.fotoPerfil ? `${updatedUser.fotoPerfil.substring(0, 20)}...` : null
           })
           
           // ⚡ ROBUST FLOW: Only redirect to /home if BOTH profile is complete AND has phone
