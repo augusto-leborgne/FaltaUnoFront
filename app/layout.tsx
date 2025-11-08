@@ -9,10 +9,16 @@ import "react-image-crop/dist/ReactCrop.css"
 import { AuthProvider } from "@/components/auth/auth-provider"
 import { ErrorBoundary } from "@/components/error-boundary"
 import { BRANDING, generateOGMetadata } from "@/lib/branding"
+import { enablePassiveListeners } from "@/lib/passive-listeners"
 
 // Force dynamic rendering for all pages to avoid lucide-react barrel export issues during static generation
 export const dynamic = 'force-dynamic'
 export const dynamicParams = true
+
+// Enable passive touch listeners for better scroll performance
+if (typeof window !== 'undefined') {
+  enablePassiveListeners()
+}
 
 export const metadata: Metadata = {
   title: BRANDING.metadata.title,
