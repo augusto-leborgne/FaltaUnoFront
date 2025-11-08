@@ -507,6 +507,13 @@ export function ProfileSetupForm() {
           // ⚡ CRITICAL FIX: Update context with latest user data to prevent redirect loops
           setUser(updatedUser)
           
+          console.log("🔍 [ProfileSetup] POST-UPDATE CHECK:", {
+            perfilCompleto: updatedUser.perfilCompleto,
+            hasCelular,
+            isComplete,
+            nextAction: (hasCelular && isComplete) ? "GO_HOME" : hasCelular ? "STAY" : "GO_PHONE"
+          })
+          
           const hasCelular = updatedUser.celular && updatedUser.celular.trim() !== ""
           const isComplete = updatedUser.perfilCompleto === true
           

@@ -35,9 +35,12 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       return
     }
 
-    // ✅ FIX: Solo verificar perfil completo si NO estamos ya en profile-setup
-    // Esto previene loops infinitos si profile-setup tiene errores
-    if (pathname !== '/profile-setup') {
+    // ✅ FIX: Solo verificar perfil completo si NO estamos en rutas de onboarding
+    // Esto previene loops infinitos en el flujo de completar perfil
+    const ONBOARDING_ROUTES = ['/profile-setup', '/phone-verification', '/verification']
+    const isOnboardingRoute = ONBOARDING_ROUTES.some(route => pathname?.startsWith(route))
+    
+    if (!isOnboardingRoute) {
       const user = AuthService.getUser()
       
       // ⚡ CRÍTICO: Validación de perfil incompleto
