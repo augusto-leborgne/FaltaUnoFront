@@ -167,10 +167,10 @@ export function ProfileSetupForm() {
     try {
       if (user) {
         setFormData((prev) => {
-          // Only prefill when fields are still empty to avoid overwriting user edits
-          const shouldPrefill = !prev.name && !prev.surname && !prev.photoPreviewUrl && !prev.address;
-          if (!shouldPrefill) return prev;
-
+          // ⚡ CAMBIO: Pre-rellenar campos individuales que estén vacíos
+          // NO usar shouldPrefill global porque si un campo tiene valor pero otro no,
+          // hay que rellenar solo el que falta
+          
           // Extract phone without country code if possible
           let phoneOnly = prev.phone;
           let countryCode = prev.countryCode;
@@ -187,16 +187,17 @@ export function ProfileSetupForm() {
 
           return {
             ...prev,
-            name: (user as any).nombre ?? (user as any).name ?? prev.name,
-            surname: (user as any).apellido ?? (user as any).apellido ?? prev.surname,
-            phone: phoneOnly ?? prev.phone,
-            countryCode: countryCode ?? prev.countryCode,
-            fechaNacimiento: (user as any).fechaNacimiento ?? (user as any).fecha_nacimiento ?? prev.fechaNacimiento,
-            genero: (user as any).genero ?? prev.genero,
-            position: (user as any).posicion ?? (user as any).position ?? prev.position,
-            height: (user as any).altura ? String((user as any).altura) : prev.height,
-            weight: (user as any).peso ? String((user as any).peso) : prev.weight,
-            address: (user as any).direccion ?? (user as any).ubicacion ?? prev.address,
+            // Pre-rellenar cada campo SI está vacío
+            name: prev.name || (user as any).nombre || (user as any).name || "",
+            surname: prev.surname || (user as any).apellido || "",
+            phone: phoneOnly || prev.phone,
+            countryCode: countryCode || prev.countryCode,
+            fechaNacimiento: prev.fechaNacimiento || (user as any).fechaNacimiento || (user as any).fecha_nacimiento || "",
+            genero: prev.genero || (user as any).genero || "",
+            position: prev.position || (user as any).posicion || (user as any).position || "",
+            height: prev.height || ((user as any).altura ? String((user as any).altura) : ""),
+            weight: prev.weight || ((user as any).peso ? String((user as any).peso) : ""),
+            address: prev.address || (user as any).direccion || (user as any).ubicacion || "",
           }
         })
       }
