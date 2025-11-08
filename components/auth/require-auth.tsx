@@ -29,22 +29,9 @@ export default function RequireAuth({
   const { user, loading } = useAuth()
 
   useEffect(() => {
-    // ⚡ DEBUG: Log when useEffect runs
-    console.log(`🔍 [RequireAuth:${pathname}] useEffect EJECUTADO`, {
-      loading,
-      hasUser: !!user,
-      allowIncomplete,
-      allowUnverified,
-      allowNoPhone,
-      userEmail: user?.email,
-      perfilCompleto: user?.perfilCompleto,
-      celular: user?.celular
-    })
-    
-    // ⚡ CRITICAL FIX v4: Run when user changes BUT only redirect if NECESSARY
+    // ⚡ CRITICAL FIX: Run when user changes BUT only redirect if NECESSARY
     // Use guards to prevent redirecting FROM the page we're trying to send them TO
     if (loading) {
-      logger.log(`[RequireAuth:${pathname}] Loading...`)
       return
     }
 
@@ -62,33 +49,13 @@ export default function RequireAuth({
       return
     }
 
-    logger.log(`[RequireAuth:${pathname}] Usuario:`, {
-      email: user.email,
-      perfilCompleto: user.perfilCompleto,
-      celular: user.celular,
-      cedulaVerificada: user.cedulaVerificada,
-      allowIncomplete,
-      allowUnverified,
-      allowNoPhone
-    })
-
     // ⚡ CRÍTICO: Validación mejorada de perfil incompleto
     const hasBasicFields = user.nombre && user.apellido
     const isProfileComplete = user.perfilCompleto === true
     
-    console.log(`🔍 [RequireAuth:${pathname}] VALIDACIONES:`, {
-      hasBasicFields,
-      isProfileComplete,
-      shouldCheckProfile: !allowIncomplete,
-      willRedirectToProfileSetup: !allowIncomplete && (!isProfileComplete || !hasBasicFields) && pathname !== "/profile-setup"
-    })
-    
     if (!allowIncomplete && (!isProfileComplete || !hasBasicFields)) {
       if (pathname !== "/profile-setup") {
-        logger.log(`[RequireAuth:${pathname}] Perfil incompleto, redirigiendo a /profile-setup`, {
-          perfilCompleto: user.perfilCompleto,
-          hasBasicFields
-        })
+        logger.log(`[RequireAuth:${pathname}] Perfil incompleto, redirigiendo a /profile-setup`)
         router.replace("/profile-setup")
       }
       return
@@ -96,13 +63,6 @@ export default function RequireAuth({
 
     // ⚡ NUEVO: Verificar que tenga celular (obligatorio)
     const hasCelular = user.celular && user.celular.trim() !== ""
-    
-    console.log(`🔍 [RequireAuth:${pathname}] CELULAR CHECK:`, {
-      hasCelular,
-      celular: user.celular,
-      shouldCheckPhone: !allowNoPhone,
-      willRedirectToPhone: !allowNoPhone && !hasCelular && pathname !== "/phone-verification"
-    })
     
     if (!allowNoPhone && !hasCelular) {
       if (pathname !== "/phone-verification") {
