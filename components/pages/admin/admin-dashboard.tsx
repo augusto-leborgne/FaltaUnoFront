@@ -32,6 +32,7 @@ interface Partido {
     id: string
     nombre: string
     apellido: string
+    foto_perfil?: string
   }
 }
 
@@ -407,8 +408,7 @@ export default function AdminDashboard() {
                                 userId={usuario.id}
                                 photo={usuario.foto_perfil || null}
                                 name={usuario.nombre}
-                                size="sm"
-                                className="ring-2 ring-white shadow-sm"
+                                className="h-8 w-8 ring-2 ring-white shadow-sm"
                               />
                               <span className="font-medium">
                                 {usuario.nombre} {usuario.apellido}
@@ -540,7 +540,7 @@ export default function AdminDashboard() {
                                   userId={partido.organizador.id}
                                   photo={partido.organizador.foto_perfil || null}
                                   name={partido.organizador.nombre}
-                                  size="xs"
+                                  className="h-6 w-6"
                                 />
                                 <span className="text-sm text-gray-600">
                                   {partido.organizador.nombre} {partido.organizador.apellido}
@@ -601,8 +601,7 @@ export default function AdminDashboard() {
                   userId={selectedUser.id}
                   photo={selectedUser.foto_perfil || null}
                   name={selectedUser.nombre}
-                  size="md"
-                  className="ring-4 ring-white/30"
+                  className="h-12 w-12 ring-4 ring-white/30"
                 />
                 <div className="text-white">
                   <h2 className="text-xl font-bold">
@@ -797,7 +796,7 @@ export default function AdminDashboard() {
                         userId={selectedMatch.organizador.id}
                         photo={selectedMatch.organizador.foto_perfil || null}
                         name={selectedMatch.organizador.nombre}
-                        size="xs"
+                        className="h-6 w-6"
                       />
                       <span className="text-gray-900">
                         {selectedMatch.organizador.nombre} {selectedMatch.organizador.apellido}
