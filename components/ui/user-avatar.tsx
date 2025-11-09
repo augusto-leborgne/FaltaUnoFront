@@ -27,6 +27,8 @@ interface UserAvatarProps {
   onClick?: () => void
   /** Lazy load the image (default: false) */
   lazy?: boolean
+  /** Whether user is deleted (don't try to load photo) */
+  isDeleted?: boolean
 }
 
 /**
@@ -82,6 +84,7 @@ export function UserAvatar({
   fallbackClassName,
   onClick,
   lazy = false,
+  isDeleted = false,
 }: UserAvatarProps): JSX.Element {
   const [loadedPhoto, setLoadedPhoto] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -89,6 +92,12 @@ export function UserAvatar({
   
   // ⚡ OPTIMIZACIÓN: Cargar foto desde cache/servidor si se provee userId
   useEffect(() => {
+    // Si el usuario está eliminado, no intentar cargar la foto
+    if (isDeleted) {
+      setLoadedPhoto(null)
+      return
+    }
+    
     // Si ya tenemos photo directa, no necesitamos cargar
     if (photo) {
       setLoadedPhoto(photo)
@@ -127,7 +136,7 @@ export function UserAvatar({
     return () => {
       cancelled = true
     }
-  }, [photo, userId])
+  }, [photo, userId, isDeleted])
   
   // Normalizar la foto a data URI si es necesario
   const normalizedPhoto = React.useMemo(() => {

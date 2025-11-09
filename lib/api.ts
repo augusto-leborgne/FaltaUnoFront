@@ -151,6 +151,7 @@ export interface UsuarioMinDTO {
   foto_perfil?: string;
   posicion?: string;
   rating?: number;
+  deleted_at?: string; // ISO datetime string if user is deleted
 }
 
 // ============================================

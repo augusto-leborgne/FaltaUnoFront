@@ -33,6 +33,7 @@ interface Partido {
     nombre: string
     apellido: string
     foto_perfil?: string
+    deleted_at?: string
   }
 }
 
@@ -637,9 +638,13 @@ export default function AdminDashboard() {
                                     photo={partido.organizador.foto_perfil || null}
                                     name={partido.organizador.nombre}
                                     className="h-6 w-6"
+                                    isDeleted={!!partido.organizador.deleted_at}
                                   />
                                   <span className="text-sm text-gray-600">
                                     {partido.organizador.nombre} {partido.organizador.apellido}
+                                    {partido.organizador.deleted_at && (
+                                      <span className="ml-2 text-xs text-red-500">(eliminado)</span>
+                                    )}
                                   </span>
                                 </div>
                               ) : (
@@ -715,9 +720,13 @@ export default function AdminDashboard() {
                               photo={partido.organizador.foto_perfil || null}
                               name={partido.organizador.nombre}
                               className="h-5 w-5"
+                              isDeleted={!!partido.organizador.deleted_at}
                             />
                             <span className="text-xs text-gray-600 truncate">
                               {partido.organizador.nombre} {partido.organizador.apellido}
+                              {partido.organizador.deleted_at && (
+                                <span className="ml-1 text-red-500">(eliminado)</span>
+                              )}
                             </span>
                           </div>
                         )}

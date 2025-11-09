@@ -99,9 +99,9 @@ class PhotoCacheManager {
         return null
       }
 
-      // 404 Not Found = Usuario no existe (error real)
+      // 404 Not Found = Usuario no existe o fue eliminado (puede ser normal en admin panel)
       if (response.status === 404) {
-        logger?.warn?.(`[PhotoCache] User ${userId} not found (404)`)
+        logger?.debug?.(`[PhotoCache] User ${userId} not found or deleted (404)`)
         return null
       }
 
