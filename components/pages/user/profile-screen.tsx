@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { BetaBadge } from "@/components/ui/beta-badge"
 import { UserAvatar } from "@/components/ui/user-avatar"
-import { Settings, Star, Phone, Users, LogOut, UserPlus, Share2 } from "lucide-react"
+import { Settings, Star, Phone, Users, LogOut, UserPlus, Share2, Shield } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useRouter } from "next/navigation"
 import { calcularEdad } from "@/lib/utils"
@@ -343,14 +343,31 @@ function ProfileScreenInner() {
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-gray-900">Mi Perfil</h1>
             <BetaBadge />
+            {user?.rol === "ADMIN" && (
+              <div className="flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 border border-red-200">
+                <Shield className="h-3 w-3 text-red-600" />
+                <span className="text-xs font-semibold text-red-600">ADMIN</span>
+              </div>
+            )}
           </div>
-          <button
-            onClick={handleSettingsClick}
-            className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
-            title="Configuración"
-          >
-            <Settings className="w-5 h-5 text-gray-600" />
-          </button>
+          <div className="flex items-center gap-2">
+            {user?.rol === "ADMIN" && (
+              <button
+                onClick={() => router.push("/admin")}
+                className="p-2 hover:bg-red-50 rounded-xl transition-colors"
+                title="Panel de Administración"
+              >
+                <Shield className="w-5 h-5 text-red-600" />
+              </button>
+            )}
+            <button
+              onClick={handleSettingsClick}
+              className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+              title="Configuración"
+            >
+              <Settings className="w-5 h-5 text-gray-600" />
+            </button>
+          </div>
         </div>
       </div>
 

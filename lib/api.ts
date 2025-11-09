@@ -140,6 +140,8 @@ export interface Usuario {
   emailVerified?: boolean; // ✅ Nuevo campo
   provider?: string;
   created_at?: string;
+  rol?: string; // 'USER' | 'ADMIN'
+  deleted_at?: string; // Para soft-deleted users
 }
 
 export interface UsuarioMinDTO {
