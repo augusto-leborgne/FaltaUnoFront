@@ -61,7 +61,10 @@ export default function AdminDashboard() {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
 
-    return response.json()
+    const json = await response.json()
+    // Backend wraps responses in ApiResponse { success, data, message }
+    // Extract the data field if it exists, otherwise return the whole response
+    return (json.data !== undefined ? json.data : json) as T
   }
 
   // Verificar que el usuario sea admin
@@ -80,19 +83,22 @@ export default function AdminDashboard() {
       try {
         setLoadingData(true)
 
-  // Cargar stats
-  const statsResponse = await authenticatedFetch<AdminStats>(`${API_URL}/admin/stats`)
+        // Cargar stats
+        const statsResponse = await authenticatedFetch<AdminStats>(`${API_URL}/admin/stats`)
         setStats(statsResponse)
 
         // Cargar usuarios
-  const usuariosResponse = await authenticatedFetch<Usuario[]>(`${API_URL}/admin/usuarios`)
-        setUsuarios(usuariosResponse)
+        const usuariosResponse = await authenticatedFetch<Usuario[]>(`${API_URL}/admin/usuarios`)
+        setUsuarios(Array.isArray(usuariosResponse) ? usuariosResponse : [])
 
         // Cargar partidos
-  const partidosResponse = await authenticatedFetch<Partido[]>(`${API_URL}/admin/partidos`)
-        setPartidos(partidosResponse)
+        const partidosResponse = await authenticatedFetch<Partido[]>(`${API_URL}/admin/partidos`)
+        setPartidos(Array.isArray(partidosResponse) ? partidosResponse : [])
       } catch (error) {
         logger.error("[AdminDashboard] Error cargando datos:", error)
+        // Set empty arrays on error to prevent crashes
+        setUsuarios([])
+        setPartidos([])
       } finally {
         setLoadingData(false)
       }
