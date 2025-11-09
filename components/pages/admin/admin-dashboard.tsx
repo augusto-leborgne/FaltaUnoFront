@@ -81,6 +81,9 @@ export default function AdminDashboard() {
   const [selectedUser, setSelectedUser] = useState<Usuario | null>(null)
   const [selectedMatch, setSelectedMatch] = useState<Partido | null>(null)
   const [selectedReport, setSelectedReport] = useState<Report | null>(null)
+  const [deleteConfirmText, setDeleteConfirmText] = useState("")
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [userToDelete, setUserToDelete] = useState<string | null>(null)
 
   // Helper para hacer fetch autenticado
   const authenticatedFetch = async <T,>(url: string, options: RequestInit = {}): Promise<T> => {
@@ -152,10 +155,6 @@ export default function AdminDashboard() {
   }, [user])
 
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm("¿Estás seguro de eliminar este usuario permanentemente? Esta acción NO se puede deshacer.")) {
-      return
-    }
-
     try {
       setError(null)
       await authenticatedFetch(`${API_URL}/admin/usuarios/${userId}`, {
@@ -172,10 +171,33 @@ export default function AdminDashboard() {
       
       setSuccessMessage("Usuario eliminado correctamente")
       setTimeout(() => setSuccessMessage(null), 3000)
+      
+      // Cerrar modal
+      setShowDeleteModal(false)
+      setUserToDelete(null)
+      setDeleteConfirmText("")
     } catch (error) {
       logger.error("[AdminDashboard] Error eliminando usuario:", error)
       setError("Error al eliminar usuario: " + (error instanceof Error ? error.message : "Error desconocido"))
       setTimeout(() => setError(null), 5000)
+    }
+  }
+
+  const openDeleteModal = (userId: string) => {
+    setUserToDelete(userId)
+    setDeleteConfirmText("")
+    setShowDeleteModal(true)
+  }
+
+  const closeDeleteModal = () => {
+    setShowDeleteModal(false)
+    setUserToDelete(null)
+    setDeleteConfirmText("")
+  }
+
+  const confirmDelete = () => {
+    if (deleteConfirmText === "ELIMINAR" && userToDelete) {
+      handleDeleteUser(userToDelete)
     }
   }
 
@@ -580,7 +602,7 @@ export default function AdminDashboard() {
                                   <Button
                                     variant="destructive"
                                     size="sm"
-                                    onClick={() => handleDeleteUser(usuario.id)}
+                                    onClick={() => openDeleteModal(usuario.id)}
                                     title="Eliminar permanentemente"
                                   >
                                     <Trash2 className="h-4 w-4" />
@@ -672,7 +694,7 @@ export default function AdminDashboard() {
                           <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => handleDeleteUser(usuario.id)}
+                            onClick={() => openDeleteModal(usuario.id)}
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
@@ -1100,7 +1122,7 @@ export default function AdminDashboard() {
                     variant="destructive"
                     onClick={() => {
                       setSelectedUser(null)
-                      handleDeleteUser(selectedUser.id)
+                      openDeleteModal(selectedUser.id)
                     }}
                     className="w-full sm:w-auto"
                   >
@@ -1221,6 +1243,80 @@ export default function AdminDashboard() {
                   Eliminar Partido
                 </Button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Confirmación de Eliminación */}
+      {showDeleteModal && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={closeDeleteModal}
+        >
+          <div 
+            className="max-w-md w-full bg-white rounded-lg shadow-xl p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                <AlertCircle className="h-6 w-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">
+                  Eliminar Usuario Permanentemente
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Esta acción NO se puede deshacer
+                </p>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="mb-6 space-y-4">
+              <p className="text-sm text-gray-700">
+                Estás a punto de eliminar este usuario de forma permanente. Se eliminarán:
+              </p>
+              <ul className="text-sm text-gray-700 list-disc list-inside space-y-1 ml-2">
+                <li>Todos sus datos personales</li>
+                <li>Su historial de partidos</li>
+                <li>Sus amistades y solicitudes</li>
+                <li>Todos sus comentarios y reseñas</li>
+              </ul>
+              <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                <p className="text-sm font-medium text-red-800 mb-2">
+                  Para confirmar, escribe <span className="font-bold">ELIMINAR</span> en el campo de abajo:
+                </p>
+                <input
+                  type="text"
+                  value={deleteConfirmText}
+                  onChange={(e) => setDeleteConfirmText(e.target.value)}
+                  placeholder="Escribe ELIMINAR"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={closeDeleteModal}
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDelete}
+                disabled={deleteConfirmText !== "ELIMINAR"}
+                className="flex-1"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Eliminar
+              </Button>
             </div>
           </div>
         </div>
