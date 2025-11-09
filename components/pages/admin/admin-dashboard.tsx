@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Users, Calendar, TrendingUp, UserCheck, Trash2, Shield, ShieldOff, AlertCircle, CheckCircle, X, Eye, Mail, Phone, MapPin, Clock, Flag } from "lucide-react"
+import { ArrowLeft, Users, Calendar, TrendingUp, UserCheck, Trash2, Shield, ShieldOff, AlertCircle, CheckCircle, X, Eye, Mail, Phone, MapPin, Clock, Flag, ChevronDown, ChevronUp, LayoutList, Grid3x3 } from "lucide-react"
 import { API_URL } from "@/lib/api"
 import { AuthService } from "@/lib/auth"
 import { logger } from "@/lib/logger"
@@ -84,6 +84,15 @@ export default function AdminDashboard() {
   const [deleteConfirmText, setDeleteConfirmText] = useState("")
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [userToDelete, setUserToDelete] = useState<string | null>(null)
+  
+  // Estados para panel de reportes
+  const [reportFilter, setReportFilter] = useState<"all" | "pending" | "resolved">("pending")
+  const [groupedView, setGroupedView] = useState(true)
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set())
+  const [showDismissModal, setShowDismissModal] = useState(false)
+  const [reportToDismiss, setReportToDismiss] = useState<Report | null>(null)
+  const [dismissAction, setDismissAction] = useState<"no_action" | "warn_reporter">("no_action")
+  const [dismissNotes, setDismissNotes] = useState("")
 
   // Helper para hacer fetch autenticado
   const authenticatedFetch = async <T,>(url: string, options: RequestInit = {}): Promise<T> => {
@@ -308,6 +317,112 @@ export default function AdminDashboard() {
       setError("Error al resolver reporte: " + (error instanceof Error ? error.message : "Error desconocido"))
       setTimeout(() => setError(null), 5000)
     }
+  }
+
+  const openDismissModal = (report: Report) => {
+    setReportToDismiss(report)
+    setDismissAction("no_action")
+    setDismissNotes("")
+    setShowDismissModal(true)
+  }
+
+  const closeDismissModal = () => {
+    setShowDismissModal(false)
+    setReportToDismiss(null)
+    setDismissAction("no_action")
+    setDismissNotes("")
+  }
+
+  const handleDismissReport = async () => {
+    if (!reportToDismiss) return
+
+    try {
+      setError(null)
+      
+      // Si se decidió advertir al reportador, primero advertir
+      if (dismissAction === "warn_reporter") {
+        const warnReason = dismissNotes || "Reporte falso o malintencionado"
+        // Aquí podrías implementar un endpoint para advertir/sancionar al reportador
+        // Por ahora solo lo registramos en las notas
+      }
+
+      await authenticatedFetch(`${API_URL}/admin/reports/${reportToDismiss.id}/dismiss`, {
+        method: "PUT",
+        body: JSON.stringify({ 
+          notes: dismissAction === "warn_reporter" 
+            ? `[REPORTADOR ADVERTIDO] ${dismissNotes}` 
+            : dismissNotes || "Reporte desestimado"
+        }),
+      })
+
+      // Actualizar lista de reportes
+      setReports((prev) =>
+        prev.map((r) =>
+          r.id === reportToDismiss.id
+            ? { ...r, status: "DISMISSED", resolvedAt: new Date().toISOString() }
+            : r
+        )
+      )
+
+      setSuccessMessage(
+        dismissAction === "warn_reporter"
+          ? "Reporte desestimado y reportador advertido"
+          : "Reporte desestimado correctamente"
+      )
+      setTimeout(() => setSuccessMessage(null), 3000)
+      closeDismissModal()
+    } catch (error) {
+      logger.error("[AdminDashboard] Error desestimando reporte:", error)
+      setError("Error al desestimar reporte: " + (error instanceof Error ? error.message : "Error desconocido"))
+      setTimeout(() => setError(null), 5000)
+    }
+  }
+
+  const toggleGroup = (userId: string) => {
+    const newExpanded = new Set(expandedGroups)
+    if (newExpanded.has(userId)) {
+      newExpanded.delete(userId)
+    } else {
+      newExpanded.add(userId)
+    }
+    setExpandedGroups(newExpanded)
+  }
+
+  // Agrupar reportes por usuario reportado
+  const getGroupedReports = () => {
+    const filtered = reports.filter(r => {
+      if (reportFilter === "pending") return r.status === "PENDING"
+      if (reportFilter === "resolved") return r.status === "RESOLVED" || r.status === "DISMISSED"
+      return true
+    })
+
+    const grouped = new Map<string, Report[]>()
+    filtered.forEach(report => {
+      const userId = report.reportedUser.id
+      if (!grouped.has(userId)) {
+        grouped.set(userId, [])
+      }
+      grouped.get(userId)!.push(report)
+    })
+
+    return Array.from(grouped.entries())
+      .map(([userId, userReports]) => ({
+        user: userReports[0].reportedUser,
+        reports: userReports.sort((a, b) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        ),
+        totalReports: userReports.length,
+        pendingReports: userReports.filter(r => r.status === "PENDING").length,
+      }))
+      .sort((a, b) => b.pendingReports - a.pendingReports || b.totalReports - a.totalReports)
+  }
+
+  const getFilteredReports = () => {
+    return reports.filter(r => {
+      if (reportFilter === "pending") return r.status === "PENDING"
+      if (reportFilter === "resolved") return r.status === "RESOLVED" || r.status === "DISMISSED"
+      return true
+    }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
   }
 
   if (authLoading || !user) {
@@ -880,22 +995,69 @@ export default function AdminDashboard() {
             {/* Reports Tab */}
             {activeTab === "reports" && (
               <>
-                {/* Filtros de reportes */}
-                <div className="bg-white rounded-lg border p-4 mb-4">
+                {/* Controles y filtros */}
+                <div className="bg-white rounded-lg border p-4 mb-4 space-y-4">
+                  {/* Filtros de estado */}
                   <div className="flex flex-wrap gap-2">
                     <button 
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        !reports.filter(r => r.status === 'PENDING').length 
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                          : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                        reportFilter === 'pending'
+                          ? 'bg-orange-500 text-white' 
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                       }`}
-                      disabled={!reports.filter(r => r.status === 'PENDING').length}
+                      onClick={() => setReportFilter('pending')}
                     >
                       Pendientes ({reports.filter(r => r.status === 'PENDING').length})
                     </button>
-                    <button className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">
+                    <button 
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        reportFilter === 'resolved'
+                          ? 'bg-green-500 text-white' 
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                      onClick={() => setReportFilter('resolved')}
+                    >
+                      Resueltos ({reports.filter(r => r.status === 'RESOLVED' || r.status === 'DISMISSED').length})
+                    </button>
+                    <button 
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        reportFilter === 'all'
+                          ? 'bg-blue-500 text-white' 
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                      onClick={() => setReportFilter('all')}
+                    >
                       Todos ({reports.length})
                     </button>
+                  </div>
+
+                  {/* Vista agrupada / lista */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">Vista:</span>
+                    <div className="flex gap-2">
+                      <button
+                        className={`p-2 rounded-lg transition-colors ${
+                          groupedView
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                        onClick={() => setGroupedView(true)}
+                        title="Agrupar por usuario"
+                      >
+                        <Users className="h-4 w-4" />
+                      </button>
+                      <button
+                        className={`p-2 rounded-lg transition-colors ${
+                          !groupedView
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                        onClick={() => setGroupedView(false)}
+                        title="Ver lista"
+                      >
+                        <LayoutList className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -905,9 +1067,172 @@ export default function AdminDashboard() {
                     <Flag className="h-12 w-12 text-gray-400 mx-auto mb-3" />
                     <p className="text-gray-600">No hay reportes</p>
                   </div>
-                ) : (
+                ) : groupedView ? (
+                  /* Vista agrupada por usuario */
                   <div className="space-y-3">
-                    {reports.map((report) => (
+                    {getGroupedReports().map(({ user, reports: userReports, totalReports, pendingReports }) => (
+                      <div
+                        key={user.id}
+                        className="bg-white rounded-lg border shadow-sm overflow-hidden"
+                      >
+                        {/* Header del grupo */}
+                        <div
+                          className="p-4 bg-gray-50 cursor-pointer hover:bg-gray-100 transition-colors"
+                          onClick={() => toggleGroup(user.id)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <UserAvatar
+                                userId={user.id}
+                                photo={null}
+                                name={user.nombre}
+                                className="h-10 w-10 shrink-0"
+                              />
+                              <div className="min-w-0">
+                                <div className="font-semibold text-gray-900 flex items-center gap-2">
+                                  <span className="truncate">
+                                    {user.nombre} {user.apellido}
+                                  </span>
+                                  {user.bannedAt && (
+                                    <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded shrink-0">
+                                      BANNED
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                  {totalReports} reporte{totalReports > 1 ? 's' : ''}
+                                  {pendingReports > 0 && (
+                                    <span className="ml-2 text-orange-600 font-medium">
+                                      ({pendingReports} pendiente{pendingReports > 1 ? 's' : ''})
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              {pendingReports > 0 && (
+                                <div className="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                                  {pendingReports}
+                                </div>
+                              )}
+                              {expandedGroups.has(user.id) ? (
+                                <ChevronUp className="h-5 w-5 text-gray-500" />
+                              ) : (
+                                <ChevronDown className="h-5 w-5 text-gray-500" />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Reportes del grupo (expandible) */}
+                        {expandedGroups.has(user.id) && (
+                          <div className="divide-y">
+                            {userReports.map((report, idx) => (
+                              <div key={report.id} className="p-4 bg-white">
+                                <div className="flex items-start justify-between mb-2">
+                                  <div className="flex items-center gap-2 min-w-0">
+                                    <div className={`w-2 h-2 rounded-full shrink-0 ${
+                                      report.status === 'PENDING' ? 'bg-orange-500' :
+                                      report.status === 'UNDER_REVIEW' ? 'bg-blue-500' :
+                                      report.status === 'RESOLVED' ? 'bg-green-500' :
+                                      'bg-gray-400'
+                                    }`} />
+                                    <div className="min-w-0">
+                                      <div className="font-medium text-gray-900 text-sm">
+                                        {report.reason.replace(/_/g, ' ')}
+                                      </div>
+                                      <div className="text-xs text-gray-500">
+                                        Reportado por: {report.reporter.nombre} {report.reporter.apellido} • {new Date(report.createdAt).toLocaleDateString('es-ES')}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <span className={`px-2 py-1 rounded text-xs font-medium shrink-0 ${
+                                    report.status === 'PENDING' ? 'bg-orange-100 text-orange-700' :
+                                    report.status === 'UNDER_REVIEW' ? 'bg-blue-100 text-blue-700' :
+                                    report.status === 'RESOLVED' ? 'bg-green-100 text-green-700' :
+                                    'bg-gray-100 text-gray-700'
+                                  }`}>
+                                    {report.status}
+                                  </span>
+                                </div>
+
+                                <p className="text-sm text-gray-700 mb-3 bg-gray-50 p-2 rounded">
+                                  {report.description}
+                                </p>
+
+                                {report.status === 'PENDING' && (
+                                  <div className="flex gap-2 flex-wrap">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => router.push(`/users/${user.id}`)}
+                                      className="text-xs"
+                                    >
+                                      <Eye className="h-3 w-3 mr-1" />
+                                      Ver perfil
+                                    </Button>
+                                    {!user.bannedAt && (
+                                      <Button
+                                        size="sm"
+                                        variant="destructive"
+                                        onClick={() => handleBanUser(user.id, report.reason)}
+                                        className="text-xs"
+                                      >
+                                        <ShieldOff className="h-3 w-3 mr-1" />
+                                        Banear
+                                      </Button>
+                                    )}
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleResolveReport(report.id, 'WARNING_SENT')}
+                                      className="text-xs bg-yellow-600 hover:bg-yellow-700"
+                                    >
+                                      <AlertCircle className="h-3 w-3 mr-1" />
+                                      Advertir
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      onClick={() => openDismissModal(report)}
+                                      className="text-xs bg-gray-600 hover:bg-gray-700"
+                                    >
+                                      <X className="h-3 w-3 mr-1" />
+                                      Desestimar
+                                    </Button>
+                                  </div>
+                                )}
+
+                                {(report.status === 'RESOLVED' || report.status === 'DISMISSED') && report.resolvedBy && (
+                                  <div className="text-xs text-gray-600 bg-green-50 p-2 rounded">
+                                    {report.status === 'RESOLVED' ? 'Resuelto' : 'Desestimado'} por {report.resolvedBy.nombre} {report.resolvedBy.apellido} el {new Date(report.resolvedAt!).toLocaleDateString('es-ES')}
+                                    {report.action && ` • Acción: ${report.action}`}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+
+                            {/* Acciones rápidas del grupo */}
+                            {pendingReports > 0 && !user.bannedAt && (
+                              <div className="p-3 bg-gray-50 border-t">
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleBanUser(user.id, `${totalReports} reportes`)}
+                                  className="w-full text-xs"
+                                >
+                                  <ShieldOff className="h-3 w-3 mr-1" />
+                                  Banear usuario ({totalReports} reportes)
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  /* Vista de lista tradicional */
+                  <div className="space-y-3">
+                    {getFilteredReports().map((report) => (
                       <div
                         key={report.id}
                         className="bg-white rounded-lg border shadow-sm p-4 hover:shadow-md transition-shadow"
@@ -973,18 +1298,26 @@ export default function AdminDashboard() {
                             )}
                             <Button
                               size="sm"
-                              onClick={() => handleResolveReport(report.id, 'NO_ACTION')}
+                              onClick={() => handleResolveReport(report.id, 'WARNING_SENT')}
+                              className="text-xs bg-yellow-600 hover:bg-yellow-700"
+                            >
+                              <AlertCircle className="h-3 w-3 mr-1" />
+                              Advertir
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => openDismissModal(report)}
                               className="text-xs bg-gray-600 hover:bg-gray-700"
                             >
-                              <CheckCircle className="h-3 w-3 mr-1" />
+                              <X className="h-3 w-3 mr-1" />
                               Desestimar
                             </Button>
                           </div>
                         )}
 
-                        {report.status === 'RESOLVED' && report.resolvedBy && (
+                        {(report.status === 'RESOLVED' || report.status === 'DISMISSED') && report.resolvedBy && (
                           <div className="text-xs text-gray-600 bg-green-50 p-2 rounded">
-                            Resuelto por {report.resolvedBy.nombre} {report.resolvedBy.apellido} el {new Date(report.resolvedAt!).toLocaleDateString('es-ES')}
+                            {report.status === 'RESOLVED' ? 'Resuelto' : 'Desestimado'} por {report.resolvedBy.nombre} {report.resolvedBy.apellido} el {new Date(report.resolvedAt!).toLocaleDateString('es-ES')}
                             {report.action && ` • Acción: ${report.action}`}
                           </div>
                         )}
@@ -1316,6 +1649,144 @@ export default function AdminDashboard() {
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Eliminar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Desestimar Reporte */}
+      {showDismissModal && reportToDismiss && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={closeDismissModal}
+        >
+          <div 
+            className="max-w-md w-full bg-white rounded-lg shadow-xl p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
+                <Flag className="h-6 w-6 text-gray-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">
+                  Desestimar Reporte
+                </h3>
+                <p className="text-sm text-gray-500">
+                  Marcar como falso o sin fundamento
+                </p>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="mb-6 space-y-4">
+              <div className="bg-gray-50 border border-gray-200 rounded-md p-3">
+                <p className="text-xs font-medium text-gray-700 mb-1">Reporte:</p>
+                <p className="text-sm text-gray-900 font-medium">
+                  {reportToDismiss.reason.replace(/_/g, ' ')}
+                </p>
+                <p className="text-xs text-gray-600 mt-1">
+                  Reportado: {reportToDismiss.reportedUser.nombre} {reportToDismiss.reportedUser.apellido}
+                </p>
+                <p className="text-xs text-gray-600">
+                  Por: {reportToDismiss.reporter.nombre} {reportToDismiss.reporter.apellido}
+                </p>
+              </div>
+
+              {/* Acción sobre el reportador */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">
+                  ¿Qué hacer con el reportador?
+                </label>
+                <div className="space-y-2">
+                  <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                    <input
+                      type="radio"
+                      name="dismissAction"
+                      value="no_action"
+                      checked={dismissAction === "no_action"}
+                      onChange={(e) => setDismissAction(e.target.value as "no_action" | "warn_reporter")}
+                      className="mt-1"
+                    />
+                    <div>
+                      <div className="text-sm font-medium text-gray-900">Sin acción</div>
+                      <div className="text-xs text-gray-600">Solo desestimar el reporte</div>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                    <input
+                      type="radio"
+                      name="dismissAction"
+                      value="warn_reporter"
+                      checked={dismissAction === "warn_reporter"}
+                      onChange={(e) => setDismissAction(e.target.value as "no_action" | "warn_reporter")}
+                      className="mt-1"
+                    />
+                    <div>
+                      <div className="text-sm font-medium text-gray-900 flex items-center gap-1">
+                        <AlertCircle className="h-4 w-4 text-orange-600" />
+                        Advertir al reportador
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        Marcar como reporte falso o malintencionado
+                      </div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Notas */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Notas {dismissAction === "warn_reporter" && <span className="text-red-600">*</span>}
+                </label>
+                <textarea
+                  value={dismissNotes}
+                  onChange={(e) => setDismissNotes(e.target.value)}
+                  placeholder={
+                    dismissAction === "warn_reporter"
+                      ? "Explicar por qué se considera reporte falso..."
+                      : "Notas adicionales (opcional)..."
+                  }
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm resize-none"
+                />
+              </div>
+
+              {dismissAction === "warn_reporter" && (
+                <div className="bg-orange-50 border border-orange-200 rounded-md p-3">
+                  <div className="flex gap-2">
+                    <AlertCircle className="h-5 w-5 text-orange-600 shrink-0" />
+                    <div className="text-xs text-orange-800">
+                      <p className="font-medium mb-1">Se registrará advertencia</p>
+                      <p>
+                        Esto quedará registrado en el historial del reportador. 
+                        Si acumula múltiples reportes falsos, podrá ser sancionado.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={closeDismissModal}
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleDismissReport}
+                disabled={dismissAction === "warn_reporter" && !dismissNotes.trim()}
+                className="flex-1 bg-gray-600 hover:bg-gray-700"
+              >
+                <X className="h-4 w-4 mr-2" />
+                Desestimar
               </Button>
             </div>
           </div>
