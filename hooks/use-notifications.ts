@@ -15,11 +15,14 @@ export function useNotifications() {
   const cargarNotificaciones = useCallback(async () => {
     try {
       const response = await NotificacionAPI.list()
-      if (response.success) {
+      if (response.success && Array.isArray(response.data)) {
         setNotificaciones(response.data)
+      } else {
+        setNotificaciones([]) // Fallback to empty array
       }
     } catch (error) {
       console.error("[useNotifications] Error cargando notificaciones:", error)
+      setNotificaciones([]) // Fallback to empty array
     }
   }, [])
 
@@ -42,11 +45,14 @@ export function useNotifications() {
   const cargarNoLeidas = useCallback(async () => {
     try {
       const response = await NotificacionAPI.getNoLeidas()
-      if (response.success) {
+      if (response.success && Array.isArray(response.data)) {
         setNoLeidas(response.data)
+      } else {
+        setNoLeidas([]) // Fallback to empty array
       }
     } catch (error) {
       console.error("[useNotifications] Error cargando no leídas:", error)
+      setNoLeidas([]) // Fallback to empty array
     }
   }, [])
 
