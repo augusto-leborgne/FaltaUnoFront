@@ -742,28 +742,28 @@ export default function AdminDashboard() {
                           <tr 
                             key={usuario.id} 
                             className="hover:bg-gray-50 cursor-pointer transition-colors"
-                            onClick={() => setSelectedUser(usuario)}
+                            onClick={() => router.push(`/users/${usuario.id}`)}
                           >
-                            <td className="px-4 py-3">
-                              <div className="flex items-center gap-3">
+                            <td className="px-3 py-2">
+                              <div className="flex items-center gap-2">
                                 <UserAvatar
                                   userId={usuario.id}
                                   photo={usuario.foto_perfil || null}
                                   name={usuario.nombre}
-                                  className="h-8 w-8 ring-2 ring-white shadow-sm"
+                                  className="h-7 w-7 ring-1 ring-white shadow-sm"
                                 />
-                                <span className="font-medium">
+                                <span className="font-medium text-sm">
                                   {usuario.nombre} {usuario.apellido}
                                 </span>
                               </div>
                             </td>
-                            <td className="px-4 py-3 text-sm text-gray-600">
+                            <td className="px-3 py-2 text-sm text-gray-600">
                               {usuario.email}
                             </td>
-                            <td className="px-4 py-3 text-sm text-gray-600">
+                            <td className="px-3 py-2 text-sm text-gray-600">
                               {usuario.celular || "-"}
                             </td>
-                            <td className="px-4 py-3">
+                            <td className="px-3 py-2">
                               <span
                                 className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${
                                   usuario.rol === "ADMIN"
@@ -779,20 +779,33 @@ export default function AdminDashboard() {
                                 {usuario.rol || "USER"}
                               </span>
                             </td>
-                            <td className="px-4 py-3">
-                              {usuario.deleted_at ? (
-                                <span className="text-xs text-red-600">Eliminado</span>
+                            <td className="px-3 py-2">
+                              {usuario.deleted_at || usuario.deletedAt ? (
+                                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-red-100 text-red-700">
+                                  Eliminado
+                                </span>
+                              ) : usuario.bannedAt ? (
+                                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-orange-100 text-orange-700">
+                                  Baneado
+                                </span>
+                              ) : usuario.lastActivityAt && 
+                                 new Date(usuario.lastActivityAt).getTime() > Date.now() - 30 * 24 * 60 * 60 * 1000 ? (
+                                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-green-100 text-green-700">
+                                  Activo
+                                </span>
                               ) : (
-                                <span className="text-xs text-green-600">Activo</span>
+                                <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-gray-100 text-gray-600">
+                                  Inactivo
+                                </span>
                               )}
                             </td>
-                            <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                            <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
                               <div className="flex gap-2">
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => setSelectedUser(usuario)}
-                                  title="Ver detalles"
+                                  onClick={() => router.push(`/users/${usuario.id}`)}
+                                  title="Ver perfil"
                                 >
                                   <Eye className="h-4 w-4" />
                                 </Button>
@@ -832,19 +845,19 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Vista Móvil - Cards */}
-                <div className="md:hidden space-y-3">
+                <div className="md:hidden space-y-2">
                   {usuarios.map((usuario) => (
                     <div
                       key={usuario.id}
-                      className="bg-white rounded-lg border shadow-sm p-4 active:bg-gray-50 transition-colors"
-                      onClick={() => setSelectedUser(usuario)}
+                      className="bg-white rounded-lg border shadow-sm p-3 active:bg-gray-50 transition-colors"
+                      onClick={() => router.push(`/users/${usuario.id}`)}
                     >
-                      <div className="flex items-start gap-3 mb-3">
+                      <div className="flex items-start gap-2 mb-2">
                         <UserAvatar
                           userId={usuario.id}
                           photo={usuario.foto_perfil || null}
                           name={usuario.nombre}
-                          className="h-12 w-12 ring-2 ring-white shadow-sm shrink-0"
+                          className="h-10 w-10 ring-1 ring-white shadow-sm shrink-0"
                         />
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-sm truncate">
@@ -868,19 +881,32 @@ export default function AdminDashboard() {
                             )}
                             {usuario.rol || "USER"}
                           </span>
-                          {usuario.deleted_at ? (
-                            <span className="text-xs text-red-600 font-medium">Eliminado</span>
+                          {usuario.deleted_at || usuario.deletedAt ? (
+                            <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-red-100 text-red-700">
+                              Eliminado
+                            </span>
+                          ) : usuario.bannedAt ? (
+                            <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-orange-100 text-orange-700">
+                              Baneado
+                            </span>
+                          ) : usuario.lastActivityAt && 
+                             new Date(usuario.lastActivityAt).getTime() > Date.now() - 30 * 24 * 60 * 60 * 1000 ? (
+                            <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-green-100 text-green-700">
+                              Activo
+                            </span>
                           ) : (
-                            <span className="text-xs text-green-600 font-medium">Activo</span>
+                            <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-gray-100 text-gray-600">
+                              Inactivo
+                            </span>
                           )}
                         </div>
                       </div>
 
-                      <div className="flex gap-2 pt-3 border-t" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex gap-2 pt-2 border-t" onClick={(e) => e.stopPropagation()}>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setSelectedUser(usuario)}
+                          onClick={() => router.push(`/users/${usuario.id}`)}
                           className="flex-1"
                         >
                           <Eye className="h-3 w-3 mr-1" />
@@ -954,7 +980,7 @@ export default function AdminDashboard() {
                           <tr 
                             key={partido.id} 
                             className="hover:bg-gray-50 cursor-pointer transition-colors"
-                            onClick={() => setSelectedMatch(partido)}
+                            onClick={() => router.push(`/matches/${partido.id}`)}
                           >
                             <td className="px-4 py-3">
                               <span className="font-medium">{partido.tipo_partido}</span>
@@ -994,8 +1020,8 @@ export default function AdminDashboard() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => setSelectedMatch(partido)}
-                                  title="Ver detalles"
+                                  onClick={() => router.push(`/matches/${partido.id}`)}
+                                  title="Ver partido"
                                 >
                                   <Eye className="h-4 w-4" />
                                 </Button>
@@ -1022,7 +1048,7 @@ export default function AdminDashboard() {
                     <div
                       key={partido.id}
                       className="bg-white rounded-lg border shadow-sm p-4 active:bg-gray-50 transition-colors"
-                      onClick={() => setSelectedMatch(partido)}
+                      onClick={() => router.push(`/matches/${partido.id}`)}
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div>
@@ -1071,11 +1097,11 @@ export default function AdminDashboard() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setSelectedMatch(partido)}
+                          onClick={() => router.push(`/matches/${partido.id}`)}
                           className="flex-1"
                         >
                           <Eye className="h-3 w-3 mr-1" />
-                          Ver Detalles
+                          Ver Partido
                         </Button>
                         <Button
                           variant="destructive"

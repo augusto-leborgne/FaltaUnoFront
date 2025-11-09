@@ -139,9 +139,14 @@ export interface Usuario {
   cedulaVerificada?: boolean;
   emailVerified?: boolean; // ✅ Nuevo campo
   provider?: string;
-  created_at?: string;
+  created_at?: string; // ISO 8601 timestamp
   rol?: string; // 'USER' | 'ADMIN'
-  deleted_at?: string; // Para soft-deleted users
+  deleted_at?: string; // Para soft-deleted users (ISO 8601)
+  bannedAt?: string; // ISO 8601 timestamp
+  banReason?: string;
+  lastActivityAt?: string; // ISO 8601 timestamp
+  createdAt?: string; // ISO 8601 timestamp
+  deletedAt?: string; // ISO 8601 timestamp (mismo que deleted_at, para consistencia)
 }
 
 export interface UsuarioMinDTO {
