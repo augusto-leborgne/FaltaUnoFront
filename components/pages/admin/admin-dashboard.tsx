@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Users, Calendar, TrendingUp, UserCheck, Trash2, Shield, ShieldOff, AlertCircle, CheckCircle, X } from "lucide-react"
+import { ArrowLeft, Users, Calendar, TrendingUp, UserCheck, Trash2, Shield, ShieldOff, AlertCircle, CheckCircle, X, Eye, Mail, Phone, MapPin, Clock } from "lucide-react"
 import { API_URL } from "@/lib/api"
 import { AuthService } from "@/lib/auth"
 import { logger } from "@/lib/logger"
+import { UserAvatar } from "@/components/ui/user-avatar"
 import type { Usuario } from "@/lib/api"
 
 interface AdminStats {
@@ -44,6 +45,10 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<"stats" | "users" | "matches">("stats")
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  
+  // Estados para modales de detalles
+  const [selectedUser, setSelectedUser] = useState<Usuario | null>(null)
+  const [selectedMatch, setSelectedMatch] = useState<Partido | null>(null)
 
   // Helper para hacer fetch autenticado
   const authenticatedFetch = async <T,>(url: string, options: RequestInit = {}): Promise<T> => {
@@ -391,18 +396,20 @@ export default function AdminDashboard() {
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {usuarios.map((usuario) => (
-                        <tr key={usuario.id} className="hover:bg-gray-50">
+                        <tr 
+                          key={usuario.id} 
+                          className="hover:bg-gray-50 cursor-pointer transition-colors"
+                          onClick={() => setSelectedUser(usuario)}
+                        >
                           <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <div className="h-8 w-8 overflow-hidden rounded-full bg-gray-200">
-                                {usuario.foto_perfil && (
-                                  <img
-                                    src={usuario.foto_perfil}
-                                    alt={usuario.nombre}
-                                    className="h-full w-full object-cover"
-                                  />
-                                )}
-                              </div>
+                            <div className="flex items-center gap-3">
+                              <UserAvatar
+                                userId={usuario.id}
+                                photo={usuario.foto_perfil || null}
+                                name={usuario.nombre}
+                                size="sm"
+                                className="ring-2 ring-white shadow-sm"
+                              />
                               <span className="font-medium">
                                 {usuario.nombre} {usuario.apellido}
                               </span>
@@ -437,8 +444,16 @@ export default function AdminDashboard() {
                               <span className="text-xs text-green-600">Activo</span>
                             )}
                           </td>
-                          <td className="px-4 py-3">
+                          <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                             <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setSelectedUser(usuario)}
+                                title="Ver detalles"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -504,7 +519,11 @@ export default function AdminDashboard() {
                     </thead>
                     <tbody className="divide-y divide-gray-200">
                       {partidos.map((partido) => (
-                        <tr key={partido.id} className="hover:bg-gray-50">
+                        <tr 
+                          key={partido.id} 
+                          className="hover:bg-gray-50 cursor-pointer transition-colors"
+                          onClick={() => setSelectedMatch(partido)}
+                        >
                           <td className="px-4 py-3">
                             <span className="font-medium">{partido.tipo_partido}</span>
                           </td>
@@ -514,23 +533,45 @@ export default function AdminDashboard() {
                           <td className="px-4 py-3 text-sm text-gray-600">
                             {partido.nombre_ubicacion}
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-600">
-                            {partido.organizador
-                              ? `${partido.organizador.nombre} ${partido.organizador.apellido}`
-                              : "-"}
+                          <td className="px-4 py-3">
+                            {partido.organizador ? (
+                              <div className="flex items-center gap-2">
+                                <UserAvatar
+                                  userId={partido.organizador.id}
+                                  photo={partido.organizador.foto_perfil || null}
+                                  name={partido.organizador.nombre}
+                                  size="xs"
+                                />
+                                <span className="text-sm text-gray-600">
+                                  {partido.organizador.nombre} {partido.organizador.apellido}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-sm text-gray-600">-</span>
+                            )}
                           </td>
                           <td className="px-4 py-3 text-sm">
                             {partido.jugadores_actuales || 0} / {partido.cantidad_jugadores}
                           </td>
-                          <td className="px-4 py-3">
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleDeleteMatch(partido.id)}
-                              title="Eliminar partido"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+                          <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setSelectedMatch(partido)}
+                                title="Ver detalles"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDeleteMatch(partido.id)}
+                                title="Eliminar partido"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -542,6 +583,253 @@ export default function AdminDashboard() {
           </>
         )}
       </div>
+
+      {/* Modal de Detalles de Usuario */}
+      {selectedUser && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setSelectedUser(null)}
+        >
+          <div 
+            className="max-w-2xl w-full bg-white rounded-lg shadow-xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <UserAvatar
+                  userId={selectedUser.id}
+                  photo={selectedUser.foto_perfil || null}
+                  name={selectedUser.nombre}
+                  size="md"
+                  className="ring-4 ring-white/30"
+                />
+                <div className="text-white">
+                  <h2 className="text-xl font-bold">
+                    {selectedUser.nombre} {selectedUser.apellido}
+                  </h2>
+                  <p className="text-sm text-blue-100">
+                    {selectedUser.rol === "ADMIN" ? "Administrador" : "Usuario"}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedUser(null)}
+                className="text-white hover:bg-white/20 rounded-full p-2 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <Mail className="h-4 w-4" />
+                    <span className="font-medium">Email</span>
+                  </div>
+                  <p className="text-gray-900 pl-6">{selectedUser.email}</p>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <Phone className="h-4 w-4" />
+                    <span className="font-medium">Celular</span>
+                  </div>
+                  <p className="text-gray-900 pl-6">{selectedUser.celular || "-"}</p>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <Shield className="h-4 w-4" />
+                    <span className="font-medium">Rol</span>
+                  </div>
+                  <p className="pl-6">
+                    <span
+                      className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${
+                        selectedUser.rol === "ADMIN"
+                          ? "bg-red-100 text-red-700"
+                          : "bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      {selectedUser.rol === "ADMIN" ? (
+                        <Shield className="h-3 w-3" />
+                      ) : (
+                        <Users className="h-3 w-3" />
+                      )}
+                      {selectedUser.rol || "USER"}
+                    </span>
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <UserCheck className="h-4 w-4" />
+                    <span className="font-medium">Estado</span>
+                  </div>
+                  <p className="pl-6">
+                    {selectedUser.deleted_at ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
+                        Eliminado
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+                        Activo
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {/* Acciones */}
+              <div className="pt-4 border-t flex gap-3 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedUser(null)
+                    handleToggleRole(selectedUser.id, selectedUser.rol || "USER")
+                  }}
+                >
+                  {selectedUser.rol === "ADMIN" ? (
+                    <>
+                      <ShieldOff className="h-4 w-4 mr-2" />
+                      Quitar Admin
+                    </>
+                  ) : (
+                    <>
+                      <Shield className="h-4 w-4 mr-2" />
+                      Hacer Admin
+                    </>
+                  )}
+                </Button>
+                {!selectedUser.deleted_at && (
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      setSelectedUser(null)
+                      handleDeleteUser(selectedUser.id)
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Eliminar Usuario
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Detalles de Partido */}
+      {selectedMatch && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => setSelectedMatch(null)}
+        >
+          <div 
+            className="max-w-2xl w-full bg-white rounded-lg shadow-xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-white">
+                  {selectedMatch.tipo_partido}
+                </h2>
+                <p className="text-sm text-orange-100">
+                  ID: {selectedMatch.id}
+                </p>
+              </div>
+              <button
+                onClick={() => setSelectedMatch(null)}
+                className="text-white hover:bg-white/20 rounded-full p-2 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <Calendar className="h-4 w-4" />
+                    <span className="font-medium">Fecha</span>
+                  </div>
+                  <p className="text-gray-900 pl-6">{selectedMatch.fecha}</p>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <Clock className="h-4 w-4" />
+                    <span className="font-medium">Hora</span>
+                  </div>
+                  <p className="text-gray-900 pl-6">{selectedMatch.hora}</p>
+                </div>
+
+                <div className="space-y-1 md:col-span-2">
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <MapPin className="h-4 w-4" />
+                    <span className="font-medium">Ubicación</span>
+                  </div>
+                  <p className="text-gray-900 pl-6">{selectedMatch.nombre_ubicacion}</p>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <Users className="h-4 w-4" />
+                    <span className="font-medium">Jugadores</span>
+                  </div>
+                  <p className="text-gray-900 pl-6">
+                    {selectedMatch.jugadores_actuales || 0} / {selectedMatch.cantidad_jugadores}
+                  </p>
+                </div>
+
+                {selectedMatch.organizador && (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <UserCheck className="h-4 w-4" />
+                      <span className="font-medium">Organizador</span>
+                    </div>
+                    <div className="flex items-center gap-2 pl-6">
+                      <UserAvatar
+                        userId={selectedMatch.organizador.id}
+                        photo={selectedMatch.organizador.foto_perfil || null}
+                        name={selectedMatch.organizador.nombre}
+                        size="xs"
+                      />
+                      <span className="text-gray-900">
+                        {selectedMatch.organizador.nombre} {selectedMatch.organizador.apellido}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Acciones */}
+              <div className="pt-4 border-t flex gap-3 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setSelectedMatch(null)}
+                >
+                  Cerrar
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    setSelectedMatch(null)
+                    handleDeleteMatch(selectedMatch.id)
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Eliminar Partido
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
