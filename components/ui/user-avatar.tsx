@@ -134,6 +134,12 @@ export function UserAvatar({
     const photoToUse = photo || loadedPhoto
     if (!photoToUse) return null
     
+    // Validar que no sea una data URI malformada (double-encoded)
+    if (photoToUse.includes('data:image') && photoToUse.includes('data:text/html')) {
+      console.error('[UserAvatar] Malformed data URI detected, ignoring photo')
+      return null
+    }
+    
     // Si ya tiene el prefijo data:image, usarla directamente
     if (photoToUse.startsWith('data:image')) {
       return photoToUse

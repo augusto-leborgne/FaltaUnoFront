@@ -112,6 +112,12 @@ class PhotoCacheManager {
 
       const blob = await response.blob()
       
+      // Validar que el blob sea una imagen válida
+      if (!blob.type.startsWith('image/')) {
+        logger?.warn?.(`[PhotoCache] Invalid image type for ${userId}: ${blob.type}`)
+        return null
+      }
+      
       // Convertir a base64 data URI
       const reader = new FileReader()
       const dataUrl = await new Promise<string>((resolve, reject) => {
@@ -119,6 +125,12 @@ class PhotoCacheManager {
         reader.onerror = reject
         reader.readAsDataURL(blob)
       })
+
+      // Validar que el data URI sea válido (no malformado)
+      if (!dataUrl.startsWith('data:image/')) {
+        logger?.error?.(`[PhotoCache] Malformed data URI for ${userId}`)
+        return null
+      }
 
       // Guardar en cache
       this.set(userId, dataUrl)
@@ -140,6 +152,12 @@ class PhotoCacheManager {
    */
   set(userId: string, photoData: string): void {
     if (!userId || !photoData) return
+
+    // Validar que no sea una data URI malformada antes de guardar
+    if (!photoData.startsWith('data:image/')) {
+      logger?.error?.(`[PhotoCache] Attempted to save invalid data URI for ${userId}`)
+      return
+    }
 
     const cached: CachedPhoto = {
       data: photoData,
@@ -237,16 +255,51 @@ class PhotoCacheManager {
 
       const parsed = JSON.parse(stored) as Record<string, CachedPhoto>
       
+      let cleaned = 0
       for (const [userId, cached] of Object.entries(parsed)) {
-        if (!this.isExpired(cached)) {
-          this.memoryCache.set(userId, cached)
+        // Skip expired entries
+        if (this.isExpired(cached)) {
+          cleaned++
+          continue
         }
+        
+        // Skip malformed data URIs (corrupted cache)
+        if (!cached.data.startsWith('data:image/')) {
+          logger?.warn?.(`[PhotoCache] Removing corrupted entry for ${userId}`)
+          cleaned++
+          continue
+        }
+        
+        this.memoryCache.set(userId, cached)
+      }
+
+      if (cleaned > 0) {
+        logger?.debug?.(`[PhotoCache] Cleaned ${cleaned} invalid entries from sessionStorage`)
+        // Re-save cleaned cache
+        this.saveAllToSessionStorage()
       }
 
       logger?.debug?.(`[PhotoCache] Loaded ${this.memoryCache.size} photos from sessionStorage`)
     } catch (error) {
       logger?.error?.("[PhotoCache] Error loading from sessionStorage:", error)
       sessionStorage.removeItem(this.SESSION_STORAGE_KEY)
+    }
+  }
+
+  /**
+   * Guarda todo el cache en memoria a sessionStorage
+   */
+  private saveAllToSessionStorage(): void {
+    if (typeof window === "undefined") return
+
+    try {
+      const data: Record<string, CachedPhoto> = {}
+      for (const [userId, cached] of this.memoryCache.entries()) {
+        data[userId] = cached
+      }
+      sessionStorage.setItem(this.SESSION_STORAGE_KEY, JSON.stringify(data))
+    } catch (error) {
+      logger?.warn?.("[PhotoCache] Error saving all to sessionStorage:", error)
     }
   }
 
