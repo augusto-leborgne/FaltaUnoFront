@@ -80,16 +80,16 @@ export default function AdminDashboard() {
       try {
         setLoadingData(true)
 
-        // Cargar stats
-        const statsResponse = await authenticatedFetch<AdminStats>(`${API_URL}/api/admin/stats`)
+  // Cargar stats
+  const statsResponse = await authenticatedFetch<AdminStats>(`${API_URL}/admin/stats`)
         setStats(statsResponse)
 
         // Cargar usuarios
-        const usuariosResponse = await authenticatedFetch<Usuario[]>(`${API_URL}/api/admin/usuarios`)
+  const usuariosResponse = await authenticatedFetch<Usuario[]>(`${API_URL}/admin/usuarios`)
         setUsuarios(usuariosResponse)
 
         // Cargar partidos
-        const partidosResponse = await authenticatedFetch<Partido[]>(`${API_URL}/api/admin/partidos`)
+  const partidosResponse = await authenticatedFetch<Partido[]>(`${API_URL}/admin/partidos`)
         setPartidos(partidosResponse)
       } catch (error) {
         logger.error("[AdminDashboard] Error cargando datos:", error)
@@ -107,7 +107,7 @@ export default function AdminDashboard() {
     }
 
     try {
-      await authenticatedFetch(`${API_URL}/api/admin/usuarios/${userId}`, {
+      await authenticatedFetch(`${API_URL}/admin/usuarios/${userId}`, {
         method: "DELETE",
       })
 
@@ -132,7 +132,7 @@ export default function AdminDashboard() {
     }
 
     try {
-      await authenticatedFetch(`${API_URL}/api/admin/usuarios/${userId}/rol`, {
+      await authenticatedFetch(`${API_URL}/admin/usuarios/${userId}/rol`, {
         method: "PUT",
         body: JSON.stringify({ rol: newRole }),
       })
@@ -153,7 +153,7 @@ export default function AdminDashboard() {
     }
 
     try {
-      await authenticatedFetch(`${API_URL}/api/admin/partidos/${matchId}`, {
+      await authenticatedFetch(`${API_URL}/admin/partidos/${matchId}`, {
         method: "DELETE",
       })
 
