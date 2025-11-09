@@ -93,6 +93,12 @@ class PhotoCacheManager {
         signal: AbortSignal.timeout(10000),
       })
 
+      // Si es 404, el usuario no tiene foto - no es un error
+      if (response.status === 404) {
+        logger?.debug?.(`[PhotoCache] User ${userId} has no photo (404)`)
+        return null
+      }
+
       if (!response.ok) {
         logger?.warn?.(`[PhotoCache] Failed to load photo for ${userId}: ${response.status}`)
         return null
@@ -113,7 +119,12 @@ class PhotoCacheManager {
       
       return dataUrl
     } catch (error) {
-      logger?.error?.(`[PhotoCache] Error loading photo for ${userId}:`, error)
+      // No loggear error si es timeout o abort (normal para usuarios sin foto)
+      if (error instanceof Error && (error.name === 'AbortError' || error.name === 'TimeoutError')) {
+        logger?.debug?.(`[PhotoCache] Timeout loading photo for ${userId}`)
+      } else {
+        logger?.error?.(`[PhotoCache] Error loading photo for ${userId}:`, error)
+      }
       return null
     }
   }
