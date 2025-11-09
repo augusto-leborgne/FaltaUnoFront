@@ -6,12 +6,13 @@ import React, { useEffect, useState, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
-import { Star, ArrowLeft, UserPlus } from "lucide-react"
+import { Star, ArrowLeft, UserPlus, Flag } from "lucide-react"
 import { useRouter } from "next/navigation"
 import AuthService from "@/lib/auth"
 import { calcularEdad } from "@/lib/utils"
 import { API_BASE, AmistadAPI } from "@/lib/api"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { ReportModal } from "@/components/ui/report-modal"
 
 interface Review {
   id: string
@@ -54,6 +55,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
   const [mutualFriends, setMutualFriends] = useState<Usuario[]>([])
   const [loading, setLoading] = useState(false) // Cambiar a false para UI inmediata
   const [error, setError] = useState<string | null>(null)
+  const [reportModalOpen, setReportModalOpen] = useState(false)
 
   const loadUserProfile = useCallback(async () => {
     try {
@@ -418,6 +420,16 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
             {friendStatus === 'pending-sent' && (
               <p className="text-sm text-orange-600 font-medium text-center">✓ Solicitud enviada correctamente</p>
             )}
+            
+            {/* Report Button */}
+            <Button
+              onClick={() => setReportModalOpen(true)}
+              variant="outline"
+              className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 py-3 rounded-xl"
+            >
+              <Flag className="w-4 h-4 mr-2" />
+              Reportar usuario
+            </Button>
           </div>
         </div>
 
@@ -517,6 +529,14 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       </div>
 
       <BottomNavigation />
+
+      {/* Report Modal */}
+      <ReportModal
+        isOpen={reportModalOpen}
+        onClose={() => setReportModalOpen(false)}
+        reportedUserId={userId}
+        reportedUserName={fullName}
+      />
     </div>
   )
 }

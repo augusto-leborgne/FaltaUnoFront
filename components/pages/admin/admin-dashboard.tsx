@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Users, Calendar, TrendingUp, UserCheck, Trash2, Shield, ShieldOff, AlertCircle, CheckCircle, X, Eye, Mail, Phone, MapPin, Clock } from "lucide-react"
+import { ArrowLeft, Users, Calendar, TrendingUp, UserCheck, Trash2, Shield, ShieldOff, AlertCircle, CheckCircle, X, Eye, Mail, Phone, MapPin, Clock, Flag } from "lucide-react"
 import { API_URL } from "@/lib/api"
 import { AuthService } from "@/lib/auth"
 import { logger } from "@/lib/logger"
@@ -37,20 +37,50 @@ interface Partido {
   }
 }
 
+interface Report {
+  id: number
+  reporter: {
+    id: string
+    nombre: string
+    apellido: string
+    email: string
+  }
+  reportedUser: {
+    id: string
+    nombre: string
+    apellido: string
+    email: string
+    bannedAt?: string
+  }
+  reason: string
+  description: string
+  status: string
+  createdAt: string
+  resolvedAt?: string
+  resolvedBy?: {
+    id: string
+    nombre: string
+    apellido: string
+  }
+  action?: string
+}
+
 export default function AdminDashboard() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [usuarios, setUsuarios] = useState<Usuario[]>([])
   const [partidos, setPartidos] = useState<Partido[]>([])
+  const [reports, setReports] = useState<Report[]>([])
   const [loadingData, setLoadingData] = useState(true)
-  const [activeTab, setActiveTab] = useState<"stats" | "users" | "matches">("stats")
+  const [activeTab, setActiveTab] = useState<"stats" | "users" | "matches" | "reports">("stats")
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   
   // Estados para modales de detalles
   const [selectedUser, setSelectedUser] = useState<Usuario | null>(null)
   const [selectedMatch, setSelectedMatch] = useState<Partido | null>(null)
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null)
 
   // Helper para hacer fetch autenticado
   const authenticatedFetch = async <T,>(url: string, options: RequestInit = {}): Promise<T> => {
@@ -103,11 +133,16 @@ export default function AdminDashboard() {
         // Cargar partidos
         const partidosResponse = await authenticatedFetch<Partido[]>(`${API_URL}/admin/partidos`)
         setPartidos(Array.isArray(partidosResponse) ? partidosResponse : [])
+
+        // Cargar reportes
+        const reportsResponse = await authenticatedFetch<Report[]>(`${API_URL}/admin/reports`)
+        setReports(Array.isArray(reportsResponse) ? reportsResponse : [])
       } catch (error) {
         logger.error("[AdminDashboard] Error cargando datos:", error)
         // Set empty arrays on error to prevent crashes
         setUsuarios([])
         setPartidos([])
+        setReports([])
       } finally {
         setLoadingData(false)
       }
@@ -196,6 +231,59 @@ export default function AdminDashboard() {
     } catch (error) {
       logger.error("[AdminDashboard] Error eliminando partido:", error)
       setError("Error al eliminar partido: " + (error instanceof Error ? error.message : "Error desconocido"))
+      setTimeout(() => setError(null), 5000)
+    }
+  }
+
+  const handleBanUser = async (userId: string, reason: string) => {
+    const banReason = prompt("Motivo del baneo:", reason)
+    if (!banReason) return
+
+    try {
+      setError(null)
+      await authenticatedFetch(`${API_URL}/admin/usuarios/${userId}/ban`, {
+        method: "POST",
+        body: JSON.stringify({ reason: banReason }),
+      })
+
+      // Actualizar lista de usuarios
+      setUsuarios((prev) =>
+        prev.map((u) =>
+          u.id === userId ? { ...u, bannedAt: new Date().toISOString() } : u
+        )
+      )
+
+      setSuccessMessage("Usuario baneado correctamente")
+      setTimeout(() => setSuccessMessage(null), 3000)
+    } catch (error) {
+      logger.error("[AdminDashboard] Error baneando usuario:", error)
+      setError("Error al banear usuario: " + (error instanceof Error ? error.message : "Error desconocido"))
+      setTimeout(() => setError(null), 5000)
+    }
+  }
+
+  const handleResolveReport = async (reportId: number, action: string) => {
+    try {
+      setError(null)
+      await authenticatedFetch(`${API_URL}/admin/reports/${reportId}/resolve`, {
+        method: "PUT",
+        body: JSON.stringify({ action }),
+      })
+
+      // Actualizar lista de reportes
+      setReports((prev) =>
+        prev.map((r) =>
+          r.id === reportId
+            ? { ...r, status: "RESOLVED", resolvedAt: new Date().toISOString(), action }
+            : r
+        )
+      )
+
+      setSuccessMessage("Reporte resuelto correctamente")
+      setTimeout(() => setSuccessMessage(null), 3000)
+    } catch (error) {
+      logger.error("[AdminDashboard] Error resolviendo reporte:", error)
+      setError("Error al resolver reporte: " + (error instanceof Error ? error.message : "Error desconocido"))
       setTimeout(() => setError(null), 5000)
     }
   }
@@ -306,6 +394,17 @@ export default function AdminDashboard() {
           >
             <Calendar className="mb-1 inline h-3 w-3 sm:h-4 sm:w-4" /> 
             <span className="ml-1">Partidos ({partidos.length})</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("reports")}
+            className={`px-3 sm:px-4 py-2 font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${
+              activeTab === "reports"
+                ? "border-b-2 border-blue-500 text-blue-600"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            <Flag className="mb-1 inline h-3 w-3 sm:h-4 sm:w-4" /> 
+            <span className="ml-1">Reportes ({reports.filter(r => r.status === 'PENDING').length})</span>
           </button>
         </div>
       </div>
@@ -753,6 +852,124 @@ export default function AdminDashboard() {
                     </div>
                   ))}
                 </div>
+              </>
+            )}
+
+            {/* Reports Tab */}
+            {activeTab === "reports" && (
+              <>
+                {/* Filtros de reportes */}
+                <div className="bg-white rounded-lg border p-4 mb-4">
+                  <div className="flex flex-wrap gap-2">
+                    <button 
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        !reports.filter(r => r.status === 'PENDING').length 
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                          : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                      }`}
+                      disabled={!reports.filter(r => r.status === 'PENDING').length}
+                    >
+                      Pendientes ({reports.filter(r => r.status === 'PENDING').length})
+                    </button>
+                    <button className="px-4 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200">
+                      Todos ({reports.length})
+                    </button>
+                  </div>
+                </div>
+
+                {/* Lista de reportes */}
+                {reports.length === 0 ? (
+                  <div className="bg-white rounded-lg border p-8 text-center">
+                    <Flag className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                    <p className="text-gray-600">No hay reportes</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {reports.map((report) => (
+                      <div
+                        key={report.id}
+                        className="bg-white rounded-lg border shadow-sm p-4 hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-2 h-2 rounded-full ${
+                              report.status === 'PENDING' ? 'bg-orange-500' :
+                              report.status === 'UNDER_REVIEW' ? 'bg-blue-500' :
+                              report.status === 'RESOLVED' ? 'bg-green-500' :
+                              'bg-gray-400'
+                            }`} />
+                            <div>
+                              <div className="font-medium text-gray-900">
+                                {report.reason.replace(/_/g, ' ')}
+                              </div>
+                              <div className="text-sm text-gray-600">
+                                Reportado: <span className="font-medium">{report.reportedUser.nombre} {report.reportedUser.apellido}</span>
+                                {report.reportedUser.bannedAt && (
+                                  <span className="ml-2 text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">BANNED</span>
+                                )}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1">
+                                Por: {report.reporter.nombre} {report.reporter.apellido} • {new Date(report.createdAt).toLocaleDateString('es-ES')}
+                              </div>
+                            </div>
+                          </div>
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            report.status === 'PENDING' ? 'bg-orange-100 text-orange-700' :
+                            report.status === 'UNDER_REVIEW' ? 'bg-blue-100 text-blue-700' :
+                            report.status === 'RESOLVED' ? 'bg-green-100 text-green-700' :
+                            'bg-gray-100 text-gray-700'
+                          }`}>
+                            {report.status}
+                          </span>
+                        </div>
+
+                        <p className="text-sm text-gray-700 mb-3 bg-gray-50 p-3 rounded">
+                          {report.description}
+                        </p>
+
+                        {report.status === 'PENDING' && (
+                          <div className="flex gap-2 flex-wrap">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => router.push(`/users/${report.reportedUser.id}`)}
+                              className="text-xs"
+                            >
+                              <Eye className="h-3 w-3 mr-1" />
+                              Ver perfil
+                            </Button>
+                            {!report.reportedUser.bannedAt && (
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleBanUser(report.reportedUser.id, report.reason)}
+                                className="text-xs"
+                              >
+                                <ShieldOff className="h-3 w-3 mr-1" />
+                                Banear usuario
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              onClick={() => handleResolveReport(report.id, 'NO_ACTION')}
+                              className="text-xs bg-gray-600 hover:bg-gray-700"
+                            >
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Desestimar
+                            </Button>
+                          </div>
+                        )}
+
+                        {report.status === 'RESOLVED' && report.resolvedBy && (
+                          <div className="text-xs text-gray-600 bg-green-50 p-2 rounded">
+                            Resuelto por {report.resolvedBy.nombre} {report.resolvedBy.apellido} el {new Date(report.resolvedAt!).toLocaleDateString('es-ES')}
+                            {report.action && ` • Acción: ${report.action}`}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </>
             )}
           </>
