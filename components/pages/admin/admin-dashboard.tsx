@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Users, Calendar, TrendingUp, UserCheck, Trash2, Shield, ShieldOff } from "lucide-react"
+import { ArrowLeft, Users, Calendar, TrendingUp, UserCheck, Trash2, Shield, ShieldOff, AlertCircle, CheckCircle, X } from "lucide-react"
 import { API_URL } from "@/lib/api"
 import { AuthService } from "@/lib/auth"
 import { logger } from "@/lib/logger"
@@ -42,6 +42,8 @@ export default function AdminDashboard() {
   const [partidos, setPartidos] = useState<Partido[]>([])
   const [loadingData, setLoadingData] = useState(true)
   const [activeTab, setActiveTab] = useState<"stats" | "users" | "matches">("stats")
+  const [error, setError] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
   // Helper para hacer fetch autenticado
   const authenticatedFetch = async <T,>(url: string, options: RequestInit = {}): Promise<T> => {
@@ -113,6 +115,7 @@ export default function AdminDashboard() {
     }
 
     try {
+      setError(null)
       await authenticatedFetch(`${API_URL}/admin/usuarios/${userId}`, {
         method: "DELETE",
       })
@@ -124,9 +127,13 @@ export default function AdminDashboard() {
       if (stats) {
         setStats({ ...stats, totalUsuarios: stats.totalUsuarios - 1 })
       }
+      
+      setSuccessMessage("Usuario eliminado correctamente")
+      setTimeout(() => setSuccessMessage(null), 3000)
     } catch (error) {
       logger.error("[AdminDashboard] Error eliminando usuario:", error)
-      alert("Error al eliminar usuario")
+      setError("Error al eliminar usuario: " + (error instanceof Error ? error.message : "Error desconocido"))
+      setTimeout(() => setError(null), 5000)
     }
   }
 
@@ -138,6 +145,7 @@ export default function AdminDashboard() {
     }
 
     try {
+      setError(null)
       await authenticatedFetch(`${API_URL}/admin/usuarios/${userId}/rol`, {
         method: "PUT",
         body: JSON.stringify({ rol: newRole }),
@@ -147,9 +155,13 @@ export default function AdminDashboard() {
       setUsuarios((prev) =>
         prev.map((u) => (u.id === userId ? { ...u, rol: newRole } : u))
       )
+      
+      setSuccessMessage(`Rol cambiado a ${newRole} correctamente`)
+      setTimeout(() => setSuccessMessage(null), 3000)
     } catch (error) {
       logger.error("[AdminDashboard] Error cambiando rol:", error)
-      alert("Error al cambiar rol")
+      setError("Error al cambiar rol: " + (error instanceof Error ? error.message : "Error desconocido"))
+      setTimeout(() => setError(null), 5000)
     }
   }
 
@@ -159,6 +171,7 @@ export default function AdminDashboard() {
     }
 
     try {
+      setError(null)
       await authenticatedFetch(`${API_URL}/admin/partidos/${matchId}`, {
         method: "DELETE",
       })
@@ -170,9 +183,13 @@ export default function AdminDashboard() {
       if (stats) {
         setStats({ ...stats, totalPartidos: stats.totalPartidos - 1 })
       }
+      
+      setSuccessMessage("Partido eliminado correctamente")
+      setTimeout(() => setSuccessMessage(null), 3000)
     } catch (error) {
       logger.error("[AdminDashboard] Error eliminando partido:", error)
-      alert("Error al eliminar partido")
+      setError("Error al eliminar partido: " + (error instanceof Error ? error.message : "Error desconocido"))
+      setTimeout(() => setError(null), 5000)
     }
   }
 
@@ -214,6 +231,37 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Error/Success Messages */}
+      {error && (
+        <div className="mx-auto max-w-6xl px-4 pt-4">
+          <div className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-200 p-4">
+            <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+            <p className="text-sm text-red-800 flex-1">{error}</p>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-600 hover:text-red-800"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {successMessage && (
+        <div className="mx-auto max-w-6xl px-4 pt-4">
+          <div className="flex items-center gap-2 rounded-lg bg-green-50 border border-green-200 p-4">
+            <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+            <p className="text-sm text-green-800 flex-1">{successMessage}</p>
+            <button
+              onClick={() => setSuccessMessage(null)}
+              className="text-green-600 hover:text-green-800"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="mx-auto max-w-6xl px-4 pt-4">
