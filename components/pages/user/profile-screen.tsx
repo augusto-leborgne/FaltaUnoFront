@@ -7,8 +7,9 @@ import React, { useEffect, useState, useCallback } from "react"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { BetaBadge } from "@/components/ui/beta-badge"
 import { UserAvatar } from "@/components/ui/user-avatar"
-import { Settings, Star, Phone, Users, LogOut, UserPlus } from "lucide-react"
+import { Settings, Star, Phone, Users, LogOut, UserPlus, Share2 } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useRouter } from "next/navigation"
 import { calcularEdad } from "@/lib/utils"
@@ -70,6 +71,12 @@ function ProfileScreenInner() {
   const [isSyncingContacts, setIsSyncingContacts] = useState(false)
   const [loading, setLoading] = useState(true) // ⚡ Mostrar spinner mientras carga primera vez
   const [error, setError] = useState<string | null>(null)
+
+  // Detectar si es iOS
+  const isIOS = () => {
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+           (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  }
 
   const loadProfileData = useCallback(async () => {
     try {
@@ -187,6 +194,48 @@ function ProfileScreenInner() {
   const handleSettingsClick = () => router.push("/settings")
   const handleFriendsClick = () => router.push("/friends") // Ver todos los amigos
 
+  const handleShareApp = async () => {
+    const shareData = {
+      title: 'Falta Uno - ¡Únete a la app!',
+      text: '¡Hey! Descarga Falta Uno, la mejor app para organizar partidos de fútbol. ⚽',
+      url: 'https://faltauno-frontend-169771742214.us-central1.run.app'
+    }
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData)
+        logger.log('[ProfileScreen] App compartida exitosamente')
+      } else {
+        // Fallback: copiar link al clipboard
+        await navigator.clipboard.writeText(shareData.url)
+        alert('✅ Link copiado al portapapeles')
+      }
+    } catch (error) {
+      logger.error('[ProfileScreen] Error al compartir:', error)
+    }
+  }
+
+  const handleInviteContact = (contact: Contact) => {
+    if (contact.isOnApp) {
+      // Si está en la app, navegar a su perfil
+      router.push(`/users/${contact.id}`)
+      return
+    }
+
+    // Si no está en la app, invitar por WhatsApp
+    const message = encodeURIComponent(
+      `¡Hola ${contact.nombre}! 👋\n\n` +
+      `Te invito a unirte a Falta Uno, la app para organizar partidos de fútbol. ⚽\n\n` +
+      `Descárgala aquí: https://faltauno-frontend-169771742214.us-central1.run.app`
+    )
+    
+    const phone = contact.celular?.replace(/[^0-9+]/g, '') // Limpiar número
+    const whatsappUrl = `https://wa.me/${phone}?text=${message}`
+    
+    window.open(whatsappUrl, '_blank')
+    logger.log('[ProfileScreen] Invitación enviada por WhatsApp a:', contact.nombre)
+  }
+
   const handleSyncContacts = async () => {
     try {
       setIsSyncingContacts(true)
@@ -291,7 +340,10 @@ function ProfileScreenInner() {
       {/* Header */}
       <div className="pt-12 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6 border-b border-gray-100">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900">Mi Perfil</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-gray-900">Mi Perfil</h1>
+            <BetaBadge />
+          </div>
           <button
             onClick={handleSettingsClick}
             className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
@@ -537,16 +589,29 @@ function ProfileScreenInner() {
 
           {contacts.length === 0 ? (
             <div className="text-center py-6 sm:py-8">
-              <p className="text-gray-500 mb-3 sm:mb-4 text-sm">No tienes contactos sincronizados</p>
+              <p className="text-gray-500 mb-3 sm:mb-4 text-sm">
+                {isIOS() ? 'Invita a tus amigos a la app' : 'No tienes contactos sincronizados'}
+              </p>
               <Button 
-                onClick={handleSyncContacts} 
+                onClick={isIOS() ? handleShareApp : handleSyncContacts} 
                 disabled={isSyncingContacts}
                 className="bg-green-600 hover:bg-green-700 text-xs sm:text-sm"
               >
-                <UserPlus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                {isSyncingContacts ? 'Sincronizando...' : 'Sincronizar contactos'}
+                {isIOS() ? (
+                  <>
+                    <Share2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    Compartir app
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    {isSyncingContacts ? 'Sincronizando...' : 'Sincronizar contactos'}
+                  </>
+                )}
               </Button>
-              <p className="text-xs text-gray-400 mt-2">Encuentra amigos que ya están en la app</p>
+              <p className="text-xs text-gray-400 mt-2">
+                {isIOS() ? 'Comparte Falta Uno con tus amigos' : 'Encuentra amigos que ya están en la app'}
+              </p>
             </div>
           ) : (
             <div className="space-y-2 sm:space-y-3">
@@ -556,14 +621,8 @@ function ProfileScreenInner() {
                 return (
                   <div
                     key={contact.id}
-                    onClick={() => {
-                      if (contact.isOnApp && contact.id) {
-                        router.push(`/users/${contact.id}`)
-                      }
-                    }}
-                    className={`flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl ${
-                      contact.isOnApp ? 'cursor-pointer hover:bg-gray-100' : ''
-                    } transition-colors`}
+                    onClick={() => handleInviteContact(contact)}
+                    className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl cursor-pointer hover:bg-gray-100 transition-colors"
                   >
                     <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
                       <UserAvatar 

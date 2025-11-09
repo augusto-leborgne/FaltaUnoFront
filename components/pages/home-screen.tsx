@@ -5,6 +5,7 @@ import { logger } from '@/lib/logger'
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { BetaBadge } from "@/components/ui/beta-badge"
 import { UserAvatar } from "@/components/ui/user-avatar"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { Clock, Calendar, Star, Bell, Newspaper, TrendingUp, Award, X } from "lucide-react"
@@ -258,7 +259,10 @@ export function HomeScreen() {
       <div className="pt-12 sm:pt-16 pb-3 sm:pb-6 px-3 sm:px-6 bg-gradient-to-r from-primary/5 to-secondary/5">
         <div className="flex items-center justify-between mb-3 sm:mb-4">
           <div className="flex-1 min-w-0">
-            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground truncate">¡Bienvenido!</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground truncate">¡Bienvenido!</h1>
+              <BetaBadge />
+            </div>
             <p className="text-xs sm:text-sm md:text-base text-muted-foreground truncate">Descubre lo que está pasando</p>
           </div>
           <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
