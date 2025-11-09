@@ -93,9 +93,15 @@ class PhotoCacheManager {
         signal: AbortSignal.timeout(10000),
       })
 
-      // Si es 404, el usuario no tiene foto - no es un error
+      // 204 No Content = Usuario existe pero no tiene foto (normal, no es error)
+      if (response.status === 204) {
+        logger?.debug?.(`[PhotoCache] User ${userId} has no photo (204 No Content)`)
+        return null
+      }
+
+      // 404 Not Found = Usuario no existe (error real)
       if (response.status === 404) {
-        logger?.debug?.(`[PhotoCache] User ${userId} has no photo (404)`)
+        logger?.warn?.(`[PhotoCache] User ${userId} not found (404)`)
         return null
       }
 
