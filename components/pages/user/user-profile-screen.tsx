@@ -113,7 +113,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       // Obtener amigos del usuario que estamos viendo
       if (misAmigos.length > 0) {
         try {
-          const userFriendsRes = await fetch(`${API_BASE}/api/amistad/amigos/${userId}`, {
+          const userFriendsRes = await fetch(`${API_BASE}/api/amistades/amigos/${userId}`, {
             headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
           })
           if (userFriendsRes.ok) {
