@@ -2,7 +2,7 @@
 
 
 import { logger } from '@/lib/logger'
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -31,43 +31,6 @@ export function LoginScreen() {
     email?: string
     password?: string
   }>({})
-
-  // ✅ Check for OAuth errors in URL parameters
-  useEffect(() => {
-    const errorParam = search.get("error")
-    const messageParam = search.get("message")
-    
-    if (errorParam) {
-      logger.error("[LoginScreen] OAuth error from URL:", errorParam, messageParam)
-      
-      // Map error codes to user-friendly messages
-      let errorMessage = "Error al iniciar sesión con Google. Por favor intenta nuevamente."
-      
-      switch (errorParam) {
-        case "oauth_no_email":
-          errorMessage = "No se pudo obtener tu email de Google. Por favor verifica los permisos."
-          break
-        case "oauth_error":
-          errorMessage = messageParam 
-            ? `Error de autenticación: ${decodeURIComponent(messageParam)}` 
-            : "Error al autenticar con Google. Por favor intenta nuevamente."
-          break
-        case "oauth_failed":
-          errorMessage = "No se pudo completar la autenticación. Por favor intenta nuevamente."
-          break
-        default:
-          errorMessage = `Error: ${errorParam}`
-      }
-      
-      setError(errorMessage)
-      
-      // Clear error from URL without reloading the page
-      const newUrl = new URL(window.location.href)
-      newUrl.searchParams.delete("error")
-      newUrl.searchParams.delete("message")
-      window.history.replaceState({}, '', newUrl.toString())
-    }
-  }, [search])
 
   // ✅ NUEVO: Validar campos individuales
   const validateField = (field: 'email' | 'password', value: string): string | null => {

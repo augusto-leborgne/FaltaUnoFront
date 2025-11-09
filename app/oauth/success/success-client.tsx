@@ -38,7 +38,7 @@ function OAuthSuccessContent() {
           setStatus("error")
           setMessage("❌ No se recibió el token de autenticación")
           await new Promise(resolve => setTimeout(resolve, 3000))
-          router.push("/login")
+          router.push("/oauth/error?reason=no_token")
           return
         }
 
@@ -84,9 +84,9 @@ function OAuthSuccessContent() {
           setMessage(`❌ Error al verificar cuenta: ${errorMsg}`)
           
           // Limpiar y redirigir
-          await new Promise(resolve => setTimeout(resolve, 5000)) // Mostrar error más tiempo
+          await new Promise(resolve => setTimeout(resolve, 3000))
           TokenPersistence.clearAllTokens()
-          router.push("/login?error=oauth_failed")
+          router.push("/oauth/error?reason=user_fetch_failed&message=" + encodeURIComponent(errorMsg))
           return
         }
 
@@ -119,10 +119,10 @@ function OAuthSuccessContent() {
         setMessage(`❌ Error: ${errorMsg}`)
         
         // Mostrar error más tiempo antes de redirigir
-        await new Promise(resolve => setTimeout(resolve, 5000))
+        await new Promise(resolve => setTimeout(resolve, 3000))
         
         TokenPersistence.clearAllTokens()
-        router.push("/login?error=oauth_error")
+        router.push("/oauth/error?reason=processing_error&message=" + encodeURIComponent(errorMsg))
       }
     }
 
