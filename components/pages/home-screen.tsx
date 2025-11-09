@@ -145,7 +145,7 @@ export function HomeScreen() {
       // Procesar partidos
       if (matchesResult.status === 'fulfilled' && matchesResult.value) {
         const matchesData = matchesResult.value
-        const partidos = matchesData.data || []
+        const partidos = Array.isArray(matchesData.data) ? matchesData.data : []
         
         // Filtrar solo próximos partidos
         const now = new Date()
@@ -155,11 +155,23 @@ export function HomeScreen() {
         }).slice(0, 5)
         
         setUpcomingMatches(proximos)
+      } else {
+        setUpcomingMatches([])
       }
 
       // Procesar reseñas pendientes
       if (reviewsResult.status === 'fulfilled' && reviewsResult.value) {
-        setPendingReviews(reviewsResult.value.data || [])
+        const reviewsData = reviewsResult.value
+        // Defensive check: ensure data is an array before setting
+        if (Array.isArray(reviewsData.data)) {
+          setPendingReviews(reviewsData.data)
+        } else if (reviewsData.success && reviewsData.data && Array.isArray(reviewsData.data)) {
+          setPendingReviews(reviewsData.data)
+        } else {
+          setPendingReviews([])
+        }
+      } else {
+        setPendingReviews([])
       }
 
       // Procesar estadísticas
@@ -177,7 +189,7 @@ export function HomeScreen() {
       // Procesar novedades
       if (novedadesResult.status === 'fulfilled' && novedadesResult.value) {
         const novedadesData = novedadesResult.value
-        if (novedadesData.success && novedadesData.data) {
+        if (novedadesData.success && Array.isArray(novedadesData.data)) {
           setNewsUpdates(novedadesData.data)
         } else {
           setNewsUpdates(getDefaultNews())
