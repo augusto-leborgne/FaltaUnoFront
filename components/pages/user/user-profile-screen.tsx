@@ -6,13 +6,14 @@ import React, { useEffect, useState, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
-import { Star, ArrowLeft, UserPlus, Flag } from "lucide-react"
+import { Star, ArrowLeft, UserPlus, Flag, Shield, ShieldOff, Trash2, UserX } from "lucide-react"
 import { useRouter } from "next/navigation"
 import AuthService from "@/lib/auth"
 import { calcularEdad } from "@/lib/utils"
 import { API_BASE, AmistadAPI } from "@/lib/api"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { ReportModal } from "@/components/ui/report-modal"
+import { useAuth } from "@/hooks/use-auth"
 
 interface Review {
   id: string
@@ -49,6 +50,7 @@ interface UserProfileScreenProps {
 
 export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
   const router = useRouter()
+  const { user: currentUser } = useAuth()
   const [user, setUser] = useState<Usuario | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [friendStatus, setFriendStatus] = useState<'none' | 'friends' | 'pending-sent' | 'pending-received'>('none')
@@ -56,6 +58,9 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
   const [loading, setLoading] = useState(false) // Cambiar a false para UI inmediata
   const [error, setError] = useState<string | null>(null)
   const [reportModalOpen, setReportModalOpen] = useState(false)
+  const [showAdminActions, setShowAdminActions] = useState(false)
+
+  const isAdmin = currentUser?.rol === "ADMIN"
 
   const loadUserProfile = useCallback(async () => {
     try {
@@ -247,6 +252,112 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
 
   const handleUserClick = (id: string) => router.push(`/users/${id}`)
 
+  // Admin functions
+  const handleBanUser = async () => {
+    const reason = prompt("Motivo del baneo:")
+    if (!reason) return
+
+    try {
+      const token = AuthService.getToken()
+      const response = await fetch(`${API_BASE}/admin/usuarios/${userId}/ban`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ reason }),
+      })
+
+      if (response.ok) {
+        alert("Usuario baneado correctamente")
+        loadUserProfile() // Recargar perfil para mostrar estado de baneo
+      } else {
+        alert("Error al banear usuario")
+      }
+    } catch (error) {
+      logger.error("Error banning user:", error)
+      alert("Error al banear usuario")
+    }
+  }
+
+  const handleUnbanUser = async () => {
+    if (!confirm("¿Desbanear este usuario?")) return
+
+    try {
+      const token = AuthService.getToken()
+      const response = await fetch(`${API_BASE}/admin/usuarios/${userId}/unban`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+
+      if (response.ok) {
+        alert("Usuario desbaneado correctamente")
+        loadUserProfile()
+      } else {
+        alert("Error al desbanear usuario")
+      }
+    } catch (error) {
+      logger.error("Error unbanning user:", error)
+      alert("Error al desbanear usuario")
+    }
+  }
+
+  const handleToggleRole = async () => {
+    const newRole = (user as any).rol === "ADMIN" ? "USER" : "ADMIN"
+    if (!confirm(`¿Cambiar rol a ${newRole}?`)) return
+
+    try {
+      const token = AuthService.getToken()
+      const response = await fetch(`${API_BASE}/admin/usuarios/${userId}/rol`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ rol: newRole }),
+      })
+
+      if (response.ok) {
+        alert(`Rol cambiado a ${newRole} correctamente`)
+        loadUserProfile()
+      } else {
+        alert("Error al cambiar rol")
+      }
+    } catch (error) {
+      logger.error("Error changing role:", error)
+      alert("Error al cambiar rol")
+    }
+  }
+
+  const handleDeleteUser = async () => {
+    const confirmText = prompt('Para eliminar permanentemente este usuario, escribe "ELIMINAR":')
+    if (confirmText !== "ELIMINAR") return
+
+    try {
+      const token = AuthService.getToken()
+      const response = await fetch(`${API_BASE}/admin/usuarios/${userId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (response.ok) {
+        alert("Usuario eliminado correctamente")
+        router.push("/admin")
+      } else {
+        const data = await response.json()
+        alert(data.message || "Error al eliminar usuario")
+      }
+    } catch (error) {
+      logger.error("Error deleting user:", error)
+      alert("Error al eliminar usuario")
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -430,6 +541,66 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
               <Flag className="w-4 h-4 mr-2" />
               Reportar usuario
             </Button>
+
+            {/* Admin Actions */}
+            {isAdmin && (
+              <div className="border-t pt-4 mt-4 space-y-3">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-sm font-bold text-gray-700 uppercase">Acciones de Admin</h4>
+                  <Shield className="w-4 h-4 text-orange-600" />
+                </div>
+
+                {/* Ban/Unban */}
+                {(user as any).bannedAt ? (
+                  <div className="space-y-2">
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+                      <p className="text-xs font-medium text-red-700">Usuario Baneado</p>
+                      <p className="text-xs text-red-600 mt-1">
+                        Razón: {(user as any).banReason || "Sin razón especificada"}
+                      </p>
+                    </div>
+                    <Button
+                      onClick={handleUnbanUser}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl"
+                    >
+                      <ShieldOff className="w-4 h-4 mr-2" />
+                      Desbanear Usuario
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={handleBanUser}
+                    variant="destructive"
+                    className="w-full py-3 rounded-xl"
+                  >
+                    <ShieldOff className="w-4 h-4 mr-2" />
+                    Banear Usuario
+                  </Button>
+                )}
+
+                {/* Toggle Role */}
+                <Button
+                  onClick={handleToggleRole}
+                  variant="outline"
+                  className="w-full border-blue-300 text-blue-700 hover:bg-blue-50 py-3 rounded-xl"
+                >
+                  <Shield className="w-4 h-4 mr-2" />
+                  {(user as any).rol === "ADMIN" ? "Quitar Admin" : "Hacer Admin"}
+                </Button>
+
+                {/* Delete User */}
+                {!(user as any).deleted_at && (
+                  <Button
+                    onClick={handleDeleteUser}
+                    variant="outline"
+                    className="w-full border-red-300 text-red-700 hover:bg-red-50 py-3 rounded-xl"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Eliminar Usuario Permanentemente
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

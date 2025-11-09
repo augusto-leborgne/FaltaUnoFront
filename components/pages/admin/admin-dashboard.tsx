@@ -16,8 +16,16 @@ interface AdminStats {
   totalUsuarios: number
   usuariosActivos: number
   registrosRecientes: number
+  usuariosEliminados: number
+  usuariosBaneados: number
   totalPartidos: number
   partidosHoy: number
+  partidosEstaSemana: number
+  partidosEsteMes: number
+  reportesPendientes: number
+  reportesResueltos: number
+  reportesTotal: number
+  tasaCrecimientoSemanal: number
 }
 
 interface Partido {
@@ -556,54 +564,145 @@ export default function AdminDashboard() {
           <>
             {/* Estadísticas */}
             {activeTab === "stats" && stats && (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="rounded-lg border bg-white p-6 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Total Usuarios</p>
-                      <p className="text-3xl font-bold">{stats.totalUsuarios}</p>
+              <div className="space-y-6">
+                {/* Estadísticas principales */}
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Usuarios</h3>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="rounded-lg border bg-white p-6 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-600">Total Usuarios</p>
+                          <p className="text-3xl font-bold text-blue-600">{stats.totalUsuarios}</p>
+                        </div>
+                        <Users className="h-10 w-10 text-blue-500" />
+                      </div>
                     </div>
-                    <Users className="h-10 w-10 text-blue-500" />
+
+                    <div className="rounded-lg border bg-white p-6 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-600">Usuarios Activos</p>
+                          <p className="text-3xl font-bold text-green-600">{stats.usuariosActivos}</p>
+                          <p className="text-xs text-gray-500 mt-1">Últimos 30 días</p>
+                        </div>
+                        <UserCheck className="h-10 w-10 text-green-500" />
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border bg-white p-6 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-600">Nuevos (7d)</p>
+                          <p className="text-3xl font-bold text-purple-600">{stats.registrosRecientes}</p>
+                          {stats.tasaCrecimientoSemanal > 0 && (
+                            <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                              <TrendingUp className="h-3 w-3" />
+                              {stats.tasaCrecimientoSemanal.toFixed(1)}% vs promedio
+                            </p>
+                          )}
+                        </div>
+                        <TrendingUp className="h-10 w-10 text-purple-500" />
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border bg-white p-6 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-600">Baneados</p>
+                          <p className="text-3xl font-bold text-red-600">{stats.usuariosBaneados}</p>
+                          <p className="text-xs text-gray-500 mt-1">{stats.usuariosEliminados} eliminados</p>
+                        </div>
+                        <ShieldOff className="h-10 w-10 text-red-500" />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="rounded-lg border bg-white p-6 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Usuarios Activos</p>
-                      <p className="text-3xl font-bold">{stats.usuariosActivos}</p>
+                {/* Estadísticas de partidos */}
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Partidos</h3>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="rounded-lg border bg-white p-6 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-600">Total Partidos</p>
+                          <p className="text-3xl font-bold text-orange-600">{stats.totalPartidos}</p>
+                        </div>
+                        <Calendar className="h-10 w-10 text-orange-500" />
+                      </div>
                     </div>
-                    <UserCheck className="h-10 w-10 text-green-500" />
+
+                    <div className="rounded-lg border bg-white p-6 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-600">Hoy</p>
+                          <p className="text-3xl font-bold text-red-600">{stats.partidosHoy}</p>
+                        </div>
+                        <Calendar className="h-10 w-10 text-red-500" />
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border bg-white p-6 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-600">Esta Semana</p>
+                          <p className="text-3xl font-bold text-blue-600">{stats.partidosEstaSemana}</p>
+                        </div>
+                        <Calendar className="h-10 w-10 text-blue-500" />
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border bg-white p-6 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-600">Este Mes</p>
+                          <p className="text-3xl font-bold text-green-600">{stats.partidosEsteMes}</p>
+                        </div>
+                        <Calendar className="h-10 w-10 text-green-500" />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="rounded-lg border bg-white p-6 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Registros (7d)</p>
-                      <p className="text-3xl font-bold">{stats.registrosRecientes}</p>
+                {/* Estadísticas de reportes */}
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Reportes y Moderación</h3>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="rounded-lg border bg-white p-6 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-600">Reportes Pendientes</p>
+                          <p className="text-3xl font-bold text-orange-600">{stats.reportesPendientes}</p>
+                        </div>
+                        <Flag className="h-10 w-10 text-orange-500" />
+                      </div>
                     </div>
-                    <TrendingUp className="h-10 w-10 text-purple-500" />
-                  </div>
-                </div>
 
-                <div className="rounded-lg border bg-white p-6 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Total Partidos</p>
-                      <p className="text-3xl font-bold">{stats.totalPartidos}</p>
+                    <div className="rounded-lg border bg-white p-6 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-600">Reportes Resueltos</p>
+                          <p className="text-3xl font-bold text-green-600">{stats.reportesResueltos}</p>
+                        </div>
+                        <CheckCircle className="h-10 w-10 text-green-500" />
+                      </div>
                     </div>
-                    <Calendar className="h-10 w-10 text-orange-500" />
-                  </div>
-                </div>
 
-                <div className="rounded-lg border bg-white p-6 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-600">Partidos Hoy</p>
-                      <p className="text-3xl font-bold">{stats.partidosHoy}</p>
+                    <div className="rounded-lg border bg-white p-6 shadow-sm">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-gray-600">Total Reportes</p>
+                          <p className="text-3xl font-bold text-gray-600">{stats.reportesTotal}</p>
+                          {stats.reportesTotal > 0 && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              {Math.round((stats.reportesResueltos / stats.reportesTotal) * 100)}% resueltos
+                            </p>
+                          )}
+                        </div>
+                        <Flag className="h-10 w-10 text-gray-500" />
+                      </div>
                     </div>
-                    <Calendar className="h-10 w-10 text-red-500" />
                   </div>
                 </div>
               </div>
