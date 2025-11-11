@@ -1864,3 +1864,13 @@ export function mapFormDataToPartidoDTO(formData: {
     organizador_id: formData.organizadorId
   };
 }
+
+// ============================================
+// EXPORT HELPER: apiClient alias para apiFetch
+// ============================================
+
+/**
+ * Cliente API genérico para llamadas REST
+ * Alias de apiFetch para componentes que prefieren el nombre "apiClient"
+ */
+export const apiClient = apiFetch;
