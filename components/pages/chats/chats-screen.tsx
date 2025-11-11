@@ -4,7 +4,7 @@ import { logger } from '@/lib/logger'
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { MessageCircle, Calendar, MapPin, Users, ChevronRight, Plus } from "lucide-react"
-import { PartidoAPI, PartidoDTO, MensajeAPI } from "@/lib/api"
+import { PartidoAPI, PartidoDTO, MensajeAPI, getUserPhotoUrl } from "@/lib/api"
 import { AuthService } from "@/lib/auth"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
@@ -39,11 +39,11 @@ export function ChatsScreen() {
     try {
       setError("")
       
-      // ⚡ OPTIMIZACIÓN: Cargar partidos con caché más largo (reduce latencia)
+      // ⚡ OPTIMIZACIÓN: Cargar partidos con caché corto para móvil (balance entre velocidad y frescura)
       const response = await apiCache.get(
         `mis-partidos-${currentUser.id}`,
         () => PartidoAPI.misPartidos(currentUser.id),
-        { ttl: 60 * 1000 } // 60 segundos - reduce requests innecesarios
+        { ttl: 15 * 1000 } // 15 segundos - más fresco para móvil
       )
       
       if (!response.success || !response.data) {
@@ -73,7 +73,7 @@ export function ChatsScreen() {
                 }
                 return resp
               },
-              { ttl: 30 * 1000 } // 30 segundos
+              { ttl: 10 * 1000 } // 10 segundos - más fresco
             )
             
             if (messagesResponse.success && messagesResponse.data && messagesResponse.data.length > 0) {
@@ -89,6 +89,14 @@ export function ChatsScreen() {
               const unreadMessages = messages.filter(m => {
                 const messageDate = new Date(m.createdAt || '')
                 return messageDate > lastVisit && m.usuarioId !== currentUser.id
+              })
+              
+              // ⚡ PREFETCH: Precargar avatares de los usuarios del chat para móvil
+              messages.forEach(msg => {
+                if (msg.usuarioId) {
+                  const img = new Image()
+                  img.src = getUserPhotoUrl(msg.usuarioId)
+                }
               })
               
               return {

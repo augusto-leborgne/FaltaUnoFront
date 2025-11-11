@@ -63,7 +63,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   useSmartPolling(
     () => loadMessages(true), // true = silent
     {
-      interval: 2000, // 2 segundos (más responsive)
+      interval: 1500, // 1.5 segundos (más responsive para móvil)
       enabled: !loading, // Solo hacer polling después de carga inicial
       pauseWhenHidden: true, // Pausar cuando tab está oculta
       hiddenInterval: 10000, // 10s cuando está oculta
@@ -635,7 +635,11 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                         src={getUserPhotoUrlMemo(msg.usuarioId)} 
                         alt={userName}
                         className="object-cover"
-                        loading="lazy"
+                        loading="eager"
+                        onError={(e) => {
+                          // Si falla la carga, ocultar el elemento para que se muestre el fallback
+                          (e.target as HTMLImageElement).style.display = 'none'
+                        }}
                       />
                       <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white text-[10px] sm:text-xs font-bold">
                         {initials}
@@ -675,10 +679,10 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                             }`
                       }`}
                     >
-                      {/* Nombre ultra-compacto - ESPACIO MÍNIMO */}
+                      {/* Nombre ultra-compacto - ESPACIO MÍNIMO - Fixed para móvil */}
                       {!isOwn && isFirstInGroup && (
                         <button
-                          className="text-[10px] sm:text-[10px] font-bold block text-blue-600 hover:text-blue-700 transition-colors -mb-0.5 touch-manipulation"
+                          className="text-[10px] sm:text-[10px] font-bold block text-blue-600 hover:text-blue-700 transition-colors mb-0 touch-manipulation"
                           onClick={() => handleUserClick(msg.usuarioId)}
                         >
                           {userName}
@@ -688,7 +692,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                       {/* Contenido del mensaje - ESPACIADO MÍNIMO */}
                       <p className={`text-xs sm:text-sm whitespace-pre-wrap break-words leading-tight ${
                         isOwn ? 'font-normal' : 'font-normal'
-                      }`}>
+                      } ${!isOwn && isFirstInGroup ? 'mt-0' : ''}`}>
                         {msg.contenido}
                       </p>
                       
