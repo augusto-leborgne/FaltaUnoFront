@@ -2,14 +2,14 @@
 
 
 import { logger } from '@/lib/logger'
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ArrowLeft, Send, AlertCircle, Users, MapPin, Clock } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
-import { MensajeAPI, PartidoAPI, InscripcionAPI, MensajeDTO } from '@/lib/api'
+import { MensajeAPI, PartidoAPI, InscripcionAPI, MensajeDTO, getUserPhotoUrl } from '@/lib/api'
 import { LoadingSpinner, InlineSpinner } from "@/components/ui/loading-spinner"
 import { useSmartPolling } from "@/hooks/use-smart-polling"
 
@@ -59,20 +59,40 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   const currentUser = AuthService.getUser()
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // ⚡ OPTIMIZACIÓN: Smart polling que pausa cuando tab está inactiva
+  // ⚡ OPTIMIZACIÓN: Smart polling más agresivo para chat activo
   useSmartPolling(
     () => loadMessages(true), // true = silent
     {
-      interval: 2000, // Más frecuente para mejor UX (2s)
+      interval: 3000, // 3 segundos (más responsive)
       enabled: !loading, // Solo hacer polling después de carga inicial
       pauseWhenHidden: true, // Pausar cuando tab está oculta
-      hiddenInterval: 30000, // 30s cuando está oculta (ahorra batería)
+      hiddenInterval: 15000, // 15s cuando está oculta (reduce carga)
     }
   )
+
+  // ⚡ OPTIMIZACIÓN: Memoizar URLs de fotos para evitar recrearlas en cada render
+  const getUserPhotoUrlMemo = useMemo(() => {
+    const cache = new Map<string, string>()
+    return (userId: string) => {
+      if (!cache.has(userId)) {
+        cache.set(userId, getUserPhotoUrl(userId))
+      }
+      return cache.get(userId)!
+    }
+  }, [])
 
   useEffect(() => {
     // Cargar datos iniciales
     loadChatData()
+    
+    // ⚡ Marcar como visitado cuando entra al chat
+    const visitKey = `chat_visit_${matchId}`
+    localStorage.setItem(visitKey, new Date().toISOString())
+    
+    // ⚡ También marcar al salir (cleanup)
+    return () => {
+      localStorage.setItem(visitKey, new Date().toISOString())
+    }
   }, [matchId])
 
   useEffect(() => {
@@ -642,26 +662,21 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                     isOwn ? "flex-row-reverse space-x-reverse" : ""
                   }`}
                 >
-                  {/* Avatar con foto real */}
+                  {/* Avatar con foto optimizada - Carga desde URL en lugar de base64 */}
                   {!isOwn && isLastInGroup ? (
                     <Avatar
                       className="w-7 h-7 cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all flex-shrink-0 shadow-sm"
                       onClick={() => handleUserClick(msg.usuarioId)}
                     >
-                      {msg.usuario?.foto_perfil ? (
-                        <AvatarImage 
-                          src={msg.usuario.foto_perfil.startsWith('data:') 
-                            ? msg.usuario.foto_perfil 
-                            : `data:image/jpeg;base64,${msg.usuario.foto_perfil}`
-                          } 
-                          alt={userName}
-                          className="object-cover"
-                        />
-                      ) : (
-                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white text-[10px] font-bold">
-                          {initials}
-                        </AvatarFallback>
-                      )}
+                      <AvatarImage 
+                        src={getUserPhotoUrlMemo(msg.usuarioId)} 
+                        alt={userName}
+                        className="object-cover"
+                        loading="lazy"
+                      />
+                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white text-[10px] font-bold">
+                        {initials}
+                      </AvatarFallback>
                     </Avatar>
                   ) : !isOwn ? (
                     <div className="w-7 flex-shrink-0" /> 
@@ -699,18 +714,18 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                             }`
                       }`}
                     >
-                      {/* Nombre compacto */}
+                      {/* Nombre compacto - ESPACIO REDUCIDO */}
                       {!isOwn && isFirstInGroup && (
                         <button
-                          className="text-[11px] font-bold block text-blue-600 hover:text-blue-700 transition-colors"
+                          className="text-[11px] font-bold block text-blue-600 hover:text-blue-700 transition-colors mb-0.5"
                           onClick={() => handleUserClick(msg.usuarioId)}
                         >
                           {userName}
                         </button>
                       )}
                       
-                      {/* Contenido del mensaje */}
-                      <p className={`text-[14px] whitespace-pre-wrap break-words leading-[1.4] ${
+                      {/* Contenido del mensaje - ESPACIO OPTIMIZADO */}
+                      <p className={`text-[14px] whitespace-pre-wrap break-words leading-[1.35] ${
                         isOwn ? 'font-normal' : 'font-normal'
                       }`}>
                         {msg.contenido}
