@@ -628,24 +628,24 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                 >
                   {/* Avatar con foto - SIEMPRE visible */}
                   {!isOwn ? (
-                    <Avatar
-                      className="w-6 h-6 sm:w-8 sm:h-8 cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all flex-shrink-0 shadow-md touch-manipulation"
+                    <div
+                      className="w-6 h-6 sm:w-8 sm:h-8 cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all flex-shrink-0 shadow-md touch-manipulation rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 relative"
                       onClick={() => handleUserClick(msg.usuarioId)}
                     >
-                      <AvatarImage 
+                      <img 
                         src={getUserPhotoUrlMemo(msg.usuarioId)} 
                         alt={userName}
-                        className="object-cover"
-                        loading="eager"
+                        className="w-full h-full object-cover absolute inset-0"
                         onError={(e) => {
-                          // Si falla la carga, ocultar el elemento para que se muestre el fallback
+                          // Ocultar imagen si falla
                           (e.target as HTMLImageElement).style.display = 'none'
                         }}
                       />
-                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white text-[10px] sm:text-xs font-bold">
+                      {/* Fallback con iniciales - se muestra cuando la imagen falla */}
+                      <div className="w-full h-full flex items-center justify-center text-white text-[10px] sm:text-xs font-bold">
                         {initials}
-                      </AvatarFallback>
-                    </Avatar>
+                      </div>
+                    </div>
                   ) : null}
                   
                   {/* Mensaje bubble compacto */}
@@ -664,7 +664,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                     </div>
 
                     <div
-                      className={`inline-block px-2.5 sm:px-3 py-1.5 sm:py-1.5 transition-all group-hover:scale-[1.01] ${
+                      className={`inline-block px-2.5 sm:px-3 py-0.5 sm:py-1 transition-all group-hover:scale-[1.01] ${
                         isOwn 
                           ? `bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white shadow-md hover:shadow-lg ${
                               isFirstInGroup && isLastInGroup ? 'rounded-2xl' :
@@ -680,20 +680,18 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                             }`
                       }`}
                     >
-                      {/* Nombre ultra-compacto - SIN ESPACIO - MARGIN NEGATIVO */}
+                      {/* Nombre - COMPACTO */}
                       {!isOwn && isFirstInGroup && (
                         <button
-                          className="text-[10px] sm:text-[10px] font-bold block text-blue-600 hover:text-blue-700 transition-colors -mb-1 touch-manipulation"
+                          className="text-[10px] sm:text-[10px] font-bold block text-blue-600 hover:text-blue-700 transition-colors mb-0.5 touch-manipulation"
                           onClick={() => handleUserClick(msg.usuarioId)}
                         >
                           {userName}
                         </button>
                       )}
                       
-                      {/* Contenido del mensaje - PEGADO AL NOMBRE */}
-                      <p className={`text-xs sm:text-sm whitespace-pre-wrap break-words leading-tight ${
-                        isOwn ? 'font-normal' : 'font-normal'
-                      }`}>
+                      {/* Contenido del mensaje */}
+                      <p className="text-xs sm:text-sm whitespace-pre-wrap break-words leading-normal font-normal">
                         {msg.contenido}
                       </p>
                       
