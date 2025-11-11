@@ -2,7 +2,7 @@
 
 
 import { logger } from '@/lib/logger'
-import { useState, useEffect, useRef, useMemo } from "react"
+import { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -71,17 +71,10 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   )
 
   // ⚡ OPTIMIZACIÓN: Memoizar URLs de fotos para evitar recrearlas en cada render
-  // ⚡ Cache optimizado para URLs de fotos con timestamp para forzar recarga
-  const getUserPhotoUrlMemo = useMemo(() => {
-    const cache = new Map<string, string>()
-    return (userId: string) => {
-      if (!cache.has(userId)) {
-        // Agregar timestamp para forzar recarga y evitar caché del navegador
-        const url = `${getUserPhotoUrl(userId)}?t=${Date.now()}`
-        cache.set(userId, url)
-      }
-      return cache.get(userId)!
-    }
+  // ⚡ URLs de fotos SIN caché - siempre fresh para que las fotos se muestren
+  const getUserPhotoUrlMemo = useCallback((userId: string) => {
+    // SIN caché, timestamp único CADA VEZ para forzar carga
+    return `${getUserPhotoUrl(userId)}?t=${Date.now()}`
   }, [])
 
   useEffect(() => {
@@ -195,11 +188,19 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         return
       }
 
-      // ⚡ MEGA OPTIMIZACIÓN: Cargar partido, inscripción y mensajes EN PARALELO
-      const [matchResponse, estadoData, messagesData] = await Promise.allSettled([
+      // ⚡ ULTRA OPTIMIZACIÓN: Solo cargar mensajes primero (lo más importante)
+      // Partido e inscripción se cargan DESPUÉS en background
+      const messagesData = await MensajeAPI.list(matchId)
+      
+      // Procesar mensajes INMEDIATAMENTE
+      if (messagesData.success && messagesData.data) {
+        setMessages(messagesData.data)
+      }
+      
+      // AHORA cargar resto en paralelo SIN bloquear
+      const [matchResponse, estadoData] = await Promise.allSettled([
         PartidoAPI.get(matchId),
-        InscripcionAPI.getEstado(matchId, currentUser.id),
-        MensajeAPI.list(matchId)
+        InscripcionAPI.getEstado(matchId, currentUser.id)
       ])
 
       // Procesar info del partido
@@ -233,10 +234,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         }
       }
 
-      // Cargar mensajes (ya los tenemos del Promise.allSettled)
-      if (messagesData.status === 'fulfilled' && messagesData.value.success && messagesData.value.data) {
-        setMessages(messagesData.value.data)
-      }
+      // Ya tenemos los mensajes procesados arriba
 
     } catch (err) {
       logger.error("[MatchChat] Error cargando chat:", err)
@@ -682,20 +680,20 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                             }`
                       }`}
                     >
-                      {/* Nombre ultra-compacto - ESPACIO MÍNIMO - Fixed para móvil */}
+                      {/* Nombre ultra-compacto - SIN ESPACIO - MARGIN NEGATIVO */}
                       {!isOwn && isFirstInGroup && (
                         <button
-                          className="text-[10px] sm:text-[10px] font-bold block text-blue-600 hover:text-blue-700 transition-colors mb-0 touch-manipulation"
+                          className="text-[10px] sm:text-[10px] font-bold block text-blue-600 hover:text-blue-700 transition-colors -mb-1 touch-manipulation"
                           onClick={() => handleUserClick(msg.usuarioId)}
                         >
                           {userName}
                         </button>
                       )}
                       
-                      {/* Contenido del mensaje - ESPACIADO MÍNIMO */}
+                      {/* Contenido del mensaje - PEGADO AL NOMBRE */}
                       <p className={`text-xs sm:text-sm whitespace-pre-wrap break-words leading-tight ${
                         isOwn ? 'font-normal' : 'font-normal'
-                      } ${!isOwn && isFirstInGroup ? 'mt-0' : ''}`}>
+                      }`}>
                         {msg.contenido}
                       </p>
                       
