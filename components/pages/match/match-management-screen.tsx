@@ -255,13 +255,26 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
     }
 
     try {
+      // 🎯 ACTUALIZACIÓN OPTIMISTA: Mover solicitud a jugadores inmediatamente
+      const solicitud = solicitudes.find(s => s.id === inscripcionId)
+      if (solicitud) {
+        // Remover de solicitudes
+        setSolicitudes(prev => prev.filter(s => s.id !== inscripcionId))
+        
+        // Actualizar contador de jugadores inmediatamente
+        setMatch(prev => prev ? {
+          ...prev,
+          jugadoresActuales: (prev.jugadoresActuales || 0) + 1
+        } : null)
+      }
+
       const response = await InscripcionAPI.aceptar(inscripcionId)
 
       if (!response.success) {
         throw new Error(response.message || "Error al aceptar")
       }
 
-      // Recargar datos ANTES del toast para mostrar cambios inmediatamente
+      // Recargar datos completos del servidor para confirmar
       await loadMatchData()
 
       toast({
@@ -271,6 +284,9 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
 
     } catch (err) {
       logger.error("[MatchManagement] Error aceptando:", err)
+      
+      // ✅ REVERTIR cambio optimista en caso de error
+      await loadMatchData()
       
       // ✅ MEJORADO: Mensajes de error más específicos
       let errorMessage = "Error al aceptar solicitud"
@@ -292,8 +308,6 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
         description: errorMessage,
         variant: "destructive",
       })
-      // Revertir cambio optimista en caso de error
-      await loadMatchData()
     }
   }
 
