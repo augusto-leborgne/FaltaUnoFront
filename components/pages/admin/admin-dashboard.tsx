@@ -101,6 +101,13 @@ export default function AdminDashboard() {
   const [reportToDismiss, setReportToDismiss] = useState<Report | null>(null)
   const [dismissAction, setDismissAction] = useState<"no_action" | "warn_reporter">("no_action")
   const [dismissNotes, setDismissNotes] = useState("")
+  
+  // Estados para modal de baneo
+  const [showBanModal, setShowBanModal] = useState(false)
+  const [userToBan, setUserToBan] = useState<Usuario | null>(null)
+  const [banReason, setBanReason] = useState("")
+  const [banDuration, setBanDuration] = useState<number | null>(7) // 7 días por defecto
+  const [banType, setBanType] = useState<"temporary" | "permanent">("temporary")
 
   // Helper para hacer fetch autenticado
   const authenticatedFetch = async <T,>(url: string, options: RequestInit = {}): Promise<T> => {
@@ -274,26 +281,53 @@ export default function AdminDashboard() {
     }
   }
 
-  const handleBanUser = async (userId: string, reason: string) => {
-    const banReason = prompt("Motivo del baneo:", reason)
-    if (!banReason) return
+  const openBanModal = (user: Usuario) => {
+    setUserToBan(user)
+    setBanReason("")
+    setBanDuration(7)
+    setBanType("temporary")
+    setShowBanModal(true)
+  }
+
+  const closeBanModal = () => {
+    setShowBanModal(false)
+    setUserToBan(null)
+    setBanReason("")
+    setBanDuration(7)
+    setBanType("temporary")
+  }
+
+  const handleBanUser = async () => {
+    if (!userToBan || !banReason.trim()) {
+      setError("Debes proporcionar una razón para el baneo")
+      setTimeout(() => setError(null), 3000)
+      return
+    }
 
     try {
       setError(null)
-      await authenticatedFetch(`${API_URL}/admin/usuarios/${userId}/ban`, {
-        method: "POST",
-        body: JSON.stringify({ reason: banReason }),
+      await authenticatedFetch(`${API_URL}/admin/usuarios/${userToBan.id}/ban`, {
+        method: "PUT",
+        body: JSON.stringify({ 
+          reason: banReason,
+          durationDays: banType === "permanent" ? null : banDuration
+        }),
       })
 
       // Actualizar lista de usuarios
       setUsuarios((prev) =>
         prev.map((u) =>
-          u.id === userId ? { ...u, bannedAt: new Date().toISOString() } : u
+          u.id === userToBan.id ? { ...u, bannedAt: new Date().toISOString() } : u
         )
       )
 
-      setSuccessMessage("Usuario baneado correctamente")
+      setSuccessMessage(`Usuario baneado ${banType === "permanent" ? "permanentemente" : `por ${banDuration} días`}`)
       setTimeout(() => setSuccessMessage(null), 3000)
+      closeBanModal()
+      // Recargar datos para reflejar el baneo
+      if (user && user.rol === "ADMIN") {
+        window.location.reload()
+      }
     } catch (error) {
       logger.error("[AdminDashboard] Error baneando usuario:", error)
       setError("Error al banear usuario: " + (error instanceof Error ? error.message : "Error desconocido"))
@@ -1300,7 +1334,10 @@ export default function AdminDashboard() {
                                       <Button
                                         size="sm"
                                         variant="destructive"
-                                        onClick={() => handleBanUser(user.id, report.reason)}
+                                        onClick={() => {
+                                          openBanModal(user)
+                                          setBanReason(report.reason)
+                                        }}
                                         className="text-xs"
                                       >
                                         <ShieldOff className="h-3 w-3 mr-1" />
@@ -1341,7 +1378,10 @@ export default function AdminDashboard() {
                                 <Button
                                   size="sm"
                                   variant="destructive"
-                                  onClick={() => handleBanUser(user.id, `${totalReports} reportes`)}
+                                  onClick={() => {
+                                    openBanModal(user)
+                                    setBanReason(`Usuario con ${totalReports} reportes`)
+                                  }}
                                   className="w-full text-xs"
                                 >
                                   <ShieldOff className="h-3 w-3 mr-1" />
@@ -1414,7 +1454,10 @@ export default function AdminDashboard() {
                               <Button
                                 size="sm"
                                 variant="destructive"
-                                onClick={() => handleBanUser(report.reportedUser.id, report.reason)}
+                                onClick={() => {
+                                  openBanModal(report.reportedUser as Usuario)
+                                  setBanReason(report.reason)
+                                }}
                                 className="text-xs"
                               >
                                 <ShieldOff className="h-3 w-3 mr-1" />
@@ -1774,6 +1817,148 @@ export default function AdminDashboard() {
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Eliminar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Baneo de Usuario */}
+      {showBanModal && userToBan && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={closeBanModal}
+        >
+          <div 
+            className="max-w-md w-full bg-white rounded-lg shadow-xl p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                <ShieldOff className="h-6 w-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">
+                  Banear Usuario
+                </h3>
+                <p className="text-sm text-gray-500">
+                  {userToBan.nombre} {userToBan.apellido}
+                </p>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="mb-6 space-y-4">
+              {/* Tipo de baneo */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Tipo de baneo
+                </label>
+                <div className="space-y-2">
+                  <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                    <input
+                      type="radio"
+                      name="banType"
+                      value="temporary"
+                      checked={banType === "temporary"}
+                      onChange={(e) => setBanType(e.target.value as "temporary" | "permanent")}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-gray-900">Temporal</div>
+                      <div className="text-xs text-gray-600">Banear por un período específico</div>
+                    </div>
+                  </label>
+                  <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                    <input
+                      type="radio"
+                      name="banType"
+                      value="permanent"
+                      checked={banType === "permanent"}
+                      onChange={(e) => setBanType(e.target.value as "temporary" | "permanent")}
+                      className="mt-1"
+                    />
+                    <div className="flex-1">
+                      <div className="text-sm font-medium text-gray-900 text-red-600">Permanente</div>
+                      <div className="text-xs text-gray-600">Banear indefinidamente</div>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Duración (solo si es temporal) */}
+              {banType === "temporary" && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    Duración del baneo
+                  </label>
+                  <select
+                    value={banDuration || 7}
+                    onChange={(e) => setBanDuration(parseInt(e.target.value))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="1">1 día</option>
+                    <option value="3">3 días</option>
+                    <option value="7">7 días (1 semana)</option>
+                    <option value="14">14 días (2 semanas)</option>
+                    <option value="30">30 días (1 mes)</option>
+                    <option value="90">90 días (3 meses)</option>
+                  </select>
+                </div>
+              )}
+
+              {/* Razón del baneo */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Razón del baneo *
+                </label>
+                <textarea
+                  value={banReason}
+                  onChange={(e) => setBanReason(e.target.value)}
+                  placeholder="Describe el motivo del baneo..."
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  required
+                />
+                <p className="text-xs text-gray-500">
+                  Esta razón será visible para el usuario cuando intente iniciar sesión.
+                </p>
+              </div>
+
+              {/* Advertencia */}
+              <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                <div className="flex gap-2">
+                  <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-xs text-red-800">
+                    <p className="font-medium mb-1">Esta acción es irreversible:</p>
+                    <ul className="list-disc list-inside space-y-1">
+                      <li>El usuario no podrá iniciar sesión</li>
+                      <li>Todas sus sesiones activas serán cerradas</li>
+                      {banType === "permanent" && <li className="font-bold">El baneo será PERMANENTE</li>}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex gap-3">
+              <Button
+                onClick={closeBanModal}
+                variant="outline"
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleBanUser}
+                variant="destructive"
+                className="flex-1"
+                disabled={!banReason.trim()}
+              >
+                <ShieldOff className="h-4 w-4 mr-1" />
+                {banType === "permanent" ? "Banear Permanentemente" : `Banear ${banDuration} días`}
               </Button>
             </div>
           </div>
