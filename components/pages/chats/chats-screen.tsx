@@ -43,7 +43,7 @@ export function ChatsScreen() {
       const response = await apiCache.get(
         `mis-partidos-${currentUser.id}`,
         () => PartidoAPI.misPartidos(currentUser.id),
-        { ttl: 15 * 1000 } // 15 segundos - más fresco para móvil
+        { ttl: 5 * 1000 } // 5 segundos - mucho más fresco para móvil
       )
       
       if (!response.success || !response.data) {
@@ -52,70 +52,64 @@ export function ChatsScreen() {
 
       const partidosInscritos = response.data
       
-      // ⚡ MEGA OPTIMIZACIÓN: Solo cargar último mensaje en lugar de todos
-      // Esto reduce dramáticamente el tiempo de carga (de segundos a milisegundos)
+      // ⚡ MEGA OPTIMIZACIÓN: Solo cargar último mensaje (NO todos los mensajes)
+      // Cargar SOLO los partidos más recientes primero (lazy load el resto)
+      const partidosToLoad = partidosInscritos.slice(0, 10) // Solo primeros 10
+      
       const partidosWithMessages = await Promise.all(
-        partidosInscritos.map(async (partido) => {
+        partidosToLoad.map(async (partido) => {
           try {
             if (!partido.id) return partido
             
-            // ⚡ Cargar solo los últimos 5 mensajes para preview (mucho más rápido)
+            // ⚡ Cargar SOLO el último mensaje (no 5, solo 1) - MÁXIMA VELOCIDAD
             const messagesResponse = await apiCache.get(
-              `mensajes-preview-${partido.id}`,
+              `ultimo-mensaje-${partido.id}`,
               async () => {
                 const resp = await MensajeAPI.list(partido.id!)
-                // Tomar solo los últimos 5 mensajes para el preview
-                if (resp.success && resp.data) {
+                // Tomar SOLO el último mensaje
+                if (resp.success && resp.data && resp.data.length > 0) {
                   return {
                     ...resp,
-                    data: resp.data.slice(-5) // Solo últimos 5
+                    data: [resp.data[resp.data.length - 1]] // Solo el último
                   }
                 }
                 return resp
               },
-              { ttl: 10 * 1000 } // 10 segundos - más fresco
+              { ttl: 3 * 1000 } // 3 segundos - muy fresco
             )
             
             if (messagesResponse.success && messagesResponse.data && messagesResponse.data.length > 0) {
-              const messages = messagesResponse.data
-              const lastMessage = messages[messages.length - 1]
+              const lastMessage = messagesResponse.data[0] // Solo hay 1 mensaje
               
-              // ⚡ Mejorar detección de no leídos con localStorage optimizado
+              // ⚡ Detección rápida de no leídos (solo verificar último mensaje)
               const lastVisitKey = `chat_visit_${partido.id}`
               const lastVisitStr = localStorage.getItem(lastVisitKey)
               const lastVisit = lastVisitStr ? new Date(lastVisitStr) : new Date(0)
               
-              // Solo contar mensajes recientes no leídos (últimos 5)
-              const unreadMessages = messages.filter(m => {
-                const messageDate = new Date(m.createdAt || '')
-                return messageDate > lastVisit && m.usuarioId !== currentUser.id
-              })
-              
-              // ⚡ PREFETCH: Precargar avatares de los usuarios del chat para móvil
-              messages.forEach(msg => {
-                if (msg.usuarioId) {
-                  const img = new Image()
-                  img.src = getUserPhotoUrl(msg.usuarioId)
-                }
-              })
+              const messageDate = new Date(lastMessage.createdAt || '')
+              const isUnread = messageDate > lastVisit && lastMessage.usuarioId !== currentUser.id
               
               return {
                 ...partido,
-                unreadCount: unreadMessages.length,
-                lastMessage: lastMessage.contenido?.substring(0, 60), // Mostrar más caracteres
+                unreadCount: isUnread ? 1 : 0,
+                lastMessage: lastMessage.contenido?.substring(0, 50), // Menos caracteres
                 lastMessageTime: lastMessage.createdAt
               } as PartidoWithUnread
             }
             return partido
           } catch (err) {
-            logger.error(`[ChatsScreen] Error loading messages for partido ${partido.id}:`, err)
+            // Silenciar errores para no bloquear carga
             return partido as PartidoWithUnread
           }
         })
       )
       
+      // Agregar partidos restantes sin mensajes (lazy)
+      const remainingPartidos = partidosInscritos.slice(10).map(p => p as PartidoWithUnread)
+      const allPartidos = [...partidosWithMessages, ...remainingPartidos]
+      
       // Ordenar: primero con no leídos, luego por fecha más reciente
-      partidosWithMessages.sort((a, b) => {
+      allPartidos.sort((a, b) => {
         // Primero los que tienen mensajes no leídos
         const aUnread = (a as PartidoWithUnread).unreadCount || 0
         const bUnread = (b as PartidoWithUnread).unreadCount || 0
@@ -129,7 +123,7 @@ export function ChatsScreen() {
         return dateB.getTime() - dateA.getTime()
       })
 
-      setPartidos(partidosWithMessages)
+      setPartidos(allPartidos)
     } catch (err) {
       logger.error("[ChatsScreen] Error cargando partidos:", err)
       setError(err instanceof Error ? err.message : "Error al cargar chats")

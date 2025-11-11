@@ -63,7 +63,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   useSmartPolling(
     () => loadMessages(true), // true = silent
     {
-      interval: 1500, // 1.5 segundos (más responsive para móvil)
+      interval: 1000, // 1 segundo (MÁXIMA velocidad para móvil)
       enabled: !loading, // Solo hacer polling después de carga inicial
       pauseWhenHidden: true, // Pausar cuando tab está oculta
       hiddenInterval: 10000, // 10s cuando está oculta
@@ -71,11 +71,14 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   )
 
   // ⚡ OPTIMIZACIÓN: Memoizar URLs de fotos para evitar recrearlas en cada render
+  // ⚡ Cache optimizado para URLs de fotos con timestamp para forzar recarga
   const getUserPhotoUrlMemo = useMemo(() => {
     const cache = new Map<string, string>()
     return (userId: string) => {
       if (!cache.has(userId)) {
-        cache.set(userId, getUserPhotoUrl(userId))
+        // Agregar timestamp para forzar recarga y evitar caché del navegador
+        const url = `${getUserPhotoUrl(userId)}?t=${Date.now()}`
+        cache.set(userId, url)
       }
       return cache.get(userId)!
     }
