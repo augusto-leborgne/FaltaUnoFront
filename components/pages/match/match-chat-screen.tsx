@@ -59,14 +59,14 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   const currentUser = AuthService.getUser()
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // ⚡ OPTIMIZACIÓN: Smart polling más agresivo para chat activo
+  // ⚡ SUPER OPTIMIZACIÓN: Polling ultra-rápido para chat en tiempo real
   useSmartPolling(
     () => loadMessages(true), // true = silent
     {
-      interval: 3000, // 3 segundos (más responsive)
+      interval: 2000, // 2 segundos (más responsive)
       enabled: !loading, // Solo hacer polling después de carga inicial
       pauseWhenHidden: true, // Pausar cuando tab está oculta
-      hiddenInterval: 15000, // 15s cuando está oculta (reduce carga)
+      hiddenInterval: 10000, // 10s cuando está oculta
     }
   )
 
@@ -192,86 +192,48 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         return
       }
 
-      // Cargar info del partido PRIMERO (necesitamos saber si es organizador)
+      // ⚡ MEGA OPTIMIZACIÓN: Cargar partido, inscripción y mensajes EN PARALELO
+      const [matchResponse, estadoData, messagesData] = await Promise.allSettled([
+        PartidoAPI.get(matchId),
+        InscripcionAPI.getEstado(matchId, currentUser.id),
+        MensajeAPI.list(matchId)
+      ])
+
+      // Procesar info del partido
       let isOrganizer = false
-      try {
-        const matchResponse = await PartidoAPI.get(matchId)
-        if (matchResponse.success && matchResponse.data) {
-          const matchData = matchResponse.data
-          setMatchInfo({
-            tipo_partido: matchData.tipoPartido || matchData.tipo_partido || "FUTBOL_5",
-            fecha: matchData.fecha,
-            hora: matchData.hora,
-            nombre_ubicacion: matchData.nombreUbicacion || matchData.nombre_ubicacion || "Ubicación no especificada",
-            jugadores_actuales: matchData.jugadoresActuales || matchData.jugadores_actuales || 0,
-            jugadores_necesarios: matchData.cantidadJugadores || matchData.cantidad_jugadores || 0
-          })
-          
-          // Verificar si el usuario es el organizador
-          isOrganizer = matchData.organizadorId === currentUser.id
-          logger.log("[MatchChat] ¿Es organizador?", isOrganizer, "- OrganizadorId:", matchData.organizadorId, "UserId:", currentUser.id)
-        }
-      } catch (err) {
-        logger.warn("[MatchChat] Error cargando info del partido:", err)
+      if (matchResponse.status === 'fulfilled' && matchResponse.value.success && matchResponse.value.data) {
+        const matchData = matchResponse.value.data
+        setMatchInfo({
+          tipo_partido: matchData.tipoPartido || matchData.tipo_partido || "FUTBOL_5",
+          fecha: matchData.fecha,
+          hora: matchData.hora,
+          nombre_ubicacion: matchData.nombreUbicacion || matchData.nombre_ubicacion || "Ubicación no especificada",
+          jugadores_actuales: matchData.jugadoresActuales || matchData.jugadores_actuales || 0,
+          jugadores_necesarios: matchData.cantidadJugadores || matchData.cantidad_jugadores || 0
+        })
+        
+        isOrganizer = matchData.organizadorId === currentUser.id
       }
 
-      // ✅ Si es organizador, permitir acceso directo al chat
-      if (isOrganizer) {
-        logger.log("[MatchChat] ✅✅ ACCESO DIRECTO: Usuario es el organizador del partido")
-        // No verificar inscripción, continuar cargando mensajes
-      } else {
-        // ✅ Si NO es organizador, verificar estado de inscripción
-        try {
-          logger.log("[MatchChat] Verificando estado de inscripción - matchId:", matchId, "userId:", currentUser.id)
-          logger.log("[MatchChat] 📞 Llamando a InscripcionAPI.getEstado...")
-          const estadoData = await InscripcionAPI.getEstado(matchId, currentUser.id)
+      // Verificar acceso (solo si NO es organizador)
+      if (!isOrganizer) {
+        if (estadoData.status === 'fulfilled' && estadoData.value.success && estadoData.value.data) {
+          const { inscrito, inscripcionId } = estadoData.value.data
+          const estaInscrito = inscrito || !!inscripcionId
           
-          logger.log("[MatchChat] 📥 Respuesta completa:", JSON.stringify(estadoData, null, 2))
-          
-          if (estadoData.success && estadoData.data) {
-            const { inscrito, estado, inscripcionId } = estadoData.data
-            
-            logger.log("[MatchChat] 📊 Estado parseado:")
-            logger.log("  - inscrito:", inscrito)
-            logger.log("  - estado:", estado)
-            logger.log("  - inscripcionId:", inscripcionId)
-            logger.log("  - tipo de estado:", typeof estado)
-            
-            const estaInscrito = inscrito || !!inscripcionId
-            
-            logger.log("[MatchChat] ✅ Validación - estaInscrito:", estaInscrito, "estado:", estado)
-            
-            // Permitir acceso si está inscrito (sin importar el estado)
-            // Si está inscrito = ya fue aceptado por el organizador
-            if (!estaInscrito) {
-              logger.warn("[MatchChat] ❌ Acceso denegado - no inscrito")
-              
-              setError("Debes inscribirte en el partido para acceder al chat")
-              setLoading(false)
-              
-              setTimeout(() => {
-                router.push(`/matches/${matchId}`)
-              }, 3000)
-              return
-            }
-            
-            logger.log("[MatchChat] ✅ Acceso permitido - usuario inscrito")
-          } else {
-            logger.error("[MatchChat] Respuesta inválida de estado:", estadoData)
+          if (!estaInscrito) {
+            setError("Debes inscribirte en el partido para acceder al chat")
+            setLoading(false)
+            setTimeout(() => router.push(`/matches/${matchId}`), 3000)
+            return
           }
-        } catch (err) {
-          logger.error("[MatchChat] Error verificando inscripción:", err)
-          setError("Error al verificar permisos de acceso. Redirigiendo...")
-          setLoading(false)
-          setTimeout(() => {
-            router.push(`/matches/${matchId}`)
-          }, 3000)
-          return
         }
       }
 
-      // Cargar mensajes
-      await loadMessages()
+      // Cargar mensajes (ya los tenemos del Promise.allSettled)
+      if (messagesData.status === 'fulfilled' && messagesData.value.success && messagesData.value.data) {
+        setMessages(messagesData.value.data)
+      }
 
     } catch (err) {
       logger.error("[MatchChat] Error cargando chat:", err)
@@ -655,17 +617,17 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
             return (
               <div 
                 key={msg.id} 
-                className={`flex ${isOwn ? "justify-end" : "justify-start"} ${isFirstInGroup ? 'mt-3' : 'mt-0.5'}`}
+                className={`flex ${isOwn ? "justify-end" : "justify-start"} ${isFirstInGroup ? 'mt-2' : 'mt-0.5'}`}
               >
                 <div
                   className={`group flex items-end space-x-2 max-w-[75%] relative ${
                     isOwn ? "flex-row-reverse space-x-reverse" : ""
                   }`}
                 >
-                  {/* Avatar con foto optimizada - Carga desde URL en lugar de base64 */}
-                  {!isOwn && isLastInGroup ? (
+                  {/* Avatar con foto - SIEMPRE visible */}
+                  {!isOwn ? (
                     <Avatar
-                      className="w-7 h-7 cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all flex-shrink-0 shadow-sm"
+                      className="w-8 h-8 cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all flex-shrink-0 shadow-md"
                       onClick={() => handleUserClick(msg.usuarioId)}
                     >
                       <AvatarImage 
@@ -674,12 +636,10 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                         className="object-cover"
                         loading="lazy"
                       />
-                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white text-[10px] font-bold">
+                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white text-xs font-bold">
                         {initials}
                       </AvatarFallback>
                     </Avatar>
-                  ) : !isOwn ? (
-                    <div className="w-7 flex-shrink-0" /> 
                   ) : null}
                   
                   {/* Mensaje bubble compacto */}
@@ -714,18 +674,18 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                             }`
                       }`}
                     >
-                      {/* Nombre compacto - ESPACIO REDUCIDO */}
+                      {/* Nombre ultra-compacto - ESPACIO MÍNIMO */}
                       {!isOwn && isFirstInGroup && (
                         <button
-                          className="text-[11px] font-bold block text-blue-600 hover:text-blue-700 transition-colors mb-0.5"
+                          className="text-[10px] font-bold block text-blue-600 hover:text-blue-700 transition-colors -mb-0.5"
                           onClick={() => handleUserClick(msg.usuarioId)}
                         >
                           {userName}
                         </button>
                       )}
                       
-                      {/* Contenido del mensaje - ESPACIO OPTIMIZADO */}
-                      <p className={`text-[14px] whitespace-pre-wrap break-words leading-[1.35] ${
+                      {/* Contenido del mensaje - ESPACIADO MÍNIMO */}
+                      <p className={`text-sm whitespace-pre-wrap break-words leading-tight ${
                         isOwn ? 'font-normal' : 'font-normal'
                       }`}>
                         {msg.contenido}
