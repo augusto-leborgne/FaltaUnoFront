@@ -124,7 +124,15 @@ export default function AdminDashboard() {
     })
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      // Intentar parsear el mensaje de error del backend
+      try {
+        const errorData = await response.json()
+        const errorMessage = errorData.message || errorData.error || `HTTP error! status: ${response.status}`
+        throw new Error(errorMessage)
+      } catch (parseError) {
+        // Si falla el parseo, usar mensaje genérico
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
     }
 
     const json = await response.json()
