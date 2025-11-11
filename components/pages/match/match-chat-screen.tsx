@@ -664,7 +664,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                     </div>
 
                     <div
-                      className={`inline-block px-2.5 sm:px-3 py-0.5 sm:py-1 transition-all group-hover:scale-[1.01] ${
+                      className={`inline-block px-2.5 sm:px-3 !py-0.5 sm:!py-1 transition-all group-hover:scale-[1.01] ${
                         isOwn 
                           ? `bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white shadow-md hover:shadow-lg ${
                               isFirstInGroup && isLastInGroup ? 'rounded-2xl' :
