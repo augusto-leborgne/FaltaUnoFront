@@ -195,7 +195,8 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
     setError("")
 
     try {
-      const response = await PartidoAPI.actualizar(matchId, editData)
+      // Pasar el partido actual para que se mezcle con los cambios
+      const response = await PartidoAPI.actualizar(matchId, editData, match)
 
       if (!response.success) {
         throw new Error(response.message || "Error al actualizar")

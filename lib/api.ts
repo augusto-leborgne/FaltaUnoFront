@@ -1085,26 +1085,59 @@ export const PartidoAPI = {
   },
 
   /**
-   * Actualizar partido - CORREGIDO
+   * Actualizar partido - REQUIERE PARTIDO COMPLETO + CAMBIOS
+   * El backend valida con @Valid, necesita todos los campos requeridos
    */
-  actualizar: async (id: string, cambios: Partial<PartidoDTO>) => {
+  actualizar: async (id: string, cambios: Partial<PartidoDTO>, partidoActual?: PartidoDTO) => {
     logger.log("[PartidoAPI.actualizar] ID:", id, "Cambios:", cambios);
     
-    // Convertir a snake_case para el backend
-    const payload: any = {};
+    // Si no tenemos el partido actual, lo obtenemos primero
+    let partidoBase = partidoActual;
+    if (!partidoBase) {
+      logger.log("[PartidoAPI.actualizar] Obteniendo partido actual...");
+      const response = await PartidoAPI.get(id);
+      if (!response.success || !response.data) {
+        throw new Error("No se pudo obtener el partido actual");
+      }
+      partidoBase = response.data;
+    }
     
-    if (cambios.fecha !== undefined) payload.fecha = cambios.fecha;
-    if (cambios.hora !== undefined) payload.hora = cambios.hora;
-    if (cambios.nombreUbicacion !== undefined) 
-      payload.nombre_ubicacion = cambios.nombreUbicacion;
-    if (cambios.cantidadJugadores !== undefined) 
-      payload.cantidad_jugadores = cambios.cantidadJugadores;
-    if (cambios.precioTotal !== undefined) 
-      payload.precio_total = cambios.precioTotal;
-    if (cambios.descripcion !== undefined) 
-      payload.descripcion = cambios.descripcion;
-    if (cambios.duracionMinutos !== undefined) 
-      payload.duracion_minutos = cambios.duracionMinutos;
+    // Mezclar cambios con partido actual (solo los campos definidos en cambios)
+    const merged = { ...partidoBase };
+    Object.keys(cambios).forEach(key => {
+      const value = (cambios as any)[key];
+      if (value !== undefined) {
+        (merged as any)[key] = value;
+      }
+    });
+    
+    // Convertir a snake_case para el backend (todos los campos requeridos)
+    const payload: any = {
+      tipo_partido: merged.tipoPartido,
+      genero: merged.genero,
+      fecha: merged.fecha,
+      hora: merged.hora,
+      nombre_ubicacion: merged.nombreUbicacion,
+      cantidad_jugadores: merged.cantidadJugadores,
+    };
+    
+    // Campos opcionales
+    if (merged.duracionMinutos !== undefined) 
+      payload.duracion_minutos = merged.duracionMinutos;
+    if (merged.descripcion !== undefined) 
+      payload.descripcion = merged.descripcion;
+    if (merged.precioTotal !== undefined) 
+      payload.precio_total = merged.precioTotal;
+    if (merged.direccionUbicacion !== undefined) 
+      payload.direccion_ubicacion = merged.direccionUbicacion;
+    if (merged.latitud !== undefined) 
+      payload.latitud = merged.latitud;
+    if (merged.longitud !== undefined) 
+      payload.longitud = merged.longitud;
+    if (merged.nivel !== undefined) 
+      payload.nivel = merged.nivel;
+    
+    logger.log("[PartidoAPI.actualizar] Payload completo:", payload);
     
     const response = await apiFetch<any>(`/api/partidos/${id}`, {
       method: 'PUT',
