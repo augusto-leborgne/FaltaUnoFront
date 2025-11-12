@@ -243,7 +243,7 @@ export function HomeScreen() {
         </div>
 
         {/* QUICK ACTIONS */}
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-6">
           <button
             onClick={handleCreateMatch}
             className="bg-gradient-to-r from-primary to-primary/90 active:from-primary/80 active:to-primary/70 text-white rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-lg active:shadow-md transition-all duration-200 touch-manipulation active:scale-[0.97] group min-h-[100px] sm:min-h-[120px]"
@@ -272,7 +272,7 @@ export function HomeScreen() {
         </div>
 
         {/* COMMUNITY STATS */}
-        <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4">
           <div className="bg-white rounded-lg sm:rounded-2xl p-3 sm:p-4 text-center shadow-md border border-primary/10 min-h-[80px] sm:min-h-[100px] flex flex-col justify-center">
             <div className="flex items-center justify-center mb-1.5 sm:mb-2">
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-full flex items-center justify-center">
@@ -326,8 +326,8 @@ export function HomeScreen() {
               >
                 <div className="flex items-start justify-between mb-3 sm:mb-3">
                   <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                    <Badge className="bg-orange-100 text-orange-800 text-xs sm:text-xs font-semibold px-2 py-0.5">{review.tipo_partido}</Badge>
-                    <Badge className="bg-red-100 text-red-800 text-xs sm:text-xs font-semibold px-2 py-0.5">Pendiente</Badge>
+                    <Badge className="bg-orange-100 text-orange-800 text-xs sm:text-xs font-semibold px-2 py-0.5 truncate">{review.tipo_partido}</Badge>
+                    <Badge className="bg-red-100 text-red-800 text-xs sm:text-xs font-semibold px-2 py-0.5 truncate">Pendiente</Badge>
                   </div>
                   <Star className="w-5 h-5 sm:w-5 sm:h-5 text-orange-600 fill-orange-600 flex-shrink-0 animate-pulse" />
                 </div>
@@ -336,7 +336,7 @@ export function HomeScreen() {
                     <Calendar className="w-5 h-5 sm:w-5 sm:h-5 text-orange-600" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-foreground mb-1 sm:mb-1 text-sm sm:text-base leading-tight">{review.fecha}</h3>
+                    <h3 className="font-semibold text-foreground mb-1 sm:mb-1 text-sm sm:text-base leading-tight truncate">{review.fecha}</h3>
                     <p className="text-sm sm:text-sm text-muted-foreground mb-2 sm:mb-2 flex items-center gap-1 truncate">
                       <MapPin className="w-4 h-4 flex-shrink-0" />
                       <span className="truncate">{review.nombre_ubicacion}</span>
@@ -388,11 +388,9 @@ export function HomeScreen() {
               >
                 <div className="flex items-start justify-between mb-3 sm:mb-3">
                   <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                    <Badge className="bg-primary/10 text-primary active:bg-primary/20 font-semibold text-xs sm:text-xs px-2 py-0.5">
-                      {match.tipo_partido}
-                    </Badge>
+                    <Badge className="bg-primary/10 text-primary active:bg-primary/20 font-semibold text-xs sm:text-xs px-2 py-0.5 truncate">{match.tipo_partido}</Badge>
                     <Badge
-                      className={`font-semibold text-xs sm:text-xs px-2 py-0.5 ${
+                      className={`font-semibold text-xs sm:text-xs px-2 py-0.5 truncate ${
                         match.estado === "CONFIRMADO"
                           ? "bg-green-100 text-green-800"
                           : "bg-blue-100 text-blue-800"
@@ -408,7 +406,7 @@ export function HomeScreen() {
                     <Calendar className="w-6 h-6 sm:w-6 sm:h-6 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-foreground mb-1 sm:mb-1 text-sm sm:text-base leading-tight">
+                    <h3 className="font-bold text-foreground mb-1 sm:mb-1 text-sm sm:text-base leading-tight truncate">
                       {match.fecha} • {match.hora}
                     </h3>
                     <p className="text-sm sm:text-sm text-muted-foreground mb-3 sm:mb-3 flex items-center gap-1 truncate">
