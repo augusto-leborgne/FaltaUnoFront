@@ -77,7 +77,7 @@ class WebSocketClient {
             return sockjs as any
           },
           
-          connectHeaders: {},
+          connectHeaders: this.getAuthHeaders(),
           
           debug: (str: string) => {
             if (process.env.NODE_ENV === 'development') {
@@ -143,6 +143,23 @@ class WebSocketClient {
     })
 
     return this.connectionPromise
+  }
+
+  /**
+   * Obtener headers de autenticación para la conexión WebSocket
+   */
+  private getAuthHeaders(): Record<string, string> {
+    // Import AuthService dynamically to avoid circular dependencies
+    const { AuthService } = require('./auth')
+    const token = AuthService.getToken()
+    
+    if (token) {
+      return {
+        'Authorization': `Bearer ${token}`
+      }
+    }
+    
+    return {}
   }
 
   /**
