@@ -69,7 +69,12 @@ class WebSocketClient {
 
         // Configurar cliente STOMP
         const stompConfig: StompConfig = {
-          webSocketFactory: () => new SockJS(socketUrl) as any,
+          webSocketFactory: () => {
+            const sockjs = new SockJS(socketUrl, null, {
+              transports: ['xhr-polling', 'xhr-streaming', 'eventsource']
+            })
+            return sockjs as any
+          },
           
           connectHeaders: {},
           
@@ -98,13 +103,13 @@ class WebSocketClient {
           onStompError: (frame: IFrame) => {
             logger.error('[WebSocket] ❌ Error STOMP:', frame)
             this.isConnecting = false
-            reject(new Error(`STOMP error: ${frame.headers['message']}`))
+            reject(new Error(`STOMP error: ${frame.headers?.message || 'Unknown error'}`))
           },
           
           onWebSocketError: (event: Event) => {
             logger.error('[WebSocket] ❌ Error WebSocket:', event)
             this.isConnecting = false
-            reject(event)
+            reject(new Error('WebSocket connection failed'))
           },
           
           onWebSocketClose: (event: CloseEvent) => {
