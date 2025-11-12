@@ -11,7 +11,7 @@ import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { MensajeAPI, PartidoAPI, InscripcionAPI, MensajeDTO, getUserPhotoUrl } from '@/lib/api'
 import { LoadingSpinner, InlineSpinner } from "@/components/ui/loading-spinner"
-import { useSmartPolling } from "@/hooks/use-smart-polling"
+import { usePartidoChat } from "@/hooks/use-websocket"
 
 interface MatchChatScreenProps {
   matchId: string
@@ -59,19 +59,35 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   const currentUser = AuthService.getUser()
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // ⚡ OPTIMIZACIÓN CRÍTICA: Polling inteligente con backoff exponencial
-  // Solo hace polling si hay actividad reciente
-  useSmartPolling(
-    () => loadMessages(true), // true = silent
-    {
-      interval: 3000, // 3 segundos (reducido de 1s para ahorrar batería y ancho de banda)
-      enabled: !loading, // Solo después de carga inicial
-      pauseWhenHidden: true, // Pausar cuando tab está oculta
-      hiddenInterval: 15000, // 15s cuando está oculta (reducido de 10s)
+  // 🔥 WebSocket: Mensajes en tiempo real (reemplaza polling)
+  usePartidoChat(matchId, (event) => {
+    logger.log('[MatchChat] 📡 WebSocket event:', event.type, event)
+    
+    if (event.type === 'NEW_MESSAGE' && event.mensaje) {
+      // Agregar nuevo mensaje al estado
+      setMessages(prev => {
+        // Evitar duplicados
+        const exists = prev.some(m => m.id === event.mensaje.id)
+        if (exists) return prev
+        
+        return [...prev, event.mensaje]
+      })
+      
+      // Si el usuario está en el fondo de la conversación, hacer scroll
+      if (messagesContainerRef.current) {
+        const container = messagesContainerRef.current
+        const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100
+        
+        if (isNearBottom) {
+          setTimeout(() => scrollToBottom(), 100)
+        } else {
+          // Incrementar contador de no leídos
+          setUnreadCount(prev => prev + 1)
+        }
+      }
     }
-  )
+  })
 
-  // ⚡ OPTIMIZACIÓN: Memoizar URLs de fotos para evitar recrearlas en cada render
   // ⚡ URLs de fotos SIN caché - siempre fresh para que las fotos se muestren
   const getUserPhotoUrlMemo = useCallback((userId: string) => {
     // SIN caché, timestamp único CADA VEZ para forzar carga
