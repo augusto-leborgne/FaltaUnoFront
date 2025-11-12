@@ -17,6 +17,8 @@ import { usePostAuthRedirect } from "@/lib/navigation"
 import ReactCrop, { type Crop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
 import { withRetry, formatErrorMessage } from '@/lib/api-utils'
+import { ProfileSetupStorage } from '@/lib/profile-setup-storage'
+import { useClickOutside } from '@/hooks/use-click-outside'
 
 export function ProfileSetupForm() {
   const router = useRouter()
@@ -25,6 +27,11 @@ export function ProfileSetupForm() {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const cameraInputRef = useRef<HTMLInputElement | null>(null)
   const formRef = useRef<HTMLFormElement | null>(null)
+  
+  // Refs para dropdowns
+  const positionDropdownRef = useRef<HTMLDivElement | null>(null)
+  const generoDropdownRef = useRef<HTMLDivElement | null>(null)
+  const countryCodeDropdownRef = useRef<HTMLDivElement | null>(null)
 
   const [formData, setFormData] = useState({
     name: "",
@@ -46,6 +53,11 @@ export function ProfileSetupForm() {
   const [showGeneroDropdown, setShowGeneroDropdown] = useState(false)
   const [showCountryCodeDropdown, setShowCountryCodeDropdown] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
+  
+  // Click outside handlers para cerrar dropdowns
+  useClickOutside(positionDropdownRef, () => setShowPositionDropdown(false), showPositionDropdown)
+  useClickOutside(generoDropdownRef, () => setShowGeneroDropdown(false), showGeneroDropdown)
+  useClickOutside(countryCodeDropdownRef, () => setShowCountryCodeDropdown(false), showCountryCodeDropdown)
   const [generalError, setGeneralError] = useState<string>("")
 
   // Image crop states
@@ -163,6 +175,32 @@ export function ProfileSetupForm() {
     hasPrefilled.current = true;
     
     try {
+      // ⚡ NUEVO: Primero intentar cargar datos guardados desde phone-verification
+      const savedData = ProfileSetupStorage.load();
+      
+      if (savedData) {
+        logger.log('[ProfileSetup] Loading saved data from storage');
+        setFormData((prev) => ({
+          ...prev,
+          name: savedData.name || prev.name,
+          surname: savedData.surname || prev.surname,
+          phone: savedData.phone || prev.phone,
+          countryCode: savedData.countryCode || prev.countryCode,
+          fechaNacimiento: savedData.fechaNacimiento || prev.fechaNacimiento,
+          genero: savedData.genero || prev.genero,
+          position: savedData.position || prev.position,
+          height: savedData.height || prev.height,
+          weight: savedData.weight || prev.weight,
+          address: savedData.address || prev.address,
+          placeDetails: savedData.placeDetails || prev.placeDetails,
+          photoPreviewUrl: savedData.photoPreviewUrl || prev.photoPreviewUrl,
+        }));
+        // Limpiar datos guardados después de cargar
+        ProfileSetupStorage.clear();
+        return;
+      }
+      
+      // Si no hay datos guardados, pre-rellenar desde user
       setFormData((prev) => {
         // ⚡ CAMBIO: Pre-rellenar campos individuales que estén vacíos
         // NO usar shouldPrefill global porque si un campo tiene valor pero otro no,
@@ -422,12 +460,29 @@ export function ProfileSetupForm() {
         // ⚡ ROBUST FLOW: Only redirect to /home if BOTH profile is complete AND has phone
         if (hasCelular && isComplete) {
           logger.log("[ProfileSetup] Registration complete with phone, redirecting to /home")
+          // ⚡ NUEVO: Limpiar datos guardados al completar exitosamente
+          ProfileSetupStorage.clear();
           router.replace('/home')
         } else if (hasCelular && !isComplete) {
           logger.warn("[ProfileSetup] Registration has phone but profile incomplete - staying")
           setGeneralError("Por favor completa todos los campos requeridos")
         } else {
           logger.log("[ProfileSetup] Registration complete, no phone - redirecting to /phone-verification")
+          // ⚡ NUEVO: Guardar datos del formulario antes de navegar
+          ProfileSetupStorage.save({
+            name: formData.name,
+            surname: formData.surname,
+            phone: formData.phone,
+            countryCode: formData.countryCode,
+            fechaNacimiento: formData.fechaNacimiento,
+            genero: formData.genero,
+            position: formData.position,
+            height: formData.height,
+            weight: formData.weight,
+            address: formData.address,
+            placeDetails: formData.placeDetails,
+            photoPreviewUrl: formData.photoPreviewUrl,
+          });
           router.replace('/phone-verification')
         }
 
@@ -519,12 +574,29 @@ export function ProfileSetupForm() {
           // ⚡ ROBUST FLOW: Only redirect to /home if BOTH profile is complete AND has phone
           if (hasCelular && isComplete) {
             logger.log("[ProfileSetup] Profile complete with phone, redirecting to /home")
+            // ⚡ NUEVO: Limpiar datos guardados al completar exitosamente
+            ProfileSetupStorage.clear();
             router.replace('/home')
           } else if (hasCelular && !isComplete) {
             logger.warn("[ProfileSetup] Has phone but profile incomplete - staying on /profile-setup")
             setGeneralError("Por favor completa todos los campos requeridos")
           } else {
             logger.log("[ProfileSetup] No phone, redirecting to /phone-verification")
+            // ⚡ NUEVO: Guardar datos del formulario antes de navegar
+            ProfileSetupStorage.save({
+              name: formData.name,
+              surname: formData.surname,
+              phone: formData.phone,
+              countryCode: formData.countryCode,
+              fechaNacimiento: formData.fechaNacimiento,
+              genero: formData.genero,
+              position: formData.position,
+              height: formData.height,
+              weight: formData.weight,
+              address: formData.address,
+              placeDetails: formData.placeDetails,
+              photoPreviewUrl: formData.photoPreviewUrl,
+            });
             router.replace('/phone-verification')
           }
         } else {
@@ -697,7 +769,7 @@ export function ProfileSetupForm() {
 
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-1.5 block">Género *</label>
-                <div className="relative">
+                <div className="relative" ref={generoDropdownRef}>
                   <Button
                     type="button"
                     variant="outline"
@@ -718,7 +790,7 @@ export function ProfileSetupForm() {
                             handleFieldChange('genero', gen)
                             setShowGeneroDropdown(false)
                           }}
-                          className="p-3 hover:bg-primary/10 cursor-pointer first:rounded-t-xl last:rounded-b-xl"
+                          className="p-3 hover:bg-primary/10 active:bg-primary/20 cursor-pointer first:rounded-t-xl last:rounded-b-xl transition-colors"
                         >
                           {gen}
                         </div>
@@ -762,7 +834,7 @@ export function ProfileSetupForm() {
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium text-gray-700 mb-1.5 block">Posición preferida *</label>
-                <div className="relative">
+                <div className="relative" ref={positionDropdownRef}>
                   <Button
                     type="button"
                     variant="outline"
@@ -783,7 +855,7 @@ export function ProfileSetupForm() {
                             handleFieldChange('position', pos)
                             setShowPositionDropdown(false)
                           }}
-                          className="p-3 hover:bg-orange-50 cursor-pointer first:rounded-t-xl last:rounded-b-xl"
+                          className="p-3 hover:bg-orange-50 active:bg-orange-100 cursor-pointer first:rounded-t-xl last:rounded-b-xl transition-colors"
                         >
                           {pos}
                         </div>

@@ -4,12 +4,14 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import { Smartphone, CheckCircle, AlertCircle, Shield, Users } from "lucide-react";
+import { Smartphone, CheckCircle, AlertCircle, Shield, Users, ArrowLeft } from "lucide-react";
 import { UsuarioAPI, API_URL } from "@/lib/api";
 import { AuthService } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
 import { logger } from "@/lib/logger";
 import { withRetry, formatErrorMessage } from "@/lib/api-utils";
+import { ProfileSetupStorage } from "@/lib/profile-setup-storage";
+import { useClickOutside } from "@/hooks/use-click-outside";
 
 // Códigos de país comunes en la región
 const COUNTRY_CODES = [
@@ -34,6 +36,31 @@ export function PhoneVerificationScreen() {
   const [showCountryDropdown, setShowCountryDropdown] = React.useState(false);
   const [isCheckingPhone, setIsCheckingPhone] = React.useState(false);
   const [phoneCheckDebounce, setPhoneCheckDebounce] = React.useState<NodeJS.Timeout | null>(null);
+  const [canGoBack, setCanGoBack] = React.useState(false);
+  
+  // Ref para el dropdown
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+  
+  // Cerrar dropdown al hacer click fuera
+  useClickOutside(dropdownRef, () => setShowCountryDropdown(false), showCountryDropdown);
+
+  // Verificar si hay datos guardados para permitir volver atrás
+  React.useEffect(() => {
+    setCanGoBack(ProfileSetupStorage.hasData());
+  }, []);
+
+  // Manejar el botón back del navegador
+  React.useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      e.preventDefault();
+      if (canGoBack) {
+        router.push('/profile-setup');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [canGoBack, router]);
 
   // Verificar si el teléfono ya está registrado
   const checkPhoneAvailability = React.useCallback(async (fullPhone: string) => {
@@ -107,6 +134,10 @@ export function PhoneVerificationScreen() {
     }
   };
 
+  const handleGoBack = () => {
+    router.push('/profile-setup');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -161,6 +192,8 @@ export function PhoneVerificationScreen() {
           
           if (isComplete) {
             logger.log("[PhoneVerification] Profile complete, redirecting to /home");
+            // ⚡ NUEVO: Limpiar datos guardados al completar exitosamente
+            ProfileSetupStorage.clear();
             router.replace("/home");
           } else {
             logger.warn("[PhoneVerification] Phone updated but profile incomplete, redirecting to /profile-setup");
@@ -272,25 +305,25 @@ export function PhoneVerificationScreen() {
                 <label className="text-sm font-medium text-gray-700 mb-1.5 block">
                   Código de país *
                 </label>
-                <div className="relative">
+                <div className="relative" ref={dropdownRef}>
                   <button
                     type="button"
                     onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary transition-all text-left flex items-center justify-between"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white border border-gray-300 rounded-xl sm:rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary transition-all text-left flex items-center justify-between text-sm sm:text-base"
                     disabled={isSubmitting}
                   >
-                    <span className="flex items-center gap-2">
-                      <span className="text-xl">{COUNTRY_CODES.find(c => c.code === countryCode)?.flag}</span>
-                      <span>{countryCode}</span>
-                      <span className="text-gray-500">- {COUNTRY_CODES.find(c => c.code === countryCode)?.country}</span>
+                    <span className="flex items-center gap-1.5 sm:gap-2">
+                      <span className="text-lg sm:text-xl">{COUNTRY_CODES.find(c => c.code === countryCode)?.flag}</span>
+                      <span className="font-medium">{countryCode}</span>
+                      <span className="text-gray-500 text-xs sm:text-sm truncate">- {COUNTRY_CODES.find(c => c.code === countryCode)?.country}</span>
                     </span>
-                    <svg className={`w-5 h-5 text-gray-400 transition-transform ${showCountryDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-400 transition-transform flex-shrink-0 ${showCountryDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </button>
                   
                   {showCountryDropdown && (
-                    <div className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-2xl shadow-xl max-h-60 overflow-y-auto">
+                    <div className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-xl sm:rounded-2xl shadow-xl max-h-60 overflow-y-auto">
                       {COUNTRY_CODES.map((item) => (
                         <button
                           key={item.code}
@@ -299,11 +332,11 @@ export function PhoneVerificationScreen() {
                             setCountryCode(item.code);
                             setShowCountryDropdown(false);
                           }}
-                          className="w-full px-4 py-3 text-left hover:bg-gray-50 flex items-center gap-3 transition-colors first:rounded-t-2xl last:rounded-b-2xl"
+                          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-left hover:bg-gray-50 active:bg-gray-100 flex items-center gap-2 sm:gap-3 transition-colors first:rounded-t-xl first:sm:rounded-t-2xl last:rounded-b-xl last:sm:rounded-b-2xl text-sm sm:text-base"
                         >
-                          <span className="text-xl">{item.flag}</span>
+                          <span className="text-lg sm:text-xl">{item.flag}</span>
                           <span className="font-medium">{item.code}</span>
-                          <span className="text-gray-600">- {item.country}</span>
+                          <span className="text-gray-600 text-xs sm:text-sm">- {item.country}</span>
                         </button>
                       ))}
                     </div>
@@ -341,10 +374,23 @@ export function PhoneVerificationScreen() {
 
           {/* Botones - mismo estilo que profile-setup */}
           <div className="space-y-3">
+            {/* Botón volver - solo si hay datos guardados */}
+            {canGoBack && (
+              <Button
+                type="button"
+                onClick={handleGoBack}
+                variant="outline"
+                className="w-full py-5 sm:py-6 rounded-xl sm:rounded-2xl transition-all text-sm sm:text-base font-semibold border-2 border-gray-300 hover:border-primary hover:bg-primary/5 flex items-center justify-center gap-2"
+              >
+                <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                Volver y editar perfil
+              </Button>
+            )}
+            
             <Button 
               type="submit" 
               disabled={isSubmitting || !!fieldError || !phoneNumber} 
-              className="w-full bg-primary text-white py-6 rounded-2xl hover:bg-primary/90 transition-all text-base font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-primary text-white py-5 sm:py-6 rounded-xl sm:rounded-2xl hover:bg-primary/90 transition-all text-sm sm:text-base font-semibold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <span className="flex items-center justify-center gap-2">
