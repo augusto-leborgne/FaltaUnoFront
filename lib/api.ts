@@ -1417,11 +1417,12 @@ export const InscripcionAPI = {
 
 export const MensajeAPI = {
   /**
-   * Listar mensajes de un partido
+   * ⚡ OPTIMIZADO: Listar mensajes con límite reducido
+   * Solo carga los 30 mensajes más recientes para carga inicial rápida
    */
-  list: async (partidoId: string) => {
+  list: async (partidoId: string, limit = 30) => {
     const response = await apiFetch<MensajeDTO[]>(
-      `/api/partidos/${partidoId}/mensajes`
+      `/api/partidos/${partidoId}/mensajes?limit=${limit}`
     );
 
     return {

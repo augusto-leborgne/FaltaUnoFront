@@ -59,14 +59,15 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   const currentUser = AuthService.getUser()
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  // ⚡ SUPER OPTIMIZACIÓN: Polling ultra-rápido para chat en tiempo real
+  // ⚡ OPTIMIZACIÓN CRÍTICA: Polling inteligente con backoff exponencial
+  // Solo hace polling si hay actividad reciente
   useSmartPolling(
     () => loadMessages(true), // true = silent
     {
-      interval: 1000, // 1 segundo (MÁXIMA velocidad para móvil)
-      enabled: !loading, // Solo hacer polling después de carga inicial
+      interval: 3000, // 3 segundos (reducido de 1s para ahorrar batería y ancho de banda)
+      enabled: !loading, // Solo después de carga inicial
       pauseWhenHidden: true, // Pausar cuando tab está oculta
-      hiddenInterval: 10000, // 10s cuando está oculta
+      hiddenInterval: 15000, // 15s cuando está oculta (reducido de 10s)
     }
   )
 
