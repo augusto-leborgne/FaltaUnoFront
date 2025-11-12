@@ -220,10 +220,10 @@ export function HomeScreen() {
               {currentUser?.nombre || user?.nombre || "Jugador"}
             </p>
           </div>
-          <div className="flex items-center space-x-3 sm:space-x-3 flex-shrink-0">
+          <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0 ml-3 sm:ml-0">
             <button
               onClick={handleNotifications}
-              className="relative p-3 sm:p-2.5 rounded-full bg-white shadow-md hover:shadow-lg transition-all duration-200 touch-manipulation active:scale-95"
+              className="relative p-3 sm:p-2.5 rounded-full bg-white shadow-md hover:shadow-lg transition-all duration-200 touch-manipulation active:scale-95 min-w-[44px] min-h-[44px] sm:min-w-[40px] sm:min-h-[40px]"
             >
               <Bell className="w-6 h-6 sm:w-6 sm:h-6 text-primary" />
               {notificationCount > 0 && (
@@ -236,7 +236,7 @@ export function HomeScreen() {
               userId={currentUser?.id}
               name={currentUser?.nombre}
               surname={currentUser?.apellido}
-              className="w-12 h-12 sm:w-12 sm:h-12 cursor-pointer ring-2 ring-white shadow-md hover:ring-primary transition-all duration-200"
+              className="w-12 h-12 sm:w-12 sm:h-12 cursor-pointer ring-2 ring-white shadow-md hover:ring-primary transition-all duration-200 min-w-[48px] min-h-[48px]"
               onClick={() => router.push("/profile")}
             />
           </div>
@@ -246,7 +246,7 @@ export function HomeScreen() {
         <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-6">
           <button
             onClick={handleCreateMatch}
-            className="bg-gradient-to-r from-primary to-primary/90 active:from-primary/80 active:to-primary/70 text-white rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-lg active:shadow-md transition-all duration-200 touch-manipulation active:scale-[0.97] group"
+            className="bg-gradient-to-r from-primary to-primary/90 active:from-primary/80 active:to-primary/70 text-white rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-lg active:shadow-md transition-all duration-200 touch-manipulation active:scale-[0.97] group min-h-[100px] sm:min-h-[120px]"
           >
             <div className="flex items-center justify-between mb-2 sm:mb-2">
               <Plus className="w-6 h-6 sm:w-7 sm:h-7 group-active:rotate-90 transition-transform duration-300" />
@@ -259,7 +259,7 @@ export function HomeScreen() {
 
           <button
             onClick={handleViewAllMatches}
-            className="bg-gradient-to-r from-secondary to-secondary/90 active:from-secondary/80 active:to-secondary/70 text-white rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-lg active:shadow-md transition-all duration-200 touch-manipulation active:scale-[0.97] group"
+            className="bg-gradient-to-r from-secondary to-secondary/90 active:from-secondary/80 active:to-secondary/70 text-white rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-lg active:shadow-md transition-all duration-200 touch-manipulation active:scale-[0.97] group min-h-[100px] sm:min-h-[120px]"
           >
             <div className="flex items-center justify-between mb-2 sm:mb-2">
               <Users className="w-6 h-6 sm:w-7 sm:h-7 group-active:scale-110 transition-transform duration-300" />
@@ -272,8 +272,8 @@ export function HomeScreen() {
         </div>
 
         {/* COMMUNITY STATS */}
-        <div className="grid grid-cols-3 gap-3 sm:gap-4">
-          <div className="bg-white rounded-lg sm:rounded-2xl p-3 sm:p-4 text-center shadow-md border border-primary/10">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
+          <div className="bg-white rounded-lg sm:rounded-2xl p-3 sm:p-4 text-center shadow-md border border-primary/10 min-h-[80px] sm:min-h-[100px] flex flex-col justify-center">
             <div className="flex items-center justify-center mb-1.5 sm:mb-2">
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-full flex items-center justify-center">
                 <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
@@ -282,7 +282,7 @@ export function HomeScreen() {
             <div className="text-lg sm:text-2xl font-bold text-green-600 leading-none mb-1 sm:mb-1">{communityStats.activeUsers}</div>
             <div className="text-xs sm:text-xs text-muted-foreground font-medium leading-tight">Activos</div>
           </div>
-          <div className="bg-white rounded-lg sm:rounded-2xl p-3 sm:p-4 text-center shadow-md border border-primary/10">
+          <div className="bg-white rounded-lg sm:rounded-2xl p-3 sm:p-4 text-center shadow-md border border-primary/10 min-h-[80px] sm:min-h-[100px] flex flex-col justify-center">
             <div className="flex items-center justify-center mb-1.5 sm:mb-2">
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary/10 rounded-full flex items-center justify-center">
                 <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
@@ -291,7 +291,7 @@ export function HomeScreen() {
             <div className="text-lg sm:text-2xl font-bold text-foreground leading-none mb-1 sm:mb-1">{communityStats.matchesThisWeek}</div>
             <div className="text-xs sm:text-xs text-muted-foreground font-medium leading-tight">Partidos</div>
           </div>
-          <div className="bg-white rounded-lg sm:rounded-2xl p-3 sm:p-4 text-center shadow-md border border-primary/10">
+          <div className="bg-white rounded-lg sm:rounded-2xl p-3 sm:p-4 text-center shadow-md border border-primary/10 min-h-[80px] sm:min-h-[100px] flex flex-col justify-center">
             <div className="flex items-center justify-center mb-1.5 sm:mb-2">
               <div className="w-8 h-8 sm:w-10 sm:h-10 bg-secondary/10 rounded-full flex items-center justify-center">
                 <Users className="w-4 h-4 sm:w-5 sm:h-5 text-secondary" />
@@ -325,9 +325,9 @@ export function HomeScreen() {
                 className="bg-gradient-to-br from-orange-50 to-yellow-50 border-2 border-orange-200/50 rounded-xl sm:rounded-2xl p-4 sm:p-4 cursor-pointer active:shadow-lg active:border-orange-300 transition-all duration-200 touch-manipulation active:scale-[0.97]"
               >
                 <div className="flex items-start justify-between mb-3 sm:mb-3">
-                  <div className="flex items-center gap-2 sm:gap-2 flex-wrap">
-                    <Badge className="bg-orange-100 text-orange-800 text-sm sm:text-xs font-semibold">{review.tipo_partido}</Badge>
-                    <Badge className="bg-red-100 text-red-800 text-sm sm:text-xs font-semibold">Pendiente</Badge>
+                  <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                    <Badge className="bg-orange-100 text-orange-800 text-xs sm:text-xs font-semibold px-2 py-0.5">{review.tipo_partido}</Badge>
+                    <Badge className="bg-red-100 text-red-800 text-xs sm:text-xs font-semibold px-2 py-0.5">Pendiente</Badge>
                   </div>
                   <Star className="w-5 h-5 sm:w-5 sm:h-5 text-orange-600 fill-orange-600 flex-shrink-0 animate-pulse" />
                 </div>
@@ -387,12 +387,12 @@ export function HomeScreen() {
                 className="bg-white border-2 border-border/50 active:border-primary/50 rounded-xl sm:rounded-2xl p-4 sm:p-4 cursor-pointer active:shadow-lg transition-all duration-200 touch-manipulation active:scale-[0.97] group"
               >
                 <div className="flex items-start justify-between mb-3 sm:mb-3">
-                  <div className="flex items-center gap-2 sm:gap-2 flex-wrap">
-                    <Badge className="bg-primary/10 text-primary active:bg-primary/20 font-semibold text-sm sm:text-xs">
+                  <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                    <Badge className="bg-primary/10 text-primary active:bg-primary/20 font-semibold text-xs sm:text-xs px-2 py-0.5">
                       {match.tipo_partido}
                     </Badge>
                     <Badge
-                      className={`font-semibold text-sm sm:text-xs ${
+                      className={`font-semibold text-xs sm:text-xs px-2 py-0.5 ${
                         match.estado === "CONFIRMADO"
                           ? "bg-green-100 text-green-800"
                           : "bg-blue-100 text-blue-800"
@@ -442,7 +442,7 @@ export function HomeScreen() {
             <div className="flex flex-col gap-3 sm:gap-3 justify-center items-stretch px-6 sm:px-6">
               <Button
                 onClick={handleViewAllMatches}
-                className="bg-gradient-to-r from-primary to-primary/90 active:from-primary/80 active:to-primary/70 text-white font-semibold shadow-lg active:shadow-md transition-all duration-200 w-full h-12 sm:h-auto"
+                className="bg-gradient-to-r from-primary to-primary/90 active:from-primary/80 active:to-primary/70 text-white font-semibold shadow-lg active:shadow-md transition-all duration-200 w-full h-12 sm:h-auto min-h-[48px] touch-manipulation"
               >
                 <Users className="w-5 h-5 mr-2" />
                 Buscar Partidos
@@ -450,7 +450,7 @@ export function HomeScreen() {
               <Button
                 onClick={handleCreateMatch}
                 variant="outline"
-                className="border-2 border-primary text-primary active:bg-primary active:text-white font-semibold transition-all duration-200 w-full h-12 sm:h-auto"
+                className="border-2 border-primary text-primary active:bg-primary active:text-white font-semibold transition-all duration-200 w-full h-12 sm:h-auto min-h-[48px] touch-manipulation"
               >
                 <Plus className="w-5 h-5 mr-2" />
                 Crear Partido
