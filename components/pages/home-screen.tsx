@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { BetaBadge } from "@/components/ui/beta-badge"
 import { UserAvatar } from "@/components/ui/user-avatar"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
-import { Clock, Calendar, Star, Bell, Newspaper, TrendingUp, Award, X } from "lucide-react"
+import { Clock, Calendar, Star, Bell, Plus, Users, MapPin, TrendingUp } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { API_BASE, InscripcionAPI, InscripcionEstado, getUserPhotoUrl } from "@/lib/api"
@@ -16,26 +16,6 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useNotifications } from "@/hooks/use-notifications"
 import { useCurrentUser } from "@/hooks/use-current-user"
 import { apiCache } from "@/lib/api-cache-manager"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-
-interface NewsUpdate {
-  id: string
-  type: "update" | "announcement" | "feature" | "community"
-  title: string
-  description: string
-  date: string
-  image?: string
-  category?: string
-  author?: string
-  readTime?: string
-  tags?: string[]
-}
 
 interface Partido {
   id: string
@@ -56,16 +36,24 @@ interface PendingReview {
   jugadores_pendientes: any[]
 }
 
+interface UserStats {
+  partidosJugados: number
+  promedioRating: number
+  partidosPendientes: number
+}
+
 export function HomeScreen() {
   const router = useRouter()
   const { count: notificationCount } = useNotifications()
-  const { user: currentUser } = useCurrentUser() // Obtener usuario con foto actualizada
+  const { user: currentUser } = useCurrentUser()
   const [upcomingMatches, setUpcomingMatches] = useState<Partido[]>([])
   const [pendingReviews, setPendingReviews] = useState<PendingReview[]>([])
-  const [newsUpdates, setNewsUpdates] = useState<NewsUpdate[]>([])
-  const [isLoading, setIsLoading] = useState(false) // Cambiar a false para mostrar UI rápido
-  const [selectedNews, setSelectedNews] = useState<NewsUpdate | null>(null)
-  const [isNewsDialogOpen, setIsNewsDialogOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [userStats, setUserStats] = useState<UserStats>({
+    partidosJugados: 0,
+    promedioRating: 0,
+    partidosPendientes: 0
+  })
   const [communityStats, setCommunityStats] = useState({
     activeUsers: 0,
     matchesThisWeek: 0,
@@ -110,7 +98,7 @@ export function HomeScreen() {
       }
 
       // ⚡ OPTIMIZACIÓN: Cargar datos en paralelo CON CACHÉ
-      const [matchesResult, reviewsResult, statsResult, novedadesResult] = await Promise.allSettled([
+      const [matchesResult, reviewsResult, statsResult] = await Promise.allSettled([
         // Cargar partidos del usuario (CACHED)
         apiCache.get(
           `partidos-usuario-${user.id}`,
@@ -131,14 +119,6 @@ export function HomeScreen() {
           () => fetch(`${API_BASE}/api/usuarios/stats`, { headers: authHeaders })
             .then(res => res.ok ? res.json() : null),
           { ttl: 10 * 60 * 1000 } // 10 minutos para stats globales
-        ),
-        
-        // Cargar novedades (CACHED - más tiempo)
-        apiCache.get(
-          `novedades-latest`,
-          () => fetch(`${API_BASE}/api/novedades?limit=5`, { headers: authHeaders })
-            .then(res => res.ok ? res.json() : null),
-          { ttl: 15 * 60 * 1000 } // 15 minutos para novedades
         )
       ])
 
@@ -186,36 +166,12 @@ export function HomeScreen() {
         }
       }
 
-      // Procesar novedades
-      if (novedadesResult.status === 'fulfilled' && novedadesResult.value) {
-        const novedadesData = novedadesResult.value
-        if (novedadesData.success && Array.isArray(novedadesData.data)) {
-          setNewsUpdates(novedadesData.data)
-        } else {
-          setNewsUpdates(getDefaultNews())
-        }
-      } else {
-        setNewsUpdates(getDefaultNews())
-      }
-
     } catch (error) {
       logger.error("Error cargando datos:", error)
-      setNewsUpdates(getDefaultNews())
     } finally {
       setIsLoading(false)
     }
   }
-
-  // Helper para noticias por defecto
-  const getDefaultNews = () => [{
-    id: "default1",
-    type: "feature" as const,
-    title: "¡Bienvenido a Falta Uno!",
-    description: "La plataforma para organizar partidos de fútbol entre amigos.",
-    date: "Recientemente",
-    author: "Equipo Falta Uno",
-    tags: ["Bienvenida"]
-  }]
 
   const handleMatchClick = async (matchId: string) => {
     // Verificar si el usuario está inscrito y aceptado
@@ -236,24 +192,7 @@ export function HomeScreen() {
   const handleReviewMatch = (matchId: string) => router.push(`/matches/${matchId}/review`)
   const handleViewAllMatches = () => router.push("/matches")
   const handleNotifications = () => router.push("/notifications")
-  
-  const handleNewsClick = (news: NewsUpdate) => {
-    setSelectedNews(news)
-    setIsNewsDialogOpen(true)
-  }
-
-  const getNewsIcon = (type: string) => {
-    switch (type) {
-      case "update":
-        return <TrendingUp className="w-4 h-4" />
-      case "announcement":
-        return <Bell className="w-4 h-4" />
-      case "feature":
-        return <Award className="w-4 h-4" />
-      default:
-        return <Newspaper className="w-4 h-4" />
-    }
-  }
+  const handleCreateMatch = () => router.push("/create-match")
 
   if (isLoading) {
     return (
@@ -266,86 +205,151 @@ export function HomeScreen() {
   const user = AuthService.getUser()
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* HEADER + STATS */}
-      <div className="pt-12 sm:pt-16 pb-3 sm:pb-6 px-3 sm:px-6 bg-gradient-to-r from-primary/5 to-secondary/5">
-        <div className="flex items-center justify-between mb-3 sm:mb-4">
+    <div className="min-h-screen bg-gradient-to-b from-primary/5 via-background to-background flex flex-col">
+      {/* HERO HEADER */}
+      <div className="pt-12 sm:pt-16 pb-6 sm:pb-8 px-4 sm:px-6">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-foreground truncate">¡Bienvenido!</h1>
+            <div className="flex items-center gap-2 mb-1">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                ¡Bienvenido!
+              </h1>
               <BetaBadge />
             </div>
-            <p className="text-xs sm:text-sm md:text-base text-muted-foreground truncate">Descubre lo que está pasando</p>
+            <p className="text-sm sm:text-base text-muted-foreground">
+              {currentUser?.nombre || user?.nombre || "Jugador"}
+            </p>
           </div>
-          <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+          <div className="flex items-center space-x-3 flex-shrink-0">
             <button
               onClick={handleNotifications}
-              className="relative p-2 rounded-full hover:bg-white/20 transition-colors touch-manipulation"
+              className="relative p-2.5 rounded-full bg-white shadow-md hover:shadow-lg transition-all duration-200 touch-manipulation active:scale-95"
             >
-              <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-foreground" />
+              <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
               {notificationCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] sm:min-w-[20px] sm:h-5 bg-red-500 text-white text-[10px] sm:text-xs font-bold rounded-full flex items-center justify-center px-1">
+                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1.5 shadow-md">
                   {notificationCount > 99 ? '99+' : notificationCount}
                 </span>
               )}
             </button>
-            {/* ✅ OPTIMIZADO: UserAvatar con userId para carga automática de foto */}
             <UserAvatar 
               userId={currentUser?.id}
               name={currentUser?.nombre}
               surname={currentUser?.apellido}
-              className="w-9 h-9 sm:w-10 sm:h-10 md:w-12 md:h-12 cursor-pointer"
+              className="w-10 h-10 sm:w-12 sm:h-12 cursor-pointer ring-2 ring-white shadow-md hover:ring-primary transition-all duration-200"
               onClick={() => router.push("/profile")}
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 sm:gap-4">
-          <div className="bg-card rounded-lg sm:rounded-xl p-2 sm:p-3 text-center">
-            <div className="text-base sm:text-lg md:text-xl font-bold text-green-600">{communityStats.activeUsers}</div>
-            <div className="text-[10px] sm:text-xs text-muted-foreground">Activos ahora</div>
+        {/* QUICK ACTIONS */}
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-6">
+          <button
+            onClick={handleCreateMatch}
+            className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white rounded-2xl p-4 sm:p-5 shadow-lg hover:shadow-xl transition-all duration-200 touch-manipulation active:scale-[0.98] group"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <Plus className="w-6 h-6 sm:w-7 sm:h-7 group-hover:rotate-90 transition-transform duration-300" />
+            </div>
+            <div className="text-left">
+              <div className="font-bold text-base sm:text-lg mb-1">Crear Partido</div>
+              <div className="text-xs sm:text-sm text-white/80">Organiza un nuevo partido</div>
+            </div>
+          </button>
+
+          <button
+            onClick={handleViewAllMatches}
+            className="bg-gradient-to-r from-secondary to-secondary/90 hover:from-secondary/90 hover:to-secondary text-white rounded-2xl p-4 sm:p-5 shadow-lg hover:shadow-xl transition-all duration-200 touch-manipulation active:scale-[0.98] group"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <Users className="w-6 h-6 sm:w-7 sm:h-7 group-hover:scale-110 transition-transform duration-300" />
+            </div>
+            <div className="text-left">
+              <div className="font-bold text-base sm:text-lg mb-1">Buscar Partidos</div>
+              <div className="text-xs sm:text-sm text-white/80">Únete a un partido</div>
+            </div>
+          </button>
+        </div>
+
+        {/* COMMUNITY STATS */}
+        <div className="grid grid-cols-3 gap-3 sm:gap-4">
+          <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center shadow-md border border-primary/10">
+            <div className="flex items-center justify-center mb-2">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-full flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+              </div>
+            </div>
+            <div className="text-xl sm:text-2xl font-bold text-green-600">{communityStats.activeUsers}</div>
+            <div className="text-[10px] sm:text-xs text-muted-foreground font-medium">Activos</div>
           </div>
-          <div className="bg-card rounded-lg sm:rounded-xl p-2 sm:p-3 text-center">
-            <div className="text-base sm:text-lg md:text-xl font-bold text-foreground">{communityStats.matchesThisWeek}</div>
-            <div className="text-[10px] sm:text-xs text-muted-foreground">Total partidos</div>
+          <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center shadow-md border border-primary/10">
+            <div className="flex items-center justify-center mb-2">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+              </div>
+            </div>
+            <div className="text-xl sm:text-2xl font-bold text-foreground">{communityStats.matchesThisWeek}</div>
+            <div className="text-[10px] sm:text-xs text-muted-foreground font-medium">Partidos</div>
           </div>
-          <div className="bg-card rounded-lg sm:rounded-xl p-2 sm:p-3 text-center">
-            <div className="text-base sm:text-lg md:text-xl font-bold text-foreground">{communityStats.newMembers}</div>
-            <div className="text-[10px] sm:text-xs text-muted-foreground">Total usuarios</div>
+          <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 text-center shadow-md border border-primary/10">
+            <div className="flex items-center justify-center mb-2">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-secondary/10 rounded-full flex items-center justify-center">
+                <Users className="w-4 h-4 sm:w-5 sm:h-5 text-secondary" />
+              </div>
+            </div>
+            <div className="text-xl sm:text-2xl font-bold text-foreground">{communityStats.newMembers}</div>
+            <div className="text-[10px] sm:text-xs text-muted-foreground font-medium">Usuarios</div>
           </div>
         </div>
       </div>
 
       {/* PENDING REVIEWS */}
       {pendingReviews.length > 0 && (
-        <div className="px-3 sm:px-6 py-4 sm:py-6">
-          <div className="flex items-center justify-between mb-3 sm:mb-4">
-            <h2 className="text-base sm:text-lg font-bold text-foreground">Partidos por calificar</h2>
-            <Badge className="bg-orange-100 text-orange-800 text-xs">{pendingReviews.length}</Badge>
+        <div className="px-4 sm:px-6 py-5 sm:py-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                <Star className="w-4 h-4 text-orange-600" />
+              </div>
+              <h2 className="text-lg sm:text-xl font-bold text-foreground">Partidos por calificar</h2>
+            </div>
+            <Badge className="bg-orange-100 text-orange-800 text-xs sm:text-sm font-semibold px-3 py-1">
+              {pendingReviews.length}
+            </Badge>
           </div>
-          <div className="space-y-2 sm:space-y-3">
+          <div className="space-y-3">
             {pendingReviews.map((review) => (
               <div
                 key={review.partido_id}
                 onClick={() => handleReviewMatch(review.partido_id)}
-                className="bg-gradient-to-r from-orange-50 to-yellow-50 border border-orange-200 rounded-xl sm:rounded-2xl p-3 sm:p-4 cursor-pointer hover:shadow-md transition-all duration-200 touch-manipulation active:scale-[0.98]"
+                className="bg-gradient-to-br from-orange-50 to-yellow-50 border-2 border-orange-200/50 rounded-2xl p-4 cursor-pointer hover:shadow-lg hover:border-orange-300 transition-all duration-200 touch-manipulation active:scale-[0.98]"
               >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-1 sm:space-x-2 flex-wrap gap-1">
-                    <Badge className="bg-orange-100 text-orange-800 text-[10px] sm:text-xs">{review.tipo_partido}</Badge>
-                    <Badge className="bg-red-100 text-red-800 text-[10px] sm:text-xs">Reseña pendiente</Badge>
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge className="bg-orange-100 text-orange-800 text-xs font-semibold">{review.tipo_partido}</Badge>
+                    <Badge className="bg-red-100 text-red-800 text-xs font-semibold">Pendiente</Badge>
                   </div>
-                  <Star className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600 flex-shrink-0" />
+                  <Star className="w-5 h-5 text-orange-600 fill-orange-600 flex-shrink-0 animate-pulse" />
                 </div>
-                <h3 className="font-semibold text-foreground mb-1 text-sm sm:text-base truncate">{review.fecha}</h3>
-                <p className="text-xs sm:text-sm text-muted-foreground mb-2 truncate">{review.nombre_ubicacion}</p>
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <span className="text-xs sm:text-sm text-muted-foreground">
-                    {review.jugadores_pendientes?.length || 0} jugadores por calificar
-                  </span>
-                  <div className="flex items-center text-orange-600">
-                    <Star className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                    <span className="text-xs sm:text-sm font-medium">Toca para calificar</span>
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
+                    <Calendar className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-foreground mb-1 text-sm sm:text-base">{review.fecha}</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-2 flex items-center gap-1 truncate">
+                      <MapPin className="w-3 h-3 flex-shrink-0" />
+                      {review.nombre_ubicacion}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground font-medium">
+                        {review.jugadores_pendientes?.length || 0} jugadores por calificar
+                      </span>
+                      <div className="flex items-center text-orange-600 font-semibold text-sm">
+                        <span>Calificar ahora</span>
+                        <Star className="w-4 h-4 ml-1" />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -354,155 +358,106 @@ export function HomeScreen() {
         </div>
       )}
 
-      {/* NOTICIAS */}
-      <div className="px-3 sm:px-6 py-4 sm:py-6">
-        <div className="flex items-center justify-between mb-4 sm:mb-6">
-          <div>
-            <h2 className="text-lg sm:text-xl font-bold text-foreground">Novedades</h2>
-            <p className="text-xs sm:text-sm text-muted-foreground">Últimas actualizaciones</p>
-          </div>
-        </div>
-
-        <div className="space-y-3 sm:space-y-6">
-          {newsUpdates.map((news) => (
-            <div
-              key={news.id}
-              onClick={() => handleNewsClick(news)}
-              className="bg-card rounded-xl sm:rounded-2xl overflow-hidden cursor-pointer hover:shadow-xl transition-all duration-300 touch-manipulation active:scale-[0.98] border border-border/50"
-            >
-              <div className="p-3 sm:p-5">
-                <div className="flex items-start gap-2 sm:gap-3 mb-2 sm:mb-3">
-                  <div className="flex-shrink-0 mt-0.5">
-                    {getNewsIcon(news.type)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-foreground text-xs sm:text-sm leading-snug line-clamp-2">
-                      {news.title && news.title.length > 100 ? `${news.title.slice(0, 97)}...` : news.title}
-                    </h3>
-                  </div>
-                </div>
-                <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 leading-relaxed line-clamp-3">{news.description}</p>
-                {news.tags && news.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 sm:gap-2 mb-3 sm:mb-4">
-                    {news.tags.map((tag) => (
-                      <span key={tag} className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-muted text-muted-foreground text-[10px] sm:text-xs rounded-lg">
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-border/50">
-                  <div className="flex items-center space-x-2 sm:space-x-3">
-                    <span className="text-[10px] sm:text-xs text-muted-foreground">{news.date}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* PRÓXIMOS PARTIDOS */}
-      <div className="px-6 py-6 pb-24">
+      <div className="px-4 sm:px-6 py-5 sm:py-6 pb-24">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-foreground">Tus próximos partidos</h2>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+              <Calendar className="w-4 h-4 text-primary" />
+            </div>
+            <h2 className="text-lg sm:text-xl font-bold text-foreground">Tus próximos partidos</h2>
+          </div>
           <Button
             onClick={handleViewAllMatches}
             variant="outline"
             size="sm"
-            className="bg-transparent border-primary text-primary hover:bg-primary/10"
+            className="bg-transparent border-2 border-primary text-primary hover:bg-primary hover:text-white font-semibold transition-all duration-200"
           >
             Ver todos
           </Button>
         </div>
 
         {upcomingMatches.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {upcomingMatches.map((match) => (
               <div
                 key={match.id}
                 onClick={() => handleMatchClick(match.id)}
-                className="bg-card rounded-2xl p-4 cursor-pointer hover:shadow-md transition-all duration-200 touch-manipulation active:scale-[0.98]"
+                className="bg-white border-2 border-border/50 hover:border-primary/50 rounded-2xl p-4 cursor-pointer hover:shadow-lg transition-all duration-200 touch-manipulation active:scale-[0.98] group"
               >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-2">
-                    <Badge className="bg-muted text-muted-foreground hover:bg-muted">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge className="bg-primary/10 text-primary hover:bg-primary/20 font-semibold">
                       {match.tipo_partido}
                     </Badge>
                     <Badge
-                      className={`hover:bg-current ${
+                      className={`font-semibold ${
                         match.estado === "CONFIRMADO"
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-secondary/20 text-secondary-foreground"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-blue-100 text-blue-800"
                       }`}
                     >
-                      {match.estado === "CONFIRMADO" ? "Confirmado" : "Disponible"}
+                      {match.estado === "CONFIRMADO" ? "✓ Confirmado" : "Disponible"}
                     </Badge>
                   </div>
-                  <Clock className="w-4 h-4 text-muted-foreground" />
+                  <Clock className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
-                <h3 className="font-semibold text-foreground mb-1">
-                  {match.fecha} {match.hora}
-                </h3>
-                <p className="text-sm text-muted-foreground mb-2">{match.nombre_ubicacion}</p>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">
-                    {match.jugadores_actuales}/{match.cantidad_jugadores} jugadores
-                  </span>
-                  <span className="text-sm text-primary font-medium">Ver detalles</span>
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
+                    <Calendar className="w-6 h-6 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-foreground mb-1 text-sm sm:text-base">
+                      {match.fecha} a las {match.hora}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground mb-3 flex items-center gap-1 truncate">
+                      <MapPin className="w-3 h-3 flex-shrink-0" />
+                      {match.nombre_ubicacion}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm font-medium text-foreground">
+                          {match.jugadores_actuales}/{match.cantidad_jugadores}
+                        </span>
+                        <span className="text-xs text-muted-foreground">jugadores</span>
+                      </div>
+                      <span className="text-sm text-primary font-semibold group-hover:underline">
+                        Ver detalles →
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 bg-card rounded-2xl">
-            <Calendar className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground mb-4">No tienes partidos próximos</p>
-            <Button
-              onClick={handleViewAllMatches}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground"
-            >
-              Buscar Partidos
-            </Button>
+          <div className="text-center py-12 bg-white rounded-2xl border-2 border-dashed border-border">
+            <div className="w-16 h-16 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Calendar className="w-8 h-8 text-primary" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-2">No tienes partidos próximos</h3>
+            <p className="text-muted-foreground mb-6 text-sm">¡Es hora de unirte a un partido o crear uno nuevo!</p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center items-center px-4">
+              <Button
+                onClick={handleViewAllMatches}
+                className="bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Buscar Partidos
+              </Button>
+              <Button
+                onClick={handleCreateMatch}
+                variant="outline"
+                className="border-2 border-primary text-primary hover:bg-primary hover:text-white font-semibold transition-all duration-200"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Crear Partido
+              </Button>
+            </div>
           </div>
         )}
       </div>
-
-      {/* News Detail Dialog */}
-      <Dialog open={isNewsDialogOpen} onOpenChange={setIsNewsDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <div className="flex items-center gap-3 mb-2">
-              {selectedNews && getNewsIcon(selectedNews.type)}
-              <DialogTitle className="text-xl sm:text-2xl">
-                {selectedNews?.title}
-              </DialogTitle>
-            </div>
-            <DialogDescription className="sr-only">
-              Detalles de la novedad: {selectedNews?.title}
-            </DialogDescription>
-            {selectedNews?.tags && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {selectedNews.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="text-xs">
-                    #{tag}
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </DialogHeader>
-          <div className="mt-4">
-            <p className="text-sm sm:text-base text-foreground leading-relaxed whitespace-pre-wrap">
-              {selectedNews?.description}
-            </p>
-            <div className="mt-6 pt-4 border-t border-border">
-              <p className="text-sm text-muted-foreground">
-                {selectedNews?.date}
-              </p>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       <BottomNavigation />
     </div>
