@@ -289,6 +289,26 @@ class WebSocketClient {
     if (this.isConnecting) return 'connecting'
     return 'disconnected'
   }
+
+  /**
+   * Enviar evento de "usuario está escribiendo"
+   */
+  sendTyping(partidoId: string, isTyping: boolean): void {
+    if (!this.client?.connected) {
+      logger.warn('[WebSocket] No conectado, no se puede enviar typing event')
+      return
+    }
+
+    try {
+      this.client.publish({
+        destination: `/app/partidos/${partidoId}/typing`,
+        body: JSON.stringify({ isTyping })
+      })
+      logger.log(`[WebSocket] Typing event enviado: ${isTyping}`)
+    } catch (error) {
+      logger.error('[WebSocket] Error enviando typing event:', error)
+    }
+  }
 }
 
 // Singleton instance

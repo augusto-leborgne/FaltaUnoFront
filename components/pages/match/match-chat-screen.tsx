@@ -54,10 +54,12 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   const [showScrollButton, setShowScrollButton] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const [isTyping, setIsTyping] = useState(false)
+  const [typingUsers, setTypingUsers] = useState<Map<string, string>>(new Map()) // userId -> userName
   const [replyingTo, setReplyingTo] = useState<MensajeDTO | null>(null)
   
   const currentUser = AuthService.getUser()
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const sendTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // 🔥 WebSocket: Mensajes en tiempo real (reemplaza polling)
   usePartidoChat(matchId, (event) => {
@@ -85,6 +87,30 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
           setUnreadCount(prev => prev + 1)
         }
       }
+    }
+    
+    // 🔥 Manejar evento de "usuario está escribiendo"
+    if (event.type === 'USER_TYPING' && event.userId && event.userId !== currentUser?.id) {
+      const { userId, userName, isTyping } = event
+      
+      setTypingUsers(prev => {
+        const newMap = new Map(prev)
+        if (isTyping) {
+          newMap.set(userId, userName || 'Usuario')
+          
+          // Auto-limpiar después de 3 segundos
+          setTimeout(() => {
+            setTypingUsers(current => {
+              const updated = new Map(current)
+              updated.delete(userId)
+              return updated
+            })
+          }, 3000)
+        } else {
+          newMap.delete(userId)
+        }
+        return newMap
+      })
     }
   })
 
@@ -145,22 +171,34 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
     }
   }
 
-  // Simular typing indicator
+  // 🔥 Manejar evento de "está escribiendo" con WebSocket
   const handleInputChange = (value: string) => {
     setMessage(value)
     
-    // Simular indicador de "escribiendo..." (se puede implementar con WebSocket en el futuro)
-    if (!isTyping) {
-      setIsTyping(true)
-    }
+    // Importar webSocketClient
+    const { webSocketClient } = require('@/lib/websocket-client')
     
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current)
+    // Si está escribiendo (tiene texto), enviar evento
+    if (value.length > 0) {
+      // Enviar "está escribiendo" = true
+      webSocketClient.sendTyping(matchId, true)
+      
+      // Limpiar timeout anterior
+      if (sendTypingTimeoutRef.current) {
+        clearTimeout(sendTypingTimeoutRef.current)
+      }
+      
+      // Después de 2 segundos sin escribir, enviar "dejó de escribir"
+      sendTypingTimeoutRef.current = setTimeout(() => {
+        webSocketClient.sendTyping(matchId, false)
+      }, 2000)
+    } else {
+      // Si borró todo el texto, enviar "dejó de escribir"
+      webSocketClient.sendTyping(matchId, false)
+      if (sendTypingTimeoutRef.current) {
+        clearTimeout(sendTypingTimeoutRef.current)
+      }
     }
-    
-    typingTimeoutRef.current = setTimeout(() => {
-      setIsTyping(false)
-    }, 1000)
   }
 
   // ============================================
@@ -785,7 +823,25 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
           </div>
         )}
         
-        <div className="p-2.5 sm:p-3">
+        <div className="p-2.5 sm:p-3 relative">
+          {/* Typing indicator */}
+          {typingUsers.size > 0 && (
+            <div className="absolute -top-5 left-3 px-2">
+              <div className="flex items-center space-x-1.5 text-xs text-gray-500 italic bg-white/80 backdrop-blur-sm rounded-full px-3 py-1">
+                <span>
+                  {Array.from(typingUsers.values()).join(', ')}
+                  {' '}
+                  {typingUsers.size === 1 ? 'está' : 'están'} escribiendo
+                </span>
+                <span className="inline-flex space-x-0.5 animate-pulse">
+                  <span>.</span>
+                  <span className="animation-delay-200">.</span>
+                  <span className="animation-delay-400">.</span>
+                </span>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center space-x-2 sm:space-x-2.5">
             {/* Input container mejorado - Mobile */}
             <div className="flex-1 relative">
