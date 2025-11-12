@@ -62,8 +62,9 @@ class WebSocketClient {
 
     this.connectionPromise = new Promise((resolve, reject) => {
       try {
-        const wsUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/^http/, 'ws').replace(/\/api$/, '') || 'http://localhost:8080'
-        const socketUrl = `${wsUrl}/ws`
+        // For SockJS, use HTTP/HTTPS URL (not WebSocket URL)
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$/, '') || 'http://localhost:8080'
+        const socketUrl = `${baseUrl}/ws`
 
         logger.log(`[WebSocket] Conectando a: ${socketUrl}`)
 
