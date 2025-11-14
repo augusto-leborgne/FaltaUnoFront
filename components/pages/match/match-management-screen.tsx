@@ -1050,6 +1050,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                 location={match.nombreUbicacion}
                 lat={match.latitud}
                 lng={match.longitud}
+                disableModal
               />
             </div>
           </div>

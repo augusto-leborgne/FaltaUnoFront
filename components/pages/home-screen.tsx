@@ -16,6 +16,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useNotifications } from "@/hooks/use-notifications"
 import { useCurrentUser } from "@/hooks/use-current-user"
 import { apiCache } from "@/lib/api-cache-manager"
+import { formatDateShort } from "@/lib/utils"
 
 interface Partido {
   id: string
@@ -336,7 +337,7 @@ export function HomeScreen() {
                     <Calendar className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-orange-600" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-foreground mb-1 text-sm sm:text-base leading-tight truncate">{review.fecha}</h3>
+                    <h3 className="font-semibold text-foreground mb-1 text-sm sm:text-base leading-tight truncate">{formatDateShort(review.fecha)}</h3>
                     <p className="text-xs sm:text-sm text-muted-foreground mb-2 flex items-center gap-1 truncate">
                       <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
                       <span className="truncate">{review.nombre_ubicacion}</span>
@@ -407,7 +408,7 @@ export function HomeScreen() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-foreground mb-1 text-sm sm:text-base leading-tight truncate">
-                      {match.fecha} • {match.hora}
+                      {formatDateShort(match.fecha)} • {match.hora}
                     </h3>
                     <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3 flex items-center gap-1 truncate">
                       <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />

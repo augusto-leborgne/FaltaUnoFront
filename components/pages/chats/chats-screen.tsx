@@ -158,9 +158,9 @@ export function ChatsScreen() {
       const month = (date.getMonth() + 1).toString().padStart(2, '0')
 
       if (date.getTime() === today.getTime()) {
-        return `Hoy ${day}/${month} ${time}`
+        return `Hoy ${time}`
       } else if (date.getTime() === tomorrow.getTime()) {
-        return `Mañana ${day}/${month} ${time}`
+        return `Mañana ${time}`
       } else {
         const weekday = date.toLocaleDateString("es-ES", { weekday: "long" })
         const formattedWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1)
@@ -258,7 +258,7 @@ export function ChatsScreen() {
           </div>
         ) : (
           // Lista de chats
-          <div className="space-y-2 sm:space-y-3">
+          <div className="space-y-3">
             {partidos.map((partido) => {
               const spotsLeft = (partido.cantidadJugadores ?? 0) - (partido.jugadoresActuales ?? 0)
               
@@ -266,7 +266,7 @@ export function ChatsScreen() {
                 <button
                   key={partido.id}
                   onClick={() => handleChatClick(partido.id)}
-                  className={`w-full bg-white border rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all text-left hover:shadow-lg hover:border-green-200 active:scale-[0.98] ${
+                  className={`w-full bg-white border rounded-2xl p-4 transition-all text-left hover:shadow-lg hover:border-green-200 active:scale-[0.98] touch-manipulation ${
                     (partido.unreadCount || 0) > 0 
                       ? 'border-blue-200 bg-blue-50' 
                       : 'border-gray-200'

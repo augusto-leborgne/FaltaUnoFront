@@ -114,10 +114,9 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
     }
   })
 
-  // ⚡ URLs de fotos SIN caché - siempre fresh para que las fotos se muestren
+  // URLs de fotos con caché adecuado
   const getUserPhotoUrlMemo = useCallback((userId: string) => {
-    // SIN caché, timestamp único CADA VEZ para forzar carga
-    return `${getUserPhotoUrl(userId)}?t=${Date.now()}`
+    return getUserPhotoUrl(userId)
   }, [])
 
   useEffect(() => {
@@ -674,7 +673,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
             return (
               <div 
                 key={msg.id} 
-                className={`flex ${isOwn ? "justify-end" : "justify-start"} ${isFirstInGroup ? 'mt-2 sm:mt-2' : 'mt-0.5'}`}
+                className={`flex ${isOwn ? "justify-end" : "justify-start"} ${isFirstInGroup ? 'mt-3' : 'mt-1'}`}
               >
                 <div
                   className={`group flex items-end space-x-1.5 sm:space-x-2 max-w-[75%] sm:max-w-[75%] relative ${
@@ -684,19 +683,18 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                   {/* Avatar con foto - SIEMPRE visible */}
                   {!isOwn ? (
                     <div
-                      className="w-6 h-6 sm:w-8 sm:h-8 cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all flex-shrink-0 shadow-md touch-manipulation rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 relative"
+                      className="w-7 h-7 sm:w-8 sm:h-8 cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all flex-shrink-0 shadow-md touch-manipulation rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 relative"
                       onClick={() => handleUserClick(msg.usuarioId)}
                     >
                       <img 
                         src={getUserPhotoUrlMemo(msg.usuarioId)} 
                         alt={userName}
-                        className="w-full h-full object-cover absolute inset-0"
+                        className="w-full h-full object-cover"
                         onError={(e) => {
-                          // Ocultar imagen si falla
                           (e.target as HTMLImageElement).style.display = 'none'
                         }}
                       />
-                      {/* Fallback con iniciales - se muestra cuando la imagen falla */}
+                      {/* Fallback con iniciales */}
                       <div className="w-full h-full flex items-center justify-center text-white text-[10px] sm:text-xs font-bold">
                         {initials}
                       </div>
@@ -719,7 +717,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                     </div>
 
                     <div
-                      className={`inline-block px-2.5 sm:px-3 !py-0.5 sm:!py-1 transition-all group-hover:scale-[1.01] ${
+                      className={`inline-block px-2.5 sm:px-3 py-1.5 sm:py-2 transition-all group-hover:scale-[1.01] ${
                         isOwn 
                           ? `bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white shadow-md hover:shadow-lg ${
                               isFirstInGroup && isLastInGroup ? 'rounded-2xl' :
@@ -801,8 +799,8 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
       <div className="border-t-2 border-blue-100 bg-white shadow-lg">
         {/* Reply preview mejorado - Mobile */}
         {replyingTo && (
-          <div className="px-3 sm:px-4 pt-2 sm:pt-3 pb-1.5 sm:pb-2 bg-blue-50">
-            <div className="flex items-start justify-between bg-white rounded-xl p-2.5 sm:p-3 border-l-4 border-blue-600 shadow-sm">
+          <div className="px-3 pt-2 pb-1.5 bg-blue-50">
+            <div className="flex items-start justify-between bg-white rounded-xl p-3 border-l-4 border-blue-600 shadow-sm">
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] sm:text-xs font-extrabold text-blue-700 mb-0.5 sm:mb-1">
                   {getUserName(replyingTo.usuario?.nombre, replyingTo.usuario?.apellido)}
@@ -826,8 +824,8 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         <div className="p-2.5 sm:p-3 relative">
           {/* Typing indicator */}
           {typingUsers.size > 0 && (
-            <div className="absolute -top-5 left-3 px-2">
-              <div className="flex items-center space-x-1.5 text-xs text-gray-500 italic bg-white/80 backdrop-blur-sm rounded-full px-3 py-1">
+            <div className="absolute -top-6 left-4 z-10">
+              <div className="flex items-center space-x-1.5 text-xs text-gray-500 italic bg-white/95 backdrop-blur-sm rounded-full px-3 py-1.5 shadow-sm border border-gray-200">
                 <span>
                   {Array.from(typingUsers.values()).join(', ')}
                   {' '}
