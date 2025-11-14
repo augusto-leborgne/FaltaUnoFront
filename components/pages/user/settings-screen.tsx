@@ -3,12 +3,12 @@
 
 
 import { logger } from '@/lib/logger'
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { UserAvatar } from "@/components/ui/user-avatar"
-import { ArrowLeft, Camera, Save, Bell, AlertCircle, Trash2 } from "lucide-react"
+import { ArrowLeft, Camera, Save, Bell, AlertCircle, Trash2, Upload, X } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { useAuth } from "@/hooks/use-auth"
@@ -29,6 +29,11 @@ export function SettingsScreen() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState("")
+  
+  // Refs para inputs de foto
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const cameraInputRef = useRef<HTMLInputElement | null>(null)
+  const [showPhotoOptions, setShowPhotoOptions] = useState(false)
 
   const [formData, setFormData] = useState({
     name: "",
@@ -365,7 +370,45 @@ export function SettingsScreen() {
       }
       reader.readAsDataURL(file)
       
+      setShowPhotoOptions(false)
       logger.log("[Settings] Foto seleccionada:", file.name)
+    }
+  }
+  
+  const openFileExplorer = () => {
+    fileInputRef.current?.click()
+    setShowPhotoOptions(false)
+  }
+  
+  const openCamera = () => {
+    cameraInputRef.current?.click()
+    setShowPhotoOptions(false)
+  }
+  
+  const removePhoto = async () => {
+    try {
+      setShowPhotoOptions(false)
+      setPhotoFile(null)
+      setAvatar("")
+      
+      // Llamar al API para eliminar foto
+      const { UsuarioAPI } = await import('@/lib/api')
+      const response = await UsuarioAPI.eliminarFoto()
+      
+      if (response.success) {
+        const currentUser = AuthService.getUser()
+        if (currentUser) {
+          PhotoCache.invalidate(currentUser.id)
+          await refreshUser()
+        }
+        setSuccess(true)
+        setTimeout(() => setSuccess(false), 3000)
+      } else {
+        setError(response.message || "Error al eliminar foto")
+      }
+    } catch (err) {
+      logger.error("[Settings] Error eliminando foto:", err)
+      setError("Error al eliminar foto")
     }
   }
 
@@ -463,21 +506,35 @@ export function SettingsScreen() {
               surname={formData.surname}
               className="w-24 h-24"
             />
-            <label className="absolute -bottom-2 -right-2 bg-primary text-white rounded-full p-2 shadow-lg cursor-pointer hover:bg-primary/90 transition-colors">
+            <button
+              type="button"
+              onClick={() => setShowPhotoOptions(true)}
+              className="absolute -bottom-2 -right-2 bg-primary text-white rounded-full p-2 shadow-lg hover:bg-primary/90 transition-colors touch-manipulation"
+            >
               <Camera className="w-4 h-4" />
-              <input 
-                type="file" 
-                accept="image/*" 
-                onChange={handleUploadPhoto} 
-                className="hidden"
-                disabled={isSaving}
-              />
-            </label>
+            </button>
           </div>
           <p className="text-sm text-gray-500 mt-2">Toca para cambiar foto</p>
           {photoFile && (
             <p className="text-sm text-primary mt-1">Nueva foto seleccionada</p>
           )}
+          
+          {/* Hidden file inputs */}
+          <input 
+            ref={fileInputRef} 
+            type="file" 
+            accept="image/*" 
+            onChange={handleUploadPhoto} 
+            className="hidden"
+          />
+          <input 
+            ref={cameraInputRef} 
+            type="file" 
+            accept="image/*" 
+            capture
+            onChange={handleUploadPhoto} 
+            className="hidden"
+          />
         </div>
 
         {/* Form Fields */}
@@ -756,6 +813,71 @@ export function SettingsScreen() {
           </div>
         </div>
       </div>
+      
+      {/* Photo Options Modal */}
+      {showPhotoOptions && (
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md max-w-full animate-in slide-in-from-bottom duration-300 sm:animate-in sm:fade-in">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-bold text-gray-900">Foto de perfil</h3>
+                <button
+                  onClick={() => setShowPhotoOptions(false)}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+              
+              <div className="space-y-3">
+                <button
+                  onClick={openCamera}
+                  className="w-full flex items-center space-x-3 p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors text-left touch-manipulation"
+                  disabled={isSaving}
+                >
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <Camera className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900">Tomar foto</div>
+                    <div className="text-sm text-gray-500">Usar cámara del dispositivo</div>
+                  </div>
+                </button>
+                
+                <button
+                  onClick={openFileExplorer}
+                  className="w-full flex items-center space-x-3 p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors text-left touch-manipulation"
+                  disabled={isSaving}
+                >
+                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <Upload className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900">Elegir de galería</div>
+                    <div className="text-sm text-gray-500">Seleccionar archivo existente</div>
+                  </div>
+                </button>
+                
+                {avatar && (
+                  <button
+                    onClick={removePhoto}
+                    className="w-full flex items-center space-x-3 p-4 bg-red-50 hover:bg-red-100 rounded-xl transition-colors text-left touch-manipulation"
+                    disabled={isSaving}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                      <Trash2 className="w-5 h-5 text-red-600" />
+                    </div>
+                    <div>
+                      <div className="font-semibold text-red-900">Eliminar foto</div>
+                      <div className="text-sm text-red-600">Usar avatar predeterminado</div>
+                    </div>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

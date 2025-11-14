@@ -46,7 +46,9 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
   const [match, setMatch] = useState<PartidoDTO | null>(null)
   const [jugadores, setJugadores] = useState<any[]>([]) // ✅ NUEVO: Lista de jugadores inscriptos
   const [userInscriptionStatus, setUserInscriptionStatus] = useState<string | null>(null) // ✅ NUEVO: Estado de inscripción del usuario
+  const [userInscripcionId, setUserInscripcionId] = useState<string | null>(null) // ID de inscripción del usuario
   const [isJoining, setIsJoining] = useState(false)
+  const [isLeaving, setIsLeaving] = useState(false)
   const [isLoading, setIsLoading] = useState(false) // Cambiar a false para UI inmediata
   const [error, setError] = useState<string>("")
   const [showMapModal, setShowMapModal] = useState(false)
@@ -102,6 +104,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
               const estadoResponse = await InscripcionAPI.getEstado(matchId, user.id)
               if (estadoResponse.success && estadoResponse.data) {
                 setUserInscriptionStatus(estadoResponse.data.estado)
+                setUserInscripcionId(estadoResponse.data.inscripcionId || null)
               }
             } catch (err) {
               logger.error("[MatchDetail] Error cargando estado de inscripción:", err)
@@ -171,6 +174,45 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
       }
     } finally {
       setIsJoining(false)
+    }
+  }
+  
+  const handleLeaveMatch = async () => {
+    if (!userInscripcionId) {
+      setError("No se encontró la inscripción")
+      return
+    }
+    
+    const confirmed = window.confirm(
+      "¿Estás seguro de que quieres abandonar este partido? Perderás tu lugar y deberás volver a inscribirte si cambias de opinión."
+    )
+    
+    if (!confirmed) return
+    
+    setIsLeaving(true)
+    setError("")
+    
+    try {
+      const response = await InscripcionAPI.cancelar(userInscripcionId)
+      
+      if (!response.success) {
+        throw new Error(response.message || "Error al abandonar el partido")
+      }
+      
+      // Actualizar estado local
+      setUserInscriptionStatus(null)
+      setUserInscripcionId(null)
+      
+      // Recargar datos del partido para actualizar contador
+      await loadMatchData()
+      
+      logger.log("[MatchDetail] Usuario abandonó el partido exitosamente")
+    } catch (err: any) {
+      if (err?.name !== "AbortError") {
+        setError(err instanceof Error ? err.message : "Error al abandonar el partido")
+      }
+    } finally {
+      setIsLeaving(false)
     }
   }
 
@@ -471,13 +513,33 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
               Gestionar partido
             </Button>
           ) : userInscriptionStatus === InscripcionEstado.ACEPTADO ? (
-            // ✅ Usuario ya está aceptado → botón para ver chat
-            <Button
-              onClick={() => router.push(`/matches/${matchId}/chat`)}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 text-lg font-semibold rounded-2xl"
-            >
-              Ver chat del partido
-            </Button>
+            // ✅ Usuario ya está aceptado
+            <div className="space-y-3">
+              <Button
+                onClick={() => router.push(`/matches/${matchId}/chat`)}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 text-lg font-semibold rounded-2xl"
+              >
+                Ver chat del partido
+              </Button>
+              {/* Botón de abandonar (solo si el partido NO está confirmado, cancelado o completado) */}
+              {!isMatchConfirmed && !isMatchCancelled && !isMatchCompleted && (
+                <Button
+                  onClick={handleLeaveMatch}
+                  disabled={isLeaving}
+                  variant="outline"
+                  className="w-full border-red-300 text-red-600 hover:bg-red-50 py-3 text-base font-semibold rounded-xl"
+                >
+                  {isLeaving ? (
+                    <span className="flex items-center justify-center">
+                      <LoadingSpinner size="sm" variant="red" className="mr-2" />
+                      Abandonando...
+                    </span>
+                  ) : (
+                    "Abandonar partido"
+                  )}
+                </Button>
+              )}
+            </div>
           ) : userInscriptionStatus === InscripcionEstado.PENDIENTE ? (
             // ✅ Usuario tiene solicitud pendiente
             <Button
