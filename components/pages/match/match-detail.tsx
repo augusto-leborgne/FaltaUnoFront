@@ -81,14 +81,14 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
           
         case 'INSCRIPCION_CREATED':
           // Nueva inscripción - recargar jugadores
-          loadMatchData()
+          loadMatch()
           break
           
         case 'INSCRIPCION_STATUS_CHANGED':
           // Estado de inscripción cambiado
           if (event.inscripcion && event.inscripcion.usuarioId === currentUser?.id) {
             // La inscripción del usuario actual cambió
-            setUserInscriptionStatus(event.newStatus)
+            setUserInscriptionStatus(event.newStatus || null)
             toast({
               title: event.newStatus === InscripcionEstado.ACEPTADO ? "¡Inscripción aceptada!" : "Inscripción rechazada",
               description: event.newStatus === InscripcionEstado.ACEPTADO 
@@ -96,12 +96,12 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
                 : "Tu solicitud ha sido rechazada",
             })
           }
-          loadMatchData()
+          loadMatch()
           break
           
         case 'INSCRIPCION_CANCELLED':
           // Jugador abandonó - recargar datos
-          loadMatchData()
+          loadMatch()
           break
           
         case 'PARTIDO_CANCELLED':
@@ -277,7 +277,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
       setUserInscripcionId(null)
       
       // Recargar datos del partido para actualizar contador
-      await loadMatchData()
+      await loadMatch()
       
       logger.log("[MatchDetail] Usuario abandonó el partido exitosamente")
     } catch (err: any) {
@@ -604,7 +604,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
                 >
                   {isLeaving ? (
                     <span className="flex items-center justify-center">
-                      <LoadingSpinner size="sm" variant="red" className="mr-2" />
+                      <LoadingSpinner size="sm" variant="white" className="mr-2" />
                       Abandonando...
                     </span>
                   ) : (

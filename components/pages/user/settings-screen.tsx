@@ -548,21 +548,13 @@ export function SettingsScreen() {
       setPhotoFile(null)
       setAvatar("")
       
-      // Llamar al API para eliminar foto
-      const { UsuarioAPI } = await import('@/lib/api')
-      const response = await UsuarioAPI.eliminarFoto()
-      
-      if (response.success) {
-        const currentUser = AuthService.getUser()
-        if (currentUser) {
-          PhotoCache.invalidate(currentUser.id)
-          await refreshUser()
-        }
-        setSuccess(true)
-        setTimeout(() => setSuccess(false), 3000)
-      } else {
-        setError(response.message || "Error al eliminar foto")
+      // Clear photo locally - backend will handle on save
+      const currentUser = AuthService.getUser()
+      if (currentUser) {
+        PhotoCache.invalidate(currentUser.id)
       }
+      
+      logger.log("[Settings] Foto marcada para eliminación")
     } catch (err) {
       logger.error("[Settings] Error eliminando foto:", err)
       setError("Error al eliminar foto")
