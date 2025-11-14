@@ -52,16 +52,16 @@ export function ChatsScreen() {
 
       const partidosInscritos = response.data
       
-      // ⚡ MEGA OPTIMIZACIÓN: Solo cargar último mensaje (NO todos los mensajes)
-      // Cargar SOLO los partidos más recientes primero (lazy load el resto)
-      const partidosToLoad = partidosInscritos.slice(0, 10) // Solo primeros 10
+      // ⚡ MEGA OPTIMIZACIÓN: Solo cargar último mensaje de primeros 20 partidos
+      // El resto se muestra sin último mensaje (más rápido)
+      const partidosToLoad = partidosInscritos.slice(0, 20) // Aumentado a 20 para mejor UX
       
       const partidosWithMessages = await Promise.all(
         partidosToLoad.map(async (partido) => {
           try {
             if (!partido.id) return partido
             
-            // ⚡ Cargar SOLO el último mensaje (no 5, solo 1) - MÁXIMA VELOCIDAD
+            // ⚡ Cargar SOLO el último mensaje - MÁXIMA VELOCIDAD
             const messagesResponse = await apiCache.get(
               `ultimo-mensaje-${partido.id}`,
               async () => {
@@ -75,7 +75,7 @@ export function ChatsScreen() {
                 }
                 return resp
               },
-              { ttl: 3 * 1000 } // 3 segundos - muy fresco
+              { ttl: 10 * 1000 } // 10 segundos - más cache para evitar requests repetidos
             )
             
             if (messagesResponse.success && messagesResponse.data && messagesResponse.data.length > 0) {
@@ -92,7 +92,7 @@ export function ChatsScreen() {
               return {
                 ...partido,
                 unreadCount: isUnread ? 1 : 0,
-                lastMessage: lastMessage.contenido?.substring(0, 50), // Menos caracteres
+                lastMessage: lastMessage.contenido?.substring(0, 60), // Aumentado a 60 caracteres
                 lastMessageTime: lastMessage.createdAt
               } as PartidoWithUnread
             }
@@ -104,8 +104,8 @@ export function ChatsScreen() {
         })
       )
       
-      // Agregar partidos restantes sin mensajes (lazy)
-      const remainingPartidos = partidosInscritos.slice(10).map(p => p as PartidoWithUnread)
+      // Agregar partidos restantes SIN mensajes (lazy - no bloquea UI)
+      const remainingPartidos = partidosInscritos.slice(20).map(p => p as PartidoWithUnread)
       const allPartidos = [...partidosWithMessages, ...remainingPartidos]
       
       // Ordenar: primero con no leídos, luego por fecha más reciente

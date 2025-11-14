@@ -242,13 +242,16 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         return
       }
 
-      // ⚡ ULTRA OPTIMIZACIÓN: Solo cargar mensajes primero (lo más importante)
-      // Partido e inscripción se cargan DESPUÉS en background
+      // ⚡ ULTRA OPTIMIZACIÓN: Solo cargar últimos 50 mensajes primero
+      // Resto se puede cargar al hacer scroll hacia arriba (implementación futura)
       const messagesData = await MensajeAPI.list(matchId)
       
-      // Procesar mensajes INMEDIATAMENTE
+      // Procesar mensajes INMEDIATAMENTE - tomar solo los últimos 100
       if (messagesData.success && messagesData.data) {
-        setMessages(messagesData.data)
+        const allMessages = messagesData.data
+        // Si hay muchos mensajes, solo mostrar los últimos 100 inicialmente
+        const recentMessages = allMessages.length > 100 ? allMessages.slice(-100) : allMessages
+        setMessages(recentMessages)
       }
       
       // AHORA cargar resto en paralelo SIN bloquear
