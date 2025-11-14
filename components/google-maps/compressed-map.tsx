@@ -9,13 +9,15 @@ interface CompressedMapProps {
   lat?: number
   lng?: number
   className?: string
+  disableModal?: boolean
 }
 
 export function CompressedMap({ 
   location, 
   lat = -34.9011, 
   lng = -56.1645, 
-  className = "" 
+  className = "",
+  disableModal = false
 }: CompressedMapProps) {
   const [showFullMap, setShowFullMap] = useState(false)
   const [imageError, setImageError] = useState(false)
@@ -27,7 +29,9 @@ export function CompressedMap({
   const hasSpecificLocation = lat !== -34.9011 || lng !== -56.1645
 
   const handleMapClick = () => {
-    setShowFullMap(true)
+    if (!disableModal) {
+      setShowFullMap(true)
+    }
   }
 
   // URL para mapa estático de Google Maps
@@ -112,7 +116,7 @@ export function CompressedMap({
       </div>
 
       {/* Full-screen Google Maps modal */}
-      {showFullMap && (
+      {!disableModal && showFullMap && (
         <GoogleMapsModal
           isOpen={showFullMap}
           onClose={() => setShowFullMap(false)}

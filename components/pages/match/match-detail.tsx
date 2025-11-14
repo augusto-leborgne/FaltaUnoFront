@@ -355,13 +355,16 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
           </div>
 
           {/* Map */}
-          {Boolean((match as any).latitud && (match as any).longitud && nombreUbicacion) && (
-            <div onClick={() => setShowMapModal(true)} className="cursor-pointer">
+          {match && (match as any).latitud && (match as any).longitud && (
+            <div onClick={(e) => {
+              e.stopPropagation()
+              setShowMapModal(true)
+            }} className="cursor-pointer">
               <CompressedMap
-                location={nombreUbicacion}
-                lat={(match as any).latitud}
-                lng={(match as any).longitud}
-                className="mb-4"
+                location={(match as any).nombreUbicacion || ''}
+                lat={Number((match as any).latitud)}
+                lng={Number((match as any).longitud)}
+                disableModal
               />
             </div>
           )}
