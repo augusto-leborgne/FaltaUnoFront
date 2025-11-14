@@ -75,6 +75,13 @@ export function SettingsScreen() {
   const [isCheckingPhone, setIsCheckingPhone] = useState(false)
   const [phoneCheckDebounce, setPhoneCheckDebounce] = useState<NodeJS.Timeout | null>(null)
 
+  // Phone verification states
+  const [showPhoneVerification, setShowPhoneVerification] = useState(false)
+  const [pendingPhone, setPendingPhone] = useState("")
+  const [verificationCode, setVerificationCode] = useState("")
+  const [resendCooldown, setResendCooldown] = useState(0)
+  const [verificationAttempts, setVerificationAttempts] = useState(0)
+
   // Verificar si el teléfono ya está registrado
   const checkPhoneAvailability = async (phone: string) => {
     if (!phone || phone.length < 8) return;
@@ -113,6 +120,14 @@ export function SettingsScreen() {
       }
     };
   }, [phoneCheckDebounce]);
+
+  // Resend cooldown timer
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCooldown]);
 
   // ✅ NUEVO: Validar campos
   const validateField = (field: string, value: any): string | null => {
@@ -206,6 +221,143 @@ export function SettingsScreen() {
     }
   }
 
+  // Send SMS verification code
+  const sendVerificationCode = async (phone: string) => {
+    setIsSaving(true);
+    setError("");
+    
+    try {
+      logger.log("[Settings] Sending verification code to:", phone);
+      
+      const response = await fetch(`${API_URL}/phone-verification/send`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${AuthService.getToken()}`
+        },
+        body: JSON.stringify({ phoneNumber: phone }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        logger.log("[Settings] Code sent successfully");
+        setPendingPhone(phone);
+        setShowPhoneVerification(true);
+        setResendCooldown(60);
+        setError("");
+      } else {
+        setError(data.message || "Error al enviar el código");
+      }
+    } catch (err: any) {
+      logger.error("[Settings] Error sending code:", err);
+      setError(err?.message || "Error al enviar el código");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Resend verification code
+  const resendVerificationCode = async () => {
+    if (resendCooldown > 0) return;
+    
+    setIsSaving(true);
+    setError("");
+    
+    try {
+      const response = await fetch(`${API_URL}/phone-verification/resend`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${AuthService.getToken()}`
+        },
+        body: JSON.stringify({ phoneNumber: pendingPhone }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        logger.log("[Settings] Code resent successfully");
+        setResendCooldown(60);
+        setError("");
+      } else {
+        setError(data.message || "Error al reenviar el código");
+      }
+    } catch (err: any) {
+      logger.error("[Settings] Error resending code:", err);
+      setError(err?.message || "Error al reenviar el código");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Verify SMS code and update phone
+  const verifyCodeAndUpdatePhone = async () => {
+    setIsSaving(true);
+    setError("");
+    
+    try {
+      logger.log("[Settings] Verifying code for:", pendingPhone);
+      
+      const response = await fetch(`${API_URL}/phone-verification/verify`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${AuthService.getToken()}`
+        },
+        body: JSON.stringify({ 
+          phoneNumber: pendingPhone,
+          code: verificationCode 
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        logger.log("[Settings] Code verified successfully");
+        
+        // Now update the phone in the profile
+        const success = await AuthService.updateProfile({ celular: pendingPhone });
+        
+        if (success) {
+          logger.log("[Settings] Phone updated successfully");
+          await refreshUser();
+          
+          // Update form data and original data
+          setFormData(prev => ({ ...prev, phone: pendingPhone }));
+          setOriginalFormData(prev => ({ ...prev, phone: pendingPhone }));
+          
+          // Close verification modal
+          setShowPhoneVerification(false);
+          setPendingPhone("");
+          setVerificationCode("");
+          setVerificationAttempts(0);
+          
+          setSuccess(true);
+          setTimeout(() => setSuccess(false), 3000);
+        } else {
+          throw new Error("Error al actualizar el teléfono");
+        }
+      } else {
+        setVerificationAttempts(prev => prev + 1);
+        setError(data.message || "Código incorrecto");
+        
+        if (verificationAttempts >= 2) {
+          setError("Demasiados intentos fallidos. Solicita un nuevo código.");
+          setShowPhoneVerification(false);
+          setPendingPhone("");
+          setVerificationCode("");
+          setVerificationAttempts(0);
+        }
+      }
+    } catch (err: any) {
+      logger.error("[Settings] Error verifying code:", err);
+      setError(err?.message || "Error al verificar el código");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const handleInputChange = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
     // ✅ Validar campos editables (phone, height, weight)
@@ -244,6 +396,14 @@ export function SettingsScreen() {
       logger.log("[Settings] Guardando cambios...")
       let hasProfileChanges = false
 
+      // Check if phone changed - if so, trigger verification first
+      if (formData.phone && formData.phone !== originalFormData.phone) {
+        logger.log("[Settings] Phone changed, triggering verification...");
+        setIsSaving(false); // Reset so verification modal can use it
+        await sendVerificationCode(formData.phone);
+        return; // Exit - verification will complete the save
+      }
+
       // 1. Subir foto si hay una nueva
       if (photoFile) {
         logger.log("[Settings] Subiendo foto...")
@@ -265,13 +425,10 @@ export function SettingsScreen() {
         hasProfileChanges = true
       }
 
-      // 2. Actualizar perfil SOLO si hay cambios REALES en los campos editables
+      // 2. Actualizar perfil SOLO si hay cambios REALES en los campos editables (excluding phone - handled above)
       const perfilData: Record<string, any> = {}
       
-      // ✅ CRÍTICO: Solo incluir campos que cambiaron respecto a los originales
-      if (formData.phone && formData.phone !== originalFormData.phone) {
-        perfilData.celular = formData.phone
-      }
+      // ✅ CRÍTICO: Solo incluir campos que cambiaron respecto a los originales (phone already handled via verification)
       if (formData.position && formData.position !== originalFormData.position) {
         perfilData.posicion = formData.position
       }
@@ -874,6 +1031,86 @@ export function SettingsScreen() {
                   </button>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Phone Verification Modal */}
+      {showPhoneVerification && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
+            <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-primary/10 to-orange-50">
+              <h3 className="text-xl font-bold text-gray-900">Verificar número</h3>
+              <p className="text-sm text-gray-600 mt-1">Enviamos un código a {pendingPhone}</p>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {error && (
+                <div className="p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-2">
+                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+              )}
+
+              <div>
+                <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Código de 6 dígitos
+                </Label>
+                <Input
+                  type="text"
+                  placeholder="000000"
+                  value={verificationCode}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    setVerificationCode(value);
+                  }}
+                  className="text-center text-2xl tracking-widest font-mono"
+                  maxLength={6}
+                  disabled={isSaving}
+                  autoFocus
+                />
+              </div>
+
+              <div className="text-center">
+                {resendCooldown > 0 ? (
+                  <p className="text-sm text-gray-500">
+                    Reenviar código en {resendCooldown}s
+                  </p>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={resendVerificationCode}
+                    disabled={isSaving}
+                    className="text-sm text-primary hover:text-primary/80 font-medium disabled:opacity-50"
+                  >
+                    Reenviar código
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="p-6 bg-gray-50 flex gap-3">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowPhoneVerification(false);
+                  setPendingPhone("");
+                  setVerificationCode("");
+                  setVerificationAttempts(0);
+                }}
+                disabled={isSaving}
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={verifyCodeAndUpdatePhone}
+                disabled={isSaving || verificationCode.length !== 6}
+                className="flex-1 bg-primary text-white hover:bg-primary/90"
+              >
+                {isSaving ? "Verificando..." : "Verificar"}
+              </Button>
             </div>
           </div>
         </div>
