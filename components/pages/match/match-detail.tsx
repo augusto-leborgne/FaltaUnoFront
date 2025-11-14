@@ -15,6 +15,8 @@ import AuthService from "@/lib/auth"
 import { PartidoAPI, InscripcionAPI, PartidoDTO, PartidoEstado, InscripcionEstado } from "@/lib/api"
 import { formatMatchType, formatDateRegional as formatDate, getSpotsLeftColor } from "@/lib/utils"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { useWebSocket } from "@/hooks/use-websocket"
+import { useToast } from "@/hooks/use-toast"
 
 interface MatchDetailProps {
   matchId: string
@@ -56,6 +58,77 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
   // Usuario actual (no forzamos re-render si cambia fuera)
   const currentUser = AuthService.getUser()
   const isOrganizer = !!(currentUser?.id && match && (currentUser.id === (match as any).organizadorId))
+  const { toast } = useToast()
+
+  // 🔥 WebSocket: Actualizaciones en tiempo real del partido
+  useWebSocket({
+    partidoId: matchId,
+    enabled: !!match, // Solo conectar cuando el partido esté cargado
+    onEvent: (event) => {
+      logger.log('[MatchDetail] 📡 WebSocket event:', event.type, event)
+      
+      switch (event.type) {
+        case 'PARTIDO_UPDATED':
+          // Actualizar datos del partido
+          if (event.partido) {
+            setMatch(event.partido)
+            toast({
+              title: "Partido actualizado",
+              description: "El partido ha sido modificado por el organizador",
+            })
+          }
+          break
+          
+        case 'INSCRIPCION_CREATED':
+          // Nueva inscripción - recargar jugadores
+          loadMatchData()
+          break
+          
+        case 'INSCRIPCION_STATUS_CHANGED':
+          // Estado de inscripción cambiado
+          if (event.inscripcion && event.inscripcion.usuarioId === currentUser?.id) {
+            // La inscripción del usuario actual cambió
+            setUserInscriptionStatus(event.newStatus)
+            toast({
+              title: event.newStatus === InscripcionEstado.ACEPTADO ? "¡Inscripción aceptada!" : "Inscripción rechazada",
+              description: event.newStatus === InscripcionEstado.ACEPTADO 
+                ? "Tu solicitud ha sido aceptada por el organizador" 
+                : "Tu solicitud ha sido rechazada",
+            })
+          }
+          loadMatchData()
+          break
+          
+        case 'INSCRIPCION_CANCELLED':
+          // Jugador abandonó - recargar datos
+          loadMatchData()
+          break
+          
+        case 'PARTIDO_CANCELLED':
+          // Partido cancelado
+          if (match) {
+            setMatch({ ...match, estado: PartidoEstado.CANCELADO })
+          }
+          toast({
+            title: "Partido cancelado",
+            description: event.reason || "El partido ha sido cancelado por el organizador",
+            variant: "destructive",
+          })
+          break
+          
+        case 'PARTIDO_COMPLETED':
+          // Partido completado
+          if (match) {
+            setMatch({ ...match, estado: PartidoEstado.COMPLETADO })
+          }
+          toast({
+            title: "Partido completado",
+            description: "El partido ha finalizado",
+          })
+          break
+      }
+    }
+  })
 
   // ====== CARGA / RE-CARGA SEGURA DEL PARTIDO ======
   const loadMatch = useCallback(async () => {
