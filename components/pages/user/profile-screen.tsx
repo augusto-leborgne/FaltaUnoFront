@@ -188,7 +188,7 @@ function ProfileScreenInner() {
     } finally {
       setLoading(false)
     }
-  }, [user?.id, reviews.length, friendRequests.length, friends.length])
+  }, [user?.id])
 
   useEffect(() => {
     if (user?.id) {

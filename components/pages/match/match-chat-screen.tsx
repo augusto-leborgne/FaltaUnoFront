@@ -68,9 +68,25 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
     if (event.type === 'NEW_MESSAGE' && event.mensaje) {
       // Agregar nuevo mensaje al estado
       setMessages(prev => {
-        // Evitar duplicados
+        // Evitar duplicados por ID exacto
         const exists = prev.some(m => m.id === event.mensaje.id)
         if (exists) return prev
+        
+        // Reemplazar mensaje optimista si existe (enviado por este usuario)
+        const hasOptimistic = prev.some(m => m.id.startsWith('temp-') && 
+          m.usuarioId === event.mensaje.usuarioId &&
+          m.contenido === event.mensaje.contenido)
+        
+        if (hasOptimistic) {
+          // Reemplazar el mensaje optimista con el real
+          return prev.map(m => 
+            m.id.startsWith('temp-') && 
+            m.usuarioId === event.mensaje.usuarioId &&
+            m.contenido === event.mensaje.contenido
+              ? event.mensaje 
+              : m
+          )
+        }
         
         return [...prev, event.mensaje]
       })

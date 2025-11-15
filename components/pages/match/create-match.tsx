@@ -577,7 +577,7 @@ export function CreateMatchScreen() {
                 onChange={(e) => handleInputChange("date", e.target.value)}
                 min={today}
                 max={maxDate}
-                className={`pl-10 py-3 rounded-xl ${fieldErrors.date ? 'border-red-500' : 'border-gray-300'}`}
+                className={`pl-10 py-3 rounded-xl ${fieldErrors.date ? 'border-red-500' : 'border-gray-300'} text-base`}
                 required
                 disabled={isLoading}
               />
@@ -598,7 +598,7 @@ export function CreateMatchScreen() {
               <select
                 value={formData.time}
                 onChange={(e) => handleInputChange("time", e.target.value)}
-                className={`w-full pl-10 pr-4 py-3 rounded-xl border ${fieldErrors.time ? 'border-red-500' : 'border-gray-300'} bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`w-full pl-10 pr-4 py-3 rounded-xl border ${fieldErrors.time ? 'border-red-500' : 'border-gray-300'} bg-white text-gray-900 text-base focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed`}
                 required
                 disabled={isLoading}
               >
