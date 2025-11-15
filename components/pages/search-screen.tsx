@@ -58,7 +58,7 @@ export function SearchScreen() {
   const [filters, setFilters] = useState({
     genero: "todos" as "todos" | "MASCULINO" | "FEMENINO" | "MIXTO",
     nivel: "todos" as "todos" | "Principiante" | "Intermedio" | "Avanzado" | "Profesional",
-    tipoPartido: "todos" as "todos" | "FUTBOL_5" | "FUTBOL_7" | "FUTBOL_11",
+    tipoPartido: "todos" as "todos" | "FUTBOL_5" | "FUTBOL_7" | "FUTBOL_8" | "FUTBOL_9" | "FUTBOL_11",
   })
 
 
@@ -486,7 +486,7 @@ export function SearchScreen() {
               <div>
                 <label className="text-xs font-medium text-gray-600 mb-2 block">Tipo de partido</label>
                 <div className="flex gap-2 flex-wrap">
-                  {["todos", "FUTBOL_5", "FUTBOL_7", "FUTBOL_11"].map((t) => (
+                  {["todos", "FUTBOL_5", "FUTBOL_7", "FUTBOL_8", "FUTBOL_9", "FUTBOL_11"].map((t) => (
                     <button
                       key={t}
                       onClick={() => setFilters(prev => ({ ...prev, tipoPartido: t as any }))}

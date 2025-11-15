@@ -130,6 +130,8 @@ export function CreateMatchScreen() {
     const playerCounts: Record<string, number> = {
       [TipoPartido.FUTBOL_5]: 10,
       [TipoPartido.FUTBOL_7]: 14,
+      [TipoPartido.FUTBOL_8]: 16,
+      [TipoPartido.FUTBOL_9]: 18,
       [TipoPartido.FUTBOL_11]: 22,
     }
     
