@@ -18,6 +18,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useWebSocket } from "@/hooks/use-websocket"
 import { useToast } from "@/hooks/use-toast"
 import { apiCache } from "@/lib/api-cache-manager"
+import { useSearchParams } from "next/navigation"
 
 interface MatchDetailProps {
   matchId: string
@@ -44,6 +45,7 @@ function getNombreUbicacion(match: PartidoDTO) {
 
 export default function MatchDetail({ matchId }: MatchDetailProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   // Estado
   const [match, setMatch] = useState<PartidoDTO | null>(null)
@@ -58,7 +60,10 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
 
   // Usuario actual (no forzamos re-render si cambia fuera)
   const currentUser = AuthService.getUser()
+  const fromAdmin = searchParams?.get('fromAdmin') === 'true'
+  const isAdmin = currentUser?.rol === 'ROLE_ADMIN'
   const isOrganizer = !!(currentUser?.id && match && (currentUser.id === (match as any).organizadorId))
+  const canManage = isOrganizer || (fromAdmin && isAdmin)
   const { toast } = useToast()
 
   // 🔥 WebSocket: Actualizaciones en tiempo real del partido
@@ -610,9 +615,9 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
 
         {/* Join Button */}
         <div className="pb-24">
-          {isOrganizer ? (
+          {canManage ? (
             <Button
-              onClick={() => router.push(`/my-matches/${matchId}`)}
+              onClick={() => router.push(`/my-matches/${matchId}${fromAdmin ? '?fromAdmin=true' : ''}`)}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 text-lg font-semibold rounded-2xl"
             >
               Gestionar partido

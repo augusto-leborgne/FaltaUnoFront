@@ -25,7 +25,7 @@ import {
   Calendar,
   AlertCircle,
 } from "lucide-react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { AuthService } from "@/lib/auth"
 import { CompressedMap } from "@/components/google-maps/compressed-map"
@@ -49,6 +49,7 @@ interface MatchManagementScreenProps {
 
 export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { toast } = useToast()
   
   // Estados
@@ -72,7 +73,10 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
   })
 
   const currentUser = AuthService.getUser()
+  const fromAdmin = searchParams?.get('fromAdmin') === 'true'
+  const isAdmin = currentUser?.rol === 'ROLE_ADMIN'
   const isMatchOrganizer = currentUser?.id === match?.organizadorId
+  const canManage = isMatchOrganizer || (fromAdmin && isAdmin)
 
   // 🔥 WebSocket: Actualizaciones en tiempo real
   useWebSocket({
@@ -102,7 +106,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
           
         case 'INSCRIPCION_CREATED':
           // Nueva solicitud de inscripción
-          if (isMatchOrganizer && event.inscripcion) {
+          if (canManage && event.inscripcion) {
             setSolicitudes(prev => [...prev, event.inscripcion])
             toast({
               title: "Nueva solicitud",
@@ -173,16 +177,16 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
   }, [matchId])
 
   useEffect(() => {
-    // Redirigir si no es organizador
-    if (!loading && !isMatchOrganizer && match) {
+    // Redirigir si no puede gestionar
+    if (!loading && !canManage && match) {
       toast({
         title: "Acceso denegado",
-        description: "Solo el organizador puede gestionar este partido",
+        description: "No tienes permisos para gestionar este partido",
         variant: "destructive",
       })
       router.push(`/matches/${matchId}`)
     }
-  }, [isMatchOrganizer, loading, match])
+  }, [canManage, loading, match])
 
   // ============================================
   // FUNCIONES DE CARGA
@@ -690,7 +694,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
   // RENDER - ERROR
   // ============================================
 
-  if (error || !match || !isMatchOrganizer) {
+  if (error || !match || !canManage) {
     return (
       <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6">
         <div className="text-center mb-6">
@@ -699,7 +703,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
             {error || "Acceso denegado"}
           </h2>
           <p className="text-gray-600">
-            {error ? "Por favor intenta nuevamente" : "Solo el organizador puede ver esta página"}
+            {error ? "Por favor intenta nuevamente" : "No tienes permisos para gestionar este partido"}
           </p>
         </div>
         <Button onClick={() => router.back()} variant="outline">

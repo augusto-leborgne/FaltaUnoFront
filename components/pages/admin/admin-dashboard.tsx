@@ -1028,7 +1028,7 @@ export default function AdminDashboard() {
                           <tr 
                             key={partido.id} 
                             className="hover:bg-gray-50 cursor-pointer transition-colors"
-                            onClick={() => router.push(`/matches/${partido.id}`)}
+                            onClick={() => router.push(`/matches/${partido.id}?fromAdmin=true`)}
                           >
                             <td className="px-4 py-3">
                               <div className="flex flex-col gap-1">
@@ -1094,7 +1094,7 @@ export default function AdminDashboard() {
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => router.push(`/matches/${partido.id}`)}
+                                  onClick={() => router.push(`/matches/${partido.id}?fromAdmin=true`)}
                                   title="Ver partido"
                                 >
                                   <Eye className="h-4 w-4" />
@@ -1122,7 +1122,7 @@ export default function AdminDashboard() {
                     <div
                       key={partido.id}
                       className="bg-white rounded-lg border shadow-sm p-4 active:bg-gray-50 transition-colors"
-                      onClick={() => router.push(`/matches/${partido.id}`)}
+                      onClick={() => router.push(`/matches/${partido.id}?fromAdmin=true`)}
                     >
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
@@ -1193,7 +1193,7 @@ export default function AdminDashboard() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => router.push(`/matches/${partido.id}`)}
+                          onClick={() => router.push(`/matches/${partido.id}?fromAdmin=true`)}
                           className="flex-1"
                         >
                           <Eye className="h-3 w-3 mr-1" />
