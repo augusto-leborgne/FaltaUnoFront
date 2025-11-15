@@ -156,9 +156,36 @@ export function HomeScreen() {
         const reviewsData = reviewsResult.value
         // Defensive check: ensure data is an array before setting
         if (Array.isArray(reviewsData.data)) {
-          setPendingReviews(reviewsData.data)
+          // ✅ FIX: Agrupar por partido_id para mostrar solo UNA tarjeta por partido
+          const uniquePartidos = new Map()
+          reviewsData.data.forEach((review: any) => {
+            if (!uniquePartidos.has(review.partido_id)) {
+              uniquePartidos.set(review.partido_id, {
+                partido_id: review.partido_id,
+                tipo_partido: review.tipo_partido,
+                fecha: review.fecha,
+                nombre_ubicacion: review.nombre_ubicacion || 'Sin ubicación',
+                // Guardar array de jugadores pendientes de calificar para este partido
+                jugadores_pendientes: reviewsData.data.filter((r: any) => r.partido_id === review.partido_id)
+              })
+            }
+          })
+          setPendingReviews(Array.from(uniquePartidos.values()))
         } else if (reviewsData.success && reviewsData.data && Array.isArray(reviewsData.data)) {
-          setPendingReviews(reviewsData.data)
+          // Same logic for nested data structure
+          const uniquePartidos = new Map()
+          reviewsData.data.forEach((review: any) => {
+            if (!uniquePartidos.has(review.partido_id)) {
+              uniquePartidos.set(review.partido_id, {
+                partido_id: review.partido_id,
+                tipo_partido: review.tipo_partido,
+                fecha: review.fecha,
+                nombre_ubicacion: review.nombre_ubicacion || 'Sin ubicación',
+                jugadores_pendientes: reviewsData.data.filter((r: any) => r.partido_id === review.partido_id)
+              })
+            }
+          })
+          setPendingReviews(Array.from(uniquePartidos.values()))
         } else {
           setPendingReviews([])
         }

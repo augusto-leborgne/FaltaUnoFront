@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation"
 import { CompressedMap } from "@/components/google-maps/compressed-map"
 import { GoogleMapsModal } from "@/components/google-maps/google-maps-modal"
 import AuthService from "@/lib/auth"
-import { PartidoAPI, InscripcionAPI, PartidoDTO, PartidoEstado, InscripcionEstado } from "@/lib/api"
+import { PartidoAPI, InscripcionAPI, PartidoDTO, PartidoEstado, InscripcionEstado, API_BASE } from "@/lib/api"
 import { formatMatchType, formatDateRegional as formatDate, getSpotsLeftColor } from "@/lib/utils"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useWebSocket } from "@/hooks/use-websocket"
@@ -243,6 +243,31 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
     setError("")
 
     try {
+      // ✅ Validar si el usuario tiene reviews pendientes antes de inscribirse
+      logger.log("[MatchDetail] Verificando reviews pendientes antes de unirse...")
+      const token = AuthService.getToken()
+      const pendingReviewsResponse = await fetch(
+        `${API_BASE}/api/usuarios/${currentUser.id}/pending-reviews`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+      
+      if (pendingReviewsResponse.ok) {
+        const reviewsData = await pendingReviewsResponse.json()
+        const pendingReviews = Array.isArray(reviewsData.data) ? reviewsData.data : []
+        
+        if (pendingReviews.length > 0) {
+          logger.warn("[MatchDetail] Usuario tiene reviews pendientes:", pendingReviews.length)
+          setError(`Debes calificar a ${pendingReviews.length} jugador${pendingReviews.length > 1 ? 'es' : ''} antes de unirte a un partido`)
+          setIsJoining(false)
+          return
+        }
+      }
+      
       const response = await InscripcionAPI.crear(match.id!, currentUser.id)
       if (response.success) {
         router.push(`/matches/${matchId}/confirmed`)

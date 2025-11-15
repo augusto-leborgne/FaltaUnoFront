@@ -11,7 +11,7 @@ import { ArrowLeft, MapPin, Calendar, Users, DollarSign, Clock, AlertCircle } fr
 import { useRouter } from "next/navigation"
 import { AddressAutocomplete } from "@/components/google-maps/address-autocomplete"
 import { AuthService } from "@/lib/auth"
-import { PartidoAPI, mapFormDataToPartidoDTO, TipoPartido, NivelPartido } from "@/lib/api"
+import { PartidoAPI, mapFormDataToPartidoDTO, TipoPartido, NivelPartido, API_BASE } from "@/lib/api"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 
 type PlaceResult = google.maps.places.PlaceResult
@@ -301,6 +301,31 @@ export function CreateMatchScreen() {
 
     try {
       logger.log("[CreateMatch] Iniciando creación de partido...")
+      
+      // ✅ Validar si el usuario tiene reviews pendientes
+      logger.log("[CreateMatch] Verificando reviews pendientes...")
+      const token = AuthService.getToken()
+      const pendingReviewsResponse = await fetch(
+        `${API_BASE}/api/usuarios/${user.id}/pending-reviews`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      )
+      
+      if (pendingReviewsResponse.ok) {
+        const reviewsData = await pendingReviewsResponse.json()
+        const pendingReviews = Array.isArray(reviewsData.data) ? reviewsData.data : []
+        
+        if (pendingReviews.length > 0) {
+          logger.warn("[CreateMatch] Usuario tiene reviews pendientes:", pendingReviews.length)
+          setError(`Debes calificar a ${pendingReviews.length} jugador${pendingReviews.length > 1 ? 'es' : ''} antes de crear un partido`)
+          setIsLoading(false)
+          return
+        }
+      }
 
       // Mapear datos del formulario al DTO
       const partidoDTO = mapFormDataToPartidoDTO({
