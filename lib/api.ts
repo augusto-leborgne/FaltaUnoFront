@@ -2,6 +2,7 @@ import { AuthService } from "./auth";
 import { keysToCamelCase, keysToSnakeCase, dualCaseKeys } from "./case-converter";
 import { logger } from "./logger";
 import { fetchWithTimeout, fetchWithRetry } from "./fetch-with-timeout";
+import { AppMetrics } from "./observability";
 
 // ============================================
 // CONFIGURACIÓN CENTRALIZADA
@@ -379,6 +380,9 @@ async function apiFetch<T>(
     const logPrefix = attemptNumber > 0 ? `[API Retry ${attemptNumber}/${RETRY_CONFIG.maxRetries}]` : '[API]'
     logger.log(`${logPrefix} ${fetchOptions.method || 'GET'} ${endpoint}`);
 
+    // Track API call metrics
+    const startTime = performance.now();
+
     try {
       // ⚡ NUEVO: Usar fetchWithTimeout para prevenir requests colgados
       const response = await fetchWithTimeout(fullUrl, {
@@ -498,10 +502,19 @@ async function apiFetch<T>(
         logger.log(`[API] ✓ ${endpoint} completado`);
       }
       
+      // Track successful API call metrics
+      const duration = performance.now() - startTime;
+      AppMetrics.apiCall(endpoint, fetchOptions.method || 'GET', response.status, duration);
+      
       return normalizedResponse;
 
     } catch (error) {
       logger.error(`${logPrefix} Error en ${endpoint}:`, error);
+      
+      // Track failed API call metrics
+      const duration = performance.now() - startTime;
+      AppMetrics.apiCall(endpoint, fetchOptions.method || 'GET', 0, duration);
+      AppMetrics.error('api_error', endpoint);
       
       // Handle abort errors (timeouts) - don't retry user-initiated aborts
       if (error instanceof Error && error.name === 'AbortError') {
@@ -667,6 +680,8 @@ export const UsuarioAPI = {
         if (response.data.user) {
           AuthService.setUser(response.data.user);
         }
+        // Track successful login
+        AppMetrics.userLogin();
       }
 
       return response;
@@ -745,11 +760,18 @@ export const UsuarioAPI = {
       
       logger.log('[UsuarioAPI.crear] Payload:', payload);
       
-      return await apiFetch<{ token?: string; user: Usuario }>('/api/usuarios', {
+      const response = await apiFetch<{ token?: string; user: Usuario }>('/api/usuarios', {
         method: 'POST',
         body: JSON.stringify(payload),
         skipAuth: true
       });
+      
+      // Track successful registration
+      if (response.success) {
+        AppMetrics.userRegister();
+      }
+      
+      return response;
     } catch (error) {
       logger.error('[UsuarioAPI.crear] Error:', error);
       return {
@@ -922,6 +944,9 @@ export const PartidoAPI = {
           data: null
         };
       }
+
+      // Track partido creation metric
+      AppMetrics.partidoCreated(payload.tipo_partido);
 
       return {
         success: true,
@@ -1139,23 +1164,41 @@ export const PartidoAPI = {
   /**
    * Resto de métodos mantienen la misma estructura...
    */
-  cancelar: (id: string, motivo?: string) => {
-    return apiFetch<void>(`/api/partidos/${id}/cancelar`, {
+  cancelar: async (id: string, motivo?: string) => {
+    const response = await apiFetch<void>(`/api/partidos/${id}/cancelar`, {
       method: 'POST',
       body: motivo ? JSON.stringify({ motivo }) : undefined
     });
+    
+    if (response.success) {
+      AppMetrics.partidoCancelled();
+    }
+    
+    return response;
   },
 
-  confirmar: (id: string) => {
-    return apiFetch<void>(`/api/partidos/${id}/confirmar`, {
+  confirmar: async (id: string) => {
+    const response = await apiFetch<void>(`/api/partidos/${id}/confirmar`, {
       method: 'POST'
     });
+    
+    if (response.success) {
+      AppMetrics.incrementCounter('faltauno_partidos_confirmed_frontend_total');
+    }
+    
+    return response;
   },
 
-  completar: (id: string) => {
-    return apiFetch<void>(`/api/partidos/${id}/completar`, {
+  completar: async (id: string) => {
+    const response = await apiFetch<void>(`/api/partidos/${id}/completar`, {
       method: 'POST'
     });
+    
+    if (response.success) {
+      AppMetrics.incrementCounter('faltauno_partidos_completed_frontend_total');
+    }
+    
+    return response;
   },
 
   getJugadores: async (id: string) => {
@@ -1328,6 +1371,11 @@ export const InscripcionAPI = {
       body: JSON.stringify({ partidoId, usuarioId })
     });
 
+    // Track partido join metric
+    if (response.success) {
+      AppMetrics.partidoJoined();
+    }
+
     return {
       ...response,
       data: normalizeInscripcion(response.data)
@@ -1390,6 +1438,11 @@ export const InscripcionAPI = {
       `/api/inscripciones/${inscripcionId}/aceptar`,
       { method: 'POST' }
     );
+
+    // Track inscripcion acceptance
+    if (response.success) {
+      AppMetrics.incrementCounter('faltauno_inscripciones_accepted_frontend_total');
+    }
 
     return {
       ...response,

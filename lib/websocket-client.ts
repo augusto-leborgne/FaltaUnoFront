@@ -6,6 +6,7 @@
 import { Client, IFrame, IMessage, StompConfig } from '@stomp/stompjs'
 import SockJS from 'sockjs-client'
 import { logger } from './logger'
+import { AppMetrics } from './observability'
 
 export type WebSocketEventType =
   | 'PARTIDO_UPDATED'
@@ -93,23 +94,27 @@ class WebSocketClient {
             logger.log('[WebSocket] ✅ Conectado exitosamente')
             this.reconnectAttempts = 0
             this.isConnecting = false
+            AppMetrics.websocketConnected()
             resolve()
           },
           
           onDisconnect: (frame: IFrame) => {
             logger.log('[WebSocket] ⚠️ Desconectado')
             this.isConnecting = false
+            AppMetrics.websocketDisconnected()
           },
           
           onStompError: (frame: IFrame) => {
             logger.error('[WebSocket] ❌ Error STOMP:', frame)
             this.isConnecting = false
+            AppMetrics.error('websocket_stomp_error')
             reject(new Error(`STOMP error: ${frame.headers?.message || 'Unknown error'}`))
           },
           
           onWebSocketError: (event: Event) => {
             logger.error('[WebSocket] ❌ Error WebSocket:', event)
             this.isConnecting = false
+            AppMetrics.error('websocket_connection_error')
             reject(new Error('WebSocket connection failed'))
           },
           
@@ -206,9 +211,11 @@ class WebSocketClient {
       try {
         const event: WebSocketEvent = JSON.parse(message.body)
         logger.log(`[WebSocket] 📨 Evento recibido:`, event.type, event)
+        AppMetrics.websocketMessage(event.type)
         callback(event)
       } catch (error) {
         logger.error('[WebSocket] Error procesando mensaje:', error)
+        AppMetrics.error('websocket_message_parse_error')
       }
     })
 
@@ -244,9 +251,11 @@ class WebSocketClient {
       try {
         const event: WebSocketEvent = JSON.parse(message.body)
         logger.log(`[WebSocket] 💬 Mensaje de chat:`, event.type, event)
+        AppMetrics.websocketMessage('CHAT_' + event.type)
         callback(event)
       } catch (error) {
         logger.error('[WebSocket] Error procesando mensaje de chat:', error)
+        AppMetrics.error('websocket_chat_parse_error')
       }
     })
 
