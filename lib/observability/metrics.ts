@@ -137,6 +137,9 @@ class MetricsCollector {
    */
   exportPrometheus(): string {
     const lines: string[] = []
+    
+    // Agregar timestamp global
+    const timestamp = Date.now()
 
     // Group by metric name
     const grouped = new Map<string, Metric[]>()
@@ -148,26 +151,28 @@ class MetricsCollector {
       grouped.get(metric.name)!.push(metric)
     }
 
-    // Export in Prometheus format
+    // Export in Prometheus format with proper escaping
     for (const [name, metrics] of grouped) {
       const firstMetric = metrics[0]
       
-      // HELP line
-      lines.push(`# HELP ${name} ${firstMetric.help}`)
+      // HELP line (escape backslashes and newlines)
+      const helpText = firstMetric.help.replace(/\\/g, '\\\\').replace(/\n/g, '\\n')
+      lines.push(`# HELP ${name} ${helpText}`)
+      
       // TYPE line
       lines.push(`# TYPE ${name} ${firstMetric.type}`)
       
-      // Metric lines
+      // Metric lines with timestamp
       for (const metric of metrics) {
         const labelsStr = metric.labels 
           ? Object.entries(metric.labels)
-              .map(([k, v]) => `${k}="${v}"`)
+              .map(([k, v]) => `${k}="${v.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`)
               .join(',')
           : ''
         
         const metricLine = labelsStr 
-          ? `${name}{${labelsStr}} ${metric.value}`
-          : `${name} ${metric.value}`
+          ? `${name}{${labelsStr}} ${metric.value} ${metric.timestamp || timestamp}`
+          : `${name} ${metric.value} ${metric.timestamp || timestamp}`
         
         lines.push(metricLine)
       }
@@ -179,17 +184,23 @@ class MetricsCollector {
   }
 
   /**
-   * Enviar métricas al backend para que las procese
-   * No podemos enviar directamente a Grafana Cloud desde el navegador (CORS)
+   * Enviar métricas a Grafana Cloud
+   * Usa el endpoint /api/metrics que actúa como proxy para evitar CORS
    */
   async pushMetrics(): Promise<void> {
-    if (!isProduction) return
+    // Solo enviar en producción o si está explícitamente habilitado
+    const grafanaEnabled = process.env.NEXT_PUBLIC_GRAFANA_ENABLED === 'true'
+    if (!grafanaEnabled && !isProduction) return
 
     try {
       const metricsData = this.exportPrometheus()
       
-      // Send to our backend API endpoint
-      // Backend will forward to Grafana Cloud (no CORS issues)
+      // Verificar que haya métricas para enviar
+      if (!metricsData || metricsData.trim().length === 0) {
+        return
+      }
+      
+      // Send to our API endpoint which forwards to Grafana Cloud
       await fetch('/api/metrics', {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
@@ -197,7 +208,6 @@ class MetricsCollector {
       })
     } catch (error) {
       // Silently fail - metrics shouldn't break the app
-      // Only log in development
       if (!isProduction) {
         console.error('Failed to push metrics:', error)
       }
@@ -237,9 +247,13 @@ if (typeof window !== 'undefined') {
   setInterval(() => metrics.cleanup(), 5 * 60 * 1000)
 }
 
-// Auto-push metrics every minute in production
-if (isProduction && typeof window !== 'undefined') {
-  setInterval(() => metrics.pushMetrics(), 60 * 1000)
+// Auto-push metrics every 30 seconds in production or when enabled
+const grafanaEnabled = typeof window !== 'undefined' && process.env.NEXT_PUBLIC_GRAFANA_ENABLED === 'true'
+if ((isProduction || grafanaEnabled) && typeof window !== 'undefined') {
+  // Push immediately on load
+  setTimeout(() => metrics.pushMetrics(), 5000)
+  // Then push every 30 seconds
+  setInterval(() => metrics.pushMetrics(), 30 * 1000)
 }
 
 // Métricas predefinidas para la app

@@ -14,6 +14,9 @@
  * }, 10000) // 10 segundos timeout
  * ```
  */
+
+import { AppMetrics } from './observability/metrics'
+
 export async function fetchWithTimeout(
   url: string,
   options: RequestInit = {},
@@ -21,6 +24,7 @@ export async function fetchWithTimeout(
 ): Promise<Response> {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+  const startTime = performance.now()
 
   try {
     const response = await fetch(url, {
@@ -28,9 +32,23 @@ export async function fetchWithTimeout(
       signal: controller.signal,
     })
     clearTimeout(timeoutId)
+    
+    // Registrar métrica de API call
+    const duration = performance.now() - startTime
+    const endpoint = new URL(url, window.location.origin).pathname
+    const method = options.method || 'GET'
+    AppMetrics.apiCall(endpoint, method, response.status, duration)
+    
     return response
   } catch (error) {
     clearTimeout(timeoutId)
+    
+    // Registrar error
+    const duration = performance.now() - startTime
+    const endpoint = new URL(url, window.location.origin).pathname
+    const method = options.method || 'GET'
+    AppMetrics.apiCall(endpoint, method, 0, duration)
+    
     if (error instanceof Error && error.name === 'AbortError') {
       throw new Error(`Request timeout after ${timeoutMs}ms`)
     }
