@@ -48,6 +48,16 @@ export function MatchesListing() {
 
   useEffect(() => {
     loadMatches()
+    
+    // Recargar cuando el usuario vuelve a la pantalla
+    const handleFocus = () => {
+      if (AuthService.isLoggedIn()) {
+        loadMatches()
+      }
+    }
+    
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
   }, [selectedFilters, searchQuery])
 
   // ============================================

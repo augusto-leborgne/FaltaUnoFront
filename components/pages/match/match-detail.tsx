@@ -77,7 +77,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
             loadMatch()
             // Invalidar caché para que otras pantallas se actualicen
             if (currentUser?.id) {
-              apiCache.invalidatePattern(`partidos-usuario-${currentUser.id}`)
+              apiCache.invalidatePattern(`partidos`) // Invalida TODOS los listados
               apiCache.invalidatePattern(`partido-${matchId}`)
             }
             toast({

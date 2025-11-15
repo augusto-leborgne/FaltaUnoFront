@@ -90,7 +90,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
             loadMatchData()
             // Invalidar caché para que otras pantallas se actualicen
             if (currentUser?.id) {
-              apiCache.invalidatePattern(`partidos-usuario-${currentUser.id}`)
+              apiCache.invalidatePattern(`partidos`) // Invalida TODOS los listados
               apiCache.invalidatePattern(`partido-${matchId}`)
             }
             toast({
@@ -312,7 +312,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
       
       // Invalidar caché para forzar actualización en otras pantallas
       if (currentUser?.id) {
-        apiCache.invalidatePattern(`partidos-usuario-${currentUser.id}`)
+        apiCache.invalidatePattern(`partidos`) // Invalida TODOS los listados
         apiCache.invalidatePattern(`partido-${matchId}`)
       }
       
