@@ -6,6 +6,7 @@
 
 const isDevelopment = process.env.NODE_ENV === 'development'
 const isProduction = process.env.NODE_ENV === 'production'
+const isBrowser = typeof window !== 'undefined'
 
 // Severity levels según Google Cloud Logging
 export enum LogSeverity {
@@ -130,10 +131,11 @@ class CloudLogger {
     const entry = this.createLogEntry(LogSeverity.DEBUG, message, metadataOrArg2)
     
     if (isDevelopment) {
-      console.debug('🐛', message, metadataOrArg2)
-    } else {
+      console.log('🔍', message, metadataOrArg2)
+    } else if (isProduction) {
       this.sendToCloudLogging(entry)
     }
+    // In production, don't log to console
   }
 
   /**
@@ -162,9 +164,10 @@ class CloudLogger {
     
     if (isDevelopment) {
       console.log('ℹ️', message, metadataOrArg2)
-    } else {
+    } else if (isProduction) {
       this.sendToCloudLogging(entry)
     }
+    // In production, don't log to console
   }
 
   /**
@@ -193,9 +196,10 @@ class CloudLogger {
     
     if (isDevelopment) {
       console.warn('⚠️', message, metadataOrArg2)
-    } else {
+    } else if (isProduction) {
       this.sendToCloudLogging(entry)
     }
+    // In production, don't log to console
   }
 
   /**
@@ -228,9 +232,10 @@ class CloudLogger {
     
     if (isDevelopment) {
       console.error('❌', message, error, metadata)
-    } else {
+    } else if (isProduction) {
       this.sendToCloudLogging(entry)
     }
+    // In production, errors still logged but without console noise
   }
 
   /**

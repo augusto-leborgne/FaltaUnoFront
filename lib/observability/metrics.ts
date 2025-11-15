@@ -39,7 +39,7 @@ class MetricsCollector {
       })
     }
 
-    // En desarrollo, log
+    // Only log in development
     if (!isProduction) {
       console.log(`📊 Counter [${name}] +${value}`, labels)
     }
@@ -60,6 +60,7 @@ class MetricsCollector {
       timestamp: Date.now(),
     })
 
+    // Only log in development
     if (!isProduction) {
       console.log(`📊 Gauge [${name}] = ${value}`, labels)
     }
@@ -93,6 +94,7 @@ class MetricsCollector {
       timestamp: Date.now(),
     })
 
+    // Only log in development
     if (!isProduction) {
       console.log(`📊 Histogram [${name}] p50=${p50}ms p95=${p95}ms p99=${p99}ms`, labels)
     }
@@ -177,8 +179,8 @@ class MetricsCollector {
   }
 
   /**
-   * Enviar métricas al backend para que Prometheus las scrape
-   * O directamente a Grafana Cloud si está configurado
+   * Enviar métricas al backend para que las procese
+   * No podemos enviar directamente a Grafana Cloud desde el navegador (CORS)
    */
   async pushMetrics(): Promise<void> {
     if (!isProduction) return
@@ -186,35 +188,19 @@ class MetricsCollector {
     try {
       const metricsData = this.exportPrometheus()
       
-      // Check if Grafana Cloud is configured
-      const grafanaEnabled = process.env.NEXT_PUBLIC_GRAFANA_ENABLED === 'true'
-      const grafanaUrl = process.env.NEXT_PUBLIC_GRAFANA_PROMETHEUS_URL
-      const grafanaUser = process.env.NEXT_PUBLIC_GRAFANA_USER
-      const grafanaKey = process.env.NEXT_PUBLIC_GRAFANA_API_KEY
-      
-      if (grafanaEnabled && grafanaUrl && grafanaUser && grafanaKey) {
-        // Push directly to Grafana Cloud
-        const auth = btoa(`${grafanaUser}:${grafanaKey}`)
-        
-        await fetch(grafanaUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'text/plain',
-            'Authorization': `Basic ${auth}`
-          },
-          body: metricsData,
-        })
-      } else {
-        // Fallback: Send to backend endpoint that Prometheus will scrape
-        await fetch('/api/metrics', {
-          method: 'POST',
-          headers: { 'Content-Type': 'text/plain' },
-          body: metricsData,
-        })
-      }
+      // Send to our backend API endpoint
+      // Backend will forward to Grafana Cloud (no CORS issues)
+      await fetch('/api/metrics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: metricsData,
+      })
     } catch (error) {
       // Silently fail - metrics shouldn't break the app
-      console.error('Failed to push metrics:', error)
+      // Only log in development
+      if (!isProduction) {
+        console.error('Failed to push metrics:', error)
+      }
     }
   }
 
