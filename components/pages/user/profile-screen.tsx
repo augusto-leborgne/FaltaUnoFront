@@ -58,6 +58,13 @@ interface Friend {
     foto_perfil?: string
     fotoPerfil?: string
   }
+  usuario?: {
+    id: string
+    nombre: string
+    apellido: string
+    foto_perfil?: string
+    fotoPerfil?: string
+  }
 }
 
 function ProfileScreenInner() {
@@ -153,14 +160,20 @@ function ProfileScreenInner() {
         
         // Filtrar duplicados y excluir al usuario actual
         const uniqueFriends = allFriends.filter((friendship: any, index: number, self: any[]) => {
+          // El backend puede devolver 'amigo' o 'usuario' según el endpoint
+          const friend = friendship.amigo || friendship.usuario
+          
           // Si no hay amigo definido, omitir
-          if (!friendship.amigo || !friendship.amigo.id) return false
+          if (!friend || !friend.id) return false
           
           // Excluir si el amigo es el usuario actual
-          if (friendship.amigo.id === user.id) return false
+          if (friend.id === user.id) return false
           
           // Eliminar duplicados: mantener solo la primera ocurrencia de cada amigo
-          return index === self.findIndex((f: any) => f.amigo?.id === friendship.amigo.id)
+          return index === self.findIndex((f: any) => {
+            const otherFriend = f.amigo || f.usuario
+            return otherFriend?.id === friend.id
+          })
         })
         
         logger.log("[ProfileScreen] Processed friends (after deduplication):", uniqueFriends)
@@ -573,7 +586,8 @@ function ProfileScreenInner() {
           ) : (
             <div className="space-y-2 sm:space-y-3">
               {friends.slice(0, 5).map((friendship) => {
-                const friend = friendship.amigo
+                // El backend puede devolver 'amigo' o 'usuario' según el endpoint
+                const friend = friendship.amigo || friendship.usuario
                 if (!friend) return null
                 
                 const friendName = `${friend.nombre} ${friend.apellido}`.trim() || "Usuario"
