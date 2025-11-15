@@ -28,6 +28,14 @@ export function MyMatchesScreen() {
 
   useEffect(() => {
     loadMatches()
+    
+    // Recargar cuando el usuario vuelve a la pantalla
+    const handleFocus = () => {
+      loadMatches()
+    }
+    
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
   }, [])
 
   const loadMatches = async () => {

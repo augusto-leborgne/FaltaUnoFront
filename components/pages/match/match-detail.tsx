@@ -17,6 +17,7 @@ import { formatMatchType, formatDateRegional as formatDate, getSpotsLeftColor } 
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useWebSocket } from "@/hooks/use-websocket"
 import { useToast } from "@/hooks/use-toast"
+import { apiCache } from "@/lib/api-cache-manager"
 
 interface MatchDetailProps {
   matchId: string
@@ -72,6 +73,13 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
           // Actualizar datos del partido
           if (event.partido) {
             setMatch(event.partido)
+            // Recargar para asegurar datos completos
+            loadMatch()
+            // Invalidar caché para que otras pantallas se actualicen
+            if (currentUser?.id) {
+              apiCache.invalidatePattern(`partidos-usuario-${currentUser.id}`)
+              apiCache.invalidatePattern(`partido-${matchId}`)
+            }
             toast({
               title: "Partido actualizado",
               description: "El partido ha sido modificado por el organizador",
@@ -324,7 +332,6 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
   const [retryCount, setRetryCount] = useState(0)
   const handleBack = () => {
     setError("")
-    setMatch(null)
     router.back()
   }
 

@@ -76,6 +76,16 @@ export function HomeScreen() {
     }
 
     loadData()
+    
+    // Recargar cuando el usuario vuelve a la pantalla
+    const handleFocus = () => {
+      if (AuthService.isLoggedIn()) {
+        loadData()
+      }
+    }
+    
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
   }, [])
 
   const loadData = async () => {

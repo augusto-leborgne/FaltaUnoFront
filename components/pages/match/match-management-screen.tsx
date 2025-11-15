@@ -33,6 +33,7 @@ import { GoogleMapsModal } from "@/components/google-maps/google-maps-modal"
 import { formatMatchType, formatDateRegional } from "@/lib/utils"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useWebSocket } from "@/hooks/use-websocket"
+import { apiCache } from "@/lib/api-cache-manager"
 import { 
   PartidoAPI, 
   InscripcionAPI, 
@@ -85,6 +86,13 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
           // Actualizar datos del partido
           if (event.partido) {
             setMatch(event.partido)
+            // Recargar datos completos para asegurar sincronización
+            loadMatchData()
+            // Invalidar caché para que otras pantallas se actualicen
+            if (currentUser?.id) {
+              apiCache.invalidatePattern(`partidos-usuario-${currentUser.id}`)
+              apiCache.invalidatePattern(`partido-${matchId}`)
+            }
             toast({
               title: "Partido actualizado",
               description: "El partido ha sido modificado",
@@ -299,13 +307,21 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
         throw new Error(response.message || "Error al actualizar")
       }
 
+      // Recargar datos primero
+      await loadMatchData()
+      
+      // Invalidar caché para forzar actualización en otras pantallas
+      if (currentUser?.id) {
+        apiCache.invalidatePattern(`partidos-usuario-${currentUser.id}`)
+        apiCache.invalidatePattern(`partido-${matchId}`)
+      }
+      
       toast({
         title: "¡Partido actualizado!",
         description: "Los cambios se han guardado correctamente",
       })
 
       setIsEditing(false)
-      await loadMatchData()
 
     } catch (err) {
       logger.error("[MatchManagement] Error guardando:", err)
