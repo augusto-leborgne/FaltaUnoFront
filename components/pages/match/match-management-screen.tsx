@@ -30,7 +30,7 @@ import { useToast } from "@/hooks/use-toast"
 import { AuthService } from "@/lib/auth"
 import { CompressedMap } from "@/components/google-maps/compressed-map"
 import { GoogleMapsModal } from "@/components/google-maps/google-maps-modal"
-import { formatMatchType } from "@/lib/utils"
+import { formatMatchType, formatDateRegional } from "@/lib/utils"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useWebSocket } from "@/hooks/use-websocket"
 import { 
@@ -550,7 +550,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
     if (!match) return
 
     const shareData = {
-      title: `Partido ${match.tipoPartido} - ${match.fecha}`,
+      title: `Partido ${match.tipoPartido} - ${formatDateRegional(match.fecha)}`,
       text: `¡Únete a nuestro partido de ${match.tipoPartido}!`,
       url: `${window.location.origin}/matches/${matchId}`,
     }
@@ -999,7 +999,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
           ) : (
             <div>
               <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">
-                {match.fecha} {match.hora.substring(0, 5)}
+                {formatDateRegional(match.fecha)} {match.hora.substring(0, 5)}
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
                 <div className="flex items-center space-x-2">
