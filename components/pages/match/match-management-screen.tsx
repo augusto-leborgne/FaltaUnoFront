@@ -718,6 +718,16 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
             >
               <Share className="w-4 h-4" />
             </Button>
+            {!isEditing && match.estado === PartidoEstado.DISPONIBLE && (
+              <Button
+                onClick={() => setIsEditing(true)}
+                variant="outline"
+                size="sm"
+                className="bg-orange-50 border-orange-200"
+              >
+                <Edit3 className="w-4 h-4" />
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -755,18 +765,6 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
               </Badge>
               {getStatusBadge()}
             </div>
-            {!isEditing && match.estado === PartidoEstado.DISPONIBLE && (
-              <Button 
-                onClick={() => setIsEditing(true)}
-                variant="outline"
-                size="sm"
-                className="ml-2 flex-shrink-0"
-              >
-                <Edit3 className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Editar</span>
-                <span className="sm:hidden">Editar</span>
-              </Button>
-            )}
           </div>
 
           {/* Alertas de estado */}
@@ -846,8 +844,10 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                   </label>
                   <Input
                     type="date"
-                    value={editData.fecha}
-                    onChange={(e) => setEditData({ ...editData, fecha: e.target.value })}
+                    value={editData.fecha || ''}
+                    onChange={(e) => {
+                      setEditData({ ...editData, fecha: e.target.value })
+                    }}
                     className="rounded-lg sm:rounded-xl text-sm sm:text-base h-10 sm:h-auto"
                     min={new Date().toISOString().split('T')[0]}
                   />
@@ -858,8 +858,13 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                   </label>
                   <Input
                     type="time"
-                    value={editData.hora.substring(0, 5)}
+                    value={editData.hora ? editData.hora.substring(0, 5) : ''}
                     onChange={(e) => {
+                      if (!e.target.value) {
+                        setEditData({ ...editData, hora: '' })
+                        return
+                      }
+                      
                       const newTime = `${e.target.value}:00`
                       const selectedDate = editData.fecha
                       const today = new Date().toISOString().split('T')[0]
