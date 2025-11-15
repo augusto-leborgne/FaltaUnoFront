@@ -129,7 +129,19 @@ export function formatDateRegional(dateString: string | Date | null | undefined)
   if (!dateString) return '';
   
   try {
-    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    let date: Date;
+    if (typeof dateString === 'string') {
+      // Parse yyyy-MM-dd format avoiding timezone issues
+      if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const [year, month, day] = dateString.split('-').map(Number);
+        date = new Date(year, month - 1, day);
+      } else {
+        date = new Date(dateString);
+      }
+    } else {
+      date = dateString;
+    }
+    
     if (isNaN(date.getTime())) return '';
     
     const day = date.getDate().toString().padStart(2, '0');
@@ -151,7 +163,19 @@ export function formatDateShort(dateString: string | Date | null | undefined): s
   if (!dateString) return '';
   
   try {
-    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    let date: Date;
+    if (typeof dateString === 'string') {
+      // Parse yyyy-MM-dd format avoiding timezone issues
+      if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const [year, month, day] = dateString.split('-').map(Number);
+        date = new Date(year, month - 1, day);
+      } else {
+        date = new Date(dateString);
+      }
+    } else {
+      date = dateString;
+    }
+    
     if (isNaN(date.getTime())) return '';
     
     const day = date.getDate().toString().padStart(2, '0');

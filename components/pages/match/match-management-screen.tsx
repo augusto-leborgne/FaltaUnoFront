@@ -718,17 +718,6 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
             >
               <Share className="w-4 h-4" />
             </Button>
-            {!isEditing && canEdit && (
-              <Button
-                onClick={() => setIsEditing(true)}
-                variant="outline"
-                size="sm"
-                className="bg-orange-50 border-orange-200"
-                disabled={!canEdit}
-              >
-                <Edit3 className="w-4 h-4" />
-              </Button>
-            )}
           </div>
         </div>
       </div>

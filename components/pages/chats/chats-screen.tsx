@@ -144,7 +144,15 @@ export function ChatsScreen() {
 
   const formatDate = (dateString: string, timeString: string) => {
     try {
-      const date = new Date(dateString)
+      // Parse yyyy-MM-dd format avoiding timezone issues
+      let date: Date;
+      if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const [year, month, day] = dateString.split('-').map(Number);
+        date = new Date(year, month - 1, day);
+      } else {
+        date = new Date(dateString);
+      }
+      
       const today = new Date()
       const tomorrow = new Date(today)
       tomorrow.setDate(tomorrow.getDate() + 1)

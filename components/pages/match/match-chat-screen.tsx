@@ -356,11 +356,28 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
     setIsTyping(false)
 
     const tempMessage = message.trim()
+    const tempId = `temp-${Date.now()}`
 
     try {
       // Limpiar input y reply inmediatamente para mejor UX
       setMessage("")
       setReplyingTo(null)
+      
+      // ⚡ Agregar mensaje optimista inmediatamente
+      const optimisticMessage: MensajeDTO = {
+        id: tempId,
+        partidoId: matchId,
+        usuarioId: currentUser.id,
+        contenido: tempMessage,
+        createdAt: new Date().toISOString(),
+        usuario: {
+          id: currentUser.id,
+          nombre: currentUser.nombre,
+          apellido: currentUser.apellido,
+        } as any
+      }
+      
+      setMessages(prev => [...prev, optimisticMessage])
       
       // Auto-scroll al enviar
       scrollToBottom(true)
@@ -374,7 +391,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         throw new Error(response.message || "Error al enviar mensaje")
       }
 
-      // Recargar mensajes inmediatamente
+      // Recargar mensajes para obtener el mensaje real del servidor
       await loadMessages(true)
       
       // Enfocar input nuevamente
@@ -386,6 +403,8 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
       setError(errorMessage)
       // Restaurar mensaje si falló
       setMessage(tempMessage)
+      // Remover mensaje optimista
+      setMessages(prev => prev.filter(m => m.id !== tempId))
     } finally {
       setSending(false)
     }
@@ -434,7 +453,15 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
 
   const formatDate = (dateString: string, timeString: string) => {
     try {
-      const date = new Date(dateString)
+      // Parse yyyy-MM-dd format avoiding timezone issues
+      let date: Date;
+      if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const [year, month, day] = dateString.split('-').map(Number);
+        date = new Date(year, month - 1, day);
+      } else {
+        date = new Date(dateString);
+      }
+      
       const today = new Date()
       const tomorrow = new Date(today)
       tomorrow.setDate(tomorrow.getDate() + 1)
@@ -463,7 +490,15 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
 
   const formatDateSeparator = (dateStr: string) => {
     try {
-      const date = new Date(dateStr)
+      // Parse date string avoiding timezone issues
+      let date: Date;
+      if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const [year, month, day] = dateStr.split('-').map(Number);
+        date = new Date(year, month - 1, day);
+      } else {
+        date = new Date(dateStr);
+      }
+      
       const today = new Date()
       const yesterday = new Date(today)
       yesterday.setDate(yesterday.getDate() - 1)
