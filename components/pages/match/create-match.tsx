@@ -13,6 +13,7 @@ import { AddressAutocomplete } from "@/components/google-maps/address-autocomple
 import { AuthService } from "@/lib/auth"
 import { PartidoAPI, mapFormDataToPartidoDTO, TipoPartido, NivelPartido, API_BASE } from "@/lib/api"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { formatMatchType } from "@/lib/utils"
 
 type PlaceResult = google.maps.places.PlaceResult
 
@@ -530,7 +531,7 @@ export function CreateMatchScreen() {
                     : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
                 }`}
               >
-                {type.replace("FUTBOL_", "F")}
+                {formatMatchType(type)}
               </button>
             ))}
           </div>

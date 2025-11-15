@@ -10,6 +10,7 @@ import { MapPin, X, Calendar, Users, Navigation } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useGoogleMaps } from "@/lib/google-maps-loader"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { formatMatchType } from "@/lib/utils"
 
 interface PartidoMapData {
   id: string
@@ -314,7 +315,7 @@ export function SearchMapView({ partidos, onClose, onPartidoClick }: SearchMapVi
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2 flex-wrap flex-1">
                   <Badge className="bg-orange-100 text-orange-800 whitespace-nowrap">
-                    {selectedPartidoData.tipo_partido?.replace("FUTBOL_", "Fútbol ")}
+                    {formatMatchType(selectedPartidoData.tipo_partido)}
                   </Badge>
                   {selectedPartidoData.genero && (
                     <Badge variant="outline" className="text-xs">

@@ -16,7 +16,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useNotifications } from "@/hooks/use-notifications"
 import { useCurrentUser } from "@/hooks/use-current-user"
 import { apiCache } from "@/lib/api-cache-manager"
-import { formatDateShort } from "@/lib/utils"
+import { formatDateShort, formatMatchType } from "@/lib/utils"
 
 interface Partido {
   id: string
@@ -365,7 +365,7 @@ export function HomeScreen() {
               >
                 <div className="flex items-start justify-between mb-2 sm:mb-3 gap-2">
                   <div className="flex items-center gap-1.5 flex-wrap flex-1 min-w-0">
-                    <Badge className="bg-orange-100 text-orange-800 text-xs font-semibold px-2 py-0.5 truncate">{review.tipo_partido}</Badge>
+                    <Badge className="bg-orange-100 text-orange-800 text-xs font-semibold px-2 py-0.5 truncate">{formatMatchType(review.tipo_partido)}</Badge>
                     <Badge className="bg-red-100 text-red-800 text-xs font-semibold px-2 py-0.5 truncate">Pendiente</Badge>
                   </div>
                   <Star className="w-5 h-5 text-orange-600 fill-orange-600 flex-shrink-0 animate-pulse" />
@@ -427,7 +427,7 @@ export function HomeScreen() {
               >
                 <div className="flex items-start justify-between mb-2 sm:mb-3 gap-2">
                   <div className="flex items-center gap-1.5 flex-wrap flex-1 min-w-0">
-                    <Badge className="bg-primary/10 text-primary active:bg-primary/20 font-semibold text-xs px-2 py-0.5 truncate">{match.tipo_partido}</Badge>
+                    <Badge className="bg-primary/10 text-primary active:bg-primary/20 font-semibold text-xs px-2 py-0.5 truncate">{formatMatchType(match.tipo_partido)}</Badge>
                     <Badge
                       className={`font-semibold text-xs px-2 py-0.5 truncate ${
                         match.estado === "CONFIRMADO"

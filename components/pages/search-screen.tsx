@@ -15,6 +15,7 @@ import { AuthService } from "@/lib/auth"
 import { API_BASE, InscripcionAPI, InscripcionEstado } from "@/lib/api"
 import { SearchMapView } from "./search-map-view"
 import { useDebounce } from "@/hooks/use-performance"
+import { formatMatchType } from "@/lib/utils"
 
 interface SearchResult {
   id: string
@@ -495,7 +496,7 @@ export function SearchScreen() {
                           : "bg-white text-gray-700 border border-gray-200 hover:border-gray-300"
                       }`}
                     >
-                      {t === "todos" ? "Todos" : t.replace("FUTBOL_", "Fútbol ")}
+                      {t === "todos" ? "Todos" : formatMatchType(t)}
                     </button>
                   ))}
                 </div>
@@ -737,7 +738,7 @@ function ResultCard({
       <div className="flex items-start justify-between mb-2">
         <div className="flex items-center gap-2 flex-wrap">
           <Badge className="bg-orange-100 text-orange-800 whitespace-nowrap">
-            {result.tipo_partido?.replace("FUTBOL_", "Fútbol ")}
+            {formatMatchType(result.tipo_partido)}
           </Badge>
           {result.genero && (
             <Badge variant="outline" className="text-xs">

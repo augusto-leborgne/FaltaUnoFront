@@ -11,6 +11,7 @@ import { AuthService } from "@/lib/auth"
 import { logger } from "@/lib/logger"
 import { UserAvatar } from "@/components/ui/user-avatar"
 import type { Usuario } from "@/lib/api"
+import { formatMatchType } from "@/lib/utils"
 
 interface AdminStats {
   totalUsuarios: number
@@ -1025,7 +1026,7 @@ export default function AdminDashboard() {
                             onClick={() => router.push(`/matches/${partido.id}`)}
                           >
                             <td className="px-4 py-3">
-                              <span className="font-medium">{partido.tipo_partido}</span>
+                              <span className="font-medium">{formatMatchType(partido.tipo_partido)}</span>
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-600">
                               {partido.fecha} {partido.hora}
@@ -1095,7 +1096,7 @@ export default function AdminDashboard() {
                       <div className="flex items-start justify-between mb-3">
                         <div>
                           <h3 className="font-semibold text-sm text-blue-600">
-                            {partido.tipo_partido}
+                            {formatMatchType(partido.tipo_partido)}
                           </h3>
                           <p className="text-xs text-gray-500 mt-1">
                             <Calendar className="inline h-3 w-3 mr-1" />
@@ -1659,7 +1660,7 @@ export default function AdminDashboard() {
             <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-4 sm:px-6 py-4 flex items-center justify-between">
               <div className="min-w-0">
                 <h2 className="text-lg sm:text-xl font-bold text-white truncate">
-                  {selectedMatch.tipo_partido}
+                  {formatMatchType(selectedMatch.tipo_partido)}
                 </h2>
                 <p className="text-xs sm:text-sm text-orange-100 truncate">
                   ID: {selectedMatch.id}

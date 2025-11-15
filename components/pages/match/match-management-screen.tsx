@@ -566,8 +566,8 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
     if (!match) return
 
     const shareData = {
-      title: `Partido ${match.tipoPartido} - ${formatDateRegional(match.fecha)}`,
-      text: `¡Únete a nuestro partido de ${match.tipoPartido}!`,
+      title: `Partido ${formatMatchType(match.tipoPartido)} - ${formatDateRegional(match.fecha)}`,
+      text: `¡Únete a nuestro partido de ${formatMatchType(match.tipoPartido)}!`,
       url: `${window.location.origin}/matches/${matchId}`,
     }
 
