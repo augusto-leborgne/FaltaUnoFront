@@ -26,3 +26,9 @@ images:
 timeout: 1200s
 options:
   machineType: 'E2_HIGHCPU_8'
+
+substitutions:
+  _NEXT_PUBLIC_GRAFANA_ENABLED: 'true'
+  _NEXT_PUBLIC_GRAFANA_PROMETHEUS_URL: 'https://prometheus-prod-56-prod-us-east-2.grafana.net/api/prom/push'
+  _NEXT_PUBLIC_GRAFANA_USER: '2802365'
+  _NEXT_PUBLIC_GRAFANA_API_KEY: 'SECRET_GRAFANA_API_KEY'
