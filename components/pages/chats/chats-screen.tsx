@@ -52,9 +52,21 @@ export function ChatsScreen() {
 
       const partidosInscritos = response.data
       
+      // ✅ FIX: Filtrar solo partidos DISPONIBLE o CONFIRMADO
+      // No mostrar partidos CANCELADO ni COMPLETADO en chats
+      const partidosActivos = partidosInscritos.filter(p => 
+        p.estado === 'DISPONIBLE' || p.estado === 'CONFIRMADO'
+      )
+      
+      if (partidosActivos.length === 0) {
+        setPartidos([])
+        setLoading(false)
+        return
+      }
+      
       // ⚡ MEGA OPTIMIZACIÓN: Solo cargar último mensaje de primeros 20 partidos
       // El resto se muestra sin último mensaje (más rápido)
-      const partidosToLoad = partidosInscritos.slice(0, 20) // Aumentado a 20 para mejor UX
+      const partidosToLoad = partidosActivos.slice(0, 20) // Aumentado a 20 para mejor UX
       
       const partidosWithMessages = await Promise.all(
         partidosToLoad.map(async (partido) => {
@@ -105,7 +117,7 @@ export function ChatsScreen() {
       )
       
       // Agregar partidos restantes SIN mensajes (lazy - no bloquea UI)
-      const remainingPartidos = partidosInscritos.slice(20).map(p => p as PartidoWithUnread)
+      const remainingPartidos = partidosActivos.slice(20).map(p => p as PartidoWithUnread)
       const allPartidos = [...partidosWithMessages, ...remainingPartidos]
       
       // Ordenar: primero con no leídos, luego por fecha más reciente

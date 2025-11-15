@@ -536,7 +536,7 @@ export function CreateMatchScreen() {
         </div>
 
         {/* Fecha y Hora */}
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           <div>
             <label className="block text-sm font-medium text-gray-900 mb-2">
               Fecha <span className="text-red-500">*</span>
