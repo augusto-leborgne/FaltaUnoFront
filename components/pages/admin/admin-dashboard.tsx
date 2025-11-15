@@ -737,7 +737,7 @@ export default function AdminDashboard() {
                           <p className="text-sm text-gray-600">Total Usuarios</p>
                           <p className="text-3xl font-bold text-blue-600">{stats.totalUsuarios}</p>
                         </div>
-                        <Users className="h-10 w-10 text-blue-500" />
+                        <Users className="h-8 w-8 sm:h-10 sm:w-10 text-blue-500" />
                       </div>
                     </div>
 
@@ -748,7 +748,7 @@ export default function AdminDashboard() {
                           <p className="text-3xl font-bold text-green-600">{stats.usuariosActivos}</p>
                           <p className="text-xs text-gray-500 mt-1">Últimos 30 días</p>
                         </div>
-                        <UserCheck className="h-10 w-10 text-green-500" />
+                        <UserCheck className="h-8 w-8 sm:h-10 sm:w-10 text-green-500" />
                       </div>
                     </div>
 
@@ -764,7 +764,7 @@ export default function AdminDashboard() {
                             </p>
                           )}
                         </div>
-                        <TrendingUp className="h-10 w-10 text-purple-500" />
+                        <TrendingUp className="h-8 w-8 sm:h-10 sm:w-10 text-purple-500" />
                       </div>
                     </div>
 
@@ -775,7 +775,7 @@ export default function AdminDashboard() {
                           <p className="text-3xl font-bold text-red-600">{stats.usuariosBaneados}</p>
                           <p className="text-xs text-gray-500 mt-1">{stats.usuariosEliminados} eliminados</p>
                         </div>
-                        <ShieldOff className="h-10 w-10 text-red-500" />
+                        <ShieldOff className="h-8 w-8 sm:h-10 sm:w-10 text-red-500" />
                       </div>
                     </div>
                   </div>
@@ -791,7 +791,7 @@ export default function AdminDashboard() {
                           <p className="text-sm text-gray-600">Total Partidos</p>
                           <p className="text-3xl font-bold text-orange-600">{stats.totalPartidos}</p>
                         </div>
-                        <Calendar className="h-10 w-10 text-orange-500" />
+                        <Calendar className="h-8 w-8 sm:h-10 sm:w-10 text-orange-500" />
                       </div>
                     </div>
 
@@ -801,7 +801,7 @@ export default function AdminDashboard() {
                           <p className="text-sm text-gray-600">Hoy</p>
                           <p className="text-3xl font-bold text-red-600">{stats.partidosHoy}</p>
                         </div>
-                        <Calendar className="h-10 w-10 text-red-500" />
+                        <Calendar className="h-8 w-8 sm:h-10 sm:w-10 text-red-500" />
                       </div>
                     </div>
 
@@ -811,7 +811,7 @@ export default function AdminDashboard() {
                           <p className="text-sm text-gray-600">Esta Semana</p>
                           <p className="text-3xl font-bold text-blue-600">{stats.partidosEstaSemana}</p>
                         </div>
-                        <Calendar className="h-10 w-10 text-blue-500" />
+                        <Calendar className="h-8 w-8 sm:h-10 sm:w-10 text-blue-500" />
                       </div>
                     </div>
 
@@ -821,7 +821,7 @@ export default function AdminDashboard() {
                           <p className="text-sm text-gray-600">Este Mes</p>
                           <p className="text-3xl font-bold text-green-600">{stats.partidosEsteMes}</p>
                         </div>
-                        <Calendar className="h-10 w-10 text-green-500" />
+                        <Calendar className="h-8 w-8 sm:h-10 sm:w-10 text-green-500" />
                       </div>
                     </div>
                   </div>
@@ -837,7 +837,7 @@ export default function AdminDashboard() {
                           <p className="text-sm text-gray-600">Reportes Pendientes</p>
                           <p className="text-3xl font-bold text-orange-600">{stats.reportesPendientes}</p>
                         </div>
-                        <Flag className="h-10 w-10 text-orange-500" />
+                        <Flag className="h-8 w-8 sm:h-10 sm:w-10 text-orange-500" />
                       </div>
                     </div>
 
@@ -847,7 +847,7 @@ export default function AdminDashboard() {
                           <p className="text-sm text-gray-600">Reportes Resueltos</p>
                           <p className="text-3xl font-bold text-green-600">{stats.reportesResueltos}</p>
                         </div>
-                        <CheckCircle className="h-10 w-10 text-green-500" />
+                        <CheckCircle className="h-8 w-8 sm:h-10 sm:w-10 text-green-500" />
                       </div>
                     </div>
 
@@ -862,7 +862,7 @@ export default function AdminDashboard() {
                             </p>
                           )}
                         </div>
-                        <Flag className="h-10 w-10 text-gray-500" />
+                        <Flag className="h-8 w-8 sm:h-10 sm:w-10 text-gray-500" />
                       </div>
                     </div>
                   </div>

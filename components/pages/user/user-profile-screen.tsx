@@ -371,7 +371,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       <div className="min-h-screen bg-background flex flex-col">
         <div className="pt-16 pb-6 px-6 border-b border-border">
           <div className="flex items-center space-x-4">
-            <button onClick={handleBack} className="p-2 -ml-2">
+            <button onClick={handleBack} className="p-2 sm:p-3 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
               <ArrowLeft className="w-5 h-5 text-muted-foreground" />
             </button>
             <h1 className="text-xl font-bold text-foreground">Perfil de usuario</h1>
@@ -409,7 +409,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       {/* Header */}
       <div className="pt-16 pb-6 px-6 border-b border-border">
         <div className="flex items-center space-x-4">
-          <button onClick={handleBack} className="p-2 -ml-2">
+          <button onClick={handleBack} className="p-2 sm:p-3 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
             <ArrowLeft className="w-5 h-5 text-muted-foreground" />
           </button>
           <h1 className="text-xl font-bold text-foreground">Perfil de usuario</h1>
@@ -444,7 +444,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
             <div className="text-center">
               <div className="text-lg font-bold text-foreground">{edad !== null ? `${edad}` : "-"}</div>
               <div className="text-sm text-muted-foreground">Edad</div>
@@ -647,7 +647,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2 mb-2">
+                    <div className="grid grid-cols-3 gap-1.5 sm:gap-2 mb-2">
                       <div className="text-center">
                         <div className="text-xs text-muted-foreground mb-1">Nivel</div>
                         <div className="flex justify-center">

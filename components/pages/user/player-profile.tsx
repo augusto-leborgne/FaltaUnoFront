@@ -221,7 +221,7 @@ function PlayerProfile({ playerId }: PlayerProfileProps) {
       {/* Header */}
       <div className="pt-16 pb-6 px-6 border-b border-gray-100">
         <div className="flex items-center space-x-4">
-          <button onClick={handleBack} className="p-2 -ml-2">
+          <button onClick={handleBack} className="p-2 sm:p-3 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </button>
           <h1 className="text-xl font-bold text-gray-900">Perfil del Jugador</h1>
@@ -320,7 +320,7 @@ function PlayerProfile({ playerId }: PlayerProfileProps) {
         {/* Stats */}
         <div className="mb-8">
           <h3 className="text-lg font-bold text-gray-900 mb-4">Estadísticas</h3>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
             {player.altura && (
               <div className="text-center bg-gray-50 rounded-xl p-4">
                 <div className="text-2xl font-bold text-gray-900">{player.altura}</div>
@@ -378,7 +378,7 @@ function PlayerProfile({ playerId }: PlayerProfileProps) {
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-3 mb-3">
+                    <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3">
                       <div className="text-center">
                         <div className="text-xs text-gray-600 mb-1">Nivel</div>
                         <div className="flex justify-center">

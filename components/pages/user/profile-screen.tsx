@@ -505,7 +505,7 @@ function ProfileScreenInner() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-2 mb-2">
+                    <div className="grid grid-cols-3 gap-1.5 sm:gap-2 mb-2">
                       <div className="text-center">
                         <div className="text-xs text-gray-600 mb-1">Nivel</div>
                         <div className="flex justify-center">

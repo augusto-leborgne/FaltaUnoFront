@@ -120,7 +120,7 @@ export function MatchConfirmation({ matchId }: MatchConfirmationProps) {
       {/* Header */}
       <div className="pt-16 pb-6 px-6 border-b border-gray-100">
         <div className="flex items-center space-x-4">
-          <button onClick={handleBack} className="p-2 -ml-2">
+          <button onClick={handleBack} className="p-2 sm:p-3 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </button>
           <h1 className="text-xl font-bold text-gray-900">Confirmar asistencia</h1>

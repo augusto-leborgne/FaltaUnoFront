@@ -234,7 +234,7 @@ export function SearchMapView({ partidos, onClose, onPartidoClick }: SearchMapVi
       <div className="pt-16 pb-4 px-6 border-b border-gray-100 bg-white">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <button onClick={onClose} className="p-2 -ml-2">
+            <button onClick={onClose} className="p-2 sm:p-3 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
               <X className="w-5 h-5 text-gray-600" />
             </button>
             <h1 className="text-xl font-bold text-gray-900">Mapa de resultados</h1>
