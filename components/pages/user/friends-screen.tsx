@@ -107,8 +107,13 @@ export function FriendsScreen() {
         })
         .filter((amigo: any) => amigo.id && amigo.id !== currentUserId) // Filtrar amigos sin datos y al usuario actual
         
-        logger.log("[FriendsScreen] Amigos procesados:", amigos.length)
-        setFriends(amigos)
+        // Eliminar duplicados basándose en el ID del amigo
+        const uniqueAmigos = amigos.filter((amigo: any, index: number, self: any[]) => 
+          index === self.findIndex((a: any) => a.id === amigo.id)
+        )
+        
+        logger.log("[FriendsScreen] Amigos procesados (después de deduplicación):", uniqueAmigos.length)
+        setFriends(uniqueAmigos)
       }
     } catch (error) {
       logger.error("Error cargando amigos:", error)

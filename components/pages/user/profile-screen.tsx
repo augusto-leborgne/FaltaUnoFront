@@ -151,8 +151,20 @@ function ProfileScreenInner() {
           allFriends = friendsData
         }
         
-        logger.log("[ProfileScreen] Processed friends:", allFriends)
-        setFriends(allFriends)
+        // Filtrar duplicados y excluir al usuario actual
+        const uniqueFriends = allFriends.filter((friendship: any, index: number, self: any[]) => {
+          // Si no hay amigo definido, omitir
+          if (!friendship.amigo || !friendship.amigo.id) return false
+          
+          // Excluir si el amigo es el usuario actual
+          if (friendship.amigo.id === user.id) return false
+          
+          // Eliminar duplicados: mantener solo la primera ocurrencia de cada amigo
+          return index === self.findIndex((f: any) => f.amigo?.id === friendship.amigo.id)
+        })
+        
+        logger.log("[ProfileScreen] Processed friends (after deduplication):", uniqueFriends)
+        setFriends(uniqueFriends)
       }
       
       // ⚡ NUEVO: Procesar contactos
