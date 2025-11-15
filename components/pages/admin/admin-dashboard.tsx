@@ -37,6 +37,11 @@ interface Partido {
   nombre_ubicacion: string
   cantidad_jugadores: number
   jugadores_actuales?: number
+  estado?: string
+  genero?: string
+  precio_total?: number
+  duracion?: number
+  descripcion?: string
   organizador?: {
     id: string
     nombre: string
@@ -1026,13 +1031,39 @@ export default function AdminDashboard() {
                             onClick={() => router.push(`/matches/${partido.id}`)}
                           >
                             <td className="px-4 py-3">
-                              <span className="font-medium">{formatMatchType(partido.tipo_partido)}</span>
+                              <div className="flex flex-col gap-1">
+                                <span className="font-medium">{formatMatchType(partido.tipo_partido)}</span>
+                                <div className="flex gap-1.5 flex-wrap">
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                                    partido.estado === 'DISPONIBLE' ? 'bg-green-100 text-green-800' :
+                                    partido.estado === 'CONFIRMADO' ? 'bg-blue-100 text-blue-800' :
+                                    partido.estado === 'CANCELADO' ? 'bg-red-100 text-red-800' :
+                                    partido.estado === 'COMPLETADO' ? 'bg-purple-100 text-purple-800' :
+                                    'bg-gray-100 text-gray-800'
+                                  }`}>
+                                    {partido.estado}
+                                  </span>
+                                  {partido.genero && (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-800">
+                                      {partido.genero}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-600">
-                              {partido.fecha} {partido.hora}
+                              <div className="flex flex-col gap-0.5">
+                                <span>{partido.fecha}</span>
+                                <span className="text-xs text-gray-500">{partido.hora} · {partido.duracion || 90} min</span>
+                              </div>
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-600">
-                              {partido.nombre_ubicacion}
+                              <div className="flex flex-col gap-0.5">
+                                <span className="line-clamp-1">{partido.nombre_ubicacion}</span>
+                                {(partido.precio_total && partido.precio_total > 0) && (
+                                  <span className="text-xs font-semibold text-green-600">${partido.precio_total}</span>
+                                )}
+                              </div>
                             </td>
                             <td className="px-4 py-3">
                               {partido.organizador ? (
@@ -1094,16 +1125,38 @@ export default function AdminDashboard() {
                       onClick={() => router.push(`/matches/${partido.id}`)}
                     >
                       <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h3 className="font-semibold text-sm text-blue-600">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-sm text-blue-600 mb-2">
                             {formatMatchType(partido.tipo_partido)}
                           </h3>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <div className="flex flex-wrap gap-1.5 mb-2">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                              partido.estado === 'DISPONIBLE' ? 'bg-green-100 text-green-800' :
+                              partido.estado === 'CONFIRMADO' ? 'bg-blue-100 text-blue-800' :
+                              partido.estado === 'CANCELADO' ? 'bg-red-100 text-red-800' :
+                              partido.estado === 'COMPLETADO' ? 'bg-purple-100 text-purple-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {partido.estado}
+                            </span>
+                            {partido.genero && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-800">
+                                {partido.genero}
+                              </span>
+                            )}
+                            {(partido.precio_total && partido.precio_total > 0) && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                ${partido.precio_total}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-500">
                             <Calendar className="inline h-3 w-3 mr-1" />
-                            {partido.fecha} {partido.hora}
+                            {partido.fecha} · {partido.hora}
+                            <span className="ml-2">⏱️ {partido.duracion || 90} min</span>
                           </p>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right ml-3">
                           <p className="text-xs font-semibold text-gray-700">
                             {partido.jugadores_actuales || 0}/{partido.cantidad_jugadores}
                           </p>
