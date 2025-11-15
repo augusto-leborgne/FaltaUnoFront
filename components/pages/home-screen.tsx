@@ -21,12 +21,15 @@ import { formatDateShort, formatMatchType } from "@/lib/utils"
 interface Partido {
   id: string
   tipo_partido: string
+  genero?: string
   estado: string
   fecha: string
   hora: string
+  duracion?: number
   nombre_ubicacion: string
   jugadores_actuales: number
   cantidad_jugadores: number
+  precio_total?: number
 }
 
 interface PendingReview {
@@ -418,56 +421,76 @@ export function HomeScreen() {
         </div>
 
         {upcomingMatches.length > 0 ? (
-          <div className="space-y-3">
-            {upcomingMatches.map((match) => (
-              <div
-                key={match.id}
-                onClick={() => handleMatchClick(match.id)}
-                className="bg-white border-2 border-border/50 active:border-primary/50 rounded-xl sm:rounded-2xl p-3 sm:p-4 cursor-pointer active:shadow-lg transition-all duration-200 touch-manipulation active:scale-[0.97] group"
-              >
-                <div className="flex items-start justify-between mb-2 sm:mb-3 gap-2">
-                  <div className="flex items-center gap-1.5 flex-wrap flex-1 min-w-0">
-                    <Badge className="bg-primary/10 text-primary active:bg-primary/20 font-semibold text-xs px-2 py-0.5 truncate">{formatMatchType(match.tipo_partido)}</Badge>
-                    <Badge
-                      className={`font-semibold text-xs px-2 py-0.5 truncate ${
-                        match.estado === "CONFIRMADO"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-blue-100 text-blue-800"
-                      }`}
-                    >
-                      {match.estado === "CONFIRMADO" ? "✓ Confirmado" : "Disponible"}
+          <div className="space-y-3 sm:space-y-4">
+            {upcomingMatches.map((match) => {
+              const spotsLeft = (match.cantidad_jugadores ?? 0) - (match.jugadores_actuales ?? 0)
+              const getSpotsLeftColor = (spots: number) => {
+                if (spots === 0) return "bg-red-100 text-red-800"
+                if (spots <= 2) return "bg-yellow-100 text-yellow-800"
+                return "bg-green-100 text-green-800"
+              }
+              
+              return (
+                <div
+                  key={match.id}
+                  onClick={() => handleMatchClick(match.id)}
+                  className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 cursor-pointer hover:shadow-lg hover:border-green-200 transition-all duration-200 touch-manipulation active:scale-[0.98] active:shadow-md"
+                >
+                  {/* Header row - Badges */}
+                  <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
+                    <div className="flex gap-1.5 sm:gap-2 flex-wrap">
+                      <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100 text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1">
+                        {formatMatchType(match.tipo_partido)}
+                      </Badge>
+                      <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1">
+                        {match.genero || 'Mixto'}
+                      </Badge>
+                    </div>
+                    <Badge className={`${getSpotsLeftColor(spotsLeft)} hover:bg-current text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1 whitespace-nowrap flex-shrink-0`}>
+                      {spotsLeft === 0 ? "Completo" : `${spotsLeft} lugar${spotsLeft !== 1 ? 'es' : ''}`}
                     </Badge>
                   </div>
-                  <Clock className="w-5 h-5 text-muted-foreground group-active:text-primary transition-colors flex-shrink-0" />
-                </div>
-                <div className="flex items-start gap-2.5 sm:gap-3">
-                  <div className="w-11 h-11 sm:w-12 sm:h-12 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg sm:rounded-xl flex items-center justify-center shadow-sm flex-shrink-0">
-                    <Calendar className="w-5.5 h-5.5 sm:w-6 sm:h-6 text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-foreground mb-1 text-sm sm:text-base leading-tight truncate">
+
+                  {/* Match Info */}
+                  <div className="mb-3 sm:mb-4">
+                    <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-2 leading-tight">
                       {formatDateShort(match.fecha)} • {match.hora?.substring(0, 5) || match.hora}
                     </h3>
-                    <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3 flex items-center gap-1 truncate">
-                      <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
-                      <span className="truncate">{match.nombre_ubicacion}</span>
-                    </p>
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5 sm:gap-2">
-                        <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground flex-shrink-0" />
-                        <span className="text-sm font-medium text-foreground">
-                          {match.jugadores_actuales}/{match.cantidad_jugadores}
+                    
+                    {/* Price and Duration */}
+                    <div className="flex flex-wrap items-center text-gray-600 text-xs sm:text-sm gap-x-3 gap-y-1 mb-2">
+                      <div className="flex items-center space-x-1 font-medium">
+                        <span className="text-green-600 text-sm sm:text-base">
+                          ${match.precio_total && match.cantidad_jugadores 
+                            ? Math.round(match.precio_total / match.cantidad_jugadores) 
+                            : 0}
                         </span>
-                        <span className="text-xs sm:text-sm text-muted-foreground hidden sm:inline">jugadores</span>
+                        <span className="text-gray-500">/ jugador</span>
                       </div>
-                      <span className="text-xs sm:text-sm text-primary font-semibold group-active:underline flex-shrink-0">
-                        Ver detalles →
-                      </span>
+                      <span className="text-gray-300">•</span>
+                      <span>{match.duracion || 90} min</span>
+                    </div>
+                    
+                    {/* Location */}
+                    <div className="flex items-start text-gray-600 text-xs sm:text-sm">
+                      <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 flex-shrink-0 mt-0.5" />
+                      <span className="line-clamp-2 sm:line-clamp-1">{match.nombre_ubicacion}</span>
                     </div>
                   </div>
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                    <span className="text-xs sm:text-sm text-gray-600">
+                      <span className="font-semibold text-gray-900">{match.jugadores_actuales}</span>
+                      <span className="text-gray-400">/{match.cantidad_jugadores}</span>
+                    </span>
+                    <span className="text-xs sm:text-sm text-green-600 font-semibold">
+                      Ver detalles →
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         ) : (
           <div className="text-center py-10 sm:py-12 bg-white rounded-xl sm:rounded-2xl border-2 border-dashed border-border">
