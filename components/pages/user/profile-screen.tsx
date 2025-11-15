@@ -48,23 +48,11 @@ interface Contact {
 
 interface Friend {
   id: string
-  usuario1Id: string
-  usuario2Id: string
-  estado: string
-  amigo?: {
-    id: string
-    nombre: string
-    apellido: string
-    foto_perfil?: string
-    fotoPerfil?: string
-  }
-  usuario?: {
-    id: string
-    nombre: string
-    apellido: string
-    foto_perfil?: string
-    fotoPerfil?: string
-  }
+  nombre: string
+  apellido: string
+  foto_perfil?: string
+  fotoPerfil?: string
+  posicion?: string
 }
 
 function ProfileScreenInner() {
@@ -158,45 +146,28 @@ function ProfileScreenInner() {
           allFriends = friendsData
         }
         
-        // Filtrar duplicados y excluir al usuario actual
-        const uniqueFriends = allFriends.filter((friendship: any, index: number, self: any[]) => {
-          // El backend puede devolver 'amigo' o 'usuario' según el endpoint
-          const friend = friendship.amigo || friendship.usuario
+        // Mapear amistades a amigos (igual que en friends-screen.tsx)
+        const mappedFriends = allFriends.map((friendship: any) => {
+          // Determinar cuál es el amigo (el que no es el usuario actual)
+          const esSolicitante = friendship.usuarioId === user?.id
+          const amigoData = esSolicitante ? friendship.amigo : friendship.usuario
           
-          logger.log("[ProfileScreen] Processing friendship:", { 
-            friendship, 
-            friend, 
-            userId: user?.id,
-            hasAmigo: !!friendship.amigo,
-            hasUsuario: !!friendship.usuario
+          logger.log("[ProfileScreen] Processing friendship:", {
+            usuarioId: friendship.usuarioId,
+            amigoId: friendship.amigoId,
+            esSolicitante,
+            amigoDataId: amigoData?.id,
+            currentUserId: user?.id
           })
           
-          // Si no hay amigo definido, omitir
-          if (!friend || !friend.id) {
-            logger.log("[ProfileScreen] Skipping - no friend or friend.id")
-            return false
-          }
-          
-          // Excluir si el amigo es el usuario actual
-          if (friend.id === user?.id) {
-            logger.log("[ProfileScreen] Skipping - friend is current user")
-            return false
-          }
-          
-          // Eliminar duplicados: mantener solo la primera ocurrencia de cada amigo
-          const isDuplicate = index !== self.findIndex((f: any) => {
-            const otherFriend = f.amigo || f.usuario
-            return otherFriend?.id === friend.id
-          })
-          
-          if (isDuplicate) {
-            logger.log("[ProfileScreen] Skipping - duplicate")
-            return false
-          }
-          
-          logger.log("[ProfileScreen] Keeping friend:", friend)
-          return true
+          return amigoData
         })
+        .filter((friend: any) => friend && friend.id && friend.id !== user?.id) // Filtrar nulos y usuario actual
+        
+        // Eliminar duplicados basándose en el ID del amigo
+        const uniqueFriends = mappedFriends.filter((friend: any, index: number, self: any[]) => 
+          index === self.findIndex((f: any) => f.id === friend.id)
+        )
         
         logger.log("[ProfileScreen] Processed friends (after deduplication):", uniqueFriends)
         setFriends(uniqueFriends)
@@ -607,16 +578,14 @@ function ProfileScreenInner() {
             </div>
           ) : (
             <div className="space-y-2 sm:space-y-3">
-              {friends.slice(0, 5).map((friendship) => {
-                // El backend puede devolver 'amigo' o 'usuario' según el endpoint
-                const friend = friendship.amigo || friendship.usuario
+              {friends.slice(0, 5).map((friend) => {
                 if (!friend) return null
                 
                 const friendName = `${friend.nombre} ${friend.apellido}`.trim() || "Usuario"
 
                 return (
                   <div
-                    key={friendship.id}
+                    key={friend.id}
                     onClick={() => router.push(`/users/${friend.id}`)}
                     className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl cursor-pointer hover:bg-gray-100 transition-colors"
                   >
