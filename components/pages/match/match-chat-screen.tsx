@@ -96,7 +96,8 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
       setTypingUsers(prev => {
         const newMap = new Map(prev)
         if (isTyping) {
-          newMap.set(userId, userName || 'Usuario')
+          // Use actual user name, not generic "Usuario"
+          newMap.set(userId, userName || 'Jugador')
           
           // Auto-limpiar después de 3 segundos
           setTimeout(() => {
@@ -318,7 +319,9 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
       const response = await MensajeAPI.list(matchId)
 
       if (response.success && response.data) {
-        setMessages(response.data)
+        // Filtrar cualquier mensaje temporal optimista para evitar duplicados
+        const serverMessages = response.data.filter(m => !m.id.startsWith('temp-'))
+        setMessages(serverMessages)
       }
 
     } catch (err) {
@@ -390,8 +393,8 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
       if (!response.success) {
         throw new Error(response.message || "Error al enviar mensaje")
       }
-
-      // Recargar mensajes para obtener el mensaje real del servidor
+      
+      // ⚡ Recargar mensajes - loadMessages filtrará automáticamente los temp-
       await loadMessages(true)
       
       // Enfocar input nuevamente
