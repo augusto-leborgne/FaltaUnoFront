@@ -125,6 +125,10 @@ export default function AdminDashboard() {
   const [matchSearchQuery, setMatchSearchQuery] = useState("")
   const [matchTypeFilter, setMatchTypeFilter] = useState<"all" | "FUTBOL_5" | "FUTBOL_7" | "FUTBOL_8" | "FUTBOL_9" | "FUTBOL_11">("all")
   const [matchStatusFilter, setMatchStatusFilter] = useState<"all" | "DISPONIBLE" | "CONFIRMADO" | "CANCELADO" | "COMPLETADO">("all")
+  
+  // Estados para sorting de partidos
+  const [matchSortField, setMatchSortField] = useState<"tipo" | "fecha" | "ubicacion" | "organizador" | null>(null)
+  const [matchSortDirection, setMatchSortDirection] = useState<"asc" | "desc">("asc")
 
   // Helper para hacer fetch autenticado
   const authenticatedFetch = async <T,>(url: string, options: RequestInit = {}): Promise<T> => {
@@ -238,30 +242,69 @@ export default function AdminDashboard() {
     return true
   })
   
-  // Funciones de filtrado para partidos
-  const filteredPartidos = partidos.filter(partido => {
-    // Filtro de búsqueda por ubicación u organizador
-    if (matchSearchQuery) {
-      const query = matchSearchQuery.toLowerCase()
-      const matchesSearch = 
-        partido.nombre_ubicacion?.toLowerCase().includes(query) ||
-        partido.organizador?.nombre?.toLowerCase().includes(query) ||
-        partido.organizador?.apellido?.toLowerCase().includes(query)
-      if (!matchesSearch) return false
+  // Funciones de filtrado y sorting para partidos
+  const filteredPartidos = partidos
+    .filter(partido => {
+      // Filtro de búsqueda por ubicación u organizador
+      if (matchSearchQuery) {
+        const query = matchSearchQuery.toLowerCase()
+        const matchesSearch = 
+          partido.nombre_ubicacion?.toLowerCase().includes(query) ||
+          partido.organizador?.nombre?.toLowerCase().includes(query) ||
+          partido.organizador?.apellido?.toLowerCase().includes(query)
+        if (!matchesSearch) return false
+      }
+      
+      // Filtro por tipo
+      if (matchTypeFilter !== "all" && partido.tipo_partido !== matchTypeFilter) {
+        return false
+      }
+      
+      // Filtro por estado
+      if (matchStatusFilter !== "all" && partido.estado !== matchStatusFilter) {
+        return false
+      }
+      
+      return true
+    })
+    .sort((a, b) => {
+      if (!matchSortField) return 0
+      
+      const direction = matchSortDirection === "asc" ? 1 : -1
+      
+      switch (matchSortField) {
+        case "tipo":
+          return direction * a.tipo_partido.localeCompare(b.tipo_partido)
+        
+        case "fecha":
+          const dateA = new Date(`${a.fecha} ${a.hora}`)
+          const dateB = new Date(`${b.fecha} ${b.hora}`)
+          return direction * (dateA.getTime() - dateB.getTime())
+        
+        case "ubicacion":
+          return direction * a.nombre_ubicacion.localeCompare(b.nombre_ubicacion)
+        
+        case "organizador":
+          const orgA = `${a.organizador?.nombre || ''} ${a.organizador?.apellido || ''}`.trim()
+          const orgB = `${b.organizador?.nombre || ''} ${b.organizador?.apellido || ''}`.trim()
+          return direction * orgA.localeCompare(orgB)
+        
+        default:
+          return 0
+      }
+    })
+  
+  // Función para manejar click en columna sorteable
+  const handleMatchSort = (field: "tipo" | "fecha" | "ubicacion" | "organizador") => {
+    if (matchSortField === field) {
+      // Si ya está ordenado por este campo, cambiar dirección
+      setMatchSortDirection(matchSortDirection === "asc" ? "desc" : "asc")
+    } else {
+      // Si es un campo nuevo, ordenar ascendente
+      setMatchSortField(field)
+      setMatchSortDirection("asc")
     }
-    
-    // Filtro por tipo
-    if (matchTypeFilter !== "all" && partido.tipo_partido !== matchTypeFilter) {
-      return false
-    }
-    
-    // Filtro por estado
-    if (matchStatusFilter !== "all" && partido.estado !== matchStatusFilter) {
-      return false
-    }
-    
-    return true
-  })
+  }
 
   const handleDeleteUser = async (userId: string) => {
     try {
@@ -1195,17 +1238,57 @@ export default function AdminDashboard() {
                     <table className="w-full">
                       <thead className="bg-gray-50">
                         <tr>
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600">
-                            Tipo
+                          <th 
+                            className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600 cursor-pointer hover:bg-gray-100 select-none"
+                            onClick={() => handleMatchSort("tipo")}
+                          >
+                            <div className="flex items-center gap-1">
+                              Tipo
+                              {matchSortField === "tipo" && (
+                                matchSortDirection === "asc" ? 
+                                  <ChevronUp className="w-4 h-4" /> : 
+                                  <ChevronDown className="w-4 h-4" />
+                              )}
+                            </div>
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600">
-                            Fecha/Hora
+                          <th 
+                            className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600 cursor-pointer hover:bg-gray-100 select-none"
+                            onClick={() => handleMatchSort("fecha")}
+                          >
+                            <div className="flex items-center gap-1">
+                              Fecha/Hora
+                              {matchSortField === "fecha" && (
+                                matchSortDirection === "asc" ? 
+                                  <ChevronUp className="w-4 h-4" /> : 
+                                  <ChevronDown className="w-4 h-4" />
+                              )}
+                            </div>
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600">
-                            Ubicación
+                          <th 
+                            className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600 cursor-pointer hover:bg-gray-100 select-none"
+                            onClick={() => handleMatchSort("ubicacion")}
+                          >
+                            <div className="flex items-center gap-1">
+                              Ubicación
+                              {matchSortField === "ubicacion" && (
+                                matchSortDirection === "asc" ? 
+                                  <ChevronUp className="w-4 h-4" /> : 
+                                  <ChevronDown className="w-4 h-4" />
+                              )}
+                            </div>
                           </th>
-                          <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600">
-                            Organizador
+                          <th 
+                            className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600 cursor-pointer hover:bg-gray-100 select-none"
+                            onClick={() => handleMatchSort("organizador")}
+                          >
+                            <div className="flex items-center gap-1">
+                              Organizador
+                              {matchSortField === "organizador" && (
+                                matchSortDirection === "asc" ? 
+                                  <ChevronUp className="w-4 h-4" /> : 
+                                  <ChevronDown className="w-4 h-4" />
+                              )}
+                            </div>
                           </th>
                           <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600">
                             Jugadores
