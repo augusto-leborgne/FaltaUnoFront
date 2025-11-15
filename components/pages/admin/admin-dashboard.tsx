@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/use-auth"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { ArrowLeft, Users, Calendar, TrendingUp, UserCheck, Trash2, Shield, ShieldOff, AlertCircle, CheckCircle, X, Eye, Mail, Phone, MapPin, Clock, Flag, ChevronDown, ChevronUp, LayoutList, Grid3x3 } from "lucide-react"
 import { API_URL } from "@/lib/api"
 import { AuthService } from "@/lib/auth"
@@ -114,6 +115,16 @@ export default function AdminDashboard() {
   const [banReason, setBanReason] = useState("")
   const [banDuration, setBanDuration] = useState<number | null>(7) // 7 días por defecto
   const [banType, setBanType] = useState<"temporary" | "permanent">("temporary")
+  
+  // Estados para filtros de usuarios
+  const [userSearchQuery, setUserSearchQuery] = useState("")
+  const [userRoleFilter, setUserRoleFilter] = useState<"all" | "admin" | "user">("all")
+  const [userStatusFilter, setUserStatusFilter] = useState<"all" | "active" | "inactive" | "banned" | "deleted">("all")
+  
+  // Estados para filtros de partidos
+  const [matchSearchQuery, setMatchSearchQuery] = useState("")
+  const [matchTypeFilter, setMatchTypeFilter] = useState<"all" | "FUTBOL_5" | "FUTBOL_7" | "FUTBOL_8" | "FUTBOL_9" | "FUTBOL_11">("all")
+  const [matchStatusFilter, setMatchStatusFilter] = useState<"all" | "DISPONIBLE" | "CONFIRMADO" | "CANCELADO" | "COMPLETADO">("all")
 
   // Helper para hacer fetch autenticado
   const authenticatedFetch = async <T,>(url: string, options: RequestInit = {}): Promise<T> => {
@@ -191,6 +202,66 @@ export default function AdminDashboard() {
 
     loadData()
   }, [user])
+
+  // Funciones de filtrado para usuarios
+  const filteredUsuarios = usuarios.filter(usuario => {
+    // Filtro de búsqueda por nombre, email o celular
+    if (userSearchQuery) {
+      const query = userSearchQuery.toLowerCase()
+      const matchesSearch = 
+        usuario.nombre?.toLowerCase().includes(query) ||
+        usuario.apellido?.toLowerCase().includes(query) ||
+        usuario.email?.toLowerCase().includes(query) ||
+        usuario.celular?.toLowerCase().includes(query)
+      if (!matchesSearch) return false
+    }
+    
+    // Filtro por rol
+    if (userRoleFilter !== "all") {
+      if (userRoleFilter === "admin" && usuario.rol !== "ADMIN") return false
+      if (userRoleFilter === "user" && usuario.rol === "ADMIN") return false
+    }
+    
+    // Filtro por estado
+    if (userStatusFilter !== "all") {
+      const isDeleted = !!(usuario.deleted_at || usuario.deletedAt)
+      const isBanned = !!usuario.bannedAt
+      const isActive = usuario.lastActivityAt && 
+        new Date(usuario.lastActivityAt).getTime() > Date.now() - 30 * 24 * 60 * 60 * 1000
+      
+      if (userStatusFilter === "deleted" && !isDeleted) return false
+      if (userStatusFilter === "banned" && !isBanned) return false
+      if (userStatusFilter === "active" && (!isActive || isDeleted || isBanned)) return false
+      if (userStatusFilter === "inactive" && (isActive || isDeleted || isBanned)) return false
+    }
+    
+    return true
+  })
+  
+  // Funciones de filtrado para partidos
+  const filteredPartidos = partidos.filter(partido => {
+    // Filtro de búsqueda por ubicación u organizador
+    if (matchSearchQuery) {
+      const query = matchSearchQuery.toLowerCase()
+      const matchesSearch = 
+        partido.nombre_ubicacion?.toLowerCase().includes(query) ||
+        partido.organizador?.nombre?.toLowerCase().includes(query) ||
+        partido.organizador?.apellido?.toLowerCase().includes(query)
+      if (!matchesSearch) return false
+    }
+    
+    // Filtro por tipo
+    if (matchTypeFilter !== "all" && partido.tipo_partido !== matchTypeFilter) {
+      return false
+    }
+    
+    // Filtro por estado
+    if (matchStatusFilter !== "all" && partido.estado !== matchStatusFilter) {
+      return false
+    }
+    
+    return true
+  })
 
   const handleDeleteUser = async (userId: string) => {
     try {
@@ -759,6 +830,65 @@ export default function AdminDashboard() {
             {/* Usuarios */}
             {activeTab === "users" && (
               <>
+                {/* Filtros de Usuarios */}
+                <div className="bg-white rounded-lg border p-4 mb-4">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Filtros</h3>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    {/* Búsqueda */}
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Buscar
+                      </label>
+                      <Input
+                        type="text"
+                        placeholder="Nombre, email o celular..."
+                        value={userSearchQuery}
+                        onChange={(e) => setUserSearchQuery(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                    
+                    {/* Filtro por Rol */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Rol
+                      </label>
+                      <select
+                        value={userRoleFilter}
+                        onChange={(e) => setUserRoleFilter(e.target.value as any)}
+                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="all">Todos</option>
+                        <option value="admin">Administradores</option>
+                        <option value="user">Usuarios</option>
+                      </select>
+                    </div>
+                    
+                    {/* Filtro por Estado */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Estado
+                      </label>
+                      <select
+                        value={userStatusFilter}
+                        onChange={(e) => setUserStatusFilter(e.target.value as any)}
+                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="all">Todos</option>
+                        <option value="active">Activos</option>
+                        <option value="inactive">Inactivos</option>
+                        <option value="banned">Baneados</option>
+                        <option value="deleted">Eliminados</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  {/* Contador de resultados */}
+                  <div className="mt-3 text-xs text-gray-600">
+                    Mostrando {filteredUsuarios.length} de {usuarios.length} usuario{usuarios.length !== 1 ? 's' : ''}
+                  </div>
+                </div>
+
                 {/* Vista Desktop - Tabla */}
                 <div className="hidden md:block overflow-hidden rounded-lg border bg-white shadow-sm">
                   <div className="overflow-x-auto">
@@ -786,7 +916,7 @@ export default function AdminDashboard() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
-                        {usuarios.map((usuario) => (
+                        {filteredUsuarios.map((usuario) => (
                           <tr 
                             key={usuario.id} 
                             className="hover:bg-gray-50 cursor-pointer transition-colors"
@@ -894,7 +1024,7 @@ export default function AdminDashboard() {
 
                 {/* Vista Móvil - Cards */}
                 <div className="md:hidden space-y-2">
-                  {usuarios.map((usuario) => (
+                  {filteredUsuarios.map((usuario) => (
                     <div
                       key={usuario.id}
                       className="bg-white rounded-lg border shadow-sm p-3 active:bg-gray-50 transition-colors"
@@ -997,6 +1127,68 @@ export default function AdminDashboard() {
             {/* Partidos */}
             {activeTab === "matches" && (
               <>
+                {/* Filtros de Partidos */}
+                <div className="bg-white rounded-lg border p-4 mb-4">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Filtros</h3>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    {/* Búsqueda */}
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Buscar
+                      </label>
+                      <Input
+                        type="text"
+                        placeholder="Ubicación u organizador..."
+                        value={matchSearchQuery}
+                        onChange={(e) => setMatchSearchQuery(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                    
+                    {/* Filtro por Tipo */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Tipo de Partido
+                      </label>
+                      <select
+                        value={matchTypeFilter}
+                        onChange={(e) => setMatchTypeFilter(e.target.value as any)}
+                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="all">Todos</option>
+                        <option value="FUTBOL_5">Fútbol 5</option>
+                        <option value="FUTBOL_7">Fútbol 7</option>
+                        <option value="FUTBOL_8">Fútbol 8</option>
+                        <option value="FUTBOL_9">Fútbol 9</option>
+                        <option value="FUTBOL_11">Fútbol 11</option>
+                      </select>
+                    </div>
+                    
+                    {/* Filtro por Estado */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Estado
+                      </label>
+                      <select
+                        value={matchStatusFilter}
+                        onChange={(e) => setMatchStatusFilter(e.target.value as any)}
+                        className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="all">Todos</option>
+                        <option value="DISPONIBLE">Disponible</option>
+                        <option value="CONFIRMADO">Confirmado</option>
+                        <option value="CANCELADO">Cancelado</option>
+                        <option value="COMPLETADO">Completado</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  {/* Contador de resultados */}
+                  <div className="mt-3 text-xs text-gray-600">
+                    Mostrando {filteredPartidos.length} de {partidos.length} partido{partidos.length !== 1 ? 's' : ''}
+                  </div>
+                </div>
+
                 {/* Vista Desktop - Tabla */}
                 <div className="hidden md:block overflow-hidden rounded-lg border bg-white shadow-sm">
                   <div className="overflow-x-auto">
@@ -1024,7 +1216,7 @@ export default function AdminDashboard() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
-                        {partidos.map((partido) => (
+                        {filteredPartidos.map((partido) => (
                           <tr 
                             key={partido.id} 
                             className="hover:bg-gray-50 cursor-pointer transition-colors"
@@ -1118,7 +1310,7 @@ export default function AdminDashboard() {
 
                 {/* Vista Móvil - Cards */}
                 <div className="md:hidden space-y-3">
-                  {partidos.map((partido) => (
+                  {filteredPartidos.map((partido) => (
                     <div
                       key={partido.id}
                       className="bg-white rounded-lg border shadow-sm p-4 active:bg-gray-50 transition-colors"
