@@ -107,12 +107,30 @@ class CloudLogger {
 
   /**
    * Log level DEBUG
+   * Supports both new signature (message, metadata?) and old signature (...args)
    */
-  debug(message: string, metadata?: Record<string, any>): void {
-    const entry = this.createLogEntry(LogSeverity.DEBUG, message, metadata)
+  debug(message: string, metadataOrArg2?: Record<string, any> | any, ...extraArgs: any[]): void {
+    // Handle old multi-argument signature
+    if (extraArgs.length > 0 || (metadataOrArg2 && typeof metadataOrArg2 !== 'object')) {
+      const allArgs = [message, metadataOrArg2, ...extraArgs].filter(arg => arg !== undefined)
+      const combinedMessage = allArgs.map(arg => 
+        typeof arg === 'string' ? arg : JSON.stringify(arg)
+      ).join(' ')
+      
+      const entry = this.createLogEntry(LogSeverity.DEBUG, combinedMessage, { rawArgs: allArgs })
+      
+      if (isDevelopment) {
+        console.debug('🐛', ...allArgs)
+      } else {
+        this.sendToCloudLogging(entry)
+      }
+      return
+    }
+    
+    const entry = this.createLogEntry(LogSeverity.DEBUG, message, metadataOrArg2)
     
     if (isDevelopment) {
-      console.debug('🐛', message, metadata)
+      console.debug('🐛', message, metadataOrArg2)
     } else {
       this.sendToCloudLogging(entry)
     }
@@ -120,12 +138,30 @@ class CloudLogger {
 
   /**
    * Log level INFO
+   * Supports both new signature (message, metadata?) and old signature (...args)
    */
-  info(message: string, metadata?: Record<string, any>): void {
-    const entry = this.createLogEntry(LogSeverity.INFO, message, metadata)
+  info(message: string, metadataOrArg2?: Record<string, any> | any, ...extraArgs: any[]): void {
+    // Handle old multi-argument signature
+    if (extraArgs.length > 0 || (metadataOrArg2 && typeof metadataOrArg2 !== 'object')) {
+      const allArgs = [message, metadataOrArg2, ...extraArgs].filter(arg => arg !== undefined)
+      const combinedMessage = allArgs.map(arg => 
+        typeof arg === 'string' ? arg : JSON.stringify(arg)
+      ).join(' ')
+      
+      const entry = this.createLogEntry(LogSeverity.INFO, combinedMessage, { rawArgs: allArgs })
+      
+      if (isDevelopment) {
+        console.log('ℹ️', ...allArgs)
+      } else {
+        this.sendToCloudLogging(entry)
+      }
+      return
+    }
+    
+    const entry = this.createLogEntry(LogSeverity.INFO, message, metadataOrArg2)
     
     if (isDevelopment) {
-      console.log('ℹ️', message, metadata)
+      console.log('ℹ️', message, metadataOrArg2)
     } else {
       this.sendToCloudLogging(entry)
     }
@@ -133,12 +169,30 @@ class CloudLogger {
 
   /**
    * Log level WARNING
+   * Supports both new signature (message, metadata?) and old signature (...args)
    */
-  warn(message: string, metadata?: Record<string, any>): void {
-    const entry = this.createLogEntry(LogSeverity.WARNING, message, metadata)
+  warn(message: string, metadataOrArg2?: Record<string, any> | any, ...extraArgs: any[]): void {
+    // Handle old multi-argument signature
+    if (extraArgs.length > 0 || (metadataOrArg2 && typeof metadataOrArg2 !== 'object')) {
+      const allArgs = [message, metadataOrArg2, ...extraArgs].filter(arg => arg !== undefined)
+      const combinedMessage = allArgs.map(arg => 
+        typeof arg === 'string' ? arg : JSON.stringify(arg)
+      ).join(' ')
+      
+      const entry = this.createLogEntry(LogSeverity.WARNING, combinedMessage, { rawArgs: allArgs })
+      
+      if (isDevelopment) {
+        console.warn('⚠️', ...allArgs)
+      } else {
+        this.sendToCloudLogging(entry)
+      }
+      return
+    }
+    
+    const entry = this.createLogEntry(LogSeverity.WARNING, message, metadataOrArg2)
     
     if (isDevelopment) {
-      console.warn('⚠️', message, metadata)
+      console.warn('⚠️', message, metadataOrArg2)
     } else {
       this.sendToCloudLogging(entry)
     }
@@ -146,8 +200,30 @@ class CloudLogger {
 
   /**
    * Log level ERROR
+   * Supports both new signature (message, error?, metadata?) and old signature (...args)
    */
-  error(message: string, error?: Error, metadata?: Record<string, any>): void {
+  error(message: string, errorOrArg2?: Error | any, metadataOrArg3?: Record<string, any> | any, ...extraArgs: any[]): void {
+    // Handle old multi-argument signature for backward compatibility
+    if (extraArgs.length > 0 || (errorOrArg2 && !(errorOrArg2 instanceof Error))) {
+      const allArgs = [message, errorOrArg2, metadataOrArg3, ...extraArgs].filter(arg => arg !== undefined)
+      const combinedMessage = allArgs.map(arg => 
+        typeof arg === 'string' ? arg : JSON.stringify(arg)
+      ).join(' ')
+      
+      const entry = this.createLogEntry(LogSeverity.ERROR, combinedMessage, { rawArgs: allArgs })
+      
+      if (isDevelopment) {
+        console.error('❌', ...allArgs)
+      } else {
+        this.sendToCloudLogging(entry)
+      }
+      return
+    }
+    
+    // New signature: (message, error?, metadata?)
+    const error = errorOrArg2 instanceof Error ? errorOrArg2 : undefined
+    const metadata = errorOrArg2 instanceof Error ? metadataOrArg3 : errorOrArg2
+    
     const entry = this.createLogEntry(LogSeverity.ERROR, message, metadata, error)
     
     if (isDevelopment) {

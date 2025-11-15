@@ -178,6 +178,7 @@ class MetricsCollector {
 
   /**
    * Enviar métricas al backend para que Prometheus las scrape
+   * O directamente a Grafana Cloud si está configurado
    */
   async pushMetrics(): Promise<void> {
     if (!isProduction) return
@@ -185,12 +186,32 @@ class MetricsCollector {
     try {
       const metricsData = this.exportPrometheus()
       
-      // Send to backend endpoint that Prometheus will scrape
-      await fetch('/api/metrics', {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: metricsData,
-      })
+      // Check if Grafana Cloud is configured
+      const grafanaEnabled = process.env.NEXT_PUBLIC_GRAFANA_ENABLED === 'true'
+      const grafanaUrl = process.env.NEXT_PUBLIC_GRAFANA_PROMETHEUS_URL
+      const grafanaUser = process.env.NEXT_PUBLIC_GRAFANA_USER
+      const grafanaKey = process.env.NEXT_PUBLIC_GRAFANA_API_KEY
+      
+      if (grafanaEnabled && grafanaUrl && grafanaUser && grafanaKey) {
+        // Push directly to Grafana Cloud
+        const auth = btoa(`${grafanaUser}:${grafanaKey}`)
+        
+        await fetch(grafanaUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain',
+            'Authorization': `Basic ${auth}`
+          },
+          body: metricsData,
+        })
+      } else {
+        // Fallback: Send to backend endpoint that Prometheus will scrape
+        await fetch('/api/metrics', {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: metricsData,
+        })
+      }
     } catch (error) {
       // Silently fail - metrics shouldn't break the app
       console.error('Failed to push metrics:', error)
