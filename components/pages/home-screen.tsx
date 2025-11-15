@@ -446,7 +446,7 @@ export function HomeScreen() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-bold text-foreground mb-1 text-sm sm:text-base leading-tight truncate">
-                      {formatDateShort(match.fecha)} • {match.hora}
+                      {formatDateShort(match.fecha)} • {match.hora?.substring(0, 5) || match.hora}
                     </h3>
                     <p className="text-xs sm:text-sm text-muted-foreground mb-2 sm:mb-3 flex items-center gap-1 truncate">
                       <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
