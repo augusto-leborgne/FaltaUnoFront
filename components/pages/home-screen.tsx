@@ -236,6 +236,46 @@ export function HomeScreen() {
   const handleNotifications = () => router.push("/notifications")
   const handleCreateMatch = () => router.push("/create-match")
 
+  // ============================================
+  // HELPERS DE FORMATO (idénticos a matches-listing)
+  // ============================================
+
+  const formatDate = (dateString: string, timeString: string) => {
+    try {
+      const date = new Date(dateString)
+      const today = new Date()
+      const tomorrow = new Date(today)
+      tomorrow.setDate(tomorrow.getDate() + 1)
+
+      today.setHours(0, 0, 0, 0)
+      tomorrow.setHours(0, 0, 0, 0)
+      const compareDate = new Date(date)
+      compareDate.setHours(0, 0, 0, 0)
+
+      const time = timeString.substring(0, 5)
+      const day = date.getDate().toString().padStart(2, '0')
+      const month = (date.getMonth() + 1).toString().padStart(2, '0')
+
+      if (compareDate.getTime() === today.getTime()) {
+        return `Hoy ${day}/${month} ${time}`
+      } else if (compareDate.getTime() === tomorrow.getTime()) {
+        return `Mañana ${day}/${month} ${time}`
+      } else {
+        const weekday = date.toLocaleDateString("es-ES", { weekday: "long" })
+        const formattedWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1)
+        return `${formattedWeekday} ${day}/${month} ${time}`
+      }
+    } catch {
+      return `${dateString} ${timeString}`
+    }
+  }
+
+  const getSpotsLeftColor = (spotsLeft: number) => {
+    if (spotsLeft === 0) return "bg-red-100 text-red-800"
+    if (spotsLeft <= 3) return "bg-yellow-100 text-yellow-800"
+    return "bg-green-100 text-green-800"
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
@@ -424,11 +464,6 @@ export function HomeScreen() {
           <div className="space-y-3 sm:space-y-4">
             {upcomingMatches.map((match) => {
               const spotsLeft = (match.cantidad_jugadores ?? 0) - (match.jugadores_actuales ?? 0)
-              const getSpotsLeftColor = (spots: number) => {
-                if (spots === 0) return "bg-red-100 text-red-800"
-                if (spots <= 2) return "bg-yellow-100 text-yellow-800"
-                return "bg-green-100 text-green-800"
-              }
               
               return (
                 <div
@@ -454,7 +489,7 @@ export function HomeScreen() {
                   {/* Match Info */}
                   <div className="mb-3 sm:mb-4">
                     <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-2 leading-tight">
-                      {formatDateShort(match.fecha)} • {match.hora?.substring(0, 5) || match.hora}
+                      {formatDate(match.fecha, match.hora)}
                     </h3>
                     
                     {/* Price and Duration */}
