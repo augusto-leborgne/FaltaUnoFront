@@ -266,6 +266,19 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
       return
     }
 
+    // Validar que la fecha/hora sea futura
+    const selectedDateTime = new Date(`${editData.fecha}T${editData.hora}`)
+    const now = new Date()
+    
+    if (selectedDateTime <= now) {
+      toast({
+        title: "Error",
+        description: "La fecha y hora del partido deben ser futuras",
+        variant: "destructive",
+      })
+      return
+    }
+
     if (editData.cantidadJugadores < (match.jugadoresActuales || 0)) {
       toast({
         title: "Error",
@@ -866,25 +879,6 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                       }
                       
                       const newTime = `${e.target.value}:00`
-                      const selectedDate = editData.fecha
-                      const today = new Date().toISOString().split('T')[0]
-                      
-                      // Si es hoy, validar que la hora sea futura
-                      if (selectedDate === today) {
-                        const now = new Date()
-                        const [hours, minutes] = e.target.value.split(':')
-                        const selectedDateTime = new Date()
-                        selectedDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0)
-                        
-                        if (selectedDateTime <= now) {
-                          toast({
-                            title: "Hora inválida",
-                            description: "La hora debe ser futura para partidos de hoy",
-                            variant: "destructive"
-                          })
-                          return
-                        }
-                      }
                       setEditData({ ...editData, hora: newTime })
                     }}
                     className="rounded-lg sm:rounded-xl text-sm sm:text-base h-10 sm:h-auto"
