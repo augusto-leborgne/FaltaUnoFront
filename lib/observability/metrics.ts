@@ -184,13 +184,35 @@ class MetricsCollector {
   }
 
   /**
-   * Enviar métricas - en realidad no hace nada porque Grafana hará scraping
-   * Solo para mantener la arquitectura limpia
+   * Enviar métricas a Grafana Cloud Remote Write
    */
   async pushMetrics(): Promise<void> {
-    // No hacer nada - Grafana Cloud hará scraping de GET /api/metrics
-    // Las métricas ya están disponibles en el singleton
-    return Promise.resolve()
+    try {
+      const grafanaUrl = process.env.NEXT_PUBLIC_GRAFANA_PROMETHEUS_URL
+      const grafanaUser = process.env.NEXT_PUBLIC_GRAFANA_USER
+      const grafanaKey = process.env.NEXT_PUBLIC_GRAFANA_API_KEY
+      
+      if (!grafanaUrl || !grafanaUser || !grafanaKey) {
+        return
+      }
+      
+      const metricsText = this.exportPrometheus()
+      
+      const response = await fetch(grafanaUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain',
+          'Authorization': 'Basic ' + btoa(`${grafanaUser}:${grafanaKey}`),
+        },
+        body: metricsText,
+      })
+      
+      if (!response.ok) {
+        console.error('Failed to push metrics:', response.statusText)
+      }
+    } catch (error) {
+      console.error('Error pushing metrics:', error)
+    }
   }
 
   /**
@@ -221,12 +243,11 @@ class MetricsCollector {
 // Singleton instance
 export const metrics = new MetricsCollector()
 
-// Auto-cleanup every 5 minutes
+// Auto-cleanup and auto-push
 if (typeof window !== 'undefined') {
   setInterval(() => metrics.cleanup(), 5 * 60 * 1000)
+  setInterval(() => metrics.pushMetrics(), 60 * 1000)
 }
-
-// No auto-push needed - Grafana Cloud will scrape GET /api/metrics
 
 // Métricas predefinidas para la app
 
