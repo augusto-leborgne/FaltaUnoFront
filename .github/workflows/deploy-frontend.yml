@@ -48,7 +48,7 @@ jobs:
           BUILD_ID=$(gcloud builds submit \
             --config=cloudbuild-prod.yaml \
             --project=${{ env.GCP_PROJECT_ID }} \
-            --substitutions="SHORT_SHA=$SHORT_SHA,_NEXT_PUBLIC_API_URL=$BACKEND_URL,_NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }}" \
+            --substitutions="SHORT_SHA=$SHORT_SHA,_NEXT_PUBLIC_API_URL=$BACKEND_URL,_NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${{ secrets.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY }},_NEXT_PUBLIC_GRAFANA_API_KEY=${{ secrets.GRAFANA_API_KEY }}" \
             --async \
             --format="value(id)")
           
