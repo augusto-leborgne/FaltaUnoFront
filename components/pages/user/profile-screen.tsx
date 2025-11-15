@@ -152,14 +152,6 @@ function ProfileScreenInner() {
           const esSolicitante = friendship.usuarioId === user?.id
           const amigoData = esSolicitante ? friendship.amigo : friendship.usuario
           
-          logger.log("[ProfileScreen] Processing friendship:", {
-            usuarioId: friendship.usuarioId,
-            amigoId: friendship.amigoId,
-            esSolicitante,
-            amigoDataId: amigoData?.id,
-            currentUserId: user?.id
-          })
-          
           return amigoData
         })
         .filter((friend: any) => friend && friend.id && friend.id !== user?.id) // Filtrar nulos y usuario actual
