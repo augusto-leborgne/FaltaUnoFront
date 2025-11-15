@@ -184,34 +184,13 @@ class MetricsCollector {
   }
 
   /**
-   * Enviar métricas a Grafana Cloud
-   * Usa el endpoint /api/metrics que actúa como proxy para evitar CORS
+   * Enviar métricas - en realidad no hace nada porque Grafana hará scraping
+   * Solo para mantener la arquitectura limpia
    */
   async pushMetrics(): Promise<void> {
-    // Solo enviar en producción o si está explícitamente habilitado
-    const grafanaEnabled = process.env.NEXT_PUBLIC_GRAFANA_ENABLED === 'true'
-    if (!grafanaEnabled && !isProduction) return
-
-    try {
-      const metricsData = this.exportPrometheus()
-      
-      // Verificar que haya métricas para enviar
-      if (!metricsData || metricsData.trim().length === 0) {
-        return
-      }
-      
-      // Send to our API endpoint which forwards to Grafana Cloud
-      await fetch('/api/metrics', {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: metricsData,
-      })
-    } catch (error) {
-      // Silently fail - metrics shouldn't break the app
-      if (!isProduction) {
-        console.error('Failed to push metrics:', error)
-      }
-    }
+    // No hacer nada - Grafana Cloud hará scraping de GET /api/metrics
+    // Las métricas ya están disponibles en el singleton
+    return Promise.resolve()
   }
 
   /**
@@ -247,14 +226,7 @@ if (typeof window !== 'undefined') {
   setInterval(() => metrics.cleanup(), 5 * 60 * 1000)
 }
 
-// Auto-push metrics every 30 seconds in production or when enabled
-const grafanaEnabled = typeof window !== 'undefined' && process.env.NEXT_PUBLIC_GRAFANA_ENABLED === 'true'
-if ((isProduction || grafanaEnabled) && typeof window !== 'undefined') {
-  // Push immediately on load
-  setTimeout(() => metrics.pushMetrics(), 5000)
-  // Then push every 30 seconds
-  setInterval(() => metrics.pushMetrics(), 30 * 1000)
-}
+// No auto-push needed - Grafana Cloud will scrape GET /api/metrics
 
 // Métricas predefinidas para la app
 

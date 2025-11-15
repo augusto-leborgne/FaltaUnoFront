@@ -22,12 +22,47 @@ NEXT_PUBLIC_GRAFANA_API_KEY=glc_eyJv...
   - WebSocket connections
   - User actions (login, register, partido created, etc.)
 
-- **Frecuencia de envío:** Cada 30 segundos
-- **Endpoint:** `POST /api/metrics` → Grafana Cloud
+- **Endpoint de exposición:** `GET /api/metrics` (formato Prometheus)
+- **Scraping:** Grafana Cloud debe configurarse para hacer scraping
 
-### 2. Backend (Spring Boot)
-- Micrometer expone métricas en `/actuator/prometheus`
-- Grafana Cloud debe configurarse para hacer scraping
+### 2. Configuración de Grafana Cloud para Scraping
+
+Grafana Cloud necesita hacer scraping del endpoint público de métricas.
+
+**Opción 1: Grafana Agent (Recomendado)**
+
+Instalar Grafana Agent en Cloud Run como sidecar o job separado:
+
+```yaml
+# grafana-agent.yaml
+metrics:
+  global:
+    scrape_interval: 60s
+    external_labels:
+      environment: production
+      app: faltauno-frontend
+    remote_write:
+      - url: https://prometheus-prod-13-prod-us-east-0.grafana.net/api/prom/push
+        basic_auth:
+          username: 1439066
+          password: ${GRAFANA_API_KEY}
+  configs:
+    - name: faltauno
+      scrape_configs:
+        - job_name: 'faltauno-frontend'
+          static_configs:
+            - targets: ['faltauno-frontend-169771742214.us-central1.run.app']
+          metrics_path: '/api/metrics'
+          scheme: https
+```
+
+**Opción 2: Grafana Cloud Synthetic Monitoring**
+
+Usar Grafana Cloud para hacer polling del endpoint cada minuto.
+
+**Opción 3: Google Cloud Monitoring Integration**
+
+Exportar métricas vía Cloud Monitoring → Grafana Cloud.
 
 ## 📊 Verificar que Funciona
 
