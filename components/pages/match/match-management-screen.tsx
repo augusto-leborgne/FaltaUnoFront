@@ -879,6 +879,26 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                       }
                       
                       const newTime = `${e.target.value}:00`
+                      const selectedDate = editData.fecha
+                      const today = new Date().toISOString().split('T')[0]
+                      
+                      // Solo validar hora si la fecha es HOY
+                      if (selectedDate === today) {
+                        const now = new Date()
+                        const [hours, minutes] = e.target.value.split(':')
+                        const selectedDateTime = new Date()
+                        selectedDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0)
+                        
+                        if (selectedDateTime <= now) {
+                          toast({
+                            title: "Hora inválida",
+                            description: "Para partidos de hoy, la hora debe ser futura",
+                            variant: "destructive"
+                          })
+                          return
+                        }
+                      }
+                      
                       setEditData({ ...editData, hora: newTime })
                     }}
                     className="rounded-lg sm:rounded-xl text-sm sm:text-base h-10 sm:h-auto"
