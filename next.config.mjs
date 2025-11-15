@@ -7,11 +7,10 @@ const nextConfig = {
   // ⚡ PERFORMANCE OPTIMIZATIONS
   // Compile only essential packages (reduce bundle size)
   compiler: {
-    // ⚡ TEMPORARILY DISABLED to debug profile-setup double refresh
-    // removeConsole: process.env.NODE_ENV === 'production' ? {
-    //   exclude: ['error', 'warn'] // Keep errors and warnings
-    // } : false,
-    removeConsole: false, // ⚡ Keep ALL console.log for debugging
+    // Remove console.log in production, keep errors and warnings
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn'] // Keep errors and warnings
+    } : false,
   },
   
   // Enable SWC minification (faster than Terser)
