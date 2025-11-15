@@ -210,6 +210,54 @@ export function formatDateTimeRegional(dateString: string | Date | null | undefi
 }
 
 /**
+ * Formatea fecha y hora de partido con "Hoy", "Mañana" o día de la semana
+ * Formato unificado para todas las pantallas de partidos
+ * @param dateString Fecha en formato ISO o yyyy-MM-dd
+ * @param timeString Hora en formato HH:mm:ss o HH:mm
+ * @returns String formateado (ej: "Hoy 15/11 18:30", "Mañana 16/11 14:00", "Sábado 16/11 20:00")
+ */
+export function formatMatchDate(dateString: string, timeString: string): string {
+  if (!dateString || !timeString) return '';
+  
+  try {
+    // Parse fecha (yyyy-MM-dd)
+    const [year, month, day] = dateString.split('-').map(Number);
+    const matchDate = new Date(year, month - 1, day);
+    
+    // Parse hora (HH:mm:ss o HH:mm)
+    const time = timeString.substring(0, 5); // Tomar solo HH:mm
+    
+    // Fechas de referencia
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const compareDate = new Date(matchDate);
+    compareDate.setHours(0, 0, 0, 0);
+    
+    // Formato de día y mes
+    const dayStr = day.toString().padStart(2, '0');
+    const monthStr = month.toString().padStart(2, '0');
+    
+    // Determinar si es hoy, mañana o futuro
+    if (compareDate.getTime() === today.getTime()) {
+      return `Hoy ${dayStr}/${monthStr} ${time}`;
+    } else if (compareDate.getTime() === tomorrow.getTime()) {
+      return `Mañana ${dayStr}/${monthStr} ${time}`;
+    } else {
+      // Día de la semana
+      const weekdays = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+      const formattedWeekday = weekdays[matchDate.getDay()];
+      return `${formattedWeekday} ${dayStr}/${monthStr} ${time}`;
+    }
+  } catch {
+    return `${dateString} ${timeString}`;
+  }
+}
+
+/**
  * Determina el color del badge según los espacios restantes
  * @param spotsLeft Espacios restantes
  * @returns Clases CSS para el badge

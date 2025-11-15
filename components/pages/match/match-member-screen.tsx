@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation"
 import { CompressedMap } from "@/components/google-maps/compressed-map"
 import AuthService from "@/lib/auth"
 import { PartidoAPI, PartidoDTO } from "@/lib/api"
-import { formatMatchType, formatDateRegional as formatDate } from "@/lib/utils"
+import { formatMatchType, formatMatchDate } from "@/lib/utils"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useToast } from "@/hooks/use-toast"
 
@@ -173,7 +173,7 @@ export default function MatchMemberScreen({ matchId }: MatchMemberScreenProps) {
               <div>
                 <p className="text-sm text-gray-600">Fecha y hora</p>
                 <p className="font-semibold text-gray-900">
-                  {formatDate((match as any).fecha)} - {(match as any).hora}
+                  {formatMatchDate((match as any).fecha, (match as any).hora)}
                 </p>
               </div>
             </div>

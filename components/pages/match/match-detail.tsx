@@ -13,7 +13,7 @@ import { CompressedMap } from "@/components/google-maps/compressed-map"
 import { GoogleMapsModal } from "@/components/google-maps/google-maps-modal"
 import AuthService from "@/lib/auth"
 import { PartidoAPI, InscripcionAPI, PartidoDTO, PartidoEstado, InscripcionEstado, API_BASE } from "@/lib/api"
-import { formatMatchType, formatDateRegional as formatDate, getSpotsLeftColor } from "@/lib/utils"
+import { formatMatchType, formatMatchDate, getSpotsLeftColor } from "@/lib/utils"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useWebSocket } from "@/hooks/use-websocket"
 import { useToast } from "@/hooks/use-toast"
@@ -332,7 +332,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
     const hora = (match as any).hora ? String((match as any).hora).slice(0, 5) : ""
     const shareData = {
       title: `Partido de ${formatMatchType(getTipoPartido(match))}`,
-      text: `¡Únete a este partido! ${formatDate(match.fecha)} ${hora} en ${getNombreUbicacion(match)}`,
+      text: `¡Únete a este partido! ${formatMatchDate(match.fecha, match.hora)} en ${getNombreUbicacion(match)}`,
       url: `${window.location.origin}/matches/${matchId}`,
     }
     if (navigator.share) {
@@ -481,7 +481,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
 
           {/* Match Time */}
           <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
-            {formatDate(match.fecha)} {hora}
+            {formatMatchDate(match.fecha, match.hora)}
           </h2>
 
           {/* Match Details */}
