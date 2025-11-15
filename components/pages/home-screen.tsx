@@ -79,6 +79,7 @@ export function HomeScreen() {
   }, [])
 
   const loadData = async () => {
+    setIsLoading(true)
     try {
       // Double-check auth before making requests
       const token = AuthService.getToken()
