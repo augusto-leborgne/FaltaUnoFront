@@ -163,17 +163,39 @@ function ProfileScreenInner() {
           // El backend puede devolver 'amigo' o 'usuario' según el endpoint
           const friend = friendship.amigo || friendship.usuario
           
+          logger.log("[ProfileScreen] Processing friendship:", { 
+            friendship, 
+            friend, 
+            userId: user?.id,
+            hasAmigo: !!friendship.amigo,
+            hasUsuario: !!friendship.usuario
+          })
+          
           // Si no hay amigo definido, omitir
-          if (!friend || !friend.id) return false
+          if (!friend || !friend.id) {
+            logger.log("[ProfileScreen] Skipping - no friend or friend.id")
+            return false
+          }
           
           // Excluir si el amigo es el usuario actual
-          if (friend.id === user.id) return false
+          if (friend.id === user?.id) {
+            logger.log("[ProfileScreen] Skipping - friend is current user")
+            return false
+          }
           
           // Eliminar duplicados: mantener solo la primera ocurrencia de cada amigo
-          return index === self.findIndex((f: any) => {
+          const isDuplicate = index !== self.findIndex((f: any) => {
             const otherFriend = f.amigo || f.usuario
             return otherFriend?.id === friend.id
           })
+          
+          if (isDuplicate) {
+            logger.log("[ProfileScreen] Skipping - duplicate")
+            return false
+          }
+          
+          logger.log("[ProfileScreen] Keeping friend:", friend)
+          return true
         })
         
         logger.log("[ProfileScreen] Processed friends (after deduplication):", uniqueFriends)
