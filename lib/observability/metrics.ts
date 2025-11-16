@@ -234,8 +234,17 @@ class MetricsCollector {
 // Singleton instance
 export const metrics = new MetricsCollector()
 
-// Auto-cleanup and auto-push
+// Inicializar métricas base en 0 (para que Prometheus siempre tenga datos)
 if (typeof window !== 'undefined') {
+  // Inicializar contadores en 0
+  metrics.incrementCounter('faltauno_page_views_total', { path: '/home' }, 0)
+  metrics.incrementCounter('faltauno_user_logins_total', {}, 0)
+  metrics.incrementCounter('faltauno_api_calls_total', { endpoint: '/api/partidos', method: 'GET', status: '200' }, 0)
+  metrics.incrementCounter('faltauno_errors_total', { type: 'unknown', component: 'unknown' }, 0)
+  metrics.setGauge('faltauno_websocket_connected', 0)
+  metrics.setGauge('faltauno_partidos_activos', 0)
+  
+  // Auto-cleanup and auto-push
   setInterval(() => metrics.cleanup(), 5 * 60 * 1000)
   setInterval(() => metrics.pushMetrics(), 60 * 1000)
 }
