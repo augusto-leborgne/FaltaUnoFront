@@ -1,0 +1,19 @@
+@startuml
+skinparam backgroundColor #FFFFFF
+actor User
+node "Next.js Frontend" as Frontend
+cloud "Cloud Run Backend" as Backend
+database "Cloud SQL" as DB
+cloud "RabbitMQ" as Rabbit
+cloud "Grafana Cloud / Prometheus" as Grafana
+cloud "Google Cloud Logging" as GL
+
+User -> Frontend : HTTP(S) requests
+Frontend -> Backend : REST API calls (NEXT_PUBLIC_API_URL)
+Frontend -> Backend : WS (STOMP over SockJS) -> /ws
+Backend -> DB : JDBC (Cloud SQL Socket Factory)
+Backend -> Rabbit : STOMP relay
+Frontend -> Grafana : push metrics (/api/metrics)
+Backend -> GL : structured logs
+
+@enduml
