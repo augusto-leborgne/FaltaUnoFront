@@ -184,25 +184,16 @@ class MetricsCollector {
   }
 
   /**
-   * Enviar métricas a Grafana Cloud Remote Write
+   * Enviar métricas vía API route (evita CORS)
    */
   async pushMetrics(): Promise<void> {
     try {
-      const grafanaUrl = process.env.NEXT_PUBLIC_GRAFANA_PROMETHEUS_URL
-      const grafanaUser = process.env.NEXT_PUBLIC_GRAFANA_USER
-      const grafanaKey = process.env.NEXT_PUBLIC_GRAFANA_API_KEY
-      
-      if (!grafanaUrl || !grafanaUser || !grafanaKey) {
-        return
-      }
-      
       const metricsText = this.exportPrometheus()
       
-      const response = await fetch(grafanaUrl, {
+      const response = await fetch('/api/metrics', {
         method: 'POST',
         headers: {
           'Content-Type': 'text/plain',
-          'Authorization': 'Basic ' + btoa(`${grafanaUser}:${grafanaKey}`),
         },
         body: metricsText,
       })
