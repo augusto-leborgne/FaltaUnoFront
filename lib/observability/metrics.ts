@@ -184,26 +184,12 @@ class MetricsCollector {
   }
 
   /**
-   * Enviar métricas vía API route (evita CORS)
+   * Enviar métricas vía API route (no usado - usamos scraping)
    */
   async pushMetrics(): Promise<void> {
-    try {
-      const metricsText = this.exportPrometheus()
-      
-      const response = await fetch('/api/metrics', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain',
-        },
-        body: metricsText,
-      })
-      
-      if (!response.ok) {
-        console.error('Failed to push metrics:', response.statusText)
-      }
-    } catch (error) {
-      console.error('Error pushing metrics:', error)
-    }
+    // No hacer push automático
+    // Las métricas se exponen vía GET /api/metrics para scraping externo
+    return Promise.resolve()
   }
 
   /**
@@ -244,9 +230,8 @@ if (typeof window !== 'undefined') {
   metrics.setGauge('faltauno_websocket_connected', 0)
   metrics.setGauge('faltauno_partidos_activos', 0)
   
-  // Auto-cleanup and auto-push
+  // Auto-cleanup (no auto-push, usamos scraping externo)
   setInterval(() => metrics.cleanup(), 5 * 60 * 1000)
-  setInterval(() => metrics.pushMetrics(), 60 * 1000)
 }
 
 // Métricas predefinidas para la app
