@@ -105,22 +105,28 @@ export function useNotifications() {
   const eliminarNotificacion = useCallback(async (id: string) => {
     try {
       const notif = notificaciones.find(n => n.id === id)
+      
+      // Eliminar optimísticamente del UI
+      setNotificaciones(prev => prev.filter(n => n.id !== id))
+      setNoLeidas(prev => prev.filter(n => n.id !== id))
+      if (notif && !notif.leida) {
+        setCount(prev => Math.max(0, prev - 1))
+      }
+      
+      // Intentar eliminar en backend (no mostrar error si ya fue eliminada)
       const response = await NotificacionAPI.eliminar(id)
       
-      if (response.success) {
-        setNotificaciones(prev => prev.filter(n => n.id !== id))
-        setNoLeidas(prev => prev.filter(n => n.id !== id))
-        if (notif && !notif.leida) {
-          setCount(prev => Math.max(0, prev - 1))
-        }
+      if (!response.success && !response.message?.includes('404') && !response.message?.includes('no encontrad')) {
+        // Solo mostrar error si no es 404
+        toast({
+          title: "Error",
+          description: "No se pudo eliminar la notificación",
+          variant: "destructive"
+        })
       }
     } catch (error) {
-      console.error("[useNotifications] Error eliminando notificación:", error)
-      toast({
-        title: "Error",
-        description: "No se pudo eliminar la notificación",
-        variant: "destructive"
-      })
+      // Ignorar errores de notificaciones ya eliminadas
+      console.warn("[useNotifications] Error eliminando notificación (puede estar ya eliminada):", error)
     }
   }, [notificaciones, toast])
 
