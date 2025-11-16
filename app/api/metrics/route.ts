@@ -1,30 +1,39 @@
 /**
  * API endpoint para métricas Prometheus
- * GET /api/metrics - Expone las métricas del browser para scraping externo
+ * POST /api/metrics - Recibe métricas del browser y las almacena
+ * GET /api/metrics - Expone las métricas almacenadas para scraping
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { metrics } from '@/lib/observability/metrics'
+
+// Almacenar métricas en memoria global (compartido entre requests)
+let cachedMetrics = ''
+let lastUpdate = 0
+
+// POST endpoint para recibir métricas del browser
+export async function POST(request: NextRequest) {
+  try {
+    const metricsText = await request.text()
+    
+    if (metricsText && metricsText.trim().length > 0) {
+      cachedMetrics = metricsText
+      lastUpdate = Date.now()
+    }
+    
+    return new NextResponse('OK', { status: 200 })
+  } catch (error) {
+    console.error('[Metrics] Error receiving metrics:', error)
+    return new NextResponse('OK', { status: 200 })
+  }
+}
 
 // GET endpoint para exponer métricas en formato Prometheus
 export async function GET(request: NextRequest) {
-  try {
-    const prometheusMetrics = metrics.exportPrometheus()
-    
-    return new NextResponse(prometheusMetrics, {
-      status: 200,
-      headers: {
-        'Content-Type': 'text/plain; version=0.0.4',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-      },
-    })
-  } catch (error) {
-    console.error('[Metrics] Error exporting metrics:', error)
-    return new NextResponse('# Error exporting metrics\n', { 
-      status: 500,
-      headers: {
-        'Content-Type': 'text/plain; version=0.0.4',
-      },
-    })
-  }
+  return new NextResponse(cachedMetrics, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/plain; version=0.0.4',
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+    },
+  })
 }
