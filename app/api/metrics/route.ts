@@ -1,11 +1,16 @@
 /**
  * API endpoint para métricas Prometheus
- * POST /api/metrics - Recibe métricas del frontend y pushea a Grafana Cloud
+ * POST /api/metrics - Recibe métricas del frontend y las guarda
+ * GET /api/metrics - Expone las últimas métricas para scraping
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 
-// POST endpoint para recibir métricas del frontend y pushear a Grafana Cloud
+// Almacenar las últimas métricas en memoria
+let latestMetrics = ''
+let lastUpdate = 0
+
+// POST endpoint para recibir métricas del frontend
 export async function POST(request: NextRequest) {
   try {
     const metricsText = await request.text()
@@ -14,37 +19,28 @@ export async function POST(request: NextRequest) {
       return new NextResponse('No metrics data', { status: 400 })
     }
 
-    // Push to Grafana Cloud Remote Write
-    const grafanaUrl = process.env.NEXT_PUBLIC_GRAFANA_PROMETHEUS_URL
-    const grafanaUser = process.env.NEXT_PUBLIC_GRAFANA_USER
-    const grafanaKey = process.env.NEXT_PUBLIC_GRAFANA_API_KEY
+    // Guardar métricas en memoria
+    latestMetrics = metricsText
+    lastUpdate = Date.now()
     
-    if (!grafanaUrl || !grafanaUser || !grafanaKey) {
-      console.error('[Metrics] Grafana credentials not configured')
-      return new NextResponse('OK', { status: 200 })
-    }
+    console.log('[Metrics] Updated', metricsText.split('\n').length, 'metric lines')
     
-    console.log('[Metrics] Pushing', metricsText.split('\n').length, 'lines to Grafana Cloud')
-    
-    const response = await fetch(grafanaUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'text/plain',
-        'Authorization': 'Basic ' + Buffer.from(`${grafanaUser}:${grafanaKey}`).toString('base64'),
-      },
-      body: metricsText,
-    })
-    
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('[Metrics] Grafana Remote Write failed:', response.status, errorText)
-      return new NextResponse(`Grafana error: ${response.status}`, { status: 500 })
-    }
-    
-    console.log('[Metrics] Successfully pushed to Grafana Cloud')
     return new NextResponse('OK', { status: 200 })
   } catch (error) {
-    console.error('[Metrics] Error pushing to Grafana:', error)
+    console.error('[Metrics] Error processing metrics:', error)
     return new NextResponse('Internal error', { status: 500 })
   }
+}
+
+// GET endpoint para exponer métricas en formato Prometheus
+export async function GET(request: NextRequest) {
+  const age = Date.now() - lastUpdate
+  console.log('[Metrics] Serving metrics (age:', Math.round(age/1000), 'seconds)')
+  
+  return new NextResponse(latestMetrics, {
+    status: 200,
+    headers: {
+      'Content-Type': 'text/plain; version=0.0.4',
+    },
+  })
 }

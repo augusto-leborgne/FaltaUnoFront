@@ -1,0 +1,59 @@
+# Multi-stage: Next.js app + Grafana Agent
+FROM node:20-alpine AS base
+FROM grafana/agent:v0.38.1 AS agent
+
+# Build Next.js
+FROM base AS deps
+WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@latest --activate
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
+
+FROM base AS builder
+WORKDIR /app
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ARG NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+ENV NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+ARG NEXT_PUBLIC_GRAFANA_ENABLED
+ENV NEXT_PUBLIC_GRAFANA_ENABLED=${NEXT_PUBLIC_GRAFANA_ENABLED}
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+ENV NEXT_TELEMETRY_DISABLED 1
+RUN corepack enable && pnpm run build
+
+# Final image with Next.js + Grafana Agent
+FROM base AS runner
+WORKDIR /app
+ENV NODE_ENV production
+ENV NEXT_TELEMETRY_DISABLED 1
+
+# Copy Grafana Agent
+COPY --from=agent /bin/grafana-agent /usr/local/bin/grafana-agent
+
+# Create user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+
+# Install pnpm and copy Next.js files
+RUN corepack enable && corepack prepare pnpm@latest --activate
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json
+COPY --from=builder --chown=nextjs:nodejs /app/pnpm-lock.yaml ./pnpm-lock.yaml
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/next.config.mjs ./next.config.mjs
+
+# Copy Grafana Agent config
+COPY agent-config.yaml /etc/agent/config.yaml
+
+# Start script
+COPY start-with-agent.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
+USER nextjs
+EXPOSE 8080
+ENV PORT 8080
+ENV HOSTNAME "0.0.0.0"
+
+CMD ["/app/start.sh"]
