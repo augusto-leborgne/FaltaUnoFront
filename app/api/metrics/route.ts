@@ -1,28 +1,9 @@
 /**
  * API endpoint para métricas Prometheus
- * GET /api/metrics - Expone métricas en formato Prometheus
- * POST /api/metrics - Recibe y envía métricas a Grafana Cloud
+ * POST /api/metrics - Recibe métricas del frontend y pushea a Grafana Cloud
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { metrics } from '@/lib/observability/metrics'
-
-export async function GET(request: NextRequest) {
-  try {
-    // Export metrics in Prometheus format
-    const prometheusMetrics = metrics.exportPrometheus()
-    
-    return new NextResponse(prometheusMetrics, {
-      status: 200,
-      headers: {
-        'Content-Type': 'text/plain; version=0.0.4',
-      },
-    })
-  } catch (error) {
-    console.error('Error exporting metrics:', error)
-    return new NextResponse('Error exporting metrics', { status: 500 })
-  }
-}
 
 // POST endpoint para recibir métricas del frontend y pushear a Grafana Cloud
 export async function POST(request: NextRequest) {
@@ -39,9 +20,11 @@ export async function POST(request: NextRequest) {
     const grafanaKey = process.env.NEXT_PUBLIC_GRAFANA_API_KEY
     
     if (!grafanaUrl || !grafanaUser || !grafanaKey) {
-      console.error('Grafana credentials not configured')
-      return new NextResponse('OK', { status: 200 }) // No fallar si no está configurado
+      console.error('[Metrics] Grafana credentials not configured')
+      return new NextResponse('OK', { status: 200 })
     }
+    
+    console.log('[Metrics] Pushing', metricsText.split('\n').length, 'lines to Grafana Cloud')
     
     const response = await fetch(grafanaUrl, {
       method: 'POST',
@@ -54,12 +37,14 @@ export async function POST(request: NextRequest) {
     
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Grafana Remote Write failed:', response.status, errorText)
+      console.error('[Metrics] Grafana Remote Write failed:', response.status, errorText)
+      return new NextResponse(`Grafana error: ${response.status}`, { status: 500 })
     }
     
+    console.log('[Metrics] Successfully pushed to Grafana Cloud')
     return new NextResponse('OK', { status: 200 })
   } catch (error) {
-    console.error('Error pushing to Grafana:', error)
-    return new NextResponse('OK', { status: 200 })
+    console.error('[Metrics] Error pushing to Grafana:', error)
+    return new NextResponse('Internal error', { status: 500 })
   }
 }
