@@ -288,19 +288,103 @@ export function ProfileSetupForm() {
 
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user' }, // Front camera
-        audio: false
-      })
-      
-      setCameraStream(stream)
+      // Check if media devices are supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('La API de cámara no está disponible en este navegador');
+      }
+
+      let stream: MediaStream | null = null;
+      let lastError: any = null;
+
+      // Try user camera first (front camera) - most computers have this
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: 'user',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        });
+        logger.log("[ProfileSetup] Successfully accessed front camera");
+      } catch (userError) {
+        lastError = userError;
+        logger.warn("[ProfileSetup] Front camera failed, trying back camera:", userError instanceof Error ? userError.message : String(userError));
+
+        // Try environment camera (back camera)
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: 'environment',
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            },
+            audio: false
+          });
+          logger.log("[ProfileSetup] Successfully accessed back camera");
+        } catch (envError) {
+          lastError = envError;
+          logger.warn("[ProfileSetup] Back camera failed, trying any camera:", envError instanceof Error ? envError.message : String(envError));
+
+          // Try any camera as fallback
+          try {
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: {
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+              },
+              audio: false
+            });
+            logger.log("[ProfileSetup] Successfully accessed any available camera");
+          } catch (anyError) {
+            lastError = anyError;
+            logger.error("[ProfileSetup] All camera attempts failed:", anyError);
+
+            // Try one more time with minimal constraints for very old devices/browsers
+            try {
+              stream = await navigator.mediaDevices.getUserMedia({
+                video: true,
+                audio: false
+              });
+              logger.log("[ProfileSetup] Successfully accessed camera with minimal constraints");
+            } catch (minimalError) {
+              // If all attempts fail, provide helpful error message
+              const error = minimalError || lastError;
+              if (error instanceof Error) {
+                if (error.name === 'NotAllowedError') {
+                  throw new Error('Permiso de cámara denegado. Por favor, permite el acceso a la cámara en tu navegador.');
+                } else if (error.name === 'NotFoundError') {
+                  throw new Error('No se encontró ninguna cámara. Verifica que tu dispositivo tenga una cámara conectada.');
+                } else if (error.name === 'NotReadableError') {
+                  throw new Error('La cámara está siendo usada por otra aplicación. Cierra otras apps que puedan estar usando la cámara.');
+                } else {
+                  throw new Error(`Error al acceder a la cámara: ${error.message || 'Error desconocido'}`);
+                }
+              } else {
+                throw new Error('Error desconocido al acceder a la cámara');
+              }
+            }
+          }
+        }
+      }
+
+      if (!stream) {
+        throw lastError || new Error('No camera available');
+      }
+
+      setCameraStream(stream);
       if (videoRef.current) {
-        videoRef.current.srcObject = stream
+        videoRef.current.srcObject = stream;
+        // Wait for video to be ready
+        videoRef.current.onloadedmetadata = () => {
+          logger.log("[ProfileSetup] Camera video metadata loaded");
+        };
       }
     } catch (err) {
-      logger.error("[ProfileSetup] Error accessing camera:", err)
-      setGeneralError("Error al acceder a la cámara")
-      setShowCameraModal(false)
+      logger.error("[ProfileSetup] Error accessing camera:", err);
+      const errorMessage = err instanceof Error ? err.message : "Error al acceder a la cámara";
+      setGeneralError(errorMessage);
+      setShowCameraModal(false);
     }
   }
 
@@ -873,14 +957,14 @@ export function ProfileSetupForm() {
                     e.preventDefault()
                     openCamera()
                   }}
-                  className="flex-1 bg-primary active:bg-primary/90 text-white shadow-md text-sm sm:text-base py-2 sm:py-2.5 rounded-md cursor-pointer text-center flex items-center justify-center"
+                  className="flex-1 bg-primary active:bg-primary/90 text-white shadow-md text-sm sm:text-base py-2 sm:py-2.5 rounded-md cursor-pointer text-center flex items-center justify-center min-h-[44px] touch-manipulation"
                 >
                   <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                   Cámara
                 </label>
                 <label
                   htmlFor="file-input"
-                  className="flex-1 active:bg-gray-50 text-sm sm:text-base py-2 sm:py-2.5 rounded-md cursor-pointer text-center flex items-center justify-center border border-gray-300"
+                  className="flex-1 active:bg-gray-50 text-sm sm:text-base py-2 sm:py-2.5 rounded-md cursor-pointer text-center flex items-center justify-center border border-gray-300 min-h-[44px] touch-manipulation"
                 >
                   <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                   Galería
@@ -1142,7 +1226,7 @@ export function ProfileSetupForm() {
       {/* Modal de crop MEJORADO - Responsivo */}
       {showCropModal && (
         <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-1 sm:p-4">
-          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-[95vw] sm:max-w-lg shadow-2xl flex flex-col overflow-hidden max-h-[98vh] sm:max-h-[90vh]">
+          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-[98vw] sm:max-w-lg shadow-2xl flex flex-col overflow-hidden max-h-[98vh] sm:max-h-[90vh]">
             <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary/10 to-orange-50 flex-shrink-0">
               <h3 className="text-sm sm:text-base font-bold text-gray-900">Ajusta tu foto</h3>
               <button
@@ -1162,7 +1246,11 @@ export function ProfileSetupForm() {
                 <div className="w-full max-w-[85vw] sm:max-w-sm md:max-w-md aspect-square flex items-center justify-center">
                   <ReactCrop
                     crop={crop}
-                    onChange={(c) => setCrop(c)}
+                    onChange={(c) => {
+                      // Force circular crop by ensuring width equals height
+                      const size = Math.min(c.width, c.height);
+                      setCrop({ ...c, width: size, height: size });
+                    }}
                     onComplete={(c) => setCompletedCrop(c)}
                     aspect={1}
                     circularCrop
@@ -1211,7 +1299,7 @@ export function ProfileSetupForm() {
       {/* Camera Modal */}
       {showCameraModal && (
         <div className="fixed inset-0 bg-black flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-sm sm:max-w-md shadow-2xl flex flex-col overflow-hidden max-h-[95vh]">
+          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-[98vw] sm:max-w-md shadow-2xl flex flex-col overflow-hidden max-h-[95vh]">
             <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary/10 to-orange-50 flex-shrink-0">
               <h3 className="text-base sm:text-lg font-bold text-gray-900">Tomar foto</h3>
               <button

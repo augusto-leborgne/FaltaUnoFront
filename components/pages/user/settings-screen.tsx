@@ -689,19 +689,100 @@ export function SettingsScreen() {
   // Camera functions
   const startCamera = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user' }, // Front camera
-        audio: false
-      })
-      
-      setCameraStream(stream)
+      // Check if media devices are supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('La API de cámara no está disponible en este navegador');
+      }
+
+      let stream;
+      let lastError;
+
+      // Try different camera options with better error handling for computers
+      try {
+        // First try user camera (front camera) - most computers have this
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: 'user',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          },
+          audio: false
+        });
+        logger.log("[Settings] Successfully accessed front camera");
+      } catch (userError) {
+        lastError = userError;
+        logger.warn("[Settings] Front camera failed, trying back camera:", userError instanceof Error ? userError.message : String(userError));
+
+        try {
+          // Fallback to environment camera (back camera) - some computers might have external cameras
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: 'environment',
+              width: { ideal: 1280 },
+              height: { ideal: 720 }
+            },
+            audio: false
+          });
+          logger.log("[Settings] Successfully accessed back camera");
+        } catch (envError) {
+          lastError = envError;
+          logger.warn("[Settings] Back camera failed, trying any camera:", envError instanceof Error ? envError.message : String(envError));
+
+          try {
+            // Final fallback - any camera available with basic constraints
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: {
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+              },
+              audio: false
+            });
+            logger.log("[Settings] Successfully accessed any available camera");
+          } catch (anyError) {
+            lastError = anyError;
+            logger.error("[Settings] All camera attempts failed:", anyError);
+
+            // Try one more time with minimal constraints for very old devices/browsers
+            try {
+              stream = await navigator.mediaDevices.getUserMedia({
+                video: true,
+                audio: false
+              });
+              logger.log("[Settings] Successfully accessed camera with minimal constraints");
+            } catch (minimalError) {
+              // If all attempts fail, provide helpful error message
+              const error = minimalError || lastError;
+              if (error instanceof Error) {
+                if (error.name === 'NotAllowedError') {
+                  throw new Error('Permiso de cámara denegado. Por favor, permite el acceso a la cámara en tu navegador.');
+                } else if (error.name === 'NotFoundError') {
+                  throw new Error('No se encontró ninguna cámara. Verifica que tu dispositivo tenga una cámara conectada.');
+                } else if (error.name === 'NotReadableError') {
+                  throw new Error('La cámara está siendo usada por otra aplicación. Cierra otras apps que puedan estar usando la cámara.');
+                } else {
+                  throw new Error(`Error al acceder a la cámara: ${error.message || 'Error desconocido'}`);
+                }
+              } else {
+                throw new Error('Error desconocido al acceder a la cámara');
+              }
+            }
+          }
+        }
+      }
+
+      setCameraStream(stream);
       if (videoRef.current) {
-        videoRef.current.srcObject = stream
+        videoRef.current.srcObject = stream;
+        // Wait for video to be ready
+        videoRef.current.onloadedmetadata = () => {
+          logger.log("[Settings] Camera video metadata loaded");
+        };
       }
     } catch (err) {
-      logger.error("[Settings] Error accessing camera:", err)
-      setError("Error al acceder a la cámara")
-      setShowCameraModal(false)
+      logger.error("[Settings] Error accessing camera:", err);
+      const errorMessage = err instanceof Error ? err.message : "Error al acceder a la cámara. Verifica los permisos del navegador.";
+      setError(errorMessage);
+      setShowCameraModal(false);
     }
   }
 
@@ -1165,7 +1246,7 @@ export function SettingsScreen() {
                   <X className="w-5 h-5 text-gray-500" />
                 </button>
               </div>
-              
+
               <div className="space-y-3 sm:space-y-4">
                 <button
                   onClick={openCamera}
@@ -1175,12 +1256,12 @@ export function SettingsScreen() {
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <Camera className="w-5 h-5 text-primary" />
                   </div>
-                  <div>
-                    <div className="font-semibold text-gray-900">Tomar foto</div>
-                    <div className="text-sm text-gray-500">Usar cámara del dispositivo</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-gray-900 text-sm sm:text-base">Tomar foto</div>
+                    <div className="text-xs sm:text-sm text-gray-500">Usar cámara del dispositivo</div>
                   </div>
                 </button>
-                
+
                 <button
                   onClick={openFileExplorer}
                   className="w-full flex items-center space-x-3 p-4 bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors text-left touch-manipulation min-h-[60px]"
@@ -1189,12 +1270,12 @@ export function SettingsScreen() {
                   <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
                     <Upload className="w-5 h-5 text-blue-600" />
                   </div>
-                  <div>
-                    <div className="font-semibold text-gray-900">Elegir de galería</div>
-                    <div className="text-sm text-gray-500">Seleccionar archivo existente</div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-gray-900 text-sm sm:text-base">Elegir de galería</div>
+                    <div className="text-xs sm:text-sm text-gray-500">Seleccionar archivo existente</div>
                   </div>
                 </button>
-                
+
                 {avatar && (
                   <button
                     onClick={removePhoto}
@@ -1204,9 +1285,9 @@ export function SettingsScreen() {
                     <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
                       <Trash2 className="w-5 h-5 text-red-600" />
                     </div>
-                    <div>
-                      <div className="font-semibold text-red-900">Eliminar foto</div>
-                      <div className="text-sm text-red-600">Usar avatar predeterminado</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-red-900 text-sm sm:text-base">Eliminar foto</div>
+                      <div className="text-xs sm:text-sm text-red-600">Usar avatar predeterminado</div>
                     </div>
                   </button>
                 )}
@@ -1298,8 +1379,8 @@ export function SettingsScreen() {
       
       {/* Crop Modal */}
       {showCropModal && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-1 sm:p-4">
-          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-[95vw] sm:max-w-lg shadow-2xl flex flex-col overflow-hidden max-h-[98vh] sm:max-h-[90vh]">
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-1 sm:p-2 md:p-4">
+          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-[95vw] sm:max-w-[90vw] md:max-w-lg shadow-2xl flex flex-col overflow-hidden max-h-[95vh] sm:max-h-[90vh]">
             <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary/10 to-orange-50 flex-shrink-0">
               <h3 className="text-sm sm:text-base font-bold text-gray-900">Ajusta tu foto</h3>
               <button
@@ -1315,12 +1396,28 @@ export function SettingsScreen() {
             </div>
 
             <div className="flex-1 overflow-hidden bg-gray-50">
-              <div className="h-full flex items-center justify-center p-2 sm:p-4">
-                <div className="w-full max-w-[85vw] sm:max-w-sm md:max-w-md aspect-square flex items-center justify-center">
+              <div className="h-full flex items-center justify-center p-2 sm:p-3 md:p-4">
+                <div className="w-full max-w-[80vw] sm:max-w-[75vw] md:max-w-sm aspect-square flex items-center justify-center">
                   <ReactCrop
                     crop={crop}
-                    onChange={(c) => setCrop(c)}
-                    onComplete={(c) => setCompletedCrop(c)}
+                    onChange={(c) => {
+                      // Force circular aspect ratio
+                      const size = Math.min(c.width, c.height);
+                      setCrop({
+                        ...c,
+                        width: size,
+                        height: size
+                      });
+                    }}
+                    onComplete={(c) => {
+                      // Ensure completed crop is also circular
+                      const size = Math.min(c.width, c.height);
+                      setCompletedCrop({
+                        ...c,
+                        width: size,
+                        height: size
+                      });
+                    }}
                     aspect={1}
                     circularCrop
                     keepSelection
@@ -1367,8 +1464,8 @@ export function SettingsScreen() {
       
       {/* Camera Modal */}
       {showCameraModal && (
-        <div className="fixed inset-0 bg-black flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-sm sm:max-w-md shadow-2xl flex flex-col overflow-hidden max-h-[95vh]">
+        <div className="fixed inset-0 bg-black flex items-center justify-center z-50 p-1 sm:p-2 md:p-4">
+          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-[95vw] sm:max-w-[90vw] md:max-w-md shadow-2xl flex flex-col overflow-hidden max-h-[95vh]">
             <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary/10 to-orange-50 flex-shrink-0">
               <h3 className="text-base sm:text-lg font-bold text-gray-900">Tomar foto</h3>
               <button
@@ -1380,20 +1477,27 @@ export function SettingsScreen() {
               </button>
             </div>
 
-            <div className="p-2 sm:p-4 bg-gray-900 flex items-center justify-center relative flex-1 min-h-0">
+            <div className="p-2 sm:p-3 md:p-4 bg-gray-900 flex items-center justify-center relative flex-1 min-h-0">
               <video
                 ref={videoRef}
                 autoPlay
                 playsInline
                 muted
-                className="w-full h-auto max-h-[50vh] sm:max-h-[60vh] object-cover rounded-lg sm:rounded-xl"
+                className="w-full h-auto max-h-[60vh] sm:max-h-[65vh] md:max-h-[70vh] object-cover rounded-lg sm:rounded-xl"
                 style={{ transform: 'scaleX(-1)' }} // Unmirror the camera view
               />
               <canvas ref={canvasRef} className="hidden" />
-              
-              {/* Camera overlay guide */}
+
+              {/* Camera overlay guide - Responsive sizing */}
               <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                <div className="w-48 h-48 sm:w-56 sm:h-56 border-2 border-white/50 rounded-full"></div>
+                <div className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 border-2 border-white/50 rounded-full"></div>
+              </div>
+
+              {/* Camera instructions for mobile */}
+              <div className="absolute bottom-20 sm:bottom-24 left-1/2 transform -translate-x-1/2 text-center">
+                <p className="text-white text-xs sm:text-sm bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">
+                  Ajusta tu cara dentro del círculo
+                </p>
               </div>
             </div>
 
@@ -1402,14 +1506,14 @@ export function SettingsScreen() {
                 type="button"
                 onClick={stopCamera}
                 variant="outline"
-                className="flex-1 text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[44px]"
+                className="flex-1 text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[48px]"
               >
                 Cancelar
               </Button>
               <Button
                 type="button"
                 onClick={capturePhoto}
-                className="flex-1 bg-primary active:bg-primary/90 text-white text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[44px]"
+                className="flex-1 bg-primary active:bg-primary/90 text-white text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[48px]"
               >
                 <Camera className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 Capturar

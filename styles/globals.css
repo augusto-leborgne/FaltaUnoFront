@@ -139,14 +139,49 @@
 .ReactCrop__drag-handle {
   background: white !important;
   border: 1px solid #ccc !important;
-  width: 12px !important;
-  height: 12px !important;
+  width: 20px !important;
+  height: 20px !important;
   border-radius: 50% !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
 }
 
 @media (max-width: 640px) {
   .ReactCrop__drag-handle {
-    width: 16px !important;
-    height: 16px !important;
+    width: 24px !important;
+    height: 24px !important;
+  }
+}
+
+/* Mobile-specific ReactCrop improvements */
+@media (max-width: 768px) {
+  .ReactCrop__crop-selection {
+    border-width: 3px !important;
+  }
+
+  .ReactCrop__drag-handle {
+    width: 28px !important;
+    height: 28px !important;
+    border-width: 2px !important;
+  }
+}
+
+/* Very small screens */
+@media (max-width: 480px) {
+  .ReactCrop__drag-handle {
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  .ReactCrop__crop-selection {
+    border-width: 4px !important;
+  }
+}
+
+/* Extra small screens - ensure usability */
+@media (max-width: 360px) {
+  .ReactCrop__drag-handle {
+    width: 36px !important;
+    height: 36px !important;
+    border-width: 3px !important;
   }
 }
