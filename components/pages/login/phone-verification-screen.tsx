@@ -110,6 +110,11 @@ export function PhoneVerificationScreen() {
     // Eliminar espacios
     const cleanPhone = value.replace(/\s/g, '');
     
+    // ❌ NO permitir que comience con 0
+    if (cleanPhone.startsWith('0')) {
+      return "No incluyas el 0 inicial";
+    }
+    
     // Debe tener entre 6 y 15 dígitos
     if (!/^\d{6,15}$/.test(cleanPhone)) {
       return "Número inválido (6-15 dígitos)";
@@ -119,9 +124,21 @@ export function PhoneVerificationScreen() {
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+    let value = e.target.value;
+    
     // Solo permitir números y espacios
-    const cleaned = value.replace(/[^\d\s]/g, '');
+    let cleaned = value.replace(/[^\d\s]/g, '');
+    
+    // ⚡ IMPORTANTE: Eliminar 0 inicial automáticamente
+    // Si el usuario escribe 0 al principio, lo removemos
+    if (cleaned.replace(/\s/g, '').startsWith('0')) {
+      cleaned = cleaned.replace(/\s/g, '').substring(1);
+      // Reformatear con espacios si había
+      if (value.includes(' ')) {
+        cleaned = cleaned.replace(/(\d{3})(?=\d)/g, '$1 ');
+      }
+    }
+    
     setPhoneNumber(cleaned);
     const validationError = validatePhoneNumber(cleaned);
     setFieldError(validationError || "");
@@ -562,7 +579,7 @@ export function PhoneVerificationScreen() {
                 <div className="relative">
                   <Input
                     type="tel"
-                    placeholder="Ej: 099 123 456"
+                    placeholder="99 123 456"
                     value={phoneNumber}
                     onChange={handlePhoneChange}
                     className={`${fieldError ? 'border-red-500 focus:ring-red-500' : 'focus:ring-primary'} ${isCheckingPhone ? 'pr-10' : ''}`}
@@ -573,7 +590,7 @@ export function PhoneVerificationScreen() {
                   {/* Indicador de verificación */}
                   {isCheckingPhone && (
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                      <svg className="animate-spin h-4 h-4 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <svg className="animate-spin h-4 w-4 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
@@ -591,9 +608,22 @@ export function PhoneVerificationScreen() {
                     Verificando disponibilidad...
                   </p>
                 )}
-                <p className="text-xs text-gray-500 mt-2">
-                  Formato final: {countryCode} {phoneNumber || "XXXXXXXXX"}
-                </p>
+                {!fieldError && phoneNumber && !isCheckingPhone && (
+                  <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                    <CheckCircle className="w-3 h-3" />
+                    Formato correcto: {countryCode} {phoneNumber}
+                  </p>
+                )}
+                <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-xs text-blue-700">
+                    <strong>ℹ️ Formato correcto:</strong> {countryCode === "+598" ? "99 123 456" : "Sin 0 inicial"}
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    {countryCode === "+598" 
+                      ? "Para Uruguay: ingresa tu número SIN el 0 inicial (ej: 99 123 456)" 
+                      : "Ingresa tu número sin el 0 inicial del código de área"}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
