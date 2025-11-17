@@ -38,6 +38,14 @@ function needsIdVerification(u: any | null | undefined) {
 
 function needsPhoneVerification(u: any | null | undefined) {
   if (!u) return false
+  
+  // ⚡ CAMBIO: Solo pedir verificación si el perfil NO está completo
+  // Si perfilCompleto === true, NO volver a pedirle el celular
+  if (u.perfilCompleto === true) {
+    return false // Perfil completo - no pedir celular
+  }
+  
+  // Solo verificar celular durante el flujo de registro/setup inicial
   const celular = u?.celular
   return !celular || celular.trim() === ""
 }
