@@ -506,14 +506,17 @@ export function ProfileSetupForm() {
           left = window.innerWidth - width - 8;
         }
 
-        // Ensure minimum width
-        width = Math.max(width, 200);
+        // Ensure width matches the trigger field width exactly (user requested same length horizontally)
+        width = rect.width;
+        // Constrain width to viewport if somehow wider
+        width = Math.min(width, window.innerWidth - 16);
 
         dropdown.style.position = 'fixed';
         dropdown.style.top = `${top}px`;
           dropdown.style.overflowY = 'auto';
         dropdown.style.left = `${left}px`;
         dropdown.style.width = `${width}px`;
+        dropdown.style.minWidth = `${width}px`;
         dropdown.style.zIndex = '9999';
       }
     }

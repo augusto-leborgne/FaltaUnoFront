@@ -397,12 +397,16 @@ export function AddressAutocomplete({
         }
         
         // Ensure minimum width
-        width = Math.max(width, 300);
+        // Match suggestion width exactly with input width for consistent UX
+        width = rect.width;
+        // Constrain width to viewport to avoid overflow
+        width = Math.min(width, window.innerWidth - 16);
         
         dropdown.style.position = 'fixed';
         dropdown.style.top = `${top}px`;
         dropdown.style.left = `${left}px`;
         dropdown.style.width = `${width}px`;
+        dropdown.style.minWidth = `${width}px`;
         dropdown.style.zIndex = '9999';
       }
     }
