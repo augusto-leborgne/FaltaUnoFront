@@ -1276,7 +1276,7 @@ export function ProfileSetupForm() {
 
             <div className="flex-1 overflow-hidden bg-gray-50">
               <div className="h-full flex items-center justify-center p-2 sm:p-4">
-                <div className="w-full max-w-[85vw] sm:max-w-sm md:max-w-md aspect-square flex items-center justify-center">
+                <div className="w-full max-w-[95vw] sm:max-w-md md:max-w-lg lg:max-w-xl aspect-square flex items-center justify-center">
                   <ReactCrop
                     crop={crop}
                     onChange={(c) => {
