@@ -278,7 +278,7 @@ export function ProfileSetupForm() {
   // Camera functions
   const openCamera = () => {
     // Try to use getUserMedia for desktop, fallback to file input for mobile
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
       setShowCameraModal(true)
     } else {
       // Fallback for older browsers or when getUserMedia is not available
