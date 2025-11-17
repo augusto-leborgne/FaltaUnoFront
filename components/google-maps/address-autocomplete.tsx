@@ -368,26 +368,31 @@ export function AddressAutocomplete({
         const spaceBelow = window.innerHeight - rect.bottom - 8;
         const spaceAbove = rect.top - 8;
 
-        // Choose placement: prefer below when there's enough space, otherwise place above
+        // ⚡ PREFERIR ARRIBA: Mostrar encima del campo si hay espacio suficiente
         let top: number;
-        if (spaceBelow >= dropdownHeight) {
-          // Place below
-          top = rect.bottom + 4;
-          dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceBelow)}px`;
+        if (spaceAbove >= dropdownHeight) {
+          // Hay espacio suficiente arriba - mostrar ARRIBA
+          top = rect.top - dropdownHeight - 4;
+          dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceAbove)}px`;
         } else if (spaceAbove >= 120) {
-          // Place above if there's space and below is constrained
+          // Hay espacio arriba pero no completo - usar lo disponible arriba
           top = rect.top - Math.min(dropdownHeight, spaceAbove) - 4;
           dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceAbove)}px`;
+        } else if (spaceBelow >= dropdownHeight) {
+          // No hay espacio arriba pero sí abajo completo
+          top = rect.bottom + 4;
+          dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceBelow)}px`;
         } else {
-          // Choose the side with more space and allow scrolling
-          if (spaceBelow >= spaceAbove) {
+          // Poco espacio en ambos lados - elegir el que tenga más
+          if (spaceAbove >= spaceBelow) {
+            top = rect.top - Math.min(dropdownHeight, spaceAbove) - 4;
+            dropdown.style.maxHeight = `${Math.max(120, spaceAbove)}px`;
+          } else {
             top = rect.bottom + 4;
             dropdown.style.maxHeight = `${Math.max(120, spaceBelow)}px`;
-          } else {
-            top = 8; // stick to top of viewport
-            dropdown.style.maxHeight = `${Math.max(120, spaceAbove)}px`;
           }
         }
+        
         let left = rect.left;
         let width = rect.width;
         
@@ -396,7 +401,6 @@ export function AddressAutocomplete({
           left = window.innerWidth - width - 8;
         }
         
-        // Ensure minimum width
         // Match suggestion width exactly with input width for consistent UX
         width = rect.width;
         // Constrain width to viewport to avoid overflow
@@ -408,6 +412,7 @@ export function AddressAutocomplete({
         dropdown.style.width = `${width}px`;
         dropdown.style.minWidth = `${width}px`;
         dropdown.style.zIndex = '9999';
+        dropdown.style.overflowY = 'auto'; // ✅ Scrolleable
       }
     }
     const reposition = () => {
@@ -421,32 +426,42 @@ export function AddressAutocomplete({
         const spaceBelow = window.innerHeight - rect.bottom - 8;
         const spaceAbove = rect.top - 8;
 
+        // ⚡ PREFERIR ARRIBA: Mostrar encima del campo si hay espacio suficiente
         let top: number;
-        if (spaceBelow >= dropdownHeight) {
-          top = rect.bottom + 4;
-          dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceBelow)}px`;
+        if (spaceAbove >= dropdownHeight) {
+          // Hay espacio suficiente arriba - mostrar ARRIBA
+          top = rect.top - dropdownHeight - 4;
+          dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceAbove)}px`;
         } else if (spaceAbove >= 120) {
+          // Hay espacio arriba pero no completo - usar lo disponible arriba
           top = rect.top - Math.min(dropdownHeight, spaceAbove) - 4;
           dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceAbove)}px`;
+        } else if (spaceBelow >= dropdownHeight) {
+          // No hay espacio arriba pero sí abajo completo
+          top = rect.bottom + 4;
+          dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceBelow)}px`;
         } else {
-          if (spaceBelow >= spaceAbove) {
+          // Poco espacio en ambos lados - elegir el que tenga más
+          if (spaceAbove >= spaceBelow) {
+            top = rect.top - Math.min(dropdownHeight, spaceAbove) - 4;
+            dropdown.style.maxHeight = `${Math.max(120, spaceAbove)}px`;
+          } else {
             top = rect.bottom + 4;
             dropdown.style.maxHeight = `${Math.max(120, spaceBelow)}px`;
-          } else {
-            top = 8;
-            dropdown.style.maxHeight = `${Math.max(120, spaceAbove)}px`;
           }
         }
 
         let left = rect.left;
         let width = rect.width;
         if (left + width > window.innerWidth) left = window.innerWidth - width - 8;
-        width = Math.max(width, 300);
+        width = rect.width;
+        width = Math.min(width, window.innerWidth - 16);
 
         dropdown.style.position = 'fixed';
         dropdown.style.top = `${top}px`;
         dropdown.style.left = `${left}px`;
         dropdown.style.width = `${width}px`;
+        dropdown.style.minWidth = `${width}px`;
         dropdown.style.zIndex = '9999';
         dropdown.style.overflowY = 'auto';
       }

@@ -68,12 +68,13 @@ export function ProfileSetupForm() {
   // Image crop states
   const [showCropModal, setShowCropModal] = useState(false)
   const [imageToCrop, setImageToCrop] = useState<string>("")
+  // ⚡ FIX: Crop inicial CIRCULAR - size = min(width, height) para que se ajuste a la imagen
   const [crop, setCrop] = useState<Crop>({
     unit: '%',
-    width: 70,
-    height: 70,
-    x: 15,
-    y: 15
+    width: 50,
+    height: 50,
+    x: 25,
+    y: 25
   })
   const [completedCrop, setCompletedCrop] = useState<Crop | null>(null)
   const imageRef = useRef<HTMLImageElement | null>(null)
@@ -441,6 +442,16 @@ export function ProfileSetupForm() {
       reader.onload = () => {
         if (reader.result) {
           setImageToCrop(reader.result as string)
+          
+          // ⚡ FIX: Reset crop to circular centered position for camera photo
+          setCrop({
+            unit: '%',
+            width: 50,
+            height: 50,
+            x: 25,
+            y: 25
+          })
+          setCompletedCrop(null) // Reset completed crop
           setShowCropModal(true)
         }
       }
@@ -513,15 +524,64 @@ export function ProfileSetupForm() {
 
         dropdown.style.position = 'fixed';
         dropdown.style.top = `${top}px`;
-          dropdown.style.overflowY = 'auto';
         dropdown.style.left = `${left}px`;
         dropdown.style.width = `${width}px`;
         dropdown.style.minWidth = `${width}px`;
         dropdown.style.zIndex = '9999';
+        dropdown.style.overflowY = 'auto'; // ✅ Scrolleable si es necesario
       }
     }
 
-    // Nothing else: repositioning + listeners done in the reposition block
+    // Reposition on scroll/resize
+    const reposition = () => {
+      if (!showGeneroDropdown || !generoDropdownRef.current) return;
+      
+      const trigger = generoDropdownRef.current.querySelector('button');
+      const dropdown = generoDropdownRef.current.querySelector('div[role="listbox"], div:last-child') as HTMLElement;
+      if (!trigger || !dropdown) return;
+
+      const rect = trigger.getBoundingClientRect();
+      const dropdownHeight = Math.min(240, dropdown.scrollHeight);
+      const spaceBelow = window.innerHeight - rect.bottom - 8;
+      const spaceAbove = rect.top - 8;
+
+      let top = rect.bottom + 4;
+      let left = rect.left;
+      let width = rect.width;
+
+      if (top + dropdownHeight > window.innerHeight) {
+        if (spaceAbove >= 120) {
+          top = rect.top - Math.min(dropdownHeight, spaceAbove) - 4;
+          dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceAbove)}px`;
+        } else {
+          top = rect.bottom + 4;
+          dropdown.style.maxHeight = `${Math.max(120, spaceBelow)}px`;
+        }
+      } else {
+        dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceBelow)}px`;
+      }
+
+      if (left + width > window.innerWidth) left = window.innerWidth - width - 8;
+      width = rect.width;
+      width = Math.min(width, window.innerWidth - 16);
+
+      dropdown.style.position = 'fixed';
+      dropdown.style.top = `${top}px`;
+      dropdown.style.left = `${left}px`;
+      dropdown.style.width = `${width}px`;
+      dropdown.style.minWidth = `${width}px`;
+      dropdown.style.zIndex = '9999';
+      dropdown.style.overflowY = 'auto';
+    };
+
+    reposition();
+    window.addEventListener('resize', reposition);
+    window.addEventListener('scroll', reposition, true);
+
+    return () => {
+      window.removeEventListener('resize', reposition);
+      window.removeEventListener('scroll', reposition, true);
+    };
   }, [showGeneroDropdown]);
 
   useEffect(() => {
@@ -564,21 +624,26 @@ export function ProfileSetupForm() {
           left = window.innerWidth - width - 8;
         }
 
-        // Ensure minimum width
-        width = Math.max(width, 200);
+        // ⚡ FIX: Match dropdown width EXACTLY with input width (same as genero dropdown)
+        width = rect.width;
+        // Constrain width to viewport if somehow wider
+        width = Math.min(width, window.innerWidth - 16);
 
         dropdown.style.position = 'fixed';
         dropdown.style.top = `${top}px`;
-          dropdown.style.overflowY = 'auto';
         dropdown.style.left = `${left}px`;
         dropdown.style.width = `${width}px`;
+        dropdown.style.minWidth = `${width}px`;
         dropdown.style.zIndex = '9999';
+        dropdown.style.overflowY = 'auto'; // ✅ Scrolleable si es necesario
       }
     }
 
     const reposition = () => {
-      const trigger = positionDropdownRef.current?.querySelector('button');
-      const dropdown = positionDropdownRef.current?.querySelector('div[role="listbox"], div:last-child') as HTMLElement | null;
+      if (!showPositionDropdown || !positionDropdownRef.current) return;
+      
+      const trigger = positionDropdownRef.current.querySelector('button');
+      const dropdown = positionDropdownRef.current.querySelector('div[role="listbox"], div:last-child') as HTMLElement | null;
       if (!trigger || !dropdown) return;
 
       const rect = trigger.getBoundingClientRect();
@@ -603,12 +668,17 @@ export function ProfileSetupForm() {
       }
 
       if (left + width > window.innerWidth) left = window.innerWidth - width - 8;
-      width = Math.max(width, 200);
+      
+      // ⚡ FIX: Match dropdown width EXACTLY with input width (same as genero dropdown)
+      width = rect.width;
+      // Constrain width to viewport if somehow wider
+      width = Math.min(width, window.innerWidth - 16);
 
       dropdown.style.position = 'fixed';
       dropdown.style.top = `${top}px`;
       dropdown.style.left = `${left}px`;
       dropdown.style.width = `${width}px`;
+      dropdown.style.minWidth = `${width}px`;
       dropdown.style.zIndex = '9999';
       dropdown.style.overflowY = 'auto';
     };
@@ -648,6 +718,21 @@ export function ProfileSetupForm() {
           return
         }
         setImageToCrop(reader.result as string)
+        
+        // ⚡ FIX: Reset crop to circular centered position when new image loads
+        const minDimension = Math.min(img.width, img.height)
+        const size = 50 // 50% of image
+        const offsetX = 25 // Center horizontally
+        const offsetY = 25 // Center vertically
+        
+        setCrop({
+          unit: '%',
+          width: size,
+          height: size,
+          x: offsetX,
+          y: offsetY
+        })
+        setCompletedCrop(null) // Reset completed crop
         setShowCropModal(true)
       }
       img.src = reader.result as string
