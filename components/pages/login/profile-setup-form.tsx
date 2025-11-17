@@ -65,10 +65,10 @@ export function ProfileSetupForm() {
   const [imageToCrop, setImageToCrop] = useState<string>("")
   const [crop, setCrop] = useState<Crop>({
     unit: '%',
-    width: 80,
-    height: 80,
-    x: 10,
-    y: 10
+    width: 60,
+    height: 60,
+    x: 20,
+    y: 20
   })
   const [completedCrop, setCompletedCrop] = useState<Crop | null>(null)
   const imageRef = useRef<HTMLImageElement | null>(null)
@@ -967,6 +967,7 @@ export function ProfileSetupForm() {
                   aspect={1}
                   circularCrop
                   keepSelection
+                  locked
                   minWidth={50}
                   minHeight={50}
                   className="max-w-full"

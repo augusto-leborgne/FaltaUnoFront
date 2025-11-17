@@ -13,8 +13,8 @@ import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { useAuth } from "@/hooks/use-auth"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import { PhotoCache } from "@/lib/photo-cache"
-import { API_URL } from "@/lib/api"
+import ReactCrop, { type Crop } from 'react-image-crop'
+import 'react-image-crop/dist/ReactCrop.css'
 
 const positions = ["Arquero", "Defensa", "Mediocampista", "Delantero"]
 
@@ -55,6 +55,19 @@ export function SettingsScreen() {
 
   const [avatar, setAvatar] = useState<string>("")
   const [photoFile, setPhotoFile] = useState<File | null>(null)
+
+  // Image crop states
+  const [showCropModal, setShowCropModal] = useState(false)
+  const [imageToCrop, setImageToCrop] = useState<string>("")
+  const [crop, setCrop] = useState<Crop>({
+    unit: '%',
+    width: 60,
+    height: 60,
+    x: 20,
+    y: 20
+  })
+  const [completedCrop, setCompletedCrop] = useState<Crop | null>(null)
+  const imageRef = useRef<HTMLImageElement | null>(null)
 
   const [notificationPreferences, setNotificationPreferences] = useState({
     matchInvitations: true,
@@ -504,7 +517,45 @@ export function SettingsScreen() {
     }
   }
 
-  const handleUploadPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCropComplete = async () => {
+    if (!imageRef.current || !completedCrop) return
+
+    const canvas = document.createElement('canvas')
+    const scaleX = imageRef.current.naturalWidth / imageRef.current.width
+    const scaleY = imageRef.current.naturalHeight / imageRef.current.height
+    const ctx = canvas.getContext('2d')
+
+    if (!ctx) return
+
+    // Tamaño final: 400x400px (suficiente calidad, peso razonable)
+    const targetSize = 400
+    canvas.width = targetSize
+    canvas.height = targetSize
+
+    ctx.drawImage(
+      imageRef.current,
+      completedCrop.x * scaleX,
+      completedCrop.y * scaleY,
+      completedCrop.width * scaleX,
+      completedCrop.height * scaleY,
+      0,
+      0,
+      targetSize,
+      targetSize
+    )
+
+    canvas.toBlob((blob) => {
+      if (!blob) return
+      
+      const file = new File([blob], 'profile-photo.jpg', { type: 'image/jpeg' })
+      
+      setPhotoFile(file)
+      setAvatar(URL.createObjectURL(file))
+      
+      setShowCropModal(false)
+      setImageToCrop('')
+    }, 'image/jpeg', 0.92) // Calidad 92% - buen balance
+  }
     const file = e.target.files?.[0]
     if (file) {
       // Validar tamaño (max 5MB)
@@ -519,16 +570,17 @@ export function SettingsScreen() {
         return
       }
 
-      setPhotoFile(file)
-      
       const reader = new FileReader()
       reader.onload = () => {
-        if (reader.result) setAvatar(reader.result as string)
+        if (reader.result) {
+          setImageToCrop(reader.result as string)
+          setShowCropModal(true)
+        }
       }
       reader.readAsDataURL(file)
       
       setShowPhotoOptions(false)
-      logger.log("[Settings] Foto seleccionada:", file.name)
+      logger.log("[Settings] Foto seleccionada para recortar:", file.name)
     }
   }
   
@@ -1102,6 +1154,74 @@ export function SettingsScreen() {
                 className="flex-1 bg-primary text-white hover:bg-primary/90"
               >
                 {isSaving ? "Verificando..." : "Verificar"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Crop Modal */}
+      {showCropModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4">
+          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-lg shadow-2xl flex flex-col overflow-hidden">
+            <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary/10 to-orange-50">
+              <h3 className="text-base sm:text-lg font-bold text-gray-900">Ajusta tu foto</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCropModal(false)
+                  setImageToCrop('')
+                }}
+                className="p-1.5 sm:p-2 active:bg-white rounded-lg sm:rounded-xl transition-colors"
+              >
+                <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+              </button>
+            </div>
+
+            <div className="p-3 sm:p-4 bg-gray-50 flex items-center justify-center" style={{ maxHeight: '60vh' }}>
+              <div className="w-full max-w-sm">
+                <ReactCrop
+                  crop={crop}
+                  onChange={(c) => setCrop(c)}
+                  onComplete={(c) => setCompletedCrop(c)}
+                  aspect={1}
+                  circularCrop
+                  keepSelection
+                  locked
+                  minWidth={50}
+                  minHeight={50}
+                  className="max-w-full"
+                >
+                  <img
+                    ref={imageRef}
+                    src={imageToCrop}
+                    alt="Recortar"
+                    className="max-w-full h-auto"
+                    style={{ maxHeight: '50vh' }}
+                  />
+                </ReactCrop>
+              </div>
+            </div>
+
+            <div className="p-3 sm:p-4 border-t border-gray-200 flex gap-2 sm:gap-3 bg-white">
+              <Button
+                type="button"
+                onClick={() => {
+                  setShowCropModal(false)
+                  setImageToCrop('')
+                }}
+                variant="outline"
+                className="flex-1 text-sm sm:text-base py-2 sm:py-2.5"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                onClick={handleCropComplete}
+                className="flex-1 bg-primary active:bg-primary/90 text-white text-sm sm:text-base py-2 sm:py-2.5"
+                disabled={!completedCrop}
+              >
+                Aplicar
               </Button>
             </div>
           </div>
