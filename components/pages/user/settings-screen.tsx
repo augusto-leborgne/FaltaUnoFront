@@ -36,6 +36,7 @@ export function SettingsScreen() {
   // Refs para inputs de foto
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const cameraInputRef = useRef<HTMLInputElement | null>(null)
+  const imageRef = useRef<HTMLImageElement | null>(null)
   const [showPhotoOptions, setShowPhotoOptions] = useState(false)
 
   const [formData, setFormData] = useState({
@@ -83,6 +84,18 @@ export function SettingsScreen() {
 
   const [isCheckingPhone, setIsCheckingPhone] = useState(false)
   const [phoneCheckDebounce, setPhoneCheckDebounce] = useState<NodeJS.Timeout | null>(null)
+
+  // Image crop states
+  const [showCropModal, setShowCropModal] = useState(false)
+  const [imageToCrop, setImageToCrop] = useState<string>("")
+  const [crop, setCrop] = useState<Crop>({
+    unit: '%',
+    width: 50,
+    height: 50,
+    x: 25,
+    y: 25
+  })
+  const [completedCrop, setCompletedCrop] = useState<Crop | null>(null)
 
   // Phone verification states
   const [showPhoneVerification, setShowPhoneVerification] = useState(false)
@@ -644,7 +657,7 @@ export function SettingsScreen() {
   
   const openCamera = () => {
     // Try to use getUserMedia for desktop, fallback to file input for mobile
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
       setShowCameraModal(true)
       setShowPhotoOptions(false)
     } else {

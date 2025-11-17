@@ -28,6 +28,10 @@ export function ProfileSetupForm() {
   const cameraInputRef = useRef<HTMLInputElement | null>(null)
   const formRef = useRef<HTMLFormElement | null>(null)
   
+  // Refs for controlling prefill logic
+  const isInitialMount = useRef(true)
+  const hasPrefilled = useRef(false)
+  
   // Refs para dropdowns
   const positionDropdownRef = useRef<HTMLDivElement | null>(null)
   const generoDropdownRef = useRef<HTMLDivElement | null>(null)
@@ -53,6 +57,7 @@ export function ProfileSetupForm() {
   const [showGeneroDropdown, setShowGeneroDropdown] = useState(false)
   const [showCountryCodeDropdown, setShowCountryCodeDropdown] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({})
   
   // Click outside handlers para cerrar dropdowns
   useClickOutside(positionDropdownRef, () => setShowPositionDropdown(false), showPositionDropdown)
@@ -273,7 +278,7 @@ export function ProfileSetupForm() {
   // Camera functions
   const openCamera = () => {
     // Try to use getUserMedia for desktop, fallback to file input for mobile
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
       setShowCameraModal(true)
     } else {
       // Fallback for older browsers or when getUserMedia is not available

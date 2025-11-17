@@ -42,6 +42,9 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       return
     }
 
+    // Get current user for validation
+    const user = AuthService.getUser()
+
     // Si es una ruta que solo requiere autenticación (como phone-verification), no validar celular
     if (AUTH_ONLY_ROUTES.some(route => pathname?.startsWith(route))) {
       return
