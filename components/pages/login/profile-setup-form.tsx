@@ -278,7 +278,7 @@ export function ProfileSetupForm() {
   // Camera functions
   const openCamera = () => {
     // Try to use getUserMedia for desktop, fallback to file input for mobile
-    if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       setShowCameraModal(true)
     } else {
       // Fallback for older browsers or when getUserMedia is not available
@@ -450,43 +450,21 @@ export function ProfileSetupForm() {
     }, 'image/jpeg', 0.92)
   }
 
-  // Position dropdowns correctly
+  // Start camera when modal opens
   useEffect(() => {
-    if (showGeneroDropdown && generoDropdownRef.current) {
-      const trigger = generoDropdownRef.current.querySelector('button');
-      const dropdown = generoDropdownRef.current.querySelector('div[role="listbox"], div:last-child') as HTMLElement;
-      
-      if (trigger && dropdown) {
-        const rect = trigger.getBoundingClientRect();
-        const dropdownHeight = Math.min(240, dropdown.scrollHeight); // max-h-60 = 240px
-        
-        // Try to position below first
-        let top = rect.bottom + 4;
-        let left = rect.left;
-        let width = rect.width;
-        
-        // Check if it would go off the bottom of viewport
-        if (top + dropdownHeight > window.innerHeight) {
-          // Position above instead
-          top = rect.top - dropdownHeight - 4;
-        }
-        
-        // Check if it would go off the right edge
-        if (left + width > window.innerWidth) {
-          left = window.innerWidth - width - 8;
-        }
-        
-        // Ensure minimum width
-        width = Math.max(width, 200);
-        
-        dropdown.style.position = 'fixed';
-        dropdown.style.top = `${top}px`;
-        dropdown.style.left = `${left}px`;
-        dropdown.style.width = `${width}px`;
-        dropdown.style.zIndex = '9999';
+    if (showCameraModal) {
+      startCamera()
+    }
+  }, [showCameraModal])
+
+  // Cleanup camera stream on unmount
+  useEffect(() => {
+    return () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop())
       }
     }
-  }, [showGeneroDropdown]);
+  }, [cameraStream])
 
   useEffect(() => {
     if (showPositionDropdown && positionDropdownRef.current) {
@@ -1347,7 +1325,7 @@ export function ProfileSetupForm() {
                 autoPlay
                 playsInline
                 muted
-                className="w-full h-auto max-h-[60vh] sm:max-h-[65vh] md:max-h-[70vh] lg:max-h-[75vh] object-cover rounded-lg sm:rounded-xl"
+                className="w-full h-auto max-h-[75vh] sm:max-h-[80vh] md:max-h-[85vh] lg:max-h-[90vh] object-cover rounded-lg sm:rounded-xl"
                 style={{ transform: 'scaleX(-1)' }} // Unmirror the camera view
               />
               <canvas ref={canvasRef} className="hidden" />

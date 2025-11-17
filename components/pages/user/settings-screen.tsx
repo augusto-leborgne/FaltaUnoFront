@@ -657,14 +657,13 @@ export function SettingsScreen() {
   
   const openCamera = () => {
     // Try to use getUserMedia for desktop, fallback to file input for mobile
-    if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       setShowCameraModal(true)
-      setShowPhotoOptions(false)
     } else {
       // Fallback for older browsers or when getUserMedia is not available
       cameraInputRef.current?.click()
-      setShowPhotoOptions(false)
     }
+    setShowPhotoOptions(false)
   }
   
   const removePhoto = async () => {
@@ -1500,7 +1499,7 @@ export function SettingsScreen() {
                 autoPlay
                 playsInline
                 muted
-                className="w-full h-auto max-h-[60vh] sm:max-h-[65vh] md:max-h-[70vh] lg:max-h-[75vh] object-cover rounded-lg sm:rounded-xl"
+                className="w-full h-auto max-h-[75vh] sm:max-h-[80vh] md:max-h-[85vh] lg:max-h-[90vh] object-cover rounded-lg sm:rounded-xl"
                 style={{ transform: 'scaleX(-1)' }} // Unmirror the camera view
               />
               <canvas ref={canvasRef} className="hidden" />
