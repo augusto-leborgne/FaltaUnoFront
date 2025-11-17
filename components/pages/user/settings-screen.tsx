@@ -59,18 +59,11 @@ export function SettingsScreen() {
   const [avatar, setAvatar] = useState<string>("")
   const [photoFile, setPhotoFile] = useState<File | null>(null)
 
-  // Image crop states
-  const [showCropModal, setShowCropModal] = useState(false)
-  const [imageToCrop, setImageToCrop] = useState<string>("")
-  const [crop, setCrop] = useState<Crop>({
-    unit: '%',
-    width: 50,
-    height: 50,
-    x: 25,
-    y: 25
-  })
-  const [completedCrop, setCompletedCrop] = useState<Crop | null>(null)
-  const imageRef = useRef<HTMLImageElement | null>(null)
+  // Camera states
+  const [showCameraModal, setShowCameraModal] = useState(false)
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null)
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
   const [notificationPreferences, setNotificationPreferences] = useState({
     matchInvitations: true,
@@ -137,13 +130,21 @@ export function SettingsScreen() {
     };
   }, [phoneCheckDebounce]);
 
-  // Resend cooldown timer
+  // Start camera when modal opens
   useEffect(() => {
-    if (resendCooldown > 0) {
-      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
-      return () => clearTimeout(timer);
+    if (showCameraModal) {
+      startCamera()
     }
-  }, [resendCooldown]);
+  }, [showCameraModal])
+
+  // Cleanup camera stream on unmount
+  useEffect(() => {
+    return () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop())
+      }
+    }
+  }, [cameraStream])
 
   // ✅ NUEVO: Validar campos
   const validateField = (field: string, value: any): string | null => {
@@ -642,8 +643,15 @@ export function SettingsScreen() {
   }
   
   const openCamera = () => {
-    cameraInputRef.current?.click()
-    setShowPhotoOptions(false)
+    // Try to use getUserMedia for desktop, fallback to file input for mobile
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      setShowCameraModal(true)
+      setShowPhotoOptions(false)
+    } else {
+      // Fallback for older browsers or when getUserMedia is not available
+      cameraInputRef.current?.click()
+      setShowPhotoOptions(false)
+    }
   }
   
   const removePhoto = async () => {
@@ -663,6 +671,69 @@ export function SettingsScreen() {
       logger.error("[Settings] Error eliminando foto:", err)
       setError("Error al eliminar foto")
     }
+  }
+
+  // Camera functions
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user' }, // Front camera
+        audio: false
+      })
+      
+      setCameraStream(stream)
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+      }
+    } catch (err) {
+      logger.error("[Settings] Error accessing camera:", err)
+      setError("Error al acceder a la cámara")
+      setShowCameraModal(false)
+    }
+  }
+
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop())
+      setCameraStream(null)
+    }
+    setShowCameraModal(false)
+  }
+
+  const capturePhoto = () => {
+    if (!videoRef.current || !canvasRef.current) return
+
+    const video = videoRef.current
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext('2d')
+
+    if (!ctx) return
+
+    // Set canvas size to video dimensions
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+
+    // Draw the video frame to canvas
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+    // Convert to blob and create file
+    canvas.toBlob((blob) => {
+      if (!blob) return
+      
+      const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' })
+      
+      // Process the captured photo like uploaded photos
+      const reader = new FileReader()
+      reader.onload = () => {
+        if (reader.result) {
+          setImageToCrop(reader.result as string)
+          setShowCropModal(true)
+        }
+      }
+      reader.readAsDataURL(file)
+      
+      stopCamera()
+    }, 'image/jpeg', 0.92)
   }
 
   const handleDeleteAccount = async () => {
@@ -1273,6 +1344,54 @@ export function SettingsScreen() {
                 disabled={!completedCrop}
               >
                 Aplicar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Camera Modal */}
+      {showCameraModal && (
+        <div className="fixed inset-0 bg-black flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl flex flex-col overflow-hidden">
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary/10 to-orange-50">
+              <h3 className="text-lg font-bold text-gray-900">Tomar foto</h3>
+              <button
+                type="button"
+                onClick={stopCamera}
+                className="p-2 active:bg-white rounded-xl transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+
+            <div className="p-4 bg-gray-900 flex items-center justify-center relative">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-auto max-h-[60vh] object-cover rounded-xl"
+              />
+              <canvas ref={canvasRef} className="hidden" />
+            </div>
+
+            <div className="p-4 border-t border-gray-200 flex gap-3 bg-white">
+              <Button
+                type="button"
+                onClick={stopCamera}
+                variant="outline"
+                className="flex-1 py-3 touch-manipulation min-h-[44px]"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                onClick={capturePhoto}
+                className="flex-1 bg-primary active:bg-primary/90 text-white py-3 touch-manipulation min-h-[44px]"
+              >
+                <Camera className="w-5 h-5 mr-2" />
+                Capturar
               </Button>
             </div>
           </div>
