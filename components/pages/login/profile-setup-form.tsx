@@ -1362,7 +1362,7 @@ export function ProfileSetupForm() {
 
             <div className="flex-1 overflow-hidden bg-gray-50">
               <div className="h-full flex items-center justify-center p-2 sm:p-4">
-                <div className="w-full max-w-[95vw] sm:max-w-md md:max-w-lg lg:max-w-xl aspect-square flex items-center justify-center">
+                <div className="w-full max-w-[95vw] sm:max-w-md md:max-w-lg lg:max-w-xl flex items-center justify-center">
                   <ReactCrop
                     crop={crop}
                     onChange={(c) => {
@@ -1389,13 +1389,13 @@ export function ProfileSetupForm() {
                     keepSelection
                     minWidth={120}
                     minHeight={120}
-                    className="w-full h-full"
+                    className="w-full max-h-[70vh]"
                   >
                     <img
                       ref={imageRef}
                       src={imageToCrop}
                       alt="Recortar"
-                      className="w-full h-full object-contain"
+                      className="max-w-full max-h-[70vh] object-contain"
                     />
                   </ReactCrop>
                 </div>
@@ -1448,7 +1448,7 @@ export function ProfileSetupForm() {
                 autoPlay
                 playsInline
                 muted
-                className="w-full h-auto max-h-[75vh] sm:max-h-[80vh] md:max-h-[85vh] lg:max-h-[90vh] object-cover rounded-lg sm:rounded-xl"
+                className="w-full h-auto max-h-[75vh] sm:max-h-[80vh] md:max-h-[85vh] lg:max-h-[90vh] object-contain rounded-lg sm:rounded-xl"
                 style={{ transform: 'scaleX(-1)' }} // Unmirror the camera view
               />
               <canvas ref={canvasRef} className="hidden" />
