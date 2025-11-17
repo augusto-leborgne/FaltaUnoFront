@@ -1130,7 +1130,7 @@ export function ProfileSetupForm() {
                     <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
                   </Button>
                   {showPositionDropdown && (
-                    <div className="fixed bg-white border border-gray-300 rounded-xl shadow-xl z-[9999] max-h-60 overflow-y-auto min-w-[200px]">
+                    <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-xl shadow-xl z-[9999] max-h-60 overflow-y-auto">
                       {positions.map((pos) => (
                         <div
                           key={pos}

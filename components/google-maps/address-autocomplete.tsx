@@ -364,16 +364,10 @@ export function AddressAutocomplete({
         const rect = input.getBoundingClientRect();
         const dropdownHeight = Math.min(224, dropdown.scrollHeight); // max-h-56 = 224px
         
-        // Try to position below first
-        let top = rect.bottom + 4;
+        // Always position above the input
+        let top = rect.top - dropdownHeight - 4;
         let left = rect.left;
         let width = rect.width;
-        
-        // Check if it would go off the bottom of viewport
-        if (top + dropdownHeight > window.innerHeight) {
-          // Position above instead
-          top = rect.top - dropdownHeight - 4;
-        }
         
         // Check if it would go off the right edge
         if (left + width > window.innerWidth) {
