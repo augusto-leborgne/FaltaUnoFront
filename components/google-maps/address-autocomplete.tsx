@@ -363,9 +363,31 @@ export function AddressAutocomplete({
       if (input && dropdown) {
         const rect = input.getBoundingClientRect();
         const dropdownHeight = Math.min(224, dropdown.scrollHeight); // max-h-56 = 224px
-        
-        // Always position above the input
-        let top = rect.top - dropdownHeight - 4;
+
+        // Calculate available space above and below the input
+        const spaceBelow = window.innerHeight - rect.bottom - 8;
+        const spaceAbove = rect.top - 8;
+
+        // Choose placement: prefer below when there's enough space, otherwise place above
+        let top: number;
+        if (spaceBelow >= dropdownHeight) {
+          // Place below
+          top = rect.bottom + 4;
+          dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceBelow)}px`;
+        } else if (spaceAbove >= 120) {
+          // Place above if there's space and below is constrained
+          top = rect.top - Math.min(dropdownHeight, spaceAbove) - 4;
+          dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceAbove)}px`;
+        } else {
+          // Choose the side with more space and allow scrolling
+          if (spaceBelow >= spaceAbove) {
+            top = rect.bottom + 4;
+            dropdown.style.maxHeight = `${Math.max(120, spaceBelow)}px`;
+          } else {
+            top = 8; // stick to top of viewport
+            dropdown.style.maxHeight = `${Math.max(120, spaceAbove)}px`;
+          }
+        }
         let left = rect.left;
         let width = rect.width;
         
@@ -382,9 +404,31 @@ export function AddressAutocomplete({
         dropdown.style.left = `${left}px`;
         dropdown.style.width = `${width}px`;
         dropdown.style.zIndex = '9999';
+        dropdown.style.overflowY = 'auto';
       }
     }
   }, [suggestions, query, isSearching, hasSelectedAddress]);
+
+  // Update dropdown position on scroll/resize
+  useEffect(() => {
+    const handler = () => {
+      // Force reposition by updating local state (no-op) via small timeout
+      if (containerRef.current) {
+        const input = containerRef.current.querySelector('input');
+        if (!input) return;
+        // Re-run positioning logic by triggering a reflow - call fetchPredictions with current value only when suggestions exist
+        // Simpler: dispatch a custom event to re-evaluate styles
+        window.dispatchEvent(new Event('resize'));
+      }
+    };
+
+    window.addEventListener('scroll', handler, true);
+    window.addEventListener('resize', handler);
+    return () => {
+      window.removeEventListener('scroll', handler, true);
+      window.removeEventListener('resize', handler);
+    };
+  }, [suggestions]);
 
   // Render de estado de carga
   if (isLoadingMaps) {

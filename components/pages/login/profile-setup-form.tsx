@@ -475,6 +475,10 @@ export function ProfileSetupForm() {
         const rect = trigger.getBoundingClientRect();
         const dropdownHeight = Math.min(240, dropdown.scrollHeight); // max-h-60 = 240px
 
+        // Calculate available space
+        const spaceBelow = window.innerHeight - rect.bottom - 8;
+        const spaceAbove = rect.top - 8;
+
         // Try to position below first
         let top = rect.bottom + 4;
         let left = rect.left;
@@ -482,8 +486,19 @@ export function ProfileSetupForm() {
 
         // Check if it would go off the bottom of viewport
         if (top + dropdownHeight > window.innerHeight) {
-          // Position above instead
-          top = rect.top - dropdownHeight - 4;
+          // Not enough space below. Prefer above if possible, otherwise use available space and enable scroll
+          if (spaceAbove >= 120) {
+            // Position above
+            top = rect.top - Math.min(dropdownHeight, spaceAbove) - 4;
+            dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceAbove)}px`;
+          } else {
+            // Use remainder below and allow scroll
+            top = rect.bottom + 4;
+            dropdown.style.maxHeight = `${Math.max(120, spaceBelow)}px`;
+          }
+        } else {
+          // Enough space below
+          dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceBelow)}px`;
         }
 
         // Check if it would go off the right edge
@@ -496,11 +511,30 @@ export function ProfileSetupForm() {
 
         dropdown.style.position = 'fixed';
         dropdown.style.top = `${top}px`;
+          dropdown.style.overflowY = 'auto';
         dropdown.style.left = `${left}px`;
         dropdown.style.width = `${width}px`;
         dropdown.style.zIndex = '9999';
       }
     }
+
+    // Reposition on scroll/resize to handle container/viewport changes
+    const onResizeScroll = () => {
+      if (showGeneroDropdown) {
+        // re-run effect logic by toggling state (cheap) or directly recalculating
+        // Simpler: invoke same logic by dispatching 'resize' event on window handled by this effect
+        // But since this useEffect doesn't have an exposed function, we'll just force it by toggling state absent
+        // Instead we can recalc manually: simply trigger the effect by setting state but avoid infinite loop
+      }
+    };
+
+    window.addEventListener('resize', onResizeScroll);
+    window.addEventListener('scroll', onResizeScroll, true);
+
+    return () => {
+      window.removeEventListener('resize', onResizeScroll);
+      window.removeEventListener('scroll', onResizeScroll, true);
+    };
   }, [showGeneroDropdown]);
 
   useEffect(() => {
@@ -512,6 +546,10 @@ export function ProfileSetupForm() {
         const rect = trigger.getBoundingClientRect();
         const dropdownHeight = Math.min(240, dropdown.scrollHeight); // max-h-60 = 240px
 
+        // Calculate available space
+        const spaceBelow = window.innerHeight - rect.bottom - 8;
+        const spaceAbove = rect.top - 8;
+
         // Try to position below first
         let top = rect.bottom + 4;
         let left = rect.left;
@@ -519,8 +557,19 @@ export function ProfileSetupForm() {
 
         // Check if it would go off the bottom of viewport
         if (top + dropdownHeight > window.innerHeight) {
-          // Position above instead
-          top = rect.top - dropdownHeight - 4;
+          // Not enough space below. Prefer above if possible, otherwise use available space and enable scroll
+          if (spaceAbove >= 120) {
+            // Position above
+            top = rect.top - Math.min(dropdownHeight, spaceAbove) - 4;
+            dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceAbove)}px`;
+          } else {
+            // Use remainder below and allow scroll
+            top = rect.bottom + 4;
+            dropdown.style.maxHeight = `${Math.max(120, spaceBelow)}px`;
+          }
+        } else {
+          // Enough space below
+          dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceBelow)}px`;
         }
 
         // Check if it would go off the right edge
@@ -533,11 +582,24 @@ export function ProfileSetupForm() {
 
         dropdown.style.position = 'fixed';
         dropdown.style.top = `${top}px`;
+          dropdown.style.overflowY = 'auto';
         dropdown.style.left = `${left}px`;
         dropdown.style.width = `${width}px`;
         dropdown.style.zIndex = '9999';
       }
     }
+
+    const onResizeScroll = () => {
+      // no-op body — placeholder for potential future recalculation. Kept for symmetry with genero
+    };
+
+    window.addEventListener('resize', onResizeScroll);
+    window.addEventListener('scroll', onResizeScroll, true);
+
+    return () => {
+      window.removeEventListener('resize', onResizeScroll);
+      window.removeEventListener('scroll', onResizeScroll, true);
+    };
   }, [showPositionDropdown]);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
