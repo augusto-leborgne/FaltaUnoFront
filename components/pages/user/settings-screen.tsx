@@ -90,10 +90,10 @@ export function SettingsScreen() {
   const [imageToCrop, setImageToCrop] = useState<string>("")
   const [crop, setCrop] = useState<Crop>({
     unit: '%',
-    width: 80,
-    height: 80,
-    x: 10,
-    y: 10
+    width: 70,
+    height: 70,
+    x: 15,
+    y: 15
   })
   const [completedCrop, setCompletedCrop] = useState<Crop | null>(null)
 
@@ -1298,10 +1298,10 @@ export function SettingsScreen() {
       
       {/* Crop Modal */}
       {showCropModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-lg shadow-2xl flex flex-col overflow-hidden max-h-[95vh] sm:max-h-[90vh]">
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-1 sm:p-4">
+          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-[95vw] sm:max-w-lg shadow-2xl flex flex-col overflow-hidden max-h-[98vh] sm:max-h-[90vh]">
             <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary/10 to-orange-50 flex-shrink-0">
-              <h3 className="text-base sm:text-lg font-bold text-gray-900">Ajusta tu foto</h3>
+              <h3 className="text-sm sm:text-base font-bold text-gray-900">Ajusta tu foto</h3>
               <button
                 type="button"
                 onClick={() => {
@@ -1314,9 +1314,9 @@ export function SettingsScreen() {
               </button>
             </div>
 
-            <div className="p-2 sm:p-4 bg-gray-50 flex items-center justify-center flex-1 overflow-hidden min-h-0">
-              <div className="w-full max-w-xs sm:max-w-sm md:max-w-md flex items-center justify-center px-2">
-                <div className="relative w-full max-w-[280px] sm:max-w-[320px] md:max-w-[400px]">
+            <div className="flex-1 overflow-hidden bg-gray-50">
+              <div className="h-full flex items-center justify-center p-2 sm:p-4">
+                <div className="w-full max-w-[85vw] sm:max-w-sm md:max-w-md aspect-square flex items-center justify-center">
                   <ReactCrop
                     crop={crop}
                     onChange={(c) => setCrop(c)}
@@ -1325,16 +1325,15 @@ export function SettingsScreen() {
                     circularCrop
                     keepSelection
                     locked
-                    minWidth={100}
-                    minHeight={100}
-                    className="w-full"
+                    minWidth={120}
+                    minHeight={120}
+                    className="w-full h-full"
                   >
                     <img
                       ref={imageRef}
                       src={imageToCrop}
                       alt="Recortar"
-                      className="w-full h-auto object-contain rounded-lg"
-                      style={{ maxHeight: '50vh' }}
+                      className="w-full h-full object-contain"
                     />
                   </ReactCrop>
                 </div>
@@ -1349,14 +1348,14 @@ export function SettingsScreen() {
                   setImageToCrop('')
                 }}
                 variant="outline"
-                className="flex-1 text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[44px]"
+                className="flex-1 text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[48px]"
               >
                 Cancelar
               </Button>
               <Button
                 type="button"
                 onClick={handleCropComplete}
-                className="flex-1 bg-primary active:bg-primary/90 text-white text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[44px]"
+                className="flex-1 bg-primary active:bg-primary/90 text-white text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[48px]"
                 disabled={!completedCrop}
               >
                 Aplicar

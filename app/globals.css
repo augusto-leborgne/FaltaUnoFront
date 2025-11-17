@@ -605,11 +605,12 @@ img {
   }
 }
 
-/* React Image Crop Styles */
+/* React Image Crop Styles - Force Circular */
 .ReactCrop__crop-selection {
   border-radius: 50% !important;
-  border: 2px solid #4caf50 !important;
+  border: 3px solid #4caf50 !important;
   background-color: rgba(76, 175, 80, 0.1) !important;
+  box-shadow: 0 0 0 1px rgba(76, 175, 80, 0.3) !important;
 }
 
 .ReactCrop__rule-of-thirds-vt,
@@ -626,25 +627,30 @@ img {
 
 .ReactCrop__drag-handle {
   background-color: #4caf50 !important;
-  border: 1px solid #ffffff !important;
-  width: 12px !important;
-  height: 12px !important;
+  border: 2px solid #ffffff !important;
+  width: 20px !important;
+  height: 20px !important;
   border-radius: 50% !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
 }
 
 .ReactCrop__drag-handle::after {
   display: none !important;
 }
 
-/* Mobile optimizations for crop interface */
-@media (max-width: 640px) {
-  .ReactCrop__crop-selection {
-    border-width: 3px !important;
-  }
-  
-  .ReactCrop__drag-handle {
-    width: 16px !important;
-    height: 16px !important;
-  }
+/* Force aspect ratio to be square for circular crop */
+.ReactCrop {
+  --react-crop-aspect-ratio: 1 !important;
 }
 
+/* Ensure circular crop on all devices */
+@media (max-width: 640px) {
+  .ReactCrop__crop-selection {
+    border-width: 4px !important;
+  }
+
+  .ReactCrop__drag-handle {
+    width: 24px !important;
+    height: 24px !important;
+  }
+}
