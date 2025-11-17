@@ -1260,7 +1260,10 @@ export function ProfileSetupForm() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => setShowGeneroDropdown(!showGeneroDropdown)}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      setShowGeneroDropdown(!showGeneroDropdown)
+                    }}
                     className={`w-full justify-between text-sm sm:text-base h-10 sm:h-auto ${fieldErrors.genero ? 'border-red-500' : ''}`}
                   >
                     <span className={formData.genero ? 'text-gray-900' : 'text-gray-500'}>
@@ -1269,7 +1272,11 @@ export function ProfileSetupForm() {
                     <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
                   </Button>
                   {showGeneroDropdown && (
-                    <div className="fixed bg-white border border-gray-300 rounded-xl shadow-xl z-[9999] max-h-60 overflow-y-auto min-w-[200px]">
+                    <div 
+                      role="listbox"
+                      className="bg-white border border-gray-300 rounded-xl shadow-xl overflow-y-auto"
+                      style={{ position: 'fixed', zIndex: 9999 }}
+                    >
                       {generos.map((gen) => (
                         <div
                           key={gen}
@@ -1277,7 +1284,7 @@ export function ProfileSetupForm() {
                             handleFieldChange('genero', gen)
                             setShowGeneroDropdown(false)
                           }}
-                          className="p-2.5 sm:p-3 hover:bg-primary/10 active:bg-primary/20 cursor-pointer first:rounded-t-xl last:rounded-b-xl transition-colors text-sm sm:text-base"
+                          className="p-3 hover:bg-primary/10 active:bg-primary/20 cursor-pointer first:rounded-t-xl last:rounded-b-xl transition-colors text-sm sm:text-base whitespace-nowrap"
                         >
                           {gen}
                         </div>
@@ -1325,7 +1332,10 @@ export function ProfileSetupForm() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => setShowPositionDropdown(!showPositionDropdown)}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      setShowPositionDropdown(!showPositionDropdown)
+                    }}
                     className={`w-full justify-between text-sm sm:text-base h-10 sm:h-auto ${fieldErrors.position ? 'border-red-500' : ''}`}
                   >
                     <span className={formData.position ? 'text-gray-900' : 'text-gray-500'}>
@@ -1334,7 +1344,11 @@ export function ProfileSetupForm() {
                     <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
                   </Button>
                   {showPositionDropdown && (
-                    <div className="fixed bg-white border border-gray-300 rounded-xl shadow-xl z-[9999] max-h-60 overflow-y-auto min-w-[200px]">
+                    <div 
+                      role="listbox"
+                      className="bg-white border border-gray-300 rounded-xl shadow-xl overflow-y-auto"
+                      style={{ position: 'fixed', zIndex: 9999 }}
+                    >
                       {positions.map((pos) => (
                         <div
                           key={pos}
@@ -1342,7 +1356,7 @@ export function ProfileSetupForm() {
                             handleFieldChange('position', pos)
                             setShowPositionDropdown(false)
                           }}
-                          className="p-2.5 sm:p-3 hover:bg-orange-50 active:bg-orange-100 cursor-pointer first:rounded-t-xl last:rounded-b-xl transition-colors text-sm sm:text-base"
+                          className="p-3 hover:bg-orange-50 active:bg-orange-100 cursor-pointer first:rounded-t-xl last:rounded-b-xl transition-colors text-sm sm:text-base whitespace-nowrap"
                         >
                           {pos}
                         </div>

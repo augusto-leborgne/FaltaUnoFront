@@ -506,7 +506,7 @@ export function AddressAutocomplete({
     <div ref={containerRef} className="relative">
       {/* Input */}
       <div className="relative">
-        <MapPin className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 pointer-events-none ${
+        <MapPin className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 pointer-events-none ${
           hasSelectedAddress 
             ? 'text-green-600' 
             : hasError || (required && query && !hasSelectedAddress)
@@ -515,7 +515,7 @@ export function AddressAutocomplete({
         }`} />
         
         <input
-          className={`w-full py-3 pl-10 pr-10 rounded-xl border bg-white focus:outline-none focus:ring-2 disabled:bg-gray-100 disabled:cursor-not-allowed ${
+          className={`w-full py-3 pl-10 pr-10 rounded-xl border bg-white focus:outline-none focus:ring-2 disabled:bg-gray-100 disabled:cursor-not-allowed text-sm sm:text-base h-10 sm:h-auto ${
             hasSelectedAddress 
               ? 'border-green-500 bg-green-50 focus:ring-green-500 focus:border-transparent' 
               : hasError || (required && query && !hasSelectedAddress)
@@ -531,15 +531,15 @@ export function AddressAutocomplete({
           autoComplete="off"
         />
 
-        {/* Indicador de búsqueda o botón limpiar */}
-        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+        {/* Indicador de búsqueda o botón limpiar - FIJO a la derecha */}
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
           {isSearching ? (
             <LoadingSpinner size="sm" variant="gray" />
           ) : query ? (
             <button
               type="button"
               onClick={handleClear}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-md hover:bg-gray-100 active:bg-gray-200"
             >
               <X className="w-4 h-4" />
             </button>
@@ -554,15 +554,19 @@ export function AddressAutocomplete({
         </div>
       )}
 
-      {/* Sugerencias */}
+      {/* Sugerencias - con role="listbox" para el posicionamiento JS */}
       {suggestions.length > 0 && (
-        <div className="fixed bg-white border border-gray-300 rounded-xl shadow-lg max-h-56 overflow-auto z-[9999] min-w-[300px]">
+        <div 
+          role="listbox"
+          className="bg-white border border-gray-300 rounded-xl shadow-xl overflow-y-auto"
+          style={{ position: 'fixed', zIndex: 9999 }}
+        >
           {suggestions.map((suggestion) => (
             <button
               key={suggestion.place_id}
               type="button"
               onClick={() => selectPrediction(suggestion)}
-              className="w-full p-3 hover:bg-gray-50 text-left transition-colors flex items-start space-x-2"
+              className="w-full p-3 hover:bg-gray-50 active:bg-gray-100 text-left transition-colors flex items-start space-x-2"
             >
               <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
               <div className="flex-1 min-w-0">
@@ -580,7 +584,11 @@ export function AddressAutocomplete({
 
       {/* Mensaje de no resultados */}
       {query.length >= 1 && suggestions.length === 0 && !isSearching && !hasSelectedAddress && (
-        <div className="fixed bg-white border border-gray-300 rounded-xl shadow-lg p-3 z-[9999] min-w-[300px]">
+        <div 
+          role="listbox"
+          className="bg-white border border-gray-300 rounded-xl shadow-xl p-3"
+          style={{ position: 'fixed', zIndex: 9999 }}
+        >
           <p className="text-sm text-gray-500 text-center">
             No se encontraron ubicaciones
           </p>
