@@ -605,51 +605,46 @@ img {
   }
 }
 
-/* Phone Input Styles */
-.PhoneInput {
-  display: flex;
-  align-items: center;
+/* React Image Crop Styles */
+.ReactCrop__crop-selection {
+  border-radius: 50% !important;
+  border: 2px solid #4caf50 !important;
+  background-color: rgba(76, 175, 80, 0.1) !important;
 }
 
-.PhoneInputInput {
-  flex: 1;
-  min-width: 0;
-  padding: 0.75rem 1rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.75rem;
-  font-size: 0.875rem;
-  transition: all 0.2s;
+.ReactCrop__rule-of-thirds-vt,
+.ReactCrop__rule-of-thirds-hz {
+  border: 1px solid rgba(76, 175, 80, 0.3) !important;
 }
 
-.PhoneInputInput:focus {
-  outline: none;
-  border-color: #10b981;
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
+.ReactCrop__rule-of-thirds-vt::before,
+.ReactCrop__rule-of-thirds-hz::before,
+.ReactCrop__rule-of-thirds-vt::after,
+.ReactCrop__rule-of-thirds-hz::after {
+  background-color: rgba(76, 175, 80, 0.3) !important;
 }
 
-.phone-input-error .PhoneInputInput {
-  border-color: #ef4444;
+.ReactCrop__drag-handle {
+  background-color: #4caf50 !important;
+  border: 1px solid #ffffff !important;
+  width: 12px !important;
+  height: 12px !important;
+  border-radius: 50% !important;
 }
 
-.PhoneInputCountry {
-  margin-right: 0.5rem;
-  padding: 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.75rem;
-  background: white;
-  cursor: pointer;
-  transition: all 0.2s;
+.ReactCrop__drag-handle::after {
+  display: none !important;
 }
 
-.PhoneInputCountry:hover {
-  background: #f3f4f6;
-}
-
-.PhoneInputCountrySelect {
-  position: absolute;
-  opacity: 0;
-  cursor: pointer;
-  width: 100%;
-  height: 100%;
+/* Mobile optimizations for crop interface */
+@media (max-width: 640px) {
+  .ReactCrop__crop-selection {
+    border-width: 3px !important;
+  }
+  
+  .ReactCrop__drag-handle {
+    width: 16px !important;
+    height: 16px !important;
+  }
 }
 

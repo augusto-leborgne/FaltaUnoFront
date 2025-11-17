@@ -90,10 +90,10 @@ export function SettingsScreen() {
   const [imageToCrop, setImageToCrop] = useState<string>("")
   const [crop, setCrop] = useState<Crop>({
     unit: '%',
-    width: 50,
-    height: 50,
-    x: 25,
-    y: 25
+    width: 80,
+    height: 80,
+    x: 10,
+    y: 10
   })
   const [completedCrop, setCompletedCrop] = useState<Crop | null>(null)
 
@@ -1153,20 +1153,20 @@ export function SettingsScreen() {
       
       {/* Photo Options Modal */}
       {showPhotoOptions && (
-        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md max-w-full animate-in slide-in-from-bottom duration-300 sm:animate-in sm:fade-in">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-3xl w-full sm:max-w-sm max-w-full animate-in slide-in-from-bottom duration-300 sm:animate-in sm:fade-in">
+            <div className="p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
                 <h3 className="text-lg font-bold text-gray-900">Foto de perfil</h3>
                 <button
                   onClick={() => setShowPhotoOptions(false)}
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
                 >
                   <X className="w-5 h-5 text-gray-500" />
                 </button>
               </div>
               
-              <div className="space-y-2 sm:space-y-3">
+              <div className="space-y-3 sm:space-y-4">
                 <button
                   onClick={openCamera}
                   className="w-full flex items-center space-x-3 p-4 bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors text-left touch-manipulation min-h-[60px]"
@@ -1299,7 +1299,7 @@ export function SettingsScreen() {
       {/* Crop Modal */}
       {showCropModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-lg shadow-2xl flex flex-col overflow-hidden max-h-[90vh] sm:max-h-[85vh]">
+          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-lg shadow-2xl flex flex-col overflow-hidden max-h-[95vh] sm:max-h-[90vh]">
             <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary/10 to-orange-50 flex-shrink-0">
               <h3 className="text-base sm:text-lg font-bold text-gray-900">Ajusta tu foto</h3>
               <button
@@ -1314,27 +1314,30 @@ export function SettingsScreen() {
               </button>
             </div>
 
-            <div className="p-2 sm:p-4 bg-gray-50 flex items-center justify-center flex-1 overflow-hidden">
-              <div className="w-full max-w-sm flex items-center justify-center">
-                <ReactCrop
-                  crop={crop}
-                  onChange={(c) => setCrop(c)}
-                  onComplete={(c) => setCompletedCrop(c)}
-                  aspect={1}
-                  circularCrop
-                  keepSelection
-                  locked
-                  minWidth={50}
-                  minHeight={50}
-                  className="max-w-full"
-                >
-                  <img
-                    ref={imageRef}
-                    src={imageToCrop}
-                    alt="Recortar"
-                    className="max-w-full h-auto max-h-[50vh] sm:max-h-[60vh] object-contain"
-                  />
-                </ReactCrop>
+            <div className="p-2 sm:p-4 bg-gray-50 flex items-center justify-center flex-1 overflow-hidden min-h-0">
+              <div className="w-full max-w-xs sm:max-w-sm md:max-w-md flex items-center justify-center px-2">
+                <div className="relative w-full max-w-[280px] sm:max-w-[320px] md:max-w-[400px]">
+                  <ReactCrop
+                    crop={crop}
+                    onChange={(c) => setCrop(c)}
+                    onComplete={(c) => setCompletedCrop(c)}
+                    aspect={1}
+                    circularCrop
+                    keepSelection
+                    locked
+                    minWidth={100}
+                    minHeight={100}
+                    className="w-full"
+                  >
+                    <img
+                      ref={imageRef}
+                      src={imageToCrop}
+                      alt="Recortar"
+                      className="w-full h-auto object-contain rounded-lg"
+                      style={{ maxHeight: '50vh' }}
+                    />
+                  </ReactCrop>
+                </div>
               </div>
             </div>
 
@@ -1365,45 +1368,51 @@ export function SettingsScreen() {
       
       {/* Camera Modal */}
       {showCameraModal && (
-        <div className="fixed inset-0 bg-black flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl flex flex-col overflow-hidden">
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary/10 to-orange-50">
-              <h3 className="text-lg font-bold text-gray-900">Tomar foto</h3>
+        <div className="fixed inset-0 bg-black flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-sm sm:max-w-md shadow-2xl flex flex-col overflow-hidden max-h-[95vh]">
+            <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary/10 to-orange-50 flex-shrink-0">
+              <h3 className="text-base sm:text-lg font-bold text-gray-900">Tomar foto</h3>
               <button
                 type="button"
                 onClick={stopCamera}
-                className="p-2 active:bg-white rounded-xl transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="p-2 active:bg-white rounded-lg sm:rounded-xl transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
-                <X className="w-5 h-5 text-gray-600" />
+                <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
               </button>
             </div>
 
-            <div className="p-4 bg-gray-900 flex items-center justify-center relative">
+            <div className="p-2 sm:p-4 bg-gray-900 flex items-center justify-center relative flex-1 min-h-0">
               <video
                 ref={videoRef}
                 autoPlay
                 playsInline
                 muted
-                className="w-full h-auto max-h-[60vh] object-cover rounded-xl"
+                className="w-full h-auto max-h-[50vh] sm:max-h-[60vh] object-cover rounded-lg sm:rounded-xl"
+                style={{ transform: 'scaleX(-1)' }} // Unmirror the camera view
               />
               <canvas ref={canvasRef} className="hidden" />
+              
+              {/* Camera overlay guide */}
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                <div className="w-48 h-48 sm:w-56 sm:h-56 border-2 border-white/50 rounded-full"></div>
+              </div>
             </div>
 
-            <div className="p-4 border-t border-gray-200 flex gap-3 bg-white">
+            <div className="p-3 sm:p-4 border-t border-gray-200 flex gap-2 sm:gap-3 bg-white flex-shrink-0">
               <Button
                 type="button"
                 onClick={stopCamera}
                 variant="outline"
-                className="flex-1 py-3 touch-manipulation min-h-[44px]"
+                className="flex-1 text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[44px]"
               >
                 Cancelar
               </Button>
               <Button
                 type="button"
                 onClick={capturePhoto}
-                className="flex-1 bg-primary active:bg-primary/90 text-white py-3 touch-manipulation min-h-[44px]"
+                className="flex-1 bg-primary active:bg-primary/90 text-white text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[44px]"
               >
-                <Camera className="w-5 h-5 mr-2" />
+                <Camera className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 Capturar
               </Button>
             </div>
