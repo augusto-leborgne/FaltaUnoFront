@@ -290,14 +290,28 @@ export function ProfileSetupForm() {
     try {
       // Check if media devices are supported
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('La API de cámara no está disponible en este navegador');
+        throw new Error('La API de cámara no está disponible en este navegador. Actualiza tu navegador o usa uno moderno como Chrome, Firefox o Edge.');
+      }
+
+      // Check current permission status if available
+      if (navigator.permissions && navigator.permissions.query) {
+        try {
+          const permissionStatus = await navigator.permissions.query({ name: 'camera' as PermissionName });
+          if (permissionStatus.state === 'denied') {
+            throw new Error('Permiso de cámara denegado. Ve a la configuración de tu navegador y permite el acceso a la cámara para este sitio.');
+          }
+        } catch (permError) {
+          // Permission API might not be fully supported, continue with getUserMedia
+          logger.warn("[ProfileSetup] Permission API not fully supported:", permError);
+        }
       }
 
       let stream: MediaStream | null = null;
       let lastError: any = null;
 
-      // Try user camera first (front camera) - most computers have this
+      // Try different camera options with better error handling for computers
       try {
+        // First try user camera (front camera) - most computers have this
         stream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: 'user',
@@ -311,8 +325,8 @@ export function ProfileSetupForm() {
         lastError = userError;
         logger.warn("[ProfileSetup] Front camera failed, trying back camera:", userError instanceof Error ? userError.message : String(userError));
 
-        // Try environment camera (back camera)
         try {
+          // Fallback to environment camera (back camera) - some computers might have external cameras
           stream = await navigator.mediaDevices.getUserMedia({
             video: {
               facingMode: 'environment',
@@ -326,8 +340,8 @@ export function ProfileSetupForm() {
           lastError = envError;
           logger.warn("[ProfileSetup] Back camera failed, trying any camera:", envError instanceof Error ? envError.message : String(envError));
 
-          // Try any camera as fallback
           try {
+            // Final fallback - any camera available with basic constraints
             stream = await navigator.mediaDevices.getUserMedia({
               video: {
                 width: { ideal: 1280 },
@@ -352,16 +366,20 @@ export function ProfileSetupForm() {
               const error = minimalError || lastError;
               if (error instanceof Error) {
                 if (error.name === 'NotAllowedError') {
-                  throw new Error('Permiso de cámara denegado. Por favor, permite el acceso a la cámara en tu navegador.');
+                  throw new Error('Permiso de cámara denegado. Haz clic en el icono de cámara en la barra de direcciones y permite el acceso. Si el problema persiste, reinicia tu navegador.');
                 } else if (error.name === 'NotFoundError') {
-                  throw new Error('No se encontró ninguna cámara. Verifica que tu dispositivo tenga una cámara conectada.');
+                  throw new Error('No se encontró ninguna cámara. Verifica que tu dispositivo tenga una cámara conectada y funcionando.');
                 } else if (error.name === 'NotReadableError') {
-                  throw new Error('La cámara está siendo usada por otra aplicación. Cierra otras apps que puedan estar usando la cámara.');
+                  throw new Error('La cámara está siendo usada por otra aplicación. Cierra otras apps que puedan estar usando la cámara e intenta nuevamente.');
+                } else if (error.name === 'OverconstrainedError') {
+                  throw new Error('La configuración de cámara solicitada no es compatible. Intenta con una resolución más baja.');
+                } else if (error.name === 'SecurityError') {
+                  throw new Error('Error de seguridad al acceder a la cámara. Asegúrate de que estés accediendo desde HTTPS.');
                 } else {
                   throw new Error(`Error al acceder a la cámara: ${error.message || 'Error desconocido'}`);
                 }
               } else {
-                throw new Error('Error desconocido al acceder a la cámara');
+                throw new Error('Error desconocido al acceder a la cámara. Intenta refrescar la página o reiniciar tu navegador.');
               }
             }
           }
@@ -382,7 +400,7 @@ export function ProfileSetupForm() {
       }
     } catch (err) {
       logger.error("[ProfileSetup] Error accessing camera:", err);
-      const errorMessage = err instanceof Error ? err.message : "Error al acceder a la cámara";
+      const errorMessage = err instanceof Error ? err.message : "Error al acceder a la cámara. Verifica los permisos del navegador.";
       setGeneralError(errorMessage);
       setShowCameraModal(false);
     }
@@ -1247,15 +1265,27 @@ export function ProfileSetupForm() {
                   <ReactCrop
                     crop={crop}
                     onChange={(c) => {
-                      // Force circular crop by ensuring width equals height
-                      const size = Math.min(c.width, c.height);
-                      setCrop({ ...c, width: size, height: size });
+                      // Allow resizing while maintaining circular aspect ratio
+                      // Use the larger dimension to determine the size
+                      const size = Math.max(c.width, c.height);
+                      setCrop({
+                        ...c,
+                        width: size,
+                        height: size
+                      });
                     }}
-                    onComplete={(c) => setCompletedCrop(c)}
+                    onComplete={(c) => {
+                      // Ensure completed crop is also circular
+                      const size = Math.max(c.width, c.height);
+                      setCompletedCrop({
+                        ...c,
+                        width: size,
+                        height: size
+                      });
+                    }}
                     aspect={1}
                     circularCrop
                     keepSelection
-                    locked
                     minWidth={120}
                     minHeight={120}
                     className="w-full h-full"
@@ -1298,8 +1328,8 @@ export function ProfileSetupForm() {
 
       {/* Camera Modal */}
       {showCameraModal && (
-        <div className="fixed inset-0 bg-black flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-[98vw] sm:max-w-md shadow-2xl flex flex-col overflow-hidden max-h-[95vh]">
+        <div className="fixed inset-0 bg-black flex items-center justify-center z-50 p-1 sm:p-2 md:p-4">
+          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-[95vw] sm:max-w-[90vw] md:max-w-lg lg:max-w-xl xl:max-w-2xl shadow-2xl flex flex-col overflow-hidden max-h-[95vh]">
             <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary/10 to-orange-50 flex-shrink-0">
               <h3 className="text-base sm:text-lg font-bold text-gray-900">Tomar foto</h3>
               <button
@@ -1311,20 +1341,27 @@ export function ProfileSetupForm() {
               </button>
             </div>
 
-            <div className="p-2 sm:p-4 bg-gray-900 flex items-center justify-center relative flex-1 min-h-0">
+            <div className="p-2 sm:p-3 md:p-4 bg-gray-900 flex items-center justify-center relative flex-1 min-h-0">
               <video
                 ref={videoRef}
                 autoPlay
                 playsInline
                 muted
-                className="w-full h-auto max-h-[50vh] sm:max-h-[60vh] object-cover rounded-lg sm:rounded-xl"
+                className="w-full h-auto max-h-[60vh] sm:max-h-[65vh] md:max-h-[70vh] lg:max-h-[75vh] object-cover rounded-lg sm:rounded-xl"
                 style={{ transform: 'scaleX(-1)' }} // Unmirror the camera view
               />
               <canvas ref={canvasRef} className="hidden" />
               
-              {/* Camera overlay guide */}
+              {/* Camera overlay guide - Responsive sizing */}
               <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                <div className="w-48 h-48 sm:w-56 sm:h-56 border-2 border-white/50 rounded-full"></div>
+                <div className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 lg:w-72 lg:h-72 xl:w-80 xl:h-80 border-2 border-white/50 rounded-full"></div>
+              </div>
+
+              {/* Camera instructions for mobile */}
+              <div className="absolute bottom-20 sm:bottom-24 left-1/2 transform -translate-x-1/2 text-center">
+                <p className="text-white text-xs sm:text-sm bg-black/50 px-3 py-1 rounded-full backdrop-blur-sm">
+                  Ajusta tu cara dentro del círculo
+                </p>
               </div>
             </div>
 

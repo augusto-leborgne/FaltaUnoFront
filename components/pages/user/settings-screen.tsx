@@ -691,7 +691,20 @@ export function SettingsScreen() {
     try {
       // Check if media devices are supported
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('La API de cámara no está disponible en este navegador');
+        throw new Error('La API de cámara no está disponible en este navegador. Actualiza tu navegador o usa uno moderno como Chrome, Firefox o Edge.');
+      }
+
+      // Check current permission status if available
+      if (navigator.permissions && navigator.permissions.query) {
+        try {
+          const permissionStatus = await navigator.permissions.query({ name: 'camera' as PermissionName });
+          if (permissionStatus.state === 'denied') {
+            throw new Error('Permiso de cámara denegado. Ve a la configuración de tu navegador y permite el acceso a la cámara para este sitio.');
+          }
+        } catch (permError) {
+          // Permission API might not be fully supported, continue with getUserMedia
+          logger.warn("[Settings] Permission API not fully supported:", permError);
+        }
       }
 
       let stream;
@@ -754,16 +767,20 @@ export function SettingsScreen() {
               const error = minimalError || lastError;
               if (error instanceof Error) {
                 if (error.name === 'NotAllowedError') {
-                  throw new Error('Permiso de cámara denegado. Por favor, permite el acceso a la cámara en tu navegador.');
+                  throw new Error('Permiso de cámara denegado. Haz clic en el icono de cámara en la barra de direcciones y permite el acceso. Si el problema persiste, reinicia tu navegador.');
                 } else if (error.name === 'NotFoundError') {
-                  throw new Error('No se encontró ninguna cámara. Verifica que tu dispositivo tenga una cámara conectada.');
+                  throw new Error('No se encontró ninguna cámara. Verifica que tu dispositivo tenga una cámara conectada y funcionando.');
                 } else if (error.name === 'NotReadableError') {
-                  throw new Error('La cámara está siendo usada por otra aplicación. Cierra otras apps que puedan estar usando la cámara.');
+                  throw new Error('La cámara está siendo usada por otra aplicación. Cierra otras apps que puedan estar usando la cámara e intenta nuevamente.');
+                } else if (error.name === 'OverconstrainedError') {
+                  throw new Error('La configuración de cámara solicitada no es compatible. Intenta con una resolución más baja.');
+                } else if (error.name === 'SecurityError') {
+                  throw new Error('Error de seguridad al acceder a la cámara. Asegúrate de que estés accediendo desde HTTPS.');
                 } else {
                   throw new Error(`Error al acceder a la cámara: ${error.message || 'Error desconocido'}`);
                 }
               } else {
-                throw new Error('Error desconocido al acceder a la cámara');
+                throw new Error('Error desconocido al acceder a la cámara. Intenta refrescar la página o reiniciar tu navegador.');
               }
             }
           }
@@ -1401,8 +1418,9 @@ export function SettingsScreen() {
                   <ReactCrop
                     crop={crop}
                     onChange={(c) => {
-                      // Force circular aspect ratio
-                      const size = Math.min(c.width, c.height);
+                      // Allow resizing while maintaining circular aspect ratio
+                      // Use the larger dimension to determine the size
+                      const size = Math.max(c.width, c.height);
                       setCrop({
                         ...c,
                         width: size,
@@ -1411,7 +1429,7 @@ export function SettingsScreen() {
                     }}
                     onComplete={(c) => {
                       // Ensure completed crop is also circular
-                      const size = Math.min(c.width, c.height);
+                      const size = Math.max(c.width, c.height);
                       setCompletedCrop({
                         ...c,
                         width: size,
@@ -1421,7 +1439,6 @@ export function SettingsScreen() {
                     aspect={1}
                     circularCrop
                     keepSelection
-                    locked
                     minWidth={120}
                     minHeight={120}
                     className="w-full h-full"
@@ -1465,7 +1482,7 @@ export function SettingsScreen() {
       {/* Camera Modal */}
       {showCameraModal && (
         <div className="fixed inset-0 bg-black flex items-center justify-center z-50 p-1 sm:p-2 md:p-4">
-          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-[95vw] sm:max-w-[90vw] md:max-w-md shadow-2xl flex flex-col overflow-hidden max-h-[95vh]">
+          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-[95vw] sm:max-w-[90vw] md:max-w-lg lg:max-w-xl xl:max-w-2xl shadow-2xl flex flex-col overflow-hidden max-h-[95vh]">
             <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary/10 to-orange-50 flex-shrink-0">
               <h3 className="text-base sm:text-lg font-bold text-gray-900">Tomar foto</h3>
               <button
@@ -1483,14 +1500,14 @@ export function SettingsScreen() {
                 autoPlay
                 playsInline
                 muted
-                className="w-full h-auto max-h-[60vh] sm:max-h-[65vh] md:max-h-[70vh] object-cover rounded-lg sm:rounded-xl"
+                className="w-full h-auto max-h-[60vh] sm:max-h-[65vh] md:max-h-[70vh] lg:max-h-[75vh] object-cover rounded-lg sm:rounded-xl"
                 style={{ transform: 'scaleX(-1)' }} // Unmirror the camera view
               />
               <canvas ref={canvasRef} className="hidden" />
 
               {/* Camera overlay guide - Responsive sizing */}
               <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                <div className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 border-2 border-white/50 rounded-full"></div>
+                <div className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 lg:w-72 lg:h-72 xl:w-80 xl:h-80 border-2 border-white/50 rounded-full"></div>
               </div>
 
               {/* Camera instructions for mobile */}
