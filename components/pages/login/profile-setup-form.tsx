@@ -65,17 +65,19 @@ export function ProfileSetupForm() {
   const [imageToCrop, setImageToCrop] = useState<string>("")
   const [crop, setCrop] = useState<Crop>({
     unit: '%',
-    width: 60,
-    height: 60,
-    x: 20,
-    y: 20
+    width: 50,
+    height: 50,
+    x: 25,
+    y: 25
   })
   const [completedCrop, setCompletedCrop] = useState<Crop | null>(null)
   const imageRef = useRef<HTMLImageElement | null>(null)
 
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({})
-  const hasPrefilled = useRef(false) // ⚡ Track if we already prefilled from user data
-  const isInitialMount = useRef(true) // ⚡ Track first mount
+  // Camera states
+  const [showCameraModal, setShowCameraModal] = useState(false)
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null)
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
   // Códigos de país más comunes en Latinoamérica
   const countryCodes = [
@@ -267,6 +269,95 @@ export function ProfileSetupForm() {
       if (formData.photoPreviewUrl) URL.revokeObjectURL(formData.photoPreviewUrl)
     }
   }, [formData.photoPreviewUrl])
+
+  // Camera functions
+  const openCamera = () => {
+    // Try to use getUserMedia for desktop, fallback to file input for mobile
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      setShowCameraModal(true)
+    } else {
+      // Fallback for older browsers or when getUserMedia is not available
+      cameraInputRef.current?.click()
+    }
+  }
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user' }, // Front camera
+        audio: false
+      })
+      
+      setCameraStream(stream)
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+      }
+    } catch (err) {
+      logger.error("[ProfileSetup] Error accessing camera:", err)
+      setGeneralError("Error al acceder a la cámara")
+      setShowCameraModal(false)
+    }
+  }
+
+  const stopCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop())
+      setCameraStream(null)
+    }
+    setShowCameraModal(false)
+  }
+
+  const capturePhoto = () => {
+    if (!videoRef.current || !canvasRef.current) return
+
+    const video = videoRef.current
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext('2d')
+
+    if (!ctx) return
+
+    // Set canvas size to video dimensions
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+
+    // Draw the video frame to canvas
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+    // Convert to blob and create file
+    canvas.toBlob((blob) => {
+      if (!blob) return
+      
+      const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' })
+      
+      // Process the captured photo like uploaded photos
+      const reader = new FileReader()
+      reader.onload = () => {
+        if (reader.result) {
+          setImageToCrop(reader.result as string)
+          setShowCropModal(true)
+        }
+      }
+      reader.readAsDataURL(file)
+      
+      stopCamera()
+    }, 'image/jpeg', 0.92)
+  }
+
+  // Start camera when modal opens
+  useEffect(() => {
+    if (showCameraModal) {
+      startCamera()
+    }
+  }, [showCameraModal])
+
+  // Cleanup camera stream on unmount
+  useEffect(() => {
+    return () => {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop())
+      }
+    }
+  }, [cameraStream])
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0] ?? null
@@ -714,6 +805,10 @@ export function ProfileSetupForm() {
               <div className="flex gap-2 sm:gap-3 w-full max-w-sm">
                 <label
                   htmlFor="camera-input"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    openCamera()
+                  }}
                   className="flex-1 bg-primary active:bg-primary/90 text-white shadow-md text-sm sm:text-base py-2 sm:py-2.5 rounded-md cursor-pointer text-center flex items-center justify-center"
                 >
                   <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
@@ -742,13 +837,13 @@ export function ProfileSetupForm() {
                 onChange={handlePhotoChange} 
                 className="hidden"
               />
-              {/* ⚡ Input para cámara - capture sin valor para mejor compatibilidad */}  
+              {/* ⚡ Input para cámara - capture="user" para cámara frontal */}  
               <input 
                 ref={cameraInputRef} 
                 id="camera-input"
                 type="file" 
                 accept="image/*" 
-                capture
+                capture="user"
                 onChange={handlePhotoChange} 
                 className="hidden"
               />
@@ -982,9 +1077,9 @@ export function ProfileSetupForm() {
 
       {/* Modal de crop MEJORADO - Responsivo */}
       {showCropModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4">
-          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-lg shadow-2xl flex flex-col overflow-hidden">
-            <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary/10 to-orange-50">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-lg shadow-2xl flex flex-col overflow-hidden max-h-[90vh] sm:max-h-[85vh]">
+            <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary/10 to-orange-50 flex-shrink-0">
               <h3 className="text-base sm:text-lg font-bold text-gray-900">Ajusta tu foto</h3>
               <button
                 type="button"
@@ -992,14 +1087,14 @@ export function ProfileSetupForm() {
                   setShowCropModal(false)
                   setImageToCrop('')
                 }}
-                className="p-1.5 sm:p-2 active:bg-white rounded-lg sm:rounded-xl transition-colors"
+                className="p-2 active:bg-white rounded-lg sm:rounded-xl transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
                 <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
               </button>
             </div>
 
-            <div className="p-3 sm:p-4 bg-gray-50 flex items-center justify-center" style={{ maxHeight: '60vh' }}>
-              <div className="w-full max-w-sm">
+            <div className="p-2 sm:p-4 bg-gray-50 flex items-center justify-center flex-1 overflow-hidden">
+              <div className="w-full max-w-sm flex items-center justify-center">
                 <ReactCrop
                   crop={crop}
                   onChange={(c) => setCrop(c)}
@@ -1016,14 +1111,13 @@ export function ProfileSetupForm() {
                     ref={imageRef}
                     src={imageToCrop}
                     alt="Recortar"
-                    className="max-w-full h-auto"
-                    style={{ maxHeight: '50vh' }}
+                    className="max-w-full h-auto max-h-[50vh] sm:max-h-[60vh] object-contain"
                   />
                 </ReactCrop>
               </div>
             </div>
 
-            <div className="p-3 sm:p-4 border-t border-gray-200 flex gap-2 sm:gap-3 bg-white">
+            <div className="p-3 sm:p-4 border-t border-gray-200 flex gap-2 sm:gap-3 bg-white flex-shrink-0">
               <Button
                 type="button"
                 onClick={() => {
@@ -1031,17 +1125,65 @@ export function ProfileSetupForm() {
                   setImageToCrop('')
                 }}
                 variant="outline"
-                className="flex-1 text-sm sm:text-base py-2 sm:py-2.5"
+                className="flex-1 text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[44px]"
               >
                 Cancelar
               </Button>
               <Button
                 type="button"
                 onClick={handleCropComplete}
-                className="flex-1 bg-primary active:bg-primary/90 text-white text-sm sm:text-base py-2 sm:py-2.5"
+                className="flex-1 bg-primary active:bg-primary/90 text-white text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[44px]"
                 disabled={!completedCrop}
               >
                 Aplicar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Camera Modal */}
+      {showCameraModal && (
+        <div className="fixed inset-0 bg-black flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl flex flex-col overflow-hidden">
+            <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary/10 to-orange-50">
+              <h3 className="text-lg font-bold text-gray-900">Tomar foto</h3>
+              <button
+                type="button"
+                onClick={stopCamera}
+                className="p-2 active:bg-white rounded-xl transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+
+            <div className="p-4 bg-gray-900 flex items-center justify-center relative">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-auto max-h-[60vh] object-cover rounded-xl"
+              />
+              <canvas ref={canvasRef} className="hidden" />
+            </div>
+
+            <div className="p-4 border-t border-gray-200 flex gap-3 bg-white">
+              <Button
+                type="button"
+                onClick={stopCamera}
+                variant="outline"
+                className="flex-1 py-3 touch-manipulation min-h-[44px]"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                onClick={capturePhoto}
+                className="flex-1 bg-primary active:bg-primary/90 text-white py-3 touch-manipulation min-h-[44px]"
+              >
+                <Camera className="w-5 h-5 mr-2" />
+                Capturar
               </Button>
             </div>
           </div>
