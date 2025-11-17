@@ -404,9 +404,57 @@ export function AddressAutocomplete({
         dropdown.style.left = `${left}px`;
         dropdown.style.width = `${width}px`;
         dropdown.style.zIndex = '9999';
-        dropdown.style.overflowY = 'auto';
       }
     }
+    const reposition = () => {
+      if ((suggestions.length > 0 || (query.length >= 1 && suggestions.length === 0 && !isSearching && !hasSelectedAddress)) && containerRef.current) {
+        const input = containerRef.current.querySelector('input');
+        const dropdown = containerRef.current.querySelector('div[role="listbox"], div:last-child') as HTMLElement;
+        if (!input || !dropdown) return;
+
+        const rect = input.getBoundingClientRect();
+        const dropdownHeight = Math.min(224, dropdown.scrollHeight);
+        const spaceBelow = window.innerHeight - rect.bottom - 8;
+        const spaceAbove = rect.top - 8;
+
+        let top: number;
+        if (spaceBelow >= dropdownHeight) {
+          top = rect.bottom + 4;
+          dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceBelow)}px`;
+        } else if (spaceAbove >= 120) {
+          top = rect.top - Math.min(dropdownHeight, spaceAbove) - 4;
+          dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceAbove)}px`;
+        } else {
+          if (spaceBelow >= spaceAbove) {
+            top = rect.bottom + 4;
+            dropdown.style.maxHeight = `${Math.max(120, spaceBelow)}px`;
+          } else {
+            top = 8;
+            dropdown.style.maxHeight = `${Math.max(120, spaceAbove)}px`;
+          }
+        }
+
+        let left = rect.left;
+        let width = rect.width;
+        if (left + width > window.innerWidth) left = window.innerWidth - width - 8;
+        width = Math.max(width, 300);
+
+        dropdown.style.position = 'fixed';
+        dropdown.style.top = `${top}px`;
+        dropdown.style.left = `${left}px`;
+        dropdown.style.width = `${width}px`;
+        dropdown.style.zIndex = '9999';
+        dropdown.style.overflowY = 'auto';
+      }
+    };
+
+    reposition();
+    window.addEventListener('scroll', reposition, true);
+    window.addEventListener('resize', reposition);
+    return () => {
+      window.removeEventListener('scroll', reposition, true);
+      window.removeEventListener('resize', reposition);
+    };
   }, [suggestions, query, isSearching, hasSelectedAddress]);
 
   // Update dropdown position on scroll/resize
