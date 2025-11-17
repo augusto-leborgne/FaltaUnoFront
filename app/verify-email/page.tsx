@@ -90,9 +90,11 @@ function VerifyEmailContent() {
     setCode(newCode);
     setError('');
 
-    // Auto-focus al siguiente input
+    // Auto-focus al siguiente input si se ingresó un dígito
     if (value && index < 5) {
-      inputRefs.current[index + 1]?.focus();
+      setTimeout(() => {
+        inputRefs.current[index + 1]?.focus();
+      }, 0);
     }
   };
 
@@ -381,6 +383,15 @@ function VerifyEmailContent() {
                   maxLength={1}
                   value={digit}
                   onChange={(e) => handleCodeChange(index, e.target.value)}
+                  onInput={(e) => {
+                    const target = e.target as HTMLInputElement;
+                    const value = target.value;
+                    if (value && /^\d$/.test(value) && index < 5) {
+                      setTimeout(() => {
+                        inputRefs.current[index + 1]?.focus();
+                      }, 10);
+                    }
+                  }}
                   onKeyDown={(e) => handleKeyDown(index, e)}
                   className={`w-12 h-14 text-center text-2xl font-bold border-2 transition-all ${
                     success 
