@@ -70,10 +70,10 @@ export function ProfileSetupForm() {
   const [imageToCrop, setImageToCrop] = useState<string>("")
   const [crop, setCrop] = useState<Crop>({
     unit: '%',
-    width: 50,
-    height: 50,
-    x: 25,
-    y: 25
+    width: 70,
+    height: 70,
+    x: 15,
+    y: 15
   })
   const [completedCrop, setCompletedCrop] = useState<Crop | null>(null)
   const imageRef = useRef<HTMLImageElement | null>(null)
@@ -1082,10 +1082,10 @@ export function ProfileSetupForm() {
 
       {/* Modal de crop MEJORADO - Responsivo */}
       {showCropModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-lg shadow-2xl flex flex-col overflow-hidden max-h-[90vh] sm:max-h-[85vh]">
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-1 sm:p-4">
+          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-[95vw] sm:max-w-lg shadow-2xl flex flex-col overflow-hidden max-h-[98vh] sm:max-h-[90vh]">
             <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary/10 to-orange-50 flex-shrink-0">
-              <h3 className="text-base sm:text-lg font-bold text-gray-900">Ajusta tu foto</h3>
+              <h3 className="text-sm sm:text-base font-bold text-gray-900">Ajusta tu foto</h3>
               <button
                 type="button"
                 onClick={() => {
@@ -1098,27 +1098,29 @@ export function ProfileSetupForm() {
               </button>
             </div>
 
-            <div className="p-2 sm:p-4 bg-gray-50 flex items-center justify-center flex-1 overflow-hidden">
-              <div className="w-full max-w-sm flex items-center justify-center">
-                <ReactCrop
-                  crop={crop}
-                  onChange={(c) => setCrop(c)}
-                  onComplete={(c) => setCompletedCrop(c)}
-                  aspect={1}
-                  circularCrop
-                  keepSelection
-                  locked
-                  minWidth={50}
-                  minHeight={50}
-                  className="max-w-full"
-                >
-                  <img
-                    ref={imageRef}
-                    src={imageToCrop}
-                    alt="Recortar"
-                    className="max-w-full h-auto max-h-[50vh] sm:max-h-[60vh] object-contain"
-                  />
-                </ReactCrop>
+            <div className="flex-1 overflow-hidden bg-gray-50">
+              <div className="h-full flex items-center justify-center p-2 sm:p-4">
+                <div className="w-full max-w-[85vw] sm:max-w-sm md:max-w-md aspect-square flex items-center justify-center">
+                  <ReactCrop
+                    crop={crop}
+                    onChange={(c) => setCrop(c)}
+                    onComplete={(c) => setCompletedCrop(c)}
+                    aspect={1}
+                    circularCrop
+                    keepSelection
+                    locked
+                    minWidth={120}
+                    minHeight={120}
+                    className="w-full h-full"
+                  >
+                    <img
+                      ref={imageRef}
+                      src={imageToCrop}
+                      alt="Recortar"
+                      className="w-full h-full object-contain"
+                    />
+                  </ReactCrop>
+                </div>
               </div>
             </div>
 
@@ -1130,14 +1132,14 @@ export function ProfileSetupForm() {
                   setImageToCrop('')
                 }}
                 variant="outline"
-                className="flex-1 text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[44px]"
+                className="flex-1 text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[48px]"
               >
                 Cancelar
               </Button>
               <Button
                 type="button"
                 onClick={handleCropComplete}
-                className="flex-1 bg-primary active:bg-primary/90 text-white text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[44px]"
+                className="flex-1 bg-primary active:bg-primary/90 text-white text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[48px]"
                 disabled={!completedCrop}
               >
                 Aplicar
@@ -1149,45 +1151,51 @@ export function ProfileSetupForm() {
 
       {/* Camera Modal */}
       {showCameraModal && (
-        <div className="fixed inset-0 bg-black flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl flex flex-col overflow-hidden">
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary/10 to-orange-50">
-              <h3 className="text-lg font-bold text-gray-900">Tomar foto</h3>
+        <div className="fixed inset-0 bg-black flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-sm sm:max-w-md shadow-2xl flex flex-col overflow-hidden max-h-[95vh]">
+            <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary/10 to-orange-50 flex-shrink-0">
+              <h3 className="text-base sm:text-lg font-bold text-gray-900">Tomar foto</h3>
               <button
                 type="button"
                 onClick={stopCamera}
-                className="p-2 active:bg-white rounded-xl transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="p-2 active:bg-white rounded-lg sm:rounded-xl transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
-                <X className="w-5 h-5 text-gray-600" />
+                <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
               </button>
             </div>
 
-            <div className="p-4 bg-gray-900 flex items-center justify-center relative">
+            <div className="p-2 sm:p-4 bg-gray-900 flex items-center justify-center relative flex-1 min-h-0">
               <video
                 ref={videoRef}
                 autoPlay
                 playsInline
                 muted
-                className="w-full h-auto max-h-[60vh] object-cover rounded-xl"
+                className="w-full h-auto max-h-[50vh] sm:max-h-[60vh] object-cover rounded-lg sm:rounded-xl"
+                style={{ transform: 'scaleX(-1)' }} // Unmirror the camera view
               />
               <canvas ref={canvasRef} className="hidden" />
+              
+              {/* Camera overlay guide */}
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                <div className="w-48 h-48 sm:w-56 sm:h-56 border-2 border-white/50 rounded-full"></div>
+              </div>
             </div>
 
-            <div className="p-4 border-t border-gray-200 flex gap-3 bg-white">
+            <div className="p-3 sm:p-4 border-t border-gray-200 flex gap-2 sm:gap-3 bg-white flex-shrink-0">
               <Button
                 type="button"
                 onClick={stopCamera}
                 variant="outline"
-                className="flex-1 py-3 touch-manipulation min-h-[44px]"
+                className="flex-1 text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[48px]"
               >
                 Cancelar
               </Button>
               <Button
                 type="button"
                 onClick={capturePhoto}
-                className="flex-1 bg-primary active:bg-primary/90 text-white py-3 touch-manipulation min-h-[44px]"
+                className="flex-1 bg-primary active:bg-primary/90 text-white text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[48px]"
               >
-                <Camera className="w-5 h-5 mr-2" />
+                <Camera className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 Capturar
               </Button>
             </div>

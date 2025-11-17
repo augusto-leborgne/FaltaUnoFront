@@ -123,3 +123,30 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ReactCrop circular crop overrides */
+.ReactCrop__crop-selection {
+  border-radius: 50% !important;
+  border: 2px solid white !important;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5) !important;
+}
+
+.ReactCrop__rule-of-thirds-vt,
+.ReactCrop__rule-of-thirds-hz {
+  display: none !important;
+}
+
+.ReactCrop__drag-handle {
+  background: white !important;
+  border: 1px solid #ccc !important;
+  width: 12px !important;
+  height: 12px !important;
+  border-radius: 50% !important;
+}
+
+@media (max-width: 640px) {
+  .ReactCrop__drag-handle {
+    width: 16px !important;
+    height: 16px !important;
+  }
+}
