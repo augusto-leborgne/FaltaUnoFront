@@ -268,9 +268,6 @@ export function ProfileSetupForm() {
     }
   }, [formData.photoPreviewUrl])
 
-  const openFilePicker = () => fileInputRef.current?.click()
-  const openCamera = () => cameraInputRef.current?.click() // ⚡ NUEVO: Abrir cámara
-
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0] ?? null
     if (!f) return
@@ -702,13 +699,12 @@ export function ProfileSetupForm() {
                     </AvatarFallback>
                   )}
                 </Avatar>
-                <button
-                  type="button"
-                  onClick={openFilePicker}
-                  className="absolute bottom-0 right-0 bg-primary text-white rounded-full p-2 sm:p-3 shadow-lg active:bg-primary/90 transition-all active:scale-110"
+                <label
+                  htmlFor="file-input"
+                  className="absolute bottom-0 right-0 bg-primary text-white rounded-full p-2 sm:p-3 shadow-lg active:bg-primary/90 transition-all active:scale-110 cursor-pointer"
                 >
                   <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
+                </label>
               </div>
               <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">Foto de perfil</h3>
               <p className="text-xs sm:text-sm text-gray-500 mb-2 sm:mb-3 px-2">
@@ -716,23 +712,20 @@ export function ProfileSetupForm() {
               </p>
               {/* ⚡ NUEVO: Dos botones - Cámara + Galería (como Instagram) */}
               <div className="flex gap-2 sm:gap-3 w-full max-w-sm">
-                <Button
-                  type="button"
-                  onClick={openCamera}
-                  className="flex-1 bg-primary active:bg-primary/90 text-white shadow-md text-sm sm:text-base py-2 sm:py-2.5"
+                <label
+                  htmlFor="camera-input"
+                  className="flex-1 bg-primary active:bg-primary/90 text-white shadow-md text-sm sm:text-base py-2 sm:py-2.5 rounded-md cursor-pointer text-center flex items-center justify-center"
                 >
                   <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                   Cámara
-                </Button>
-                <Button
-                  type="button"
-                  onClick={openFilePicker}
-                  variant="outline"
-                  className="flex-1 active:bg-gray-50 text-sm sm:text-base py-2 sm:py-2.5"
+                </label>
+                <label
+                  htmlFor="file-input"
+                  className="flex-1 active:bg-gray-50 text-sm sm:text-base py-2 sm:py-2.5 rounded-md cursor-pointer text-center flex items-center justify-center border border-gray-300"
                 >
                   <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                   Galería
-                </Button>
+                </label>
               </div>
               {fieldErrors.photo && (
                 <p className="text-xs sm:text-sm text-red-500 mt-2 flex items-center gap-1">
@@ -743,17 +736,19 @@ export function ProfileSetupForm() {
               {/* Input para galería */}
               <input 
                 ref={fileInputRef} 
+                id="file-input"
                 type="file" 
                 accept="image/*" 
                 onChange={handlePhotoChange} 
                 className="hidden"
               />
-              {/* ⚡ Input para cámara - capture="user" para forzar cámara frontal (selfie) */}
+              {/* ⚡ Input para cámara - capture sin valor para mejor compatibilidad */}  
               <input 
                 ref={cameraInputRef} 
+                id="camera-input"
                 type="file" 
                 accept="image/*" 
-                capture="user"
+                capture
                 onChange={handlePhotoChange} 
                 className="hidden"
               />
