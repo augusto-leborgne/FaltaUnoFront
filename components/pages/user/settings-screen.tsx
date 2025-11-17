@@ -64,10 +64,10 @@ export function SettingsScreen() {
   const [imageToCrop, setImageToCrop] = useState<string>("")
   const [crop, setCrop] = useState<Crop>({
     unit: '%',
-    width: 60,
-    height: 60,
-    x: 20,
-    y: 20
+    width: 50,
+    height: 50,
+    x: 25,
+    y: 25
   })
   const [completedCrop, setCompletedCrop] = useState<Crop | null>(null)
   const imageRef = useRef<HTMLImageElement | null>(null)
@@ -784,7 +784,7 @@ export function SettingsScreen() {
             ref={cameraInputRef} 
             type="file" 
             accept="image/*" 
-            capture
+            capture="user"
             onChange={handleUploadPhoto} 
             className="hidden"
           />
@@ -1082,10 +1082,10 @@ export function SettingsScreen() {
                 </button>
               </div>
               
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 <button
                   onClick={openCamera}
-                  className="w-full flex items-center space-x-3 p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors text-left touch-manipulation"
+                  className="w-full flex items-center space-x-3 p-4 bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors text-left touch-manipulation min-h-[60px]"
                   disabled={isSaving}
                 >
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -1099,7 +1099,7 @@ export function SettingsScreen() {
                 
                 <button
                   onClick={openFileExplorer}
-                  className="w-full flex items-center space-x-3 p-4 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors text-left touch-manipulation"
+                  className="w-full flex items-center space-x-3 p-4 bg-gray-50 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors text-left touch-manipulation min-h-[60px]"
                   disabled={isSaving}
                 >
                   <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
@@ -1114,7 +1114,7 @@ export function SettingsScreen() {
                 {avatar && (
                   <button
                     onClick={removePhoto}
-                    className="w-full flex items-center space-x-3 p-4 bg-red-50 hover:bg-red-100 rounded-xl transition-colors text-left touch-manipulation"
+                    className="w-full flex items-center space-x-3 p-4 bg-red-50 hover:bg-red-100 active:bg-red-200 rounded-xl transition-colors text-left touch-manipulation min-h-[60px]"
                     disabled={isSaving}
                   >
                     <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
@@ -1214,9 +1214,9 @@ export function SettingsScreen() {
       
       {/* Crop Modal */}
       {showCropModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4">
-          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-lg shadow-2xl flex flex-col overflow-hidden">
-            <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary/10 to-orange-50">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-lg shadow-2xl flex flex-col overflow-hidden max-h-[90vh] sm:max-h-[85vh]">
+            <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary/10 to-orange-50 flex-shrink-0">
               <h3 className="text-base sm:text-lg font-bold text-gray-900">Ajusta tu foto</h3>
               <button
                 type="button"
@@ -1224,14 +1224,14 @@ export function SettingsScreen() {
                   setShowCropModal(false)
                   setImageToCrop('')
                 }}
-                className="p-1.5 sm:p-2 active:bg-white rounded-lg sm:rounded-xl transition-colors"
+                className="p-2 active:bg-white rounded-lg sm:rounded-xl transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
                 <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
               </button>
             </div>
 
-            <div className="p-3 sm:p-4 bg-gray-50 flex items-center justify-center" style={{ maxHeight: '60vh' }}>
-              <div className="w-full max-w-sm">
+            <div className="p-2 sm:p-4 bg-gray-50 flex items-center justify-center flex-1 overflow-hidden">
+              <div className="w-full max-w-sm flex items-center justify-center">
                 <ReactCrop
                   crop={crop}
                   onChange={(c) => setCrop(c)}
@@ -1248,14 +1248,13 @@ export function SettingsScreen() {
                     ref={imageRef}
                     src={imageToCrop}
                     alt="Recortar"
-                    className="max-w-full h-auto"
-                    style={{ maxHeight: '50vh' }}
+                    className="max-w-full h-auto max-h-[50vh] sm:max-h-[60vh] object-contain"
                   />
                 </ReactCrop>
               </div>
             </div>
 
-            <div className="p-3 sm:p-4 border-t border-gray-200 flex gap-2 sm:gap-3 bg-white">
+            <div className="p-3 sm:p-4 border-t border-gray-200 flex gap-2 sm:gap-3 bg-white flex-shrink-0">
               <Button
                 type="button"
                 onClick={() => {
@@ -1263,14 +1262,14 @@ export function SettingsScreen() {
                   setImageToCrop('')
                 }}
                 variant="outline"
-                className="flex-1 text-sm sm:text-base py-2 sm:py-2.5"
+                className="flex-1 text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[44px]"
               >
                 Cancelar
               </Button>
               <Button
                 type="button"
                 onClick={handleCropComplete}
-                className="flex-1 bg-primary active:bg-primary/90 text-white text-sm sm:text-base py-2 sm:py-2.5"
+                className="flex-1 bg-primary active:bg-primary/90 text-white text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[44px]"
                 disabled={!completedCrop}
               >
                 Aplicar
