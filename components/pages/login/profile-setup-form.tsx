@@ -518,23 +518,7 @@ export function ProfileSetupForm() {
       }
     }
 
-    // Reposition on scroll/resize to handle container/viewport changes
-    const onResizeScroll = () => {
-      if (showGeneroDropdown) {
-        // re-run effect logic by toggling state (cheap) or directly recalculating
-        // Simpler: invoke same logic by dispatching 'resize' event on window handled by this effect
-        // But since this useEffect doesn't have an exposed function, we'll just force it by toggling state absent
-        // Instead we can recalc manually: simply trigger the effect by setting state but avoid infinite loop
-      }
-    };
-
-    window.addEventListener('resize', onResizeScroll);
-    window.addEventListener('scroll', onResizeScroll, true);
-
-    return () => {
-      window.removeEventListener('resize', onResizeScroll);
-      window.removeEventListener('scroll', onResizeScroll, true);
-    };
+    // Nothing else: repositioning + listeners done in the reposition block
   }, [showGeneroDropdown]);
 
   useEffect(() => {
@@ -589,9 +573,46 @@ export function ProfileSetupForm() {
       }
     }
 
-    const onResizeScroll = () => {
-      // no-op body — placeholder for potential future recalculation. Kept for symmetry with genero
+    const reposition = () => {
+      const trigger = positionDropdownRef.current?.querySelector('button');
+      const dropdown = positionDropdownRef.current?.querySelector('div[role="listbox"], div:last-child') as HTMLElement | null;
+      if (!trigger || !dropdown) return;
+
+      const rect = trigger.getBoundingClientRect();
+      const dropdownHeight = Math.min(240, dropdown.scrollHeight);
+      const spaceBelow = window.innerHeight - rect.bottom - 8;
+      const spaceAbove = rect.top - 8;
+
+      let top = rect.bottom + 4;
+      let left = rect.left;
+      let width = rect.width;
+
+      if (top + dropdownHeight > window.innerHeight) {
+        if (spaceAbove >= 120) {
+          top = rect.top - Math.min(dropdownHeight, spaceAbove) - 4;
+          dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceAbove)}px`;
+        } else {
+          top = rect.bottom + 4;
+          dropdown.style.maxHeight = `${Math.max(120, spaceBelow)}px`;
+        }
+      } else {
+        dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceBelow)}px`;
+      }
+
+      if (left + width > window.innerWidth) left = window.innerWidth - width - 8;
+      width = Math.max(width, 200);
+
+      dropdown.style.position = 'fixed';
+      dropdown.style.top = `${top}px`;
+      dropdown.style.left = `${left}px`;
+      dropdown.style.width = `${width}px`;
+      dropdown.style.zIndex = '9999';
+      dropdown.style.overflowY = 'auto';
     };
+
+    reposition();
+
+    const onResizeScroll = () => reposition();
 
     window.addEventListener('resize', onResizeScroll);
     window.addEventListener('scroll', onResizeScroll, true);
