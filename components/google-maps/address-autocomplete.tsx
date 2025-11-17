@@ -461,27 +461,6 @@ export function AddressAutocomplete({
     };
   }, [suggestions, query, isSearching, hasSelectedAddress]);
 
-  // Update dropdown position on scroll/resize
-  useEffect(() => {
-    const handler = () => {
-      // Force reposition by updating local state (no-op) via small timeout
-      if (containerRef.current) {
-        const input = containerRef.current.querySelector('input');
-        if (!input) return;
-        // Re-run positioning logic by triggering a reflow - call fetchPredictions with current value only when suggestions exist
-        // Simpler: dispatch a custom event to re-evaluate styles
-        window.dispatchEvent(new Event('resize'));
-      }
-    };
-
-    window.addEventListener('scroll', handler, true);
-    window.addEventListener('resize', handler);
-    return () => {
-      window.removeEventListener('scroll', handler, true);
-      window.removeEventListener('resize', handler);
-    };
-  }, [suggestions]);
-
   // Render de estado de carga
   if (isLoadingMaps) {
     return (
