@@ -197,23 +197,9 @@ function VerifyEmailContent() {
           }
         }
 
-        // Redirect: if we have a user object prefer to read perfilCompleto from it
+        // Redirect: Always go to phone verification since it's now mandatory
         setTimeout(() => {
-          const userForRedirect = returnedUser || AuthService.getUser();
-          if (userForRedirect?.perfilCompleto) {
-            router.push('/home');
-          } else {
-            // Fallback: if we don't have a token/usuario (older backend), keep compatibility
-            if (!returnedToken && !returnedUser) {
-              // ✅ Si viene de registro, usar sessionStorage (se limpia al cerrar pestaña)
-              sessionStorage.setItem('pendingVerification', JSON.stringify({
-                email: email!,
-                passwordHash: data.data.passwordHash,
-                timestamp: Date.now()
-              }));
-            }
-            router.push('/profile-setup');
-          }
+          router.push('/phone-verification');
         }, 2500);
       } else {
         // Mensajes de error específicos del backend

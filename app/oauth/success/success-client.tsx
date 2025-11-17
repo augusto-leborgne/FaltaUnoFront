@@ -94,18 +94,16 @@ function OAuthSuccessContent() {
         logger.info("[OAuth] ✅ Autenticación completa exitosamente")
         setStatus("success")
         
-        if (!user.perfilCompleto) {
+        // Phone verification is now mandatory for all users
+        if (!user.celularVerificado) {
+          setMessage("✅ ¡Bienvenido! Verifica tu celular para continuar")
+          await new Promise(resolve => setTimeout(resolve, 2000))
+          router.push("/phone-verification")
+        } else if (!user.perfilCompleto) {
           setMessage("✅ ¡Bienvenido! Completemos tu perfil")
           await new Promise(resolve => setTimeout(resolve, 2000))
           router.push("/profile-setup")
         } else {
-          // TODO: Verificación de cédula deshabilitada temporalmente - ir directo a home
-          /*
-          } else if (!user.cedulaVerificada) {
-          setMessage("✅ ¡Bienvenido! Verificá tu cédula")
-          await new Promise(resolve => setTimeout(resolve, 2000))
-          router.push("/verification")
-          */
           setMessage(`✅ ¡Bienvenido, ${user.nombre || user.email}!`)
           await new Promise(resolve => setTimeout(resolve, 2000))
           router.push("/home")

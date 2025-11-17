@@ -139,6 +139,7 @@ export interface Usuario {
   userLastUpdatedAt?: number;
   cedulaVerificada?: boolean;
   emailVerified?: boolean; // ✅ Nuevo campo
+  celularVerificado?: boolean; // ✅ Phone verification status
   provider?: string;
   created_at?: string; // ISO 8601 timestamp
   rol?: string; // 'USER' | 'ADMIN'

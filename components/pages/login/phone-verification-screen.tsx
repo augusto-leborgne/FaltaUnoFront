@@ -291,7 +291,7 @@ export function PhoneVerificationScreen() {
               ProfileSetupStorage.clear();
               router.replace("/home");
             } else {
-              logger.warn("[PhoneVerification] Phone updated but profile incomplete, redirecting to /profile-setup");
+              logger.warn("[PhoneVerification] Phone verified but profile incomplete, redirecting to /profile-setup");
               router.replace("/profile-setup");
             }
           } else {
