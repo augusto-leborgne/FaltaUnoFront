@@ -703,12 +703,12 @@ export function ProfileSetupForm() {
                 onChange={handlePhotoChange} 
                 className="hidden"
               />
-              {/* ⚡ Input para cámara - capture sin valor para forzar cámara del dispositivo */}
+              {/* ⚡ Input para cámara - capture="user" para forzar cámara frontal (selfie) */}
               <input 
                 ref={cameraInputRef} 
                 type="file" 
                 accept="image/*" 
-                capture
+                capture="user"
                 onChange={handlePhotoChange} 
                 className="hidden"
               />
@@ -966,6 +966,9 @@ export function ProfileSetupForm() {
                   onComplete={(c) => setCompletedCrop(c)}
                   aspect={1}
                   circularCrop
+                  keepSelection
+                  minWidth={50}
+                  minHeight={50}
                   className="max-w-full"
                 >
                   <img
