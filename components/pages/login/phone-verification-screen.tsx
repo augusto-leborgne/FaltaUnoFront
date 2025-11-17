@@ -185,13 +185,35 @@ export function PhoneVerificationScreen() {
       const fullPhone = `${countryCode}${phoneNumber.replace(/\s/g, '')}`;
       logger.log("[PhoneVerification] Sending code to:", fullPhone);
       
+      // PRIMERO: Guardar el teléfono en el perfil del usuario
+      logger.log("[PhoneVerification] Updating phone in user profile first...");
+      const updateRes = await withRetry(
+        () => UsuarioAPI.actualizarPerfil({ celular: fullPhone }),
+        {
+          maxRetries: 2,
+          delayMs: 1500,
+          shouldRetry: (error) => {
+            return error.name === 'AbortError' || 
+                   error.message?.includes('timeout') ||
+                   (error.status >= 500 && error.status < 600)
+          }
+        }
+      );
+      
+      if (!updateRes.success) {
+        throw new Error(updateRes.message ?? "No se pudo actualizar el número de celular");
+      }
+      
+      logger.log("[PhoneVerification] Phone updated successfully, now sending verification code...");
+      
+      // SEGUNDO: Enviar código de verificación (backend usa el celular del perfil)
       const response = await fetch(`${API_URL}/phone-verification/send`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${AuthService.getToken()}`
         },
-        body: JSON.stringify({ phoneNumber: fullPhone }),
+        // Backend NO acepta phoneNumber en body - usa el celular del usuario
       });
 
       const data = await response.json();
@@ -220,15 +242,16 @@ export function PhoneVerificationScreen() {
     setError("");
     
     try {
-      const fullPhone = `${countryCode}${phoneNumber.replace(/\s/g, '')}`;
+      logger.log("[PhoneVerification] Resending code");
       
+      // Backend usa el celular del perfil del usuario - no necesita phoneNumber
       const response = await fetch(`${API_URL}/phone-verification/resend`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${AuthService.getToken()}`
         },
-        body: JSON.stringify({ phoneNumber: fullPhone }),
+        // Backend NO acepta phoneNumber en body - usa el celular del usuario
       });
 
       const data = await response.json();
@@ -255,9 +278,9 @@ export function PhoneVerificationScreen() {
     setError("");
     
     try {
-      const fullPhone = `${countryCode}${phoneNumber.replace(/\s/g, '')}`;
-      logger.log("[PhoneVerification] Verifying code for:", fullPhone);
+      logger.log("[PhoneVerification] Verifying code...");
       
+      // Backend solo necesita el código - ya tiene el celular del usuario
       const response = await fetch(`${API_URL}/phone-verification/verify`, {
         method: 'POST',
         headers: { 
@@ -265,7 +288,6 @@ export function PhoneVerificationScreen() {
           'Authorization': `Bearer ${AuthService.getToken()}`
         },
         body: JSON.stringify({ 
-          phoneNumber: fullPhone,
           code: verificationCode 
         }),
       });
@@ -275,47 +297,27 @@ export function PhoneVerificationScreen() {
       if (data.success) {
         logger.log("[PhoneVerification] Code verified successfully");
         
-        // Update phone in user profile
-        const res = await withRetry(
-          () => UsuarioAPI.actualizarPerfil({ celular: fullPhone }),
-          {
-            maxRetries: 2,
-            delayMs: 1500,
-            shouldRetry: (error) => {
-              return error.name === 'AbortError' || 
-                     error.message?.includes('timeout') ||
-                     (error.status >= 500 && error.status < 600)
-            }
-          }
-        );
+        // Refresh user from server (backend ya marcó celularVerificado = true)
+        const refreshed = await refreshUser();
         
-        if (res.success && res.data) {
-          logger.log("[PhoneVerification] Phone updated successfully");
+        if (refreshed) {
+          setUser(refreshed);
+          setIsSuccess(true);
           
-          // Refresh user from server
-          const refreshed = await refreshUser();
+          await new Promise(resolve => setTimeout(resolve, 500));
           
-          if (refreshed && refreshed.celular) {
-            setUser(refreshed);
-            setIsSuccess(true);
-            
-            await new Promise(resolve => setTimeout(resolve, 500));
-            
-            const isComplete = refreshed.perfilCompleto === true;
-            
-            if (isComplete) {
-              logger.log("[PhoneVerification] Profile complete, redirecting to /home");
-              ProfileSetupStorage.clear();
-              router.replace("/home");
-            } else {
-              logger.warn("[PhoneVerification] Phone verified but profile incomplete, redirecting to /profile-setup");
-              router.replace("/profile-setup");
-            }
+          const isComplete = refreshed.perfilCompleto === true;
+          
+          if (isComplete) {
+            logger.log("[PhoneVerification] Profile complete, redirecting to /home");
+            ProfileSetupStorage.clear();
+            router.replace("/home");
           } else {
-            throw new Error("No se pudo verificar la actualización");
+            logger.warn("[PhoneVerification] Phone verified but profile incomplete, redirecting to /profile-setup");
+            router.replace("/profile-setup");
           }
         } else {
-          throw new Error(res.message ?? "No se pudo actualizar el número de celular");
+          throw new Error("No se pudo verificar la actualización");
         }
       } else {
         setAttempts(prev => prev + 1);
