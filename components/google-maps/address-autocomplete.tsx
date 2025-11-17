@@ -354,17 +354,43 @@ export function AddressAutocomplete({
     onChange("", null);
   };
 
-  // Cerrar sugerencias al hacer clic afuera
+  // Position suggestions correctly
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setSuggestions([]);
+    if ((suggestions.length > 0 || (query.length >= 1 && suggestions.length === 0 && !isSearching && !hasSelectedAddress)) && containerRef.current) {
+      const input = containerRef.current.querySelector('input');
+      const dropdown = containerRef.current.querySelector('div[role="listbox"], div:last-child') as HTMLElement;
+      
+      if (input && dropdown) {
+        const rect = input.getBoundingClientRect();
+        const dropdownHeight = Math.min(224, dropdown.scrollHeight); // max-h-56 = 224px
+        
+        // Try to position below first
+        let top = rect.bottom + 4;
+        let left = rect.left;
+        let width = rect.width;
+        
+        // Check if it would go off the bottom of viewport
+        if (top + dropdownHeight > window.innerHeight) {
+          // Position above instead
+          top = rect.top - dropdownHeight - 4;
+        }
+        
+        // Check if it would go off the right edge
+        if (left + width > window.innerWidth) {
+          left = window.innerWidth - width - 8;
+        }
+        
+        // Ensure minimum width
+        width = Math.max(width, 300);
+        
+        dropdown.style.position = 'fixed';
+        dropdown.style.top = `${top}px`;
+        dropdown.style.left = `${left}px`;
+        dropdown.style.width = `${width}px`;
+        dropdown.style.zIndex = '9999';
       }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    }
+  }, [suggestions, query, isSearching, hasSelectedAddress]);
 
   // Render de estado de carga
   if (isLoadingMaps) {
@@ -446,7 +472,7 @@ export function AddressAutocomplete({
 
       {/* Sugerencias */}
       {suggestions.length > 0 && (
-        <div className="absolute z-[100] mt-1 w-full bg-white border border-gray-300 rounded-xl shadow-lg max-h-56 overflow-auto">
+        <div className="fixed bg-white border border-gray-300 rounded-xl shadow-lg max-h-56 overflow-auto z-[9999] min-w-[300px]">
           {suggestions.map((suggestion) => (
             <button
               key={suggestion.place_id}
@@ -470,7 +496,7 @@ export function AddressAutocomplete({
 
       {/* Mensaje de no resultados */}
       {query.length >= 1 && suggestions.length === 0 && !isSearching && !hasSelectedAddress && (
-        <div className="absolute z-[100] mt-1 w-full bg-white border border-gray-300 rounded-xl shadow-lg p-3">
+        <div className="fixed bg-white border border-gray-300 rounded-xl shadow-lg p-3 z-[9999] min-w-[300px]">
           <p className="text-sm text-gray-500 text-center">
             No se encontraron ubicaciones
           </p>

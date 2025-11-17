@@ -348,21 +348,80 @@ export function ProfileSetupForm() {
     }, 'image/jpeg', 0.92)
   }
 
-  // Start camera when modal opens
+  // Position dropdowns correctly
   useEffect(() => {
-    if (showCameraModal) {
-      startCamera()
-    }
-  }, [showCameraModal])
-
-  // Cleanup camera stream on unmount
-  useEffect(() => {
-    return () => {
-      if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop())
+    if (showGeneroDropdown && generoDropdownRef.current) {
+      const trigger = generoDropdownRef.current.querySelector('button');
+      const dropdown = generoDropdownRef.current.querySelector('div[role="listbox"], div:last-child') as HTMLElement;
+      
+      if (trigger && dropdown) {
+        const rect = trigger.getBoundingClientRect();
+        const dropdownHeight = Math.min(240, dropdown.scrollHeight); // max-h-60 = 240px
+        
+        // Try to position below first
+        let top = rect.bottom + 4;
+        let left = rect.left;
+        let width = rect.width;
+        
+        // Check if it would go off the bottom of viewport
+        if (top + dropdownHeight > window.innerHeight) {
+          // Position above instead
+          top = rect.top - dropdownHeight - 4;
+        }
+        
+        // Check if it would go off the right edge
+        if (left + width > window.innerWidth) {
+          left = window.innerWidth - width - 8;
+        }
+        
+        // Ensure minimum width
+        width = Math.max(width, 200);
+        
+        dropdown.style.position = 'fixed';
+        dropdown.style.top = `${top}px`;
+        dropdown.style.left = `${left}px`;
+        dropdown.style.width = `${width}px`;
+        dropdown.style.zIndex = '9999';
       }
     }
-  }, [cameraStream])
+  }, [showGeneroDropdown]);
+
+  useEffect(() => {
+    if (showPositionDropdown && positionDropdownRef.current) {
+      const trigger = positionDropdownRef.current.querySelector('button');
+      const dropdown = positionDropdownRef.current.querySelector('div[role="listbox"], div:last-child') as HTMLElement;
+      
+      if (trigger && dropdown) {
+        const rect = trigger.getBoundingClientRect();
+        const dropdownHeight = Math.min(240, dropdown.scrollHeight); // max-h-60 = 240px
+        
+        // Try to position below first
+        let top = rect.bottom + 4;
+        let left = rect.left;
+        let width = rect.width;
+        
+        // Check if it would go off the bottom of viewport
+        if (top + dropdownHeight > window.innerHeight) {
+          // Position above instead
+          top = rect.top - dropdownHeight - 4;
+        }
+        
+        // Check if it would go off the right edge
+        if (left + width > window.innerWidth) {
+          left = window.innerWidth - width - 8;
+        }
+        
+        // Ensure minimum width
+        width = Math.max(width, 200);
+        
+        dropdown.style.position = 'fixed';
+        dropdown.style.top = `${top}px`;
+        dropdown.style.left = `${left}px`;
+        dropdown.style.width = `${width}px`;
+        dropdown.style.zIndex = '9999';
+      }
+    }
+  }, [showPositionDropdown]);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0] ?? null
@@ -922,7 +981,7 @@ export function ProfileSetupForm() {
                     <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
                   </Button>
                   {showGeneroDropdown && (
-                    <div className="absolute mt-1 w-full bg-white border border-gray-300 rounded-xl shadow-xl z-[100]">
+                    <div className="fixed bg-white border border-gray-300 rounded-xl shadow-xl z-[9999] max-h-60 overflow-y-auto min-w-[200px]">
                       {generos.map((gen) => (
                         <div
                           key={gen}
@@ -987,7 +1046,7 @@ export function ProfileSetupForm() {
                     <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
                   </Button>
                   {showPositionDropdown && (
-                    <div className="absolute mt-1 w-full bg-white border border-gray-300 rounded-xl shadow-xl z-[100] max-h-60 overflow-y-auto">
+                    <div className="fixed bg-white border border-gray-300 rounded-xl shadow-xl z-[9999] max-h-60 overflow-y-auto min-w-[200px]">
                       {positions.map((pos) => (
                         <div
                           key={pos}
