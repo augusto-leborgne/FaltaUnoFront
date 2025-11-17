@@ -782,7 +782,7 @@ export function ProfileSetupForm() {
                     <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
                   </Button>
                   {showGeneroDropdown && (
-                    <div className="absolute mt-1 w-full bg-white border border-gray-300 rounded-xl shadow-xl z-50">
+                    <div className="absolute bottom-full mb-1 w-full bg-white border border-gray-300 rounded-xl shadow-xl z-50">
                       {generos.map((gen) => (
                         <div
                           key={gen}
@@ -847,7 +847,7 @@ export function ProfileSetupForm() {
                     <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
                   </Button>
                   {showPositionDropdown && (
-                    <div className="absolute mt-1 w-full bg-white border border-gray-300 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto">
+                    <div className="absolute bottom-full mb-1 w-full bg-white border border-gray-300 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto">
                       {positions.map((pos) => (
                         <div
                           key={pos}
