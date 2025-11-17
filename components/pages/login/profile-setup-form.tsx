@@ -17,7 +17,7 @@ import { usePostAuthRedirect } from "@/lib/navigation"
 import ReactCrop, { type Crop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
 import { withRetry, formatErrorMessage } from '@/lib/api-utils'
-import { ProfileSetupStorage } from '@/lib/profile-setup-storage'
+import { ProfileSetupStorage, ProfileSetupData } from '@/lib/profile-setup-storage'
 import { useClickOutside } from '@/hooks/use-click-outside'
 
 export function ProfileSetupForm() {
@@ -193,8 +193,29 @@ export function ProfileSetupForm() {
           weight: savedData.weight || prev.weight,
           address: savedData.address || prev.address,
           placeDetails: savedData.placeDetails || prev.placeDetails,
-          photoPreviewUrl: savedData.photoPreviewUrl || prev.photoPreviewUrl,
         }));
+
+        // Restaurar foto si existe
+        if (savedData.photoFile) {
+          try {
+            const photoFile = ProfileSetupStorage.base64ToFile(savedData.photoFile);
+            const photoPreviewUrl = URL.createObjectURL(photoFile);
+            setFormData((prev) => ({
+              ...prev,
+              photo: photoFile,
+              photoPreviewUrl: photoPreviewUrl,
+            }));
+          } catch (error) {
+            logger.error('[ProfileSetup] Error restoring photo from base64:', error);
+          }
+        } else if (savedData.photoPreviewUrl) {
+          // Legacy support
+          setFormData((prev) => ({
+            ...prev,
+            photoPreviewUrl: savedData.photoPreviewUrl || "",
+          }));
+        }
+
         // Limpiar datos guardados después de cargar
         ProfileSetupStorage.clear();
         return;
@@ -469,7 +490,7 @@ export function ProfileSetupForm() {
         } else {
           logger.log("[ProfileSetup] Registration complete, no phone - redirecting to /phone-verification")
           // ⚡ NUEVO: Guardar datos del formulario antes de navegar
-          ProfileSetupStorage.save({
+          const saveData: ProfileSetupData = {
             name: formData.name,
             surname: formData.surname,
             phone: formData.phone,
@@ -482,7 +503,19 @@ export function ProfileSetupForm() {
             address: formData.address,
             placeDetails: formData.placeDetails,
             photoPreviewUrl: formData.photoPreviewUrl,
-          });
+          };
+
+          // Convertir foto a base64 si existe
+          if (formData.photo) {
+            try {
+              const photoBase64 = await ProfileSetupStorage.fileToBase64(formData.photo);
+              saveData.photoFile = photoBase64;
+            } catch (error) {
+              logger.error("[ProfileSetup] Error converting photo to base64:", error);
+            }
+          }
+
+          ProfileSetupStorage.save(saveData);
           router.replace('/phone-verification')
         }
 
@@ -583,7 +616,7 @@ export function ProfileSetupForm() {
           } else {
             logger.log("[ProfileSetup] No phone, redirecting to /phone-verification")
             // ⚡ NUEVO: Guardar datos del formulario antes de navegar
-            ProfileSetupStorage.save({
+            const saveData: ProfileSetupData = {
               name: formData.name,
               surname: formData.surname,
               phone: formData.phone,
@@ -596,7 +629,19 @@ export function ProfileSetupForm() {
               address: formData.address,
               placeDetails: formData.placeDetails,
               photoPreviewUrl: formData.photoPreviewUrl,
-            });
+            };
+
+            // Convertir foto a base64 si existe
+            if (formData.photo) {
+              try {
+                const photoBase64 = await ProfileSetupStorage.fileToBase64(formData.photo);
+                saveData.photoFile = photoBase64;
+              } catch (error) {
+                logger.error("[ProfileSetup] Error converting photo to base64:", error);
+              }
+            }
+
+            ProfileSetupStorage.save(saveData);
             router.replace('/phone-verification')
           }
         } else {
@@ -782,7 +827,7 @@ export function ProfileSetupForm() {
                     <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
                   </Button>
                   {showGeneroDropdown && (
-                    <div className="absolute bottom-full mb-1 w-full bg-white border border-gray-300 rounded-xl shadow-xl z-50">
+                    <div className="absolute mt-1 w-full bg-white border border-gray-300 rounded-xl shadow-xl z-[100]">
                       {generos.map((gen) => (
                         <div
                           key={gen}
@@ -847,7 +892,7 @@ export function ProfileSetupForm() {
                     <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
                   </Button>
                   {showPositionDropdown && (
-                    <div className="absolute bottom-full mb-1 w-full bg-white border border-gray-300 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto">
+                    <div className="absolute mt-1 w-full bg-white border border-gray-300 rounded-xl shadow-xl z-[100] max-h-60 overflow-y-auto">
                       {positions.map((pos) => (
                         <div
                           key={pos}

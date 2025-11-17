@@ -15,6 +15,9 @@ import { useAuth } from "@/hooks/use-auth"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import ReactCrop, { type Crop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
+import { UsuarioAPI, API_URL } from "@/lib/api"
+import { PhotoCache } from "@/lib/photo-cache"
+import { ProfileSetupStorage, type ProfileSetupData } from "@/lib/profile-setup-storage"
 
 const positions = ["Arquero", "Defensa", "Mediocampista", "Delantero"]
 
@@ -174,6 +177,23 @@ export function SettingsScreen() {
   useEffect(() => {
     loadUserData()
     loadNotificationPreferences()
+    
+    // Check for stored data from phone verification navigation
+    const storedData = ProfileSetupStorage.load()
+    if (storedData) {
+      const blobUrl = ProfileSetupStorage.base64ToBlobUrl(storedData)
+      if (blobUrl) {
+        setAvatar(blobUrl)
+        
+        // Try to recreate File object if photoFile data exists
+        if (storedData.photoFile) {
+          const file = ProfileSetupStorage.base64ToFile(storedData.photoFile)
+          setPhotoFile(file)
+        }
+        
+        logger.log("[Settings] Photo restored from storage")
+      }
+    }
   }, [])
 
   const loadUserData = async () => {
@@ -241,6 +261,33 @@ export function SettingsScreen() {
     
     try {
       logger.log("[Settings] Sending verification code to:", phone);
+      
+      // Save current form data and photo to storage before navigating
+      const storageData: ProfileSetupData = {
+        name: formData.name,
+        surname: formData.surname,
+        phone: formData.phone,
+        countryCode: "+598", // Default, will be updated if needed
+        fechaNacimiento: "",
+        genero: "",
+        position: formData.position,
+        height: formData.height,
+        weight: formData.weight,
+        address: "",
+        placeDetails: null,
+      };
+
+      // Save photo file data if exists
+      if (photoFile) {
+        try {
+          const photoData = await ProfileSetupStorage.fileToBase64(photoFile);
+          storageData.photoFile = photoData;
+        } catch (err) {
+          logger.warn("[Settings] Could not save photo to storage:", err);
+        }
+      }
+
+      ProfileSetupStorage.save(storageData);
       
       const response = await fetch(`${API_URL}/phone-verification/send`, {
         method: 'POST',
@@ -345,6 +392,9 @@ export function SettingsScreen() {
           setPendingPhone("");
           setVerificationCode("");
           setVerificationAttempts(0);
+          
+          // Clear stored data since verification is complete
+          ProfileSetupStorage.clear();
           
           setSuccess(true);
           setTimeout(() => setSuccess(false), 3000);
@@ -556,6 +606,8 @@ export function SettingsScreen() {
       setImageToCrop('')
     }, 'image/jpeg', 0.92) // Calidad 92% - buen balance
   }
+
+  const handleUploadPhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
       // Validar tamaño (max 5MB)

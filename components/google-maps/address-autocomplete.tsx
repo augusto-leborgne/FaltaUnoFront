@@ -446,7 +446,7 @@ export function AddressAutocomplete({
 
       {/* Sugerencias */}
       {suggestions.length > 0 && (
-        <div className="absolute z-50 bottom-full mb-1 w-full bg-white border border-gray-300 rounded-xl shadow-lg max-h-56 overflow-auto">
+        <div className="absolute z-[100] mt-1 w-full bg-white border border-gray-300 rounded-xl shadow-lg max-h-56 overflow-auto">
           {suggestions.map((suggestion) => (
             <button
               key={suggestion.place_id}
@@ -470,7 +470,7 @@ export function AddressAutocomplete({
 
       {/* Mensaje de no resultados */}
       {query.length >= 1 && suggestions.length === 0 && !isSearching && !hasSelectedAddress && (
-        <div className="absolute z-50 bottom-full mb-1 w-full bg-white border border-gray-300 rounded-xl shadow-lg p-3">
+        <div className="absolute z-[100] mt-1 w-full bg-white border border-gray-300 rounded-xl shadow-lg p-3">
           <p className="text-sm text-gray-500 text-center">
             No se encontraron ubicaciones
           </p>

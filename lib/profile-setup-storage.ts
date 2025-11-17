@@ -15,12 +15,68 @@ export interface ProfileSetupData {
   weight: string
   address: string
   placeDetails: google.maps.places.PlaceResult | null
-  photoPreviewUrl?: string
+  photoFile?: {
+    data: string // base64 encoded image data
+    type: string // mime type
+    name: string // original filename
+  }
+  photoPreviewUrl?: string // legacy support
 }
 
 const STORAGE_KEY = 'profile_setup_draft'
 
 export const ProfileSetupStorage = {
+  /**
+   * Convierte un File a base64 para almacenamiento
+   */
+  fileToBase64(file: File): Promise<{ data: string; type: string; name: string }> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        if (reader.result) {
+          resolve({
+            data: reader.result as string,
+            type: file.type,
+            name: file.name
+          })
+        } else {
+          reject(new Error('Failed to read file'))
+        }
+      }
+      reader.onerror = () => reject(reader.error)
+      reader.readAsDataURL(file)
+    })
+  },
+
+  /**
+   * Convierte datos base64 de vuelta a blob URL
+   */
+  base64ToBlobUrl(data: ProfileSetupData): string | null {
+    if (data.photoFile) {
+      return data.photoFile.data // Ya es un data URL completo
+    }
+    if (data.photoPreviewUrl) {
+      return data.photoPreviewUrl // Legacy support
+    }
+    return null
+  },
+
+  /**
+   * Convierte datos base64 de vuelta a File object
+   */
+  base64ToFile(photoFile: { data: string; type: string; name: string }): File {
+    // Convertir data URL a blob
+    const arr = photoFile.data.split(',')
+    const mime = arr[0].match(/:(.*?);/)?.[1] || photoFile.type
+    const bstr = atob(arr[1])
+    let n = bstr.length
+    const u8arr = new Uint8Array(n)
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n)
+    }
+    const blob = new Blob([u8arr], { type: mime })
+    return new File([blob], photoFile.name, { type: mime })
+  },
   /**
    * Guarda los datos del formulario en sessionStorage
    */
