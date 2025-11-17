@@ -467,33 +467,70 @@ export function ProfileSetupForm() {
   }, [cameraStream])
 
   useEffect(() => {
-    if (showPositionDropdown && positionDropdownRef.current) {
-      const trigger = positionDropdownRef.current.querySelector('button');
-      const dropdown = positionDropdownRef.current.querySelector('div[role="listbox"], div:last-child') as HTMLElement;
-      
+    if (showGeneroDropdown && generoDropdownRef.current) {
+      const trigger = generoDropdownRef.current.querySelector('button');
+      const dropdown = generoDropdownRef.current.querySelector('div[role="listbox"], div:last-child') as HTMLElement;
+
       if (trigger && dropdown) {
         const rect = trigger.getBoundingClientRect();
         const dropdownHeight = Math.min(240, dropdown.scrollHeight); // max-h-60 = 240px
-        
+
         // Try to position below first
         let top = rect.bottom + 4;
         let left = rect.left;
         let width = rect.width;
-        
+
         // Check if it would go off the bottom of viewport
         if (top + dropdownHeight > window.innerHeight) {
           // Position above instead
           top = rect.top - dropdownHeight - 4;
         }
-        
+
         // Check if it would go off the right edge
         if (left + width > window.innerWidth) {
           left = window.innerWidth - width - 8;
         }
-        
+
         // Ensure minimum width
         width = Math.max(width, 200);
-        
+
+        dropdown.style.position = 'fixed';
+        dropdown.style.top = `${top}px`;
+        dropdown.style.left = `${left}px`;
+        dropdown.style.width = `${width}px`;
+        dropdown.style.zIndex = '9999';
+      }
+    }
+  }, [showGeneroDropdown]);
+
+  useEffect(() => {
+    if (showPositionDropdown && positionDropdownRef.current) {
+      const trigger = positionDropdownRef.current.querySelector('button');
+      const dropdown = positionDropdownRef.current.querySelector('div[role="listbox"], div:last-child') as HTMLElement;
+
+      if (trigger && dropdown) {
+        const rect = trigger.getBoundingClientRect();
+        const dropdownHeight = Math.min(240, dropdown.scrollHeight); // max-h-60 = 240px
+
+        // Try to position below first
+        let top = rect.bottom + 4;
+        let left = rect.left;
+        let width = rect.width;
+
+        // Check if it would go off the bottom of viewport
+        if (top + dropdownHeight > window.innerHeight) {
+          // Position above instead
+          top = rect.top - dropdownHeight - 4;
+        }
+
+        // Check if it would go off the right edge
+        if (left + width > window.innerWidth) {
+          left = window.innerWidth - width - 8;
+        }
+
+        // Ensure minimum width
+        width = Math.max(width, 200);
+
         dropdown.style.position = 'fixed';
         dropdown.style.top = `${top}px`;
         dropdown.style.left = `${left}px`;
@@ -1126,7 +1163,7 @@ export function ProfileSetupForm() {
                     <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
                   </Button>
                   {showPositionDropdown && (
-                    <div className="absolute top-full left-0 right-0 bg-white border border-gray-300 rounded-xl shadow-xl z-[9999] max-h-60 overflow-y-auto">
+                    <div className="fixed bg-white border border-gray-300 rounded-xl shadow-xl z-[9999] max-h-60 overflow-y-auto min-w-[200px]">
                       {positions.map((pos) => (
                         <div
                           key={pos}
