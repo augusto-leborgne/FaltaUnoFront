@@ -50,17 +50,6 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       return
     }
 
-    // ✅ VERIFICACIÓN OBLIGATORIA: Validar que el celular esté verificado
-    // Excepción: Admin users pueden acceder a rutas de admin sin verificación de celular
-    const isAdminRoute = pathname?.startsWith('/admin');
-    const isAdminUser = user?.rol === 'ADMIN';
-    
-    if (!user?.celularVerificado && !(isAdminRoute && isAdminUser)) {
-      logger.debug('[ProtectedRoute] Celular no verificado, redirigiendo a phone-verification')
-      router.push('/phone-verification')
-      return
-    }
-
     // ✅ IMPORTANTE: NO validar perfilCompleto aquí
     // Cada página usa RequireAuth con sus propios props (allowIncomplete, etc.)
     // Si validamos aquí, causamos loops infinitos en el flujo de onboarding

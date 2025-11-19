@@ -61,17 +61,6 @@ export default function RequireAuth({
       return
     }
 
-    // ⚡ NUEVO: Verificar que tenga celular (obligatorio)
-    const hasCelular = user.celular && user.celular.trim() !== ""
-    
-    if (!allowNoPhone && !hasCelular) {
-      if (pathname !== "/phone-verification") {
-        logger.log(`[RequireAuth:${pathname}] Celular faltante, redirigiendo a /phone-verification`)
-        router.replace("/phone-verification")
-      }
-      return
-    }
-
     if (!allowUnverified && user.perfilCompleto && !user.cedulaVerificada) {
       // TODO: Verificación de cédula deshabilitada temporalmente
     }

@@ -216,7 +216,7 @@ export default function AdminDashboard() {
         usuario.nombre?.toLowerCase().includes(query) ||
         usuario.apellido?.toLowerCase().includes(query) ||
         usuario.email?.toLowerCase().includes(query) ||
-        usuario.celular?.toLowerCase().includes(query)
+        usuario.email?.toLowerCase().includes(query)
       if (!matchesSearch) return false
     }
     
@@ -945,7 +945,7 @@ export default function AdminDashboard() {
                             Email
                           </th>
                           <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600">
-                            Celular
+                            Email
                           </th>
                           <th className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600">
                             Rol
@@ -982,7 +982,7 @@ export default function AdminDashboard() {
                               {usuario.email}
                             </td>
                             <td className="px-3 py-2 text-sm text-gray-600">
-                              {usuario.celular || "-"}
+                              {usuario.email || "-"}
                             </td>
                             <td className="px-3 py-2">
                               <span
@@ -1085,7 +1085,7 @@ export default function AdminDashboard() {
                             {usuario.nombre} {usuario.apellido}
                           </h3>
                           <p className="text-xs text-gray-600 truncate">{usuario.email}</p>
-                          <p className="text-xs text-gray-500">{usuario.celular || "Sin celular"}</p>
+                          <p className="text-xs text-gray-500">{usuario.email || "Sin celular"}</p>
                         </div>
                         <div className="flex flex-col gap-1 items-end shrink-0">
                           <span
@@ -1886,9 +1886,9 @@ export default function AdminDashboard() {
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-sm text-gray-500">
                     <Phone className="h-4 w-4" />
-                    <span className="font-medium">Celular</span>
+                    <span className="font-medium">Email</span>
                   </div>
-                  <p className="text-gray-900 pl-6 text-sm">{selectedUser.celular || "-"}</p>
+                  <p className="text-gray-900 pl-6 text-sm">{selectedUser.email || "-"}</p>
                 </div>
 
                 <div className="space-y-1">

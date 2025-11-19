@@ -166,8 +166,8 @@ export function ContactsScreen() {
           </Avatar>
           <div>
             <div className="font-medium text-gray-900">{fullName}</div>
-            {user.celular && (
-              <div className="text-sm text-gray-500">{user.celular}</div>
+            {user.email && (
+              <div className="text-sm text-gray-500">{user.email}</div>
             )}
           </div>
         </div>
@@ -308,9 +308,9 @@ export function ContactsScreen() {
             <h2 className="text-xl font-bold text-gray-900 text-center mb-2">
               {selectedUser.nombre} {selectedUser.apellido}
             </h2>
-            {selectedUser.celular && (
+            {selectedUser.email && (
               <p className="text-sm text-gray-600 text-center mb-2">
-                {selectedUser.celular}
+                {selectedUser.email}
               </p>
             )}
             <p className="text-sm text-gray-500 text-center mb-6">
