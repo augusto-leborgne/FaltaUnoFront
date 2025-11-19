@@ -17,7 +17,6 @@ import { usePostAuthRedirect } from "@/lib/navigation"
 import ReactCrop, { type Crop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
 import { withRetry, formatErrorMessage } from '@/lib/api-utils'
-import { ProfileSetupStorage, ProfileSetupData } from '@/lib/profile-setup-storage'
 import { useClickOutside } from '@/hooks/use-click-outside'
 
 export function ProfileSetupForm() {
@@ -35,13 +34,10 @@ export function ProfileSetupForm() {
   // Refs para dropdowns
   const positionDropdownRef = useRef<HTMLDivElement | null>(null)
   const generoDropdownRef = useRef<HTMLDivElement | null>(null)
-  const countryCodeDropdownRef = useRef<HTMLDivElement | null>(null)
 
   const [formData, setFormData] = useState({
     name: "",
     surname: "",
-    phone: "",
-    countryCode: "+598", // Default Uruguay
     fechaNacimiento: "",
     genero: "",
     position: "",
@@ -55,14 +51,12 @@ export function ProfileSetupForm() {
 
   const [showPositionDropdown, setShowPositionDropdown] = useState(false)
   const [showGeneroDropdown, setShowGeneroDropdown] = useState(false)
-  const [showCountryCodeDropdown, setShowCountryCodeDropdown] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({})
   
   // Click outside handlers para cerrar dropdowns
   useClickOutside(positionDropdownRef, () => setShowPositionDropdown(false), showPositionDropdown)
   useClickOutside(generoDropdownRef, () => setShowGeneroDropdown(false), showGeneroDropdown)
-  useClickOutside(countryCodeDropdownRef, () => setShowCountryCodeDropdown(false), showCountryCodeDropdown)
   const [generalError, setGeneralError] = useState<string>("")
 
   // Image crop states
@@ -85,19 +79,6 @@ export function ProfileSetupForm() {
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
-  // Códigos de país más comunes en Latinoamérica
-  const countryCodes = [
-    { code: "+598", country: "🇺🇾 Uruguay", flag: "🇺🇾" },
-    { code: "+54", country: "🇦🇷 Argentina", flag: "🇦🇷" },
-    { code: "+55", country: "🇧🇷 Brasil", flag: "🇧🇷" },
-    { code: "+56", country: "🇨🇱 Chile", flag: "🇨🇱" },
-    { code: "+57", country: "🇨🇴 Colombia", flag: "🇨🇴" },
-    { code: "+51", country: "🇵🇪 Perú", flag: "🇵🇪" },
-    { code: "+52", country: "🇲🇽 México", flag: "🇲🇽" },
-    { code: "+34", country: "🇪🇸 España", flag: "🇪🇸" },
-    { code: "+1", country: "🇺🇸 USA/Canadá", flag: "🇺🇸" },
-  ]
-
   const validateField = (field: string, value: any): string | null => {
     switch (field) {
       case 'name':
@@ -108,10 +89,6 @@ export function ProfileSetupForm() {
       case 'surname':
         if (!value || value.trim().length < 2) return "Mínimo 2 caracteres"
         if (value.trim().length > 50) return "Máximo 50 caracteres"
-        return null
-      
-      case 'phone':
-        // Phone no es requerido - se pedirá en paso posterior
         return null
       
       case 'fechaNacimiento':
@@ -183,79 +160,13 @@ export function ProfileSetupForm() {
     hasPrefilled.current = true;
     
     try {
-      // ⚡ NUEVO: Primero intentar cargar datos guardados desde phone-verification
-      const savedData = ProfileSetupStorage.load();
-      
-      if (savedData) {
-        logger.log('[ProfileSetup] Loading saved data from storage');
-        setFormData((prev) => ({
-          ...prev,
-          name: savedData.name || prev.name,
-          surname: savedData.surname || prev.surname,
-          phone: savedData.phone || prev.phone,
-          countryCode: savedData.countryCode || prev.countryCode,
-          fechaNacimiento: savedData.fechaNacimiento || prev.fechaNacimiento,
-          genero: savedData.genero || prev.genero,
-          position: savedData.position || prev.position,
-          height: savedData.height || prev.height,
-          weight: savedData.weight || prev.weight,
-          address: savedData.address || prev.address,
-          placeDetails: savedData.placeDetails || prev.placeDetails,
-        }));
-
-        // Restaurar foto si existe
-        if (savedData.photoFile) {
-          try {
-            const photoFile = ProfileSetupStorage.base64ToFile(savedData.photoFile);
-            const photoPreviewUrl = URL.createObjectURL(photoFile);
-            setFormData((prev) => ({
-              ...prev,
-              photo: photoFile,
-              photoPreviewUrl: photoPreviewUrl,
-            }));
-          } catch (error) {
-            logger.error('[ProfileSetup] Error restoring photo from base64:', error);
-          }
-        } else if (savedData.photoPreviewUrl) {
-          // Legacy support
-          setFormData((prev) => ({
-            ...prev,
-            photoPreviewUrl: savedData.photoPreviewUrl || "",
-          }));
-        }
-
-        // Limpiar datos guardados después de cargar
-        ProfileSetupStorage.clear();
-        return;
-      }
-      
-      // Si no hay datos guardados, pre-rellenar desde user
+      // Pre-rellenar desde user
       setFormData((prev) => {
-        // ⚡ CAMBIO: Pre-rellenar campos individuales que estén vacíos
-        // NO usar shouldPrefill global porque si un campo tiene valor pero otro no,
-        // hay que rellenar solo el que falta
-        
-        // Extract phone without country code if possible
-        let phoneOnly = prev.phone;
-        let countryCode = prev.countryCode;
-        if ((user as any).celular) {
-          const cleaned = (user as any).celular.trim();
-          const match = cleaned.match(/^(\+\d{1,4})\s*(.*)$/);
-          if (match) {
-            countryCode = match[1];
-            phoneOnly = match[2];
-          } else {
-            phoneOnly = cleaned;
-          }
-        }
-
+        // Pre-rellenar campos individuales que estén vacíos
         return {
           ...prev,
-          // Pre-rellenar cada campo SI está vacío
           name: prev.name || (user as any).nombre || (user as any).name || "",
           surname: prev.surname || (user as any).apellido || "",
-          phone: phoneOnly || prev.phone,
-          countryCode: countryCode || prev.countryCode,
           fechaNacimiento: prev.fechaNacimiento || (user as any).fechaNacimiento || (user as any).fecha_nacimiento || "",
           genero: prev.genero || (user as any).genero || "",
           position: prev.position || (user as any).posicion || (user as any).position || "",
@@ -852,8 +763,6 @@ export function ProfileSetupForm() {
       const isNewRegistration = !!(verifiedEmail && passwordHash)
       logger.log("[ProfileSetup] Mode:", isNewRegistration ? "NEW REGISTRATION" : "PROFILE UPDATE")
 
-      const fullPhone = `${formData.countryCode}${formData.phone}`
-
       if (isNewRegistration) {
         logger.log("[ProfileSetup] Completing registration for:", verifiedEmail)
         
@@ -915,48 +824,14 @@ export function ProfileSetupForm() {
         // Navigation flag already set at the beginning of function
         await new Promise(resolve => setTimeout(resolve, 200))
         
-        const hasCelular = usuario.celular && usuario.celular.trim() !== ""
         const isComplete = usuario.perfilCompleto === true
         
-        // ⚡ ROBUST FLOW: Only redirect to /home if BOTH profile is complete AND has phone
-        if (hasCelular && isComplete) {
-          logger.log("[ProfileSetup] Registration complete with phone, redirecting to /home")
-          // ⚡ NUEVO: Limpiar datos guardados al completar exitosamente
-          ProfileSetupStorage.clear();
+        if (isComplete) {
+          logger.log("[ProfileSetup] Registration complete, redirecting to /home")
           router.replace('/home')
-        } else if (hasCelular && !isComplete) {
-          logger.warn("[ProfileSetup] Registration has phone but profile incomplete - staying")
-          setGeneralError("Por favor completa todos los campos requeridos")
         } else {
-          logger.log("[ProfileSetup] Registration complete, no phone - redirecting to /phone-verification")
-          // ⚡ NUEVO: Guardar datos del formulario antes de navegar
-          const saveData: ProfileSetupData = {
-            name: formData.name,
-            surname: formData.surname,
-            phone: formData.phone,
-            countryCode: formData.countryCode,
-            fechaNacimiento: formData.fechaNacimiento,
-            genero: formData.genero,
-            position: formData.position,
-            height: formData.height,
-            weight: formData.weight,
-            address: formData.address,
-            placeDetails: formData.placeDetails,
-            photoPreviewUrl: formData.photoPreviewUrl,
-          };
-
-          // Convertir foto a base64 si existe
-          if (formData.photo) {
-            try {
-              const photoBase64 = await ProfileSetupStorage.fileToBase64(formData.photo);
-              saveData.photoFile = photoBase64;
-            } catch (error) {
-              logger.error("[ProfileSetup] Error converting photo to base64:", error);
-            }
-          }
-
-          ProfileSetupStorage.save(saveData);
-          router.replace('/phone-verification')
+          logger.warn("[ProfileSetup] Profile incomplete - staying on setup")
+          setGeneralError("Por favor completa todos los campos requeridos")
         }
 
       } else {
@@ -991,11 +866,6 @@ export function ProfileSetupForm() {
           peso: String(formData.weight),
           direccion: formData.address,
           placeDetails: formData.placeDetails ? JSON.stringify(formData.placeDetails) : null,
-        }
-        
-        // ⚡ CRITICAL FIX: Include existing celular to prevent backend from nullifying it
-        if (user?.celular) {
-          payload.celular = user.celular
         }
         
         // ⚡ IMPROVED: Use retry logic for critical profile update
@@ -1035,54 +905,19 @@ export function ProfileSetupForm() {
             email: updatedUser.email,
             perfilCompleto: updatedUser.perfilCompleto,
             hasFotoPerfil: updatedUser.hasFotoPerfil,
-            celular: updatedUser.celular
           })
           
           // ⚡ CRITICAL FIX: Update context with latest user data to prevent redirect loops
           setUser(updatedUser)
           
-          const hasCelular = updatedUser.celular && updatedUser.celular.trim() !== ""
           const isComplete = updatedUser.perfilCompleto === true
           
-          // ⚡ ROBUST FLOW: Only redirect to /home if BOTH profile is complete AND has phone
-          if (hasCelular && isComplete) {
-            logger.log("[ProfileSetup] Profile complete with phone, redirecting to /home")
-            // ⚡ NUEVO: Limpiar datos guardados al completar exitosamente
-            ProfileSetupStorage.clear();
+          if (isComplete) {
+            logger.log("[ProfileSetup] Profile complete, redirecting to /home")
             router.replace('/home')
-          } else if (hasCelular && !isComplete) {
-            logger.warn("[ProfileSetup] Has phone but profile incomplete - staying on /profile-setup")
-            setGeneralError("Por favor completa todos los campos requeridos")
           } else {
-            logger.log("[ProfileSetup] No phone, redirecting to /phone-verification")
-            // ⚡ NUEVO: Guardar datos del formulario antes de navegar
-            const saveData: ProfileSetupData = {
-              name: formData.name,
-              surname: formData.surname,
-              phone: formData.phone,
-              countryCode: formData.countryCode,
-              fechaNacimiento: formData.fechaNacimiento,
-              genero: formData.genero,
-              position: formData.position,
-              height: formData.height,
-              weight: formData.weight,
-              address: formData.address,
-              placeDetails: formData.placeDetails,
-              photoPreviewUrl: formData.photoPreviewUrl,
-            };
-
-            // Convertir foto a base64 si existe
-            if (formData.photo) {
-              try {
-                const photoBase64 = await ProfileSetupStorage.fileToBase64(formData.photo);
-                saveData.photoFile = photoBase64;
-              } catch (error) {
-                logger.error("[ProfileSetup] Error converting photo to base64:", error);
-              }
-            }
-
-            ProfileSetupStorage.save(saveData);
-            router.replace('/phone-verification')
+            logger.warn("[ProfileSetup] Profile incomplete - staying on /profile-setup")
+            setGeneralError("Por favor completa todos los campos requeridos")
           }
         } else {
           logger.error("[ProfileSetup] Failed to verify profile state:", checkRes)
