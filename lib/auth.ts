@@ -474,11 +474,6 @@ export class AuthService {
         merged.nombre = (data && data.nombre) ? data.nombre : currentUser?.nombre ?? merged.nombre
         merged.apellido = (data && data.apellido) ? data.apellido : currentUser?.apellido ?? merged.apellido
 
-        // Preserve celular: if server sends a non-empty celular use it, otherwise keep local
-        merged.celular = (data && data.celular && String(data.celular).trim() !== '')
-          ? data.celular
-          : (currentUser?.celular ?? merged.celular)
-
         // Preserve/normalize photo flag (server may return explicit hasFotoPerfil)
         merged.hasFotoPerfil = (data && Object.prototype.hasOwnProperty.call(data, 'hasFotoPerfil'))
           ? data.hasFotoPerfil
@@ -493,7 +488,6 @@ export class AuthService {
           email: merged.email,
           perfilCompleto: merged.perfilCompleto,
           cedulaVerificada: merged.cedulaVerificada,
-          celular: merged.celular,
         })
         return merged as Usuario
         

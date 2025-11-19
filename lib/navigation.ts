@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation"
 
 const PROFILE_SETUP_ROUTE = "/profile-setup"
 const VERIFICATION_ROUTE = "/verification"
-const PHONE_VERIFICATION_ROUTE = "/phone-verification"
 const HOME_ROUTE = "/home"
 
 // Helpers -------------------------------------------------------------
@@ -82,36 +81,17 @@ function needsIdVerification(user?: Usuario | null): boolean {
   */
 }
 
-function needsPhoneVerification(user?: Usuario | null): boolean {
-  if (!user) return false
-  
-  // ⚡ CAMBIO: Solo pedir verificación si el perfil NO está completo
-  // Si perfilCompleto === true, significa que ya pasó por el flujo completo
-  // No volver a pedirle el celular en cada login
-  const isComplete = asBool((user as any)?.perfilCompleto)
-  if (isComplete === true) {
-    return false // Perfil completo - no pedir celular aunque no lo tenga
-  }
-  
-  // Solo verificar celular durante el flujo de registro/setup
-  const celular = (user as any)?.celular
-  return !celular || celular.trim() === ""
-}
-
 // API pública ---------------------------------------------------------
 
 export function decidePostAuthRoute(user?: Usuario | null): string {
   if (!user) return PROFILE_SETUP_ROUTE
   
-  // ⚡ FLUJO SIMPLIFICADO:
+  // Flujo simplificado:
   // 1. Si perfil incompleto -> profile-setup (incluye foto, datos básicos)
-  // 2. Si perfil completo -> home (sin importar si tiene celular o no)
-  // El celular solo se pide durante el flujo de registro inicial
+  // 2. Si perfil completo -> home
   
   if (isProfileIncomplete(user)) return PROFILE_SETUP_ROUTE
   
-  // ⚡ NUEVO: Phone verification solo durante registro, no en login
-  // Si llegamos aquí con perfil completo, ir directo a home
   if (needsIdVerification(user)) return VERIFICATION_ROUTE
   
   return HOME_ROUTE

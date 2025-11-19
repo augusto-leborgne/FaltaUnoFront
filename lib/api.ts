@@ -124,7 +124,6 @@ export interface Usuario {
   nombre: string;
   apellido: string;
   email: string;
-  celular?: string;
   fechaNacimiento?: string; // yyyy-MM-dd
   altura?: number;
   peso?: number;
@@ -139,7 +138,6 @@ export interface Usuario {
   userLastUpdatedAt?: number;
   cedulaVerificada?: boolean;
   emailVerified?: boolean; // ✅ Nuevo campo
-  celularVerificado?: boolean; // ✅ Phone verification status
   provider?: string;
   created_at?: string; // ISO 8601 timestamp
   rol?: string; // 'USER' | 'ADMIN'
