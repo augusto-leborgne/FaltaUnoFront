@@ -259,5 +259,11 @@ export function SettingsScreen() {
 		}
 	}
 
-	// ...rest of the component, including crop/camera/delete logic and UI, with phone field and logic removed...
+
+	// TODO: Complete UI implementation
+	return (
+		<div className="p-4">
+			<p>Settings Screen - UI implementation pending</p>
+		</div>
+	)
 }
