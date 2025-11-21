@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { DropdownPortal } from "../pages/login/DropdownPortal";
 import { googleMapsLoader } from "@/lib/google-maps-loader";
 import { X, MapPin } from "lucide-react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
@@ -39,6 +40,7 @@ export function AddressAutocomplete({
   const sessionTokenRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const isSelectingRef = useRef(false); // Prevenir handleBlur durante selección
 
   // Sincronizar valor externo
@@ -354,127 +356,7 @@ export function AddressAutocomplete({
     onChange("", null);
   };
 
-  // Position suggestions correctly
-  useEffect(() => {
-    if ((suggestions.length > 0 || (query.length >= 1 && suggestions.length === 0 && !isSearching && !hasSelectedAddress)) && containerRef.current) {
-      const input = containerRef.current.querySelector('input');
-      const dropdown = containerRef.current.querySelector('div[role="listbox"], div:last-child') as HTMLElement;
-      
-      if (input && dropdown) {
-        const rect = input.getBoundingClientRect();
-        const dropdownHeight = Math.min(224, dropdown.scrollHeight); // max-h-56 = 224px
 
-        // Calculate available space above and below the input
-        const spaceBelow = window.innerHeight - rect.bottom - 8;
-        const spaceAbove = rect.top - 8;
-
-        // ⚡ PREFERIR ARRIBA: Mostrar encima del campo si hay espacio suficiente
-        let top: number;
-        if (spaceAbove >= dropdownHeight) {
-          // Hay espacio suficiente arriba - mostrar ARRIBA
-          top = rect.top - dropdownHeight - 4;
-          dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceAbove)}px`;
-        } else if (spaceAbove >= 120) {
-          // Hay espacio arriba pero no completo - usar lo disponible arriba
-          top = rect.top - Math.min(dropdownHeight, spaceAbove) - 4;
-          dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceAbove)}px`;
-        } else if (spaceBelow >= dropdownHeight) {
-          // No hay espacio arriba pero sí abajo completo
-          top = rect.bottom + 4;
-          dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceBelow)}px`;
-        } else {
-          // Poco espacio en ambos lados - elegir el que tenga más
-          if (spaceAbove >= spaceBelow) {
-            top = rect.top - Math.min(dropdownHeight, spaceAbove) - 4;
-            dropdown.style.maxHeight = `${Math.max(120, spaceAbove)}px`;
-          } else {
-            top = rect.bottom + 4;
-            dropdown.style.maxHeight = `${Math.max(120, spaceBelow)}px`;
-          }
-        }
-        
-        let left = rect.left;
-        let width = rect.width;
-        
-        // Check if it would go off the right edge
-        if (left + width > window.innerWidth) {
-          left = window.innerWidth - width - 8;
-        }
-        
-        // Match suggestion width exactly with input width for consistent UX
-        width = rect.width;
-        // Constrain width to viewport to avoid overflow
-        width = Math.min(width, window.innerWidth - 16);
-        
-        dropdown.style.position = 'fixed';
-        dropdown.style.top = `${top}px`;
-        dropdown.style.left = `${left}px`;
-        dropdown.style.width = `${width}px`;
-        dropdown.style.minWidth = `${width}px`;
-        dropdown.style.zIndex = '9999';
-        dropdown.style.overflowY = 'auto'; // ✅ Scrolleable
-      }
-    }
-    const reposition = () => {
-      if ((suggestions.length > 0 || (query.length >= 1 && suggestions.length === 0 && !isSearching && !hasSelectedAddress)) && containerRef.current) {
-        const input = containerRef.current.querySelector('input');
-        const dropdown = containerRef.current.querySelector('div[role="listbox"], div:last-child') as HTMLElement;
-        if (!input || !dropdown) return;
-
-        const rect = input.getBoundingClientRect();
-        const dropdownHeight = Math.min(224, dropdown.scrollHeight);
-        const spaceBelow = window.innerHeight - rect.bottom - 8;
-        const spaceAbove = rect.top - 8;
-
-        // ⚡ PREFERIR ARRIBA: Mostrar encima del campo si hay espacio suficiente
-        let top: number;
-        if (spaceAbove >= dropdownHeight) {
-          // Hay espacio suficiente arriba - mostrar ARRIBA
-          top = rect.top - dropdownHeight - 4;
-          dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceAbove)}px`;
-        } else if (spaceAbove >= 120) {
-          // Hay espacio arriba pero no completo - usar lo disponible arriba
-          top = rect.top - Math.min(dropdownHeight, spaceAbove) - 4;
-          dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceAbove)}px`;
-        } else if (spaceBelow >= dropdownHeight) {
-          // No hay espacio arriba pero sí abajo completo
-          top = rect.bottom + 4;
-          dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceBelow)}px`;
-        } else {
-          // Poco espacio en ambos lados - elegir el que tenga más
-          if (spaceAbove >= spaceBelow) {
-            top = rect.top - Math.min(dropdownHeight, spaceAbove) - 4;
-            dropdown.style.maxHeight = `${Math.max(120, spaceAbove)}px`;
-          } else {
-            top = rect.bottom + 4;
-            dropdown.style.maxHeight = `${Math.max(120, spaceBelow)}px`;
-          }
-        }
-
-        let left = rect.left;
-        let width = rect.width;
-        if (left + width > window.innerWidth) left = window.innerWidth - width - 8;
-        width = rect.width;
-        width = Math.min(width, window.innerWidth - 16);
-
-        dropdown.style.position = 'fixed';
-        dropdown.style.top = `${top}px`;
-        dropdown.style.left = `${left}px`;
-        dropdown.style.width = `${width}px`;
-        dropdown.style.minWidth = `${width}px`;
-        dropdown.style.zIndex = '9999';
-        dropdown.style.overflowY = 'auto';
-      }
-    };
-
-    reposition();
-    window.addEventListener('scroll', reposition, true);
-    window.addEventListener('resize', reposition);
-    return () => {
-      window.removeEventListener('scroll', reposition, true);
-      window.removeEventListener('resize', reposition);
-    };
-  }, [suggestions, query, isSearching, hasSelectedAddress]);
 
   // Render de estado de carga
   if (isLoadingMaps) {
@@ -513,8 +395,8 @@ export function AddressAutocomplete({
             ? 'text-red-500'
             : 'text-gray-400'
         }`} />
-        
         <input
+          ref={inputRef}
           className={`w-full py-3 pl-10 pr-10 rounded-xl border bg-white focus:outline-none focus:ring-2 disabled:bg-gray-100 disabled:cursor-not-allowed text-sm sm:text-base h-10 sm:h-auto ${
             hasSelectedAddress 
               ? 'border-green-500 bg-green-50 focus:ring-green-500 focus:border-transparent' 
@@ -530,7 +412,6 @@ export function AddressAutocomplete({
           onBlur={handleBlur}
           autoComplete="off"
         />
-
         {/* Indicador de búsqueda o botón limpiar - FIJO a la derecha */}
         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
           {isSearching ? (
@@ -554,46 +435,46 @@ export function AddressAutocomplete({
         </div>
       )}
 
-      {/* Sugerencias - con role="listbox" para el posicionamiento JS */}
-      {suggestions.length > 0 && (
-        <div 
-          role="listbox"
-          className="bg-white border border-gray-300 rounded-xl shadow-xl overflow-y-auto"
-          style={{ position: 'fixed', zIndex: 9999 }}
-        >
-          {suggestions.map((suggestion) => (
-            <button
-              key={suggestion.place_id}
-              type="button"
-              onClick={() => selectPrediction(suggestion)}
-              className="w-full p-3 hover:bg-gray-50 active:bg-gray-100 text-left transition-colors flex items-start space-x-2"
-            >
-              <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-900 truncate">
-                  {suggestion.structured_formatting.main_text}
-                </p>
-                <p className="text-xs text-gray-500 truncate">
-                  {suggestion.structured_formatting.secondary_text}
-                </p>
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Mensaje de no resultados */}
-      {query.length >= 1 && suggestions.length === 0 && !isSearching && !hasSelectedAddress && (
-        <div 
-          role="listbox"
-          className="bg-white border border-gray-300 rounded-xl shadow-xl p-3"
-          style={{ position: 'fixed', zIndex: 9999 }}
-        >
-          <p className="text-sm text-gray-500 text-center">
-            No se encontraron ubicaciones
-          </p>
-        </div>
-      )}
+      {/* Sugerencias y no resultados usando DropdownPortal */}
+      <DropdownPortal
+        anchorRef={inputRef}
+        open={suggestions.length > 0 || (query.length >= 1 && suggestions.length === 0 && !isSearching && !hasSelectedAddress)}
+        minWidth={inputRef.current?.offsetWidth || 200}
+        maxWidth={400}
+        maxHeight={224}
+        onClose={() => {}}
+        className="bg-white border border-gray-300 rounded-xl shadow-xl overflow-y-auto"
+        preferAbove={false}
+      >
+        {suggestions.length > 0 ? (
+          <div role="listbox">
+            {suggestions.map((suggestion) => (
+              <button
+                key={suggestion.place_id}
+                type="button"
+                onClick={() => selectPrediction(suggestion)}
+                className="w-full p-3 hover:bg-gray-50 active:bg-gray-100 text-left transition-colors flex items-start space-x-2"
+              >
+                <MapPin className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-gray-900 truncate">
+                    {suggestion.structured_formatting.main_text}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {suggestion.structured_formatting.secondary_text}
+                  </p>
+                </div>
+              </button>
+            ))}
+          </div>
+        ) : (query.length >= 1 && !isSearching && !hasSelectedAddress ? (
+          <div role="listbox" className="p-3">
+            <p className="text-sm text-gray-500 text-center">
+              No se encontraron ubicaciones
+            </p>
+          </div>
+        ) : null)}
+      </DropdownPortal>
     </div>
   );
 }

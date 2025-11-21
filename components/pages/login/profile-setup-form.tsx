@@ -2,6 +2,7 @@
 
 import { logger } from '@/lib/logger'
 import React, { useRef, useState, useEffect } from "react"
+import { DropdownPortal } from "./DropdownPortal"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -33,7 +34,9 @@ export function ProfileSetupForm() {
   
   // Refs para dropdowns
   const positionDropdownRef = useRef<HTMLDivElement | null>(null)
+  const positionButtonRef = useRef<HTMLButtonElement | null>(null)
   const generoDropdownRef = useRef<HTMLDivElement | null>(null)
+  const generoButtonRef = useRef<HTMLButtonElement | null>(null)
 
   const [formData, setFormData] = useState({
     name: "",
@@ -388,224 +391,9 @@ export function ProfileSetupForm() {
     }
   }, [cameraStream])
 
-  useEffect(() => {
-    if (showGeneroDropdown && generoDropdownRef.current) {
-      const trigger = generoDropdownRef.current.querySelector('button');
-      const dropdown = generoDropdownRef.current.querySelector('div[role="listbox"], div:last-child') as HTMLElement;
 
-      if (trigger && dropdown) {
-        const rect = trigger.getBoundingClientRect();
-        const dropdownHeight = Math.min(240, dropdown.scrollHeight); // max-h-60 = 240px
 
-        // Calculate available space
-        const spaceBelow = window.innerHeight - rect.bottom - 8;
-        const spaceAbove = rect.top - 8;
 
-        // Try to position below first
-        let top = rect.bottom + 4;
-        let left = rect.left;
-        let width = rect.width;
-
-        // Check if it would go off the bottom of viewport
-        if (top + dropdownHeight > window.innerHeight) {
-          // Not enough space below. Prefer above if possible, otherwise use available space and enable scroll
-          if (spaceAbove >= 120) {
-            // Position above
-            top = rect.top - Math.min(dropdownHeight, spaceAbove) - 4;
-            dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceAbove)}px`;
-          } else {
-            // Use remainder below and allow scroll
-            top = rect.bottom + 4;
-            dropdown.style.maxHeight = `${Math.max(120, spaceBelow)}px`;
-          }
-        } else {
-          // Enough space below
-          dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceBelow)}px`;
-        }
-
-        // Check if it would go off the right edge
-        if (left + width > window.innerWidth) {
-          left = window.innerWidth - width - 8;
-        }
-
-        // Ensure width matches the trigger field width exactly (user requested same length horizontally)
-        width = rect.width;
-        // Constrain width to viewport if somehow wider
-        width = Math.min(width, window.innerWidth - 16);
-
-        dropdown.style.position = 'fixed';
-        dropdown.style.top = `${top}px`;
-        dropdown.style.left = `${left}px`;
-        dropdown.style.width = `${width}px`;
-        dropdown.style.minWidth = `${width}px`;
-        dropdown.style.zIndex = '9999';
-        dropdown.style.overflowY = 'auto'; // ✅ Scrolleable si es necesario
-      }
-    }
-
-    // Reposition on scroll/resize
-    const reposition = () => {
-      if (!showGeneroDropdown || !generoDropdownRef.current) return;
-      
-      const trigger = generoDropdownRef.current.querySelector('button');
-      const dropdown = generoDropdownRef.current.querySelector('div[role="listbox"], div:last-child') as HTMLElement;
-      if (!trigger || !dropdown) return;
-
-      const rect = trigger.getBoundingClientRect();
-      const dropdownHeight = Math.min(240, dropdown.scrollHeight);
-      const spaceBelow = window.innerHeight - rect.bottom - 8;
-      const spaceAbove = rect.top - 8;
-
-      let top = rect.bottom + 4;
-      let left = rect.left;
-      let width = rect.width;
-
-      if (top + dropdownHeight > window.innerHeight) {
-        if (spaceAbove >= 120) {
-          top = rect.top - Math.min(dropdownHeight, spaceAbove) - 4;
-          dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceAbove)}px`;
-        } else {
-          top = rect.bottom + 4;
-          dropdown.style.maxHeight = `${Math.max(120, spaceBelow)}px`;
-        }
-      } else {
-        dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceBelow)}px`;
-      }
-
-      if (left + width > window.innerWidth) left = window.innerWidth - width - 8;
-      width = rect.width;
-      width = Math.min(width, window.innerWidth - 16);
-
-      dropdown.style.position = 'fixed';
-      dropdown.style.top = `${top}px`;
-      dropdown.style.left = `${left}px`;
-      dropdown.style.width = `${width}px`;
-      dropdown.style.minWidth = `${width}px`;
-      dropdown.style.zIndex = '9999';
-      dropdown.style.overflowY = 'auto';
-    };
-
-    reposition();
-    window.addEventListener('resize', reposition);
-    window.addEventListener('scroll', reposition, true);
-
-    return () => {
-      window.removeEventListener('resize', reposition);
-      window.removeEventListener('scroll', reposition, true);
-    };
-  }, [showGeneroDropdown]);
-
-  useEffect(() => {
-    if (showPositionDropdown && positionDropdownRef.current) {
-      const trigger = positionDropdownRef.current.querySelector('button');
-      const dropdown = positionDropdownRef.current.querySelector('div[role="listbox"], div:last-child') as HTMLElement;
-
-      if (trigger && dropdown) {
-        const rect = trigger.getBoundingClientRect();
-        const dropdownHeight = Math.min(240, dropdown.scrollHeight); // max-h-60 = 240px
-
-        // Calculate available space
-        const spaceBelow = window.innerHeight - rect.bottom - 8;
-        const spaceAbove = rect.top - 8;
-
-        // Try to position below first
-        let top = rect.bottom + 4;
-        let left = rect.left;
-        let width = rect.width;
-
-        // Check if it would go off the bottom of viewport
-        if (top + dropdownHeight > window.innerHeight) {
-          // Not enough space below. Prefer above if possible, otherwise use available space and enable scroll
-          if (spaceAbove >= 120) {
-            // Position above
-            top = rect.top - Math.min(dropdownHeight, spaceAbove) - 4;
-            dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceAbove)}px`;
-          } else {
-            // Use remainder below and allow scroll
-            top = rect.bottom + 4;
-            dropdown.style.maxHeight = `${Math.max(120, spaceBelow)}px`;
-          }
-        } else {
-          // Enough space below
-          dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceBelow)}px`;
-        }
-
-        // Check if it would go off the right edge
-        if (left + width > window.innerWidth) {
-          left = window.innerWidth - width - 8;
-        }
-
-        // ⚡ FIX: Match dropdown width EXACTLY with input width (same as genero dropdown)
-        width = rect.width;
-        // Constrain width to viewport if somehow wider
-        width = Math.min(width, window.innerWidth - 16);
-
-        dropdown.style.position = 'fixed';
-        dropdown.style.top = `${top}px`;
-        dropdown.style.left = `${left}px`;
-        dropdown.style.width = `${width}px`;
-        dropdown.style.minWidth = `${width}px`;
-        dropdown.style.zIndex = '9999';
-        dropdown.style.overflowY = 'auto'; // ✅ Scrolleable si es necesario
-      }
-    }
-
-    const reposition = () => {
-      if (!showPositionDropdown || !positionDropdownRef.current) return;
-      
-      const trigger = positionDropdownRef.current.querySelector('button');
-      const dropdown = positionDropdownRef.current.querySelector('div[role="listbox"], div:last-child') as HTMLElement | null;
-      if (!trigger || !dropdown) return;
-
-      const rect = trigger.getBoundingClientRect();
-      const dropdownHeight = Math.min(240, dropdown.scrollHeight);
-      const spaceBelow = window.innerHeight - rect.bottom - 8;
-      const spaceAbove = rect.top - 8;
-
-      let top = rect.bottom + 4;
-      let left = rect.left;
-      let width = rect.width;
-
-      if (top + dropdownHeight > window.innerHeight) {
-        if (spaceAbove >= 120) {
-          top = rect.top - Math.min(dropdownHeight, spaceAbove) - 4;
-          dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceAbove)}px`;
-        } else {
-          top = rect.bottom + 4;
-          dropdown.style.maxHeight = `${Math.max(120, spaceBelow)}px`;
-        }
-      } else {
-        dropdown.style.maxHeight = `${Math.min(dropdownHeight, spaceBelow)}px`;
-      }
-
-      if (left + width > window.innerWidth) left = window.innerWidth - width - 8;
-      
-      // ⚡ FIX: Match dropdown width EXACTLY with input width (same as genero dropdown)
-      width = rect.width;
-      // Constrain width to viewport if somehow wider
-      width = Math.min(width, window.innerWidth - 16);
-
-      dropdown.style.position = 'fixed';
-      dropdown.style.top = `${top}px`;
-      dropdown.style.left = `${left}px`;
-      dropdown.style.width = `${width}px`;
-      dropdown.style.minWidth = `${width}px`;
-      dropdown.style.zIndex = '9999';
-      dropdown.style.overflowY = 'auto';
-    };
-
-    reposition();
-
-    const onResizeScroll = () => reposition();
-
-    window.addEventListener('resize', onResizeScroll);
-    window.addEventListener('scroll', onResizeScroll, true);
-
-    return () => {
-      window.removeEventListener('resize', onResizeScroll);
-      window.removeEventListener('scroll', onResizeScroll, true);
-    };
-  }, [showPositionDropdown]);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0] ?? null
@@ -1095,6 +883,7 @@ export function ProfileSetupForm() {
                   <Button
                     type="button"
                     variant="outline"
+                    ref={generoButtonRef}
                     onClick={(e) => {
                       e.preventDefault()
                       setShowGeneroDropdown(!showGeneroDropdown)
@@ -1106,12 +895,16 @@ export function ProfileSetupForm() {
                     </span>
                     <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
                   </Button>
-                  {showGeneroDropdown && (
-                    <div 
-                      role="listbox"
-                      className="bg-white border border-gray-300 rounded-xl shadow-xl overflow-y-auto"
-                      style={{ position: 'fixed', zIndex: 9999 }}
-                    >
+                  <DropdownPortal
+                    anchorRef={generoButtonRef}
+                    open={showGeneroDropdown}
+                    minWidth={generoButtonRef.current?.offsetWidth || 200}
+                    maxWidth={400}
+                    maxHeight={240}
+                    onClose={() => setShowGeneroDropdown(false)}
+                    className="bg-white border border-gray-300 rounded-xl shadow-xl overflow-y-auto"
+                  >
+                    <div role="listbox">
                       {generos.map((gen) => (
                         <div
                           key={gen}
@@ -1125,7 +918,7 @@ export function ProfileSetupForm() {
                         </div>
                       ))}
                     </div>
-                  )}
+                  </DropdownPortal>
                 </div>
                 {fieldErrors.genero && (
                   <p className="text-xs text-red-500 mt-1">{fieldErrors.genero}</p>
@@ -1167,6 +960,7 @@ export function ProfileSetupForm() {
                   <Button
                     type="button"
                     variant="outline"
+                    ref={positionButtonRef}
                     onClick={(e) => {
                       e.preventDefault()
                       setShowPositionDropdown(!showPositionDropdown)
@@ -1178,12 +972,16 @@ export function ProfileSetupForm() {
                     </span>
                     <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
                   </Button>
-                  {showPositionDropdown && (
-                    <div 
-                      role="listbox"
-                      className="bg-white border border-gray-300 rounded-xl shadow-xl overflow-y-auto"
-                      style={{ position: 'fixed', zIndex: 9999 }}
-                    >
+                  <DropdownPortal
+                    anchorRef={positionButtonRef}
+                    open={showPositionDropdown}
+                    minWidth={positionButtonRef.current?.offsetWidth || 200}
+                    maxWidth={400}
+                    maxHeight={240}
+                    onClose={() => setShowPositionDropdown(false)}
+                    className="bg-white border border-gray-300 rounded-xl shadow-xl overflow-y-auto"
+                  >
+                    <div role="listbox">
                       {positions.map((pos) => (
                         <div
                           key={pos}
@@ -1197,7 +995,7 @@ export function ProfileSetupForm() {
                         </div>
                       ))}
                     </div>
-                  )}
+                  </DropdownPortal>
                 </div>
                 {fieldErrors.position && (
                   <p className="text-xs text-red-500 mt-1">{fieldErrors.position}</p>
