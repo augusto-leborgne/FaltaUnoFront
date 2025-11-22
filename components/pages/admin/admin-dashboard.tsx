@@ -671,8 +671,8 @@ export default function AdminDashboard() {
           <button
             onClick={() => setActiveTab("stats")}
             className={`px-3 sm:px-4 py-2 font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${activeTab === "stats"
-                ? "border-b-2 border-blue-500 text-blue-600"
-                : "text-gray-600 hover:text-gray-900"
+              ? "border-b-2 border-blue-500 text-blue-600"
+              : "text-gray-600 hover:text-gray-900"
               }`}
           >
             <TrendingUp className="mb-1 inline h-3 w-3 sm:h-4 sm:w-4" />
@@ -681,8 +681,8 @@ export default function AdminDashboard() {
           <button
             onClick={() => setActiveTab("users")}
             className={`px-3 sm:px-4 py-2 font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${activeTab === "users"
-                ? "border-b-2 border-blue-500 text-blue-600"
-                : "text-gray-600 hover:text-gray-900"
+              ? "border-b-2 border-blue-500 text-blue-600"
+              : "text-gray-600 hover:text-gray-900"
               }`}
           >
             <Users className="mb-1 inline h-3 w-3 sm:h-4 sm:w-4" />
@@ -691,8 +691,8 @@ export default function AdminDashboard() {
           <button
             onClick={() => setActiveTab("matches")}
             className={`px-3 sm:px-4 py-2 font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${activeTab === "matches"
-                ? "border-b-2 border-blue-500 text-blue-600"
-                : "text-gray-600 hover:text-gray-900"
+              ? "border-b-2 border-blue-500 text-blue-600"
+              : "text-gray-600 hover:text-gray-900"
               }`}
           >
             <Calendar className="mb-1 inline h-3 w-3 sm:h-4 sm:w-4" />
@@ -701,8 +701,8 @@ export default function AdminDashboard() {
           <button
             onClick={() => setActiveTab("reports")}
             className={`px-3 sm:px-4 py-2 font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${activeTab === "reports"
-                ? "border-b-2 border-blue-500 text-blue-600"
-                : "text-gray-600 hover:text-gray-900"
+              ? "border-b-2 border-blue-500 text-blue-600"
+              : "text-gray-600 hover:text-gray-900"
               }`}
           >
             <Flag className="mb-1 inline h-3 w-3 sm:h-4 sm:w-4" />
@@ -982,8 +982,8 @@ export default function AdminDashboard() {
                             <td className="px-3 py-2">
                               <span
                                 className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${usuario.rol === "ADMIN"
-                                    ? "bg-red-100 text-red-700"
-                                    : "bg-gray-100 text-gray-700"
+                                  ? "bg-red-100 text-red-700"
+                                  : "bg-gray-100 text-gray-700"
                                   }`}
                               >
                                 {usuario.rol === "ADMIN" ? (
@@ -1079,13 +1079,13 @@ export default function AdminDashboard() {
                             {usuario.nombre} {usuario.apellido}
                           </h3>
                           <p className="text-xs text-gray-600 truncate">{usuario.email}</p>
-                          <p className="text-xs text-gray-500">{usuario.email || "Sin celular"}</p>
+                          <p className="text-xs text-gray-500">{(usuario as any).celular || "Sin celular"}</p>
                         </div>
                         <div className="flex flex-col gap-1 items-end shrink-0">
                           <span
                             className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${usuario.rol === "ADMIN"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-gray-100 text-gray-700"
+                              ? "bg-red-100 text-red-700"
+                              : "bg-gray-100 text-gray-700"
                               }`}
                           >
                             {usuario.rol === "ADMIN" ? (
@@ -1303,10 +1303,10 @@ export default function AdminDashboard() {
                                 <span className="font-medium">{formatMatchType(partido.tipo_partido)}</span>
                                 <div className="flex gap-1.5 flex-wrap">
                                   <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${partido.estado === 'DISPONIBLE' ? 'bg-green-100 text-green-800' :
-                                      partido.estado === 'CONFIRMADO' ? 'bg-blue-100 text-blue-800' :
-                                        partido.estado === 'CANCELADO' ? 'bg-red-100 text-red-800' :
-                                          partido.estado === 'COMPLETADO' ? 'bg-purple-100 text-purple-800' :
-                                            'bg-gray-100 text-gray-800'
+                                    partido.estado === 'CONFIRMADO' ? 'bg-blue-100 text-blue-800' :
+                                      partido.estado === 'CANCELADO' ? 'bg-red-100 text-red-800' :
+                                        partido.estado === 'COMPLETADO' ? 'bg-purple-100 text-purple-800' :
+                                          'bg-gray-100 text-gray-800'
                                     }`}>
                                     {partido.estado}
                                   </span>
@@ -1398,10 +1398,10 @@ export default function AdminDashboard() {
                           </h3>
                           <div className="flex flex-wrap gap-1.5 mb-2">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${partido.estado === 'DISPONIBLE' ? 'bg-green-100 text-green-800' :
-                                partido.estado === 'CONFIRMADO' ? 'bg-blue-100 text-blue-800' :
-                                  partido.estado === 'CANCELADO' ? 'bg-red-100 text-red-800' :
-                                    partido.estado === 'COMPLETADO' ? 'bg-purple-100 text-purple-800' :
-                                      'bg-gray-100 text-gray-800'
+                              partido.estado === 'CONFIRMADO' ? 'bg-blue-100 text-blue-800' :
+                                partido.estado === 'CANCELADO' ? 'bg-red-100 text-red-800' :
+                                  partido.estado === 'COMPLETADO' ? 'bg-purple-100 text-purple-800' :
+                                    'bg-gray-100 text-gray-800'
                               }`}>
                               {partido.estado}
                             </span>
@@ -1488,8 +1488,8 @@ export default function AdminDashboard() {
                   <div className="flex flex-wrap gap-2">
                     <button
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${reportFilter === 'pending'
-                          ? 'bg-orange-500 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                       onClick={() => setReportFilter('pending')}
                     >
@@ -1497,8 +1497,8 @@ export default function AdminDashboard() {
                     </button>
                     <button
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${reportFilter === 'resolved'
-                          ? 'bg-green-500 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-green-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                       onClick={() => setReportFilter('resolved')}
                     >
@@ -1506,8 +1506,8 @@ export default function AdminDashboard() {
                     </button>
                     <button
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${reportFilter === 'all'
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                       onClick={() => setReportFilter('all')}
                     >
@@ -1521,8 +1521,8 @@ export default function AdminDashboard() {
                     <div className="flex gap-2">
                       <button
                         className={`p-2 rounded-lg transition-colors ${groupedView
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                           }`}
                         onClick={() => setGroupedView(true)}
                         title="Agrupar por usuario"
@@ -1531,8 +1531,8 @@ export default function AdminDashboard() {
                       </button>
                       <button
                         className={`p-2 rounded-lg transition-colors ${!groupedView
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                           }`}
                         onClick={() => setGroupedView(false)}
                         title="Ver lista"
@@ -1614,9 +1614,9 @@ export default function AdminDashboard() {
                                 <div className="flex items-start justify-between mb-2">
                                   <div className="flex items-center gap-2 min-w-0">
                                     <div className={`w-2 h-2 rounded-full shrink-0 ${report.status === 'PENDING' ? 'bg-orange-500' :
-                                        report.status === 'UNDER_REVIEW' ? 'bg-blue-500' :
-                                          report.status === 'RESOLVED' ? 'bg-green-500' :
-                                            'bg-gray-400'
+                                      report.status === 'UNDER_REVIEW' ? 'bg-blue-500' :
+                                        report.status === 'RESOLVED' ? 'bg-green-500' :
+                                          'bg-gray-400'
                                       }`} />
                                     <div className="min-w-0">
                                       <div className="font-medium text-gray-900 text-sm">
@@ -1628,9 +1628,9 @@ export default function AdminDashboard() {
                                     </div>
                                   </div>
                                   <span className={`px-2 py-1 rounded text-xs font-medium shrink-0 ${report.status === 'PENDING' ? 'bg-orange-100 text-orange-700' :
-                                      report.status === 'UNDER_REVIEW' ? 'bg-blue-100 text-blue-700' :
-                                        report.status === 'RESOLVED' ? 'bg-green-100 text-green-700' :
-                                          'bg-gray-100 text-gray-700'
+                                    report.status === 'UNDER_REVIEW' ? 'bg-blue-100 text-blue-700' :
+                                      report.status === 'RESOLVED' ? 'bg-green-100 text-green-700' :
+                                        'bg-gray-100 text-gray-700'
                                     }`}>
                                     {report.status}
                                   </span>
@@ -1726,9 +1726,9 @@ export default function AdminDashboard() {
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-3">
                             <div className={`w-2 h-2 rounded-full ${report.status === 'PENDING' ? 'bg-orange-500' :
-                                report.status === 'UNDER_REVIEW' ? 'bg-blue-500' :
-                                  report.status === 'RESOLVED' ? 'bg-green-500' :
-                                    'bg-gray-400'
+                              report.status === 'UNDER_REVIEW' ? 'bg-blue-500' :
+                                report.status === 'RESOLVED' ? 'bg-green-500' :
+                                  'bg-gray-400'
                               }`} />
                             <div>
                               <div className="font-medium text-gray-900">
@@ -1746,9 +1746,9 @@ export default function AdminDashboard() {
                             </div>
                           </div>
                           <span className={`px-3 py-1 rounded-full text-xs font-medium ${report.status === 'PENDING' ? 'bg-orange-100 text-orange-700' :
-                              report.status === 'UNDER_REVIEW' ? 'bg-blue-100 text-blue-700' :
-                                report.status === 'RESOLVED' ? 'bg-green-100 text-green-700' :
-                                  'bg-gray-100 text-gray-700'
+                            report.status === 'UNDER_REVIEW' ? 'bg-blue-100 text-blue-700' :
+                              report.status === 'RESOLVED' ? 'bg-green-100 text-green-700' :
+                                'bg-gray-100 text-gray-700'
                             }`}>
                             {report.status}
                           </span>
@@ -1881,8 +1881,8 @@ export default function AdminDashboard() {
                   <p className="pl-6">
                     <span
                       className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${selectedUser.rol === "ADMIN"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-gray-100 text-gray-700"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-gray-100 text-gray-700"
                         }`}
                     >
                       {selectedUser.rol === "ADMIN" ? (

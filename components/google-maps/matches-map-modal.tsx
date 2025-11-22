@@ -106,7 +106,7 @@ export function MatchesMapModal({ isOpen, onClose }: MatchesMapModalProps) {
       });
 
       marker.addListener("gmp-click", () => {
-        setSelectedMatch(m);
+        // Navigate directly to match details\n        window.location.href = `/matches/${m.id}`;
       });
 
       return marker;

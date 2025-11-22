@@ -42,7 +42,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-  
+
   // Estados
   const [message, setMessage] = useState("")
   const [messages, setMessages] = useState<MensajeDTO[]>([])
@@ -56,7 +56,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   const [isTyping, setIsTyping] = useState(false)
   const [typingUsers, setTypingUsers] = useState<Map<string, string>>(new Map()) // userId -> userName
   const [replyingTo, setReplyingTo] = useState<MensajeDTO | null>(null)
-  
+
   const currentUser = AuthService.getUser()
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const sendTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -64,38 +64,53 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   // 🔥 WebSocket: Mensajes en tiempo real (reemplaza polling)
   usePartidoChat(matchId, (event) => {
     logger.log('[MatchChat] 📡 WebSocket event:', event.type, event)
-    
+
     if (event.type === 'NEW_MESSAGE' && event.mensaje) {
       // Agregar nuevo mensaje al estado
       setMessages(prev => {
-        // Evitar duplicados por ID exacto
-        const exists = prev.some(m => m.id === event.mensaje.id)
-        if (exists) return prev
-        
+        // ⚡ FIX: Evitar duplicados por ID exacto
+        const existsById = prev.some(m => m.id === event.mensaje.id)
+        if (existsById) {
+          logger.log('[MatchChat] Skipping duplicate message by ID:', event.mensaje.id)
+          return prev
+        }
+
+        // ⚡ FIX: Detectar mensajes muy recientes con mismo contenido (posible duplicado)
+        const isVeryRecent = prev.some(m =>
+          m.usuarioId === event.mensaje.usuarioId &&
+          m.contenido === event.mensaje.contenido &&
+          Math.abs(new Date(m.createdAt).getTime() - new Date(event.mensaje.createdAt).getTime()) < 1000
+        )
+
+        if (isVeryRecent) {
+          logger.log('[MatchChat] Skipping very recent duplicate')
+          return prev
+        }
+
         // Reemplazar mensaje optimista si existe (enviado por este usuario)
-        const hasOptimistic = prev.some(m => m.id.startsWith('temp-') && 
+        const hasOptimistic = prev.some(m => m.id.startsWith('temp-') &&
           m.usuarioId === event.mensaje.usuarioId &&
           m.contenido === event.mensaje.contenido)
-        
+
         if (hasOptimistic) {
           // Reemplazar el mensaje optimista con el real
-          return prev.map(m => 
-            m.id.startsWith('temp-') && 
-            m.usuarioId === event.mensaje.usuarioId &&
-            m.contenido === event.mensaje.contenido
-              ? event.mensaje 
+          return prev.map(m =>
+            m.id.startsWith('temp-') &&
+              m.usuarioId === event.mensaje.usuarioId &&
+              m.contenido === event.mensaje.contenido
+              ? event.mensaje
               : m
           )
         }
-        
+
         return [...prev, event.mensaje]
       })
-      
+
       // Si el usuario está en el fondo de la conversación, hacer scroll
       if (messagesContainerRef.current) {
         const container = messagesContainerRef.current
         const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100
-        
+
         if (isNearBottom) {
           setTimeout(() => scrollToBottom(), 100)
         } else {
@@ -104,17 +119,23 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         }
       }
     }
-    
+
     // 🔥 Manejar evento de "usuario está escribiendo"
     if (event.type === 'USER_TYPING' && event.userId && event.userId !== currentUser?.id) {
       const { userId, userName, isTyping } = event
-      
+
+      // ⚡ FIX: Double-check it's not the current user (extra safety)
+      if (userId === currentUser?.id) {
+        logger.warn('[MatchChat] Ignoring own typing event')
+        return
+      }
+
       setTypingUsers(prev => {
         const newMap = new Map(prev)
         if (isTyping) {
           // Use actual user name, not generic "Usuario"
           newMap.set(userId, userName || 'Jugador')
-          
+
           // Auto-limpiar después de 3 segundos
           setTimeout(() => {
             setTypingUsers(current => {
@@ -139,11 +160,11 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   useEffect(() => {
     // Cargar datos iniciales
     loadChatData()
-    
+
     // ⚡ Marcar como visitado cuando entra al chat
     const visitKey = `chat_visit_${matchId}`
     localStorage.setItem(visitKey, new Date().toISOString())
-    
+
     // ⚡ También marcar al salir (cleanup)
     return () => {
       localStorage.setItem(visitKey, new Date().toISOString())
@@ -180,7 +201,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
     if (container) {
       const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 150
       setShowScrollButton(!isNearBottom)
-      
+
       if (isNearBottom) {
         setUnreadCount(0)
       }
@@ -190,20 +211,20 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   // 🔥 Manejar evento de "está escribiendo" con WebSocket
   const handleInputChange = (value: string) => {
     setMessage(value)
-    
+
     // Importar webSocketClient
     const { webSocketClient } = require('@/lib/websocket-client')
-    
+
     // Si está escribiendo (tiene texto), enviar evento
     if (value.length > 0) {
       // Enviar "está escribiendo" = true
       webSocketClient.sendTyping(matchId, true)
-      
+
       // Limpiar timeout anterior
       if (sendTypingTimeoutRef.current) {
         clearTimeout(sendTypingTimeoutRef.current)
       }
-      
+
       // Después de 2 segundos sin escribir, enviar "dejó de escribir"
       sendTypingTimeoutRef.current = setTimeout(() => {
         webSocketClient.sendTyping(matchId, false)
@@ -227,7 +248,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
 
     msgs.forEach((msg) => {
       const msgDate = new Date(msg.createdAt).toDateString()
-      
+
       if (msgDate !== lastDate) {
         result.push({
           type: 'date-separator',
@@ -235,7 +256,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         })
         lastDate = msgDate
       }
-      
+
       result.push(msg)
     })
 
@@ -262,7 +283,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
       // ⚡ ULTRA OPTIMIZACIÓN: Solo cargar últimos 50 mensajes primero
       // Resto se puede cargar al hacer scroll hacia arriba (implementación futura)
       const messagesData = await MensajeAPI.list(matchId)
-      
+
       // Procesar mensajes INMEDIATAMENTE - tomar solo los últimos 100
       if (messagesData.success && messagesData.data) {
         const allMessages = messagesData.data
@@ -270,7 +291,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         const recentMessages = allMessages.length > 100 ? allMessages.slice(-100) : allMessages
         setMessages(recentMessages)
       }
-      
+
       // AHORA cargar resto en paralelo SIN bloquear
       const [matchResponse, estadoData] = await Promise.allSettled([
         PartidoAPI.get(matchId),
@@ -289,7 +310,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
           jugadores_actuales: matchData.jugadoresActuales || matchData.jugadores_actuales || 0,
           jugadores_necesarios: matchData.cantidadJugadores || matchData.cantidad_jugadores || 0
         })
-        
+
         isOrganizer = matchData.organizadorId === currentUser.id
       }
 
@@ -298,7 +319,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         if (estadoData.status === 'fulfilled' && estadoData.value.success && estadoData.value.data) {
           const { inscrito, inscripcionId } = estadoData.value.data
           const estaInscrito = inscrito || !!inscripcionId
-          
+
           if (!estaInscrito) {
             setError("Debes inscribirte en el partido para acceder al chat")
             setLoading(false)
@@ -381,7 +402,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
       // Limpiar input y reply inmediatamente para mejor UX
       setMessage("")
       setReplyingTo(null)
-      
+
       // ⚡ Agregar mensaje optimista inmediatamente
       const optimisticMessage: MensajeDTO = {
         id: tempId,
@@ -395,9 +416,9 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
           apellido: currentUser.apellido,
         } as any
       }
-      
+
       setMessages(prev => [...prev, optimisticMessage])
-      
+
       // Auto-scroll al enviar
       scrollToBottom(true)
 
@@ -409,10 +430,10 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
       if (!response.success) {
         throw new Error(response.message || "Error al enviar mensaje")
       }
-      
+
       // ⚡ Recargar mensajes - loadMessages filtrará automáticamente los temp-
       await loadMessages(true)
-      
+
       // Enfocar input nuevamente
       inputRef.current?.focus()
 
@@ -445,8 +466,8 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   // ============================================
 
   const scrollToBottom = (smooth = true) => {
-    messagesEndRef.current?.scrollIntoView({ 
-      behavior: smooth ? "smooth" : "auto" 
+    messagesEndRef.current?.scrollIntoView({
+      behavior: smooth ? "smooth" : "auto"
     })
   }
 
@@ -461,9 +482,9 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
   const formatTime = (dateString: string) => {
     try {
       const date = new Date(dateString)
-      return date.toLocaleTimeString("es-ES", { 
-        hour: "2-digit", 
-        minute: "2-digit" 
+      return date.toLocaleTimeString("es-ES", {
+        hour: "2-digit",
+        minute: "2-digit"
       })
     } catch {
       return ""
@@ -480,7 +501,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
       } else {
         date = new Date(dateString);
       }
-      
+
       const today = new Date()
       const tomorrow = new Date(today)
       tomorrow.setDate(tomorrow.getDate() + 1)
@@ -517,7 +538,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
       } else {
         date = new Date(dateStr);
       }
-      
+
       const today = new Date()
       const yesterday = new Date(today)
       yesterday.setDate(yesterday.getDate() - 1)
@@ -575,8 +596,8 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         {/* Header */}
         <div className="pt-16 pb-4 px-6 border-b border-gray-100 bg-white">
           <div className="flex items-center space-x-4">
-            <button 
-              onClick={handleBack} 
+            <button
+              onClick={handleBack}
               className="p-2 -ml-2 hover:bg-gray-100 rounded-xl transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -626,16 +647,16 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
       <div className="sticky top-0 z-20 bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 shadow-lg">
         <div className="safe-top" /> {/* Espacio para notch en iOS */}
         <div className="flex items-center px-2 sm:px-3 py-2">
-          <button 
-            onClick={handleBack} 
+          <button
+            onClick={handleBack}
             className="p-2 hover:bg-white/20 rounded-lg transition-all flex-shrink-0 active:scale-95 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Volver"
           >
             <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </button>
-          
+
           {/* Match info ultra-compacto */}
-          <button 
+          <button
             onClick={() => router.push(`/matches/${matchId}`)}
             className="flex-1 min-w-0 text-left hover:bg-white/10 rounded-lg px-2 py-1 transition-all active:scale-[0.98] touch-manipulation"
           >
@@ -667,7 +688,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
             <div className="flex-1">
               <p className="text-red-600 text-xs sm:text-sm">{error}</p>
             </div>
-            <button 
+            <button
               onClick={() => setError("")}
               className="text-red-600 hover:text-red-700 text-base sm:text-lg leading-none touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center -mr-2"
             >
@@ -678,7 +699,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
       )}
 
       {/* Messages Container - Optimizado para móvil */}
-      <div 
+      <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
         className="flex-1 px-2 sm:px-4 py-3 sm:py-4 space-y-0.5 overflow-y-auto bg-gradient-to-b from-gray-50 to-white overscroll-behavior-contain"
@@ -717,25 +738,24 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
             const isOwn = msg.usuarioId === currentUser?.id
             const userName = getUserName(msg.usuario?.nombre, msg.usuario?.apellido)
             const initials = getUserInitials(msg.usuario?.nombre, msg.usuario?.apellido)
-            
+
             // Verificar si es el último mensaje del mismo usuario
             const prevItem = index > 0 ? messagesWithSeparators[index - 1] : null
             const nextItem = messagesWithSeparators[index + 1]
-            
-            const isFirstInGroup = !prevItem || isDateSeparator(prevItem) || 
+
+            const isFirstInGroup = !prevItem || isDateSeparator(prevItem) ||
               (prevItem as MensajeDTO).usuarioId !== msg.usuarioId
-            const isLastInGroup = !nextItem || isDateSeparator(nextItem) || 
+            const isLastInGroup = !nextItem || isDateSeparator(nextItem) ||
               (nextItem as MensajeDTO).usuarioId !== msg.usuarioId
 
             return (
-              <div 
-                key={msg.id} 
+              <div
+                key={msg.id}
                 className={`flex ${isOwn ? "justify-end" : "justify-start"} ${isFirstInGroup ? 'mt-3' : 'mt-1'}`}
               >
                 <div
-                  className={`group flex items-end space-x-1.5 sm:space-x-2 max-w-[75%] sm:max-w-[75%] relative ${
-                    isOwn ? "flex-row-reverse space-x-reverse" : ""
-                  }`}
+                  className={`group flex items-end space-x-1.5 sm:space-x-2 max-w-[75%] sm:max-w-[75%] relative ${isOwn ? "flex-row-reverse space-x-reverse" : ""
+                    }`}
                 >
                   {/* Avatar con foto - SIEMPRE visible */}
                   {!isOwn ? (
@@ -743,8 +763,8 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                       className="w-7 h-7 sm:w-8 sm:h-8 cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all flex-shrink-0 shadow-md touch-manipulation rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 relative"
                       onClick={() => handleUserClick(msg.usuarioId)}
                     >
-                      <img 
-                        src={getUserPhotoUrlMemo(msg.usuarioId)} 
+                      <img
+                        src={getUserPhotoUrlMemo(msg.usuarioId)}
                         alt={userName}
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -757,7 +777,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                       </div>
                     </div>
                   ) : null}
-                  
+
                   {/* Mensaje bubble compacto */}
                   <div className="relative flex-1">
                     {/* Opciones de mensaje (aparecen al hover) */}
@@ -774,21 +794,18 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                     </div>
 
                     <div
-                      className={`inline-block px-2.5 sm:px-3 py-1.5 sm:py-2 transition-all group-hover:scale-[1.01] ${
-                        isOwn 
-                          ? `bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white shadow-md hover:shadow-lg ${
-                              isFirstInGroup && isLastInGroup ? 'rounded-2xl' :
-                              isFirstInGroup ? 'rounded-t-2xl rounded-bl-2xl rounded-br-md' :
+                      className={`inline-block px-2.5 sm:px-3 py-1.5 sm:py-2 transition-all group-hover:scale-[1.01] ${isOwn
+                          ? `bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white shadow-md hover:shadow-lg ${isFirstInGroup && isLastInGroup ? 'rounded-2xl' :
+                            isFirstInGroup ? 'rounded-t-2xl rounded-bl-2xl rounded-br-md' :
                               isLastInGroup ? 'rounded-b-2xl rounded-tl-2xl rounded-tr-md' :
-                              'rounded-l-2xl rounded-r-md'
-                            }` 
-                          : `bg-white text-gray-900 border border-gray-200 shadow-sm hover:shadow-md ${
-                              isFirstInGroup && isLastInGroup ? 'rounded-2xl' :
-                              isFirstInGroup ? 'rounded-t-2xl rounded-br-2xl rounded-bl-md' :
+                                'rounded-l-2xl rounded-r-md'
+                          }`
+                          : `bg-white text-gray-900 border border-gray-200 shadow-sm hover:shadow-md ${isFirstInGroup && isLastInGroup ? 'rounded-2xl' :
+                            isFirstInGroup ? 'rounded-t-2xl rounded-br-2xl rounded-bl-md' :
                               isLastInGroup ? 'rounded-b-2xl rounded-tr-2xl rounded-tl-md' :
-                              'rounded-r-2xl rounded-l-md'
-                            }`
-                      }`}
+                                'rounded-r-2xl rounded-l-md'
+                          }`
+                        }`}
                     >
                       {/* Nombre - COMPACTO */}
                       {!isOwn && isFirstInGroup && (
@@ -799,19 +816,17 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                           {userName}
                         </button>
                       )}
-                      
+
                       {/* Contenido del mensaje */}
                       <p className="text-xs sm:text-sm whitespace-pre-wrap break-words leading-normal font-normal">
                         {msg.contenido}
                       </p>
-                      
+
                       {/* Footer con hora y check marks */}
-                      <div className={`flex items-center space-x-1 mt-0.5 sm:mt-1 ${
-                        isOwn ? 'justify-end' : 'justify-start'
-                      }`}>
-                        <span className={`text-[9px] sm:text-[9px] font-medium ${
-                          isOwn ? "text-blue-200" : "text-gray-400"
+                      <div className={`flex items-center space-x-1 mt-0.5 sm:mt-1 ${isOwn ? 'justify-end' : 'justify-start'
                         }`}>
+                        <span className={`text-[9px] sm:text-[9px] font-medium ${isOwn ? "text-blue-200" : "text-gray-400"
+                          }`}>
                           {formatTime(msg.createdAt)}
                         </span>
                         {/* Check mark para mensajes propios */}
@@ -877,7 +892,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
             </div>
           </div>
         )}
-        
+
         <div className="p-2.5 sm:p-3 relative">
           {/* Typing indicator */}
           {typingUsers.size > 0 && (

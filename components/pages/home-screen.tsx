@@ -79,14 +79,14 @@ export function HomeScreen() {
     }
 
     loadData()
-    
+
     // Recargar cuando el usuario vuelve a la pantalla
     const handleFocus = () => {
       if (AuthService.isLoggedIn()) {
         loadData()
       }
     }
-    
+
     window.addEventListener('focus', handleFocus)
     return () => window.removeEventListener('focus', handleFocus)
   }, [])
@@ -120,14 +120,14 @@ export function HomeScreen() {
           () => fetch(`${API_BASE}/api/partidos/usuario/${user.id}`, { headers: authHeaders })
             .then(res => res.ok ? res.json() : null)
         ),
-        
+
         // Cargar reseñas pendientes (CACHED)
         apiCache.get(
           `pending-reviews-${user.id}`,
           () => fetch(`${API_BASE}/api/usuarios/${user.id}/pending-reviews`, { headers: authHeaders })
             .then(res => res.ok ? res.json() : null)
         ),
-        
+
         // Cargar estadísticas de la comunidad (CACHED - más tiempo)
         apiCache.get(
           `stats-global`,
@@ -141,14 +141,14 @@ export function HomeScreen() {
       if (matchesResult.status === 'fulfilled' && matchesResult.value) {
         const matchesData = matchesResult.value
         const partidos = Array.isArray(matchesData.data) ? matchesData.data : []
-        
+
         // Filtrar solo próximos partidos
         const now = new Date()
         const proximos = partidos.filter((p: any) => {
           const fechaPartido = new Date(`${p.fecha}T${p.hora}`)
           return fechaPartido > now
         }).slice(0, 5)
-        
+
         setUpcomingMatches(proximos)
       } else {
         setUpcomingMatches([])
@@ -305,7 +305,7 @@ export function HomeScreen() {
           <div className="flex items-center space-x-2 flex-shrink-0">
             <button
               onClick={handleNotifications}
-              className="relative p-2.5 sm:p-2.5 rounded-full bg-white shadow-md hover:shadow-lg transition-all duration-200 touch-manipulation active:scale-95 min-w-[44px] min-h-[44px]"
+              className="relative p-2.5 sm:p-2.5 rounded-full bg-white shadow-md hover:shadow-lg transition-all duration-200 touch-manipulation active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
               <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
               {notificationCount > 0 && (
@@ -314,7 +314,7 @@ export function HomeScreen() {
                 </span>
               )}
             </button>
-            <UserAvatar 
+            <UserAvatar
               userId={currentUser?.id}
               name={currentUser?.nombre}
               surname={currentUser?.apellido}
@@ -464,7 +464,7 @@ export function HomeScreen() {
           <div className="space-y-3 sm:space-y-4">
             {upcomingMatches.map((match) => {
               const spotsLeft = (match.cantidad_jugadores ?? 0) - (match.jugadores_actuales ?? 0)
-              
+
               return (
                 <div
                   key={match.id}
@@ -491,13 +491,13 @@ export function HomeScreen() {
                     <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-2 leading-tight">
                       {formatDate(match.fecha, match.hora)}
                     </h3>
-                    
+
                     {/* Price and Duration */}
                     <div className="flex flex-wrap items-center text-gray-600 text-xs sm:text-sm gap-x-3 gap-y-1 mb-2">
                       <div className="flex items-center space-x-1 font-medium">
                         <span className="text-green-600 text-sm sm:text-base">
-                          ${match.precio_total && match.cantidad_jugadores 
-                            ? Math.round(match.precio_total / match.cantidad_jugadores) 
+                          ${match.precio_total && match.cantidad_jugadores
+                            ? Math.round(match.precio_total / match.cantidad_jugadores)
                             : 0}
                         </span>
                         <span className="text-gray-500">/ jugador</span>
@@ -505,7 +505,7 @@ export function HomeScreen() {
                       <span className="text-gray-300">•</span>
                       <span>{match.duracion || 90} min</span>
                     </div>
-                    
+
                     {/* Location */}
                     <div className="flex items-start text-gray-600 text-xs sm:text-sm">
                       <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 flex-shrink-0 mt-0.5" />

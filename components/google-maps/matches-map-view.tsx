@@ -203,19 +203,9 @@ export function MatchesMapView({
         title: match.nombreUbicacion || "Partido",
       })
 
-      // ✅ Click en marker: animación + redirección (sin InfoWindow)
+      // ✅ Click en marker: redirigir directamente (sin mostrar info)
       marker.addListener("gmp-click", () => {
-        // Aplicar animación de bounce al marker clickeado
-        const pinElement = markerContent.querySelector('div > div') as HTMLElement
-        if (pinElement) {
-          pinElement.style.animation = 'bounce 0.75s'
-          setTimeout(() => {
-            pinElement.style.animation = ''
-          }, 750)
-        }
-
-        // Redirigir (lógica original)
-        if (onMarkerClick && match.id) onMarkerClick(match.id)
+        if (onMarkerClick && match.id) onMarkerClick(match.id);
       })
 
       markersRef.current.push(marker)

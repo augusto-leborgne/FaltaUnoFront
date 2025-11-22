@@ -17,7 +17,6 @@ const mapMatches = [
 export function MatchesMap() {
   const router = useRouter();
   const { user } = useAuth();
-  const [selectedMatch, setSelectedMatch] = useState<number | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const { isLoaded, error, google } = useGoogleMaps();
   const mapRef = useRef<HTMLDivElement | null>(null);
@@ -117,7 +116,7 @@ export function MatchesMap() {
       });
 
       marker.addListener("gmp-click", () => {
-        setSelectedMatch(m.id);
+        handleMatchClick(m.id);
       });
 
       return marker;
@@ -127,7 +126,6 @@ export function MatchesMap() {
       markersRef.current.forEach((mk) => mk.map = null);
       markersRef.current = [];
       mapInstanceRef.current = null;
-      setSelectedMatch(null);
     };
   }, [isLoaded, google, userLocation]);
 
@@ -182,28 +180,7 @@ export function MatchesMap() {
           {error && <div className="absolute inset-0 flex items-center justify-center"><p className="text-sm text-red-600">Error cargando mapa: {error.message}</p></div>}
         </div>
 
-        {selectedMatch && (
-          <div className="absolute bottom-24 left-4 right-4">
-            {mapMatches.filter((m) => m.id === selectedMatch).map((match) => (
-              <div key={match.id} className="bg-white rounded-2xl p-4 shadow-lg border border-gray-200">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-2">
-                    <Badge className="bg-orange-100 text-gray-800">{match.type}</Badge>
-                    <Badge className="bg-green-100 text-green-800">Quedan {match.spotsLeft}</Badge>
-                  </div>
-                  <button onClick={() => setSelectedMatch(null)} className="text-gray-400 hover:text-gray-600 p-1">✕</button>
-                </div>
 
-                <h3 className="font-bold text-gray-900 mb-1">{match.time}</h3>
-                <p className="text-sm text-gray-600 mb-4">{match.location}</p>
-
-                <Button onClick={() => handleMatchClick(match.id)} className="w-full bg-green-600 hover:bg-green-700 text-white rounded-xl">
-                  Ver detalles
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       <BottomNavigation />
