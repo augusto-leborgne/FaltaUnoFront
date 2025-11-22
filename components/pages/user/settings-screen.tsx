@@ -286,49 +286,124 @@ export function SettingsScreen() {
 	}
 
 	const capturePhoto = () => {
-		if (!videoRef.current || !canvasRef.current) return
+		if (!videoRef.current || !canvasRef.current) {
+			logger.error("[Settings] Video or canvas ref not available")
+			return
+		}
 
 		const video = videoRef.current
 		const canvas = canvasRef.current
+
+		if (video.videoWidth === 0 || video.videoHeight === 0) {
+			logger.error("[Settings] Video not ready")
+			setError("La cámara no está lista, por favor intenta de nuevo")
+			return
+		}
+
 		canvas.width = video.videoWidth
 		canvas.height = video.videoHeight
 		const ctx = canvas.getContext('2d')
-		if (!ctx) return
+		if (!ctx) {
+			logger.error("[Settings] Could not get canvas context")
+			return
+		}
 
+		logger.log("[Settings] Capturing photo from camera")
 		ctx.drawImage(video, 0, 0)
 		canvas.toBlob((blob) => {
 			if (blob) {
+				logger.log("[Settings] Photo captured, showing crop modal")
 				const url = URL.createObjectURL(blob)
 				setImageToCrop(url)
+				// Initialize crop to centered position
+				setCrop({
+					unit: '%',
+					width: 50,
+					height: 50,
+					x: 25,
+					y: 25
+				})
+				setCompletedCrop(null)
 				setShowCropModal(true)
 				stopCamera()
+			} else {
+				logger.error("[Settings] Failed to create blob from canvas")
+				setError("Error al capturar la foto")
 			}
 		}, 'image/jpeg', 0.95)
 	}
 
 	const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0]
-		if (file) {
-			const reader = new FileReader()
-			reader.onload = () => {
-				setImageToCrop(reader.result as string)
-				setShowCropModal(true)
-			}
-			reader.readAsDataURL(file)
+		if (!file) return
+
+		logger.log("[Settings] File selected:", file.name, file.type, file.size)
+
+		// Validate file type
+		if (!file.type.startsWith('image/')) {
+			setError("Por favor selecciona una imagen válida")
+			return
 		}
+
+		// Validate file size (30MB max, like Instagram)
+		const MAX_SIZE = 30 * 1024 * 1024
+		if (file.size > MAX_SIZE) {
+			setError("La imagen no puede superar 30MB")
+			return
+		}
+
+		const reader = new FileReader()
+		reader.onload = () => {
+			logger.log("[Settings] Image loaded, showing crop modal")
+			setImageToCrop(reader.result as string)
+			// Initialize crop to centered position
+			setCrop({
+				unit: '%',
+				width: 50,
+				height: 50,
+				x: 25,
+				y: 25
+			})
+			setCompletedCrop(null)
+			setShowCropModal(true)
+		}
+		reader.onerror = () => {
+			logger.error("[Settings] Error reading file")
+			setError("Error al leer la imagen")
+		}
+		reader.readAsDataURL(file)
+		e.target.value = '' // Reset input
 	}
 
 	const handleCropComplete = async () => {
-		if (!completedCrop || !imageRef.current) return
+		if (!completedCrop || !imageRef.current) {
+			logger.error("[Settings] Missing crop or image ref")
+			return
+		}
 
 		const canvas = document.createElement('canvas')
 		const scaleX = imageRef.current.naturalWidth / imageRef.current.width
 		const scaleY = imageRef.current.naturalHeight / imageRef.current.height
-		canvas.width = completedCrop.width
-		canvas.height = completedCrop.height
 		const ctx = canvas.getContext('2d')
 
-		if (!ctx) return
+		if (!ctx) {
+			logger.error("[Settings] Could not get canvas context")
+			return
+		}
+
+		// Resize to 400x400 for optimal quality and file size
+		const targetSize = 400
+		canvas.width = targetSize
+		canvas.height = targetSize
+
+		logger.log("[Settings] Cropping image with dimensions:", {
+			cropX: completedCrop.x,
+			cropY: completedCrop.y,
+			cropWidth: completedCrop.width,
+			cropHeight: completedCrop.height,
+			scaleX,
+			scaleY
+		})
 
 		ctx.drawImage(
 			imageRef.current,
@@ -338,20 +413,25 @@ export function SettingsScreen() {
 			completedCrop.height * scaleY,
 			0,
 			0,
-			completedCrop.width,
-			completedCrop.height
+			targetSize,
+			targetSize
 		)
 
 		canvas.toBlob((blob) => {
 			if (blob) {
+				logger.log("[Settings] Cropped image created, size:", blob.size)
 				const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' })
 				setPhotoFile(file)
 				const url = URL.createObjectURL(blob)
 				setAvatar(url)
 				setShowCropModal(false)
 				setImageToCrop("")
+				setError("") // Clear any previous errors
+			} else {
+				logger.error("[Settings] Failed to create blob from cropped image")
+				setError("Error al procesar la imagen")
 			}
-		}, 'image/jpeg', 0.95)
+		}, 'image/jpeg', 0.92)
 	}
 
 	const handleDeleteAccount = async () => {
@@ -454,22 +534,22 @@ export function SettingsScreen() {
 						</div>
 
 						{showPhotoOptions && (
-							<div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+							<div className="flex flex-col gap-2 w-full">
 								<Button
 									onClick={() => fileInputRef.current?.click()}
 									variant="outline"
-									className="flex items-center gap-2"
+									className="flex items-center justify-center gap-2 min-h-[48px] w-full"
 								>
-									<Upload className="w-4 h-4" />
-									Subir foto
+									<Upload className="w-5 h-5" />
+									<span>Subir foto</span>
 								</Button>
 								<Button
 									onClick={startCamera}
 									variant="outline"
-									className="flex items-center gap-2"
+									className="flex items-center justify-center gap-2 min-h-[48px] w-full"
 								>
-									<Camera className="w-4 h-4" />
-									Tomar foto
+									<Camera className="w-5 h-5" />
+									<span>Tomar foto</span>
 								</Button>
 								{avatar && (
 									<Button
@@ -478,10 +558,10 @@ export function SettingsScreen() {
 											setPhotoFile(null)
 										}}
 										variant="outline"
-										className="flex items-center gap-2 text-red-600 hover:text-red-700"
+										className="flex items-center justify-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 min-h-[48px] w-full"
 									>
-										<X className="w-4 h-4" />
-										Eliminar
+										<X className="w-5 h-5" />
+										<span>Eliminar foto</span>
 									</Button>
 								)}
 							</div>
@@ -656,22 +736,50 @@ export function SettingsScreen() {
 
 			{/* Camera Modal */}
 			{showCameraModal && (
-				<div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-					<div className="bg-white rounded-2xl p-6 max-w-md w-full">
-						<h3 className="text-lg font-bold mb-4">Tomar foto</h3>
-						<video
-							ref={videoRef}
-							autoPlay
-							playsInline
-							className="w-full rounded-lg mb-4"
-						/>
-						<canvas ref={canvasRef} className="hidden" />
-						<div className="flex gap-2">
-							<Button onClick={capturePhoto} className="flex-1 bg-green-600 hover:bg-green-700">
-								<Camera className="w-4 h-4 mr-2" />
+				<div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
+					<div className="w-full h-full sm:h-auto sm:max-w-lg sm:rounded-2xl bg-black sm:bg-white overflow-hidden flex flex-col">
+						<div className="p-4 border-b border-gray-700 sm:border-gray-200 flex items-center justify-between bg-black sm:bg-white flex-shrink-0">
+							<h3 className="text-lg font-bold text-white sm:text-gray-900">Tomar foto</h3>
+							<button
+								onClick={stopCamera}
+								className="p-2 hover:bg-gray-800 sm:hover:bg-gray-100 rounded-xl transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+							>
+								<X className="w-5 h-5 text-white sm:text-gray-600" />
+							</button>
+						</div>
+						<div className="flex-1 bg-black flex items-center justify-center relative p-4">
+							<video
+								ref={videoRef}
+								autoPlay
+								playsInline
+								muted
+								className="w-full h-auto max-h-[70vh] object-contain rounded-lg"
+							/>
+							<canvas ref={canvasRef} className="hidden" />
+							{/* Visual guide overlay */}
+							<div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+								<div className="w-64 h-64 sm:w-72 sm:h-72 border-4 border-white/50 rounded-full"></div>
+							</div>
+							{/* Instructions */}
+							<div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 text-center">
+								<p className="text-white text-sm bg-black/50 px-4 py-2 rounded-full backdrop-blur-sm">
+									Ajusta tu cara dentro del círculo
+								</p>
+							</div>
+						</div>
+						<div className="p-4 bg-black sm:bg-white flex gap-3">
+							<Button
+								onClick={capturePhoto}
+								className="flex-1 bg-green-600 hover:bg-green-700 min-h-[48px] text-base"
+							>
+								<Camera className="w-5 h-5 mr-2" />
 								Capturar
 							</Button>
-							<Button onClick={stopCamera} variant="outline" className="flex-1">
+							<Button
+								onClick={stopCamera}
+								variant="outline"
+								className="flex-1 min-h-[48px] text-base border-gray-600 text-gray-300 sm:text-gray-900 sm:border-gray-300"
+							>
 								Cancelar
 							</Button>
 						</div>
@@ -681,27 +789,61 @@ export function SettingsScreen() {
 
 			{/* Crop Modal */}
 			{showCropModal && imageToCrop && (
-				<div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-					<div className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-						<h3 className="text-lg font-bold mb-4">Ajustar foto</h3>
-						<div className="mb-4">
+				<div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
+					<div className="w-full h-full sm:h-auto sm:max-w-2xl sm:rounded-2xl bg-white overflow-hidden flex flex-col max-h-screen">
+						<div className="p-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
+							<h3 className="text-base sm:text-lg font-bold text-gray-900">Ajustar foto</h3>
+							<button
+								onClick={() => {
+									setShowCropModal(false)
+									setImageToCrop("")
+								}}
+								className="p-2 hover:bg-gray-100 rounded-xl transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+							>
+								<X className="w-5 h-5 text-gray-600" />
+							</button>
+						</div>
+						<div className="flex-1 overflow-auto p-4 sm:p-6">
 							<ReactCrop
 								crop={crop}
-								onChange={(c) => setCrop(c)}
-								onComplete={(c) => setCompletedCrop(c)}
+								onChange={(c) => {
+									// Enforce circular aspect ratio by keeping width and height equal
+									const size = Math.max(c.width, c.height);
+									setCrop({
+										...c,
+										width: size,
+										height: size
+									});
+								}}
+								onComplete={(c) => {
+									// Ensure completed crop is also circular
+									const size = Math.max(c.width, c.height);
+									setCompletedCrop({
+										...c,
+										width: size,
+										height: size
+									});
+								}}
 								aspect={1}
 								circularCrop
+								keepSelection
+								minWidth={120}
+								minHeight={120}
+								className="max-w-full"
 							>
 								<img
 									ref={imageRef}
 									src={imageToCrop}
 									alt="Crop"
-									className="max-w-full"
+									className="max-w-full h-auto"
 								/>
 							</ReactCrop>
 						</div>
-						<div className="flex gap-2">
-							<Button onClick={handleCropComplete} className="flex-1 bg-green-600 hover:bg-green-700">
+						<div className="p-4 bg-white border-t border-gray-200 flex gap-3 flex-shrink-0">
+							<Button
+								onClick={handleCropComplete}
+								className="flex-1 bg-green-600 hover:bg-green-700 min-h-[48px] text-base"
+							>
 								Confirmar
 							</Button>
 							<Button
@@ -710,7 +852,7 @@ export function SettingsScreen() {
 									setImageToCrop("")
 								}}
 								variant="outline"
-								className="flex-1"
+								className="flex-1 min-h-[48px] text-base"
 							>
 								Cancelar
 							</Button>
