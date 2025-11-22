@@ -173,8 +173,25 @@ export function SettingsScreen() {
 		}
 	}
 
-	const handleNotificationToggle = (field: keyof typeof notificationPreferences) => {
-		setNotificationPreferences((prev) => ({ ...prev, [field]: !prev[field] }))
+	const handleNotificationToggle = async (field: keyof typeof notificationPreferences) => {
+		// Update local state immediately for instant feedback
+		const newValue = !notificationPreferences[field]
+		setNotificationPreferences((prev) => ({ ...prev, [field]: newValue }))
+
+		// Auto-save to backend
+		try {
+			logger.log(`[Settings] Auto-saving notification preference: ${field} = ${newValue}`)
+			const { NotificationPreferencesAPI } = await import('@/lib/api')
+			const updatedPrefs = { ...notificationPreferences, [field]: newValue }
+			await NotificationPreferencesAPI.update(updatedPrefs)
+			logger.log(`[Settings] Notification preference saved successfully`)
+		} catch (error) {
+			logger.error('[Settings] Error saving notification preference:', error)
+			// Revert on error
+			setNotificationPreferences((prev) => ({ ...prev, [field]: !newValue }))
+			setError('Error al guardar preferencia de notificación')
+			setTimeout(() => setError(''), 3000)
+		}
 	}
 
 	const handleBack = () => router.back()
@@ -534,9 +551,14 @@ export function SettingsScreen() {
 					</div>
 				)}
 
-				{/* Profile Photo Section */}
-				<div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
-					<h3 className="text-base sm:text-lg font-bold text-gray-900 mb-4">Foto de perfil</h3>
+				{/* Profile Photo Section - MODERNIZED */}
+				<div className="bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-2xl sm:rounded-3xl p-5 sm:p-8 mb-5 sm:mb-6 shadow-lg hover:shadow-xl transition-shadow">
+					<div className="flex items-center gap-2 sm:gap-3 mb-5 sm:mb-6">
+						<div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-md">
+							<Camera className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+						</div>
+						<h3 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Foto de perfil</h3>
+					</div>
 					<div className="flex flex-col items-center gap-4">
 						<div className="relative">
 							<UserAvatar
@@ -547,7 +569,7 @@ export function SettingsScreen() {
 							/>
 							<button
 								onClick={() => setShowPhotoOptions(!showPhotoOptions)}
-								className="absolute bottom-0 right-0 p-2 bg-green-600 hover:bg-green-700 text-white rounded-full shadow-lg transition-colors"
+								className="absolute bottom-0 right-0 p-2 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-full shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center"
 							>
 								<Camera className="w-4 h-4" />
 							</button>
@@ -605,9 +627,16 @@ export function SettingsScreen() {
 					</div>
 				</div>
 
-				{/* Personal Information */}
-				<div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
-					<h3 className="text-base sm:text-lg font-bold text-gray-900 mb-4">Información personal</h3>
+				{/* Personal Information - MODERNIZED */}
+				<div className="bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-2xl sm:rounded-3xl p-5 sm:p-8 mb-5 sm:mb-6 shadow-lg hover:shadow-xl transition-shadow">
+					<div className="flex items-center gap-2 sm:gap-3 mb-5 sm:mb-6">
+						<div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-md">
+							<svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+							</svg>
+						</div>
+						<h3 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Información personal</h3>
+					</div>
 					<div className="space-y-4">
 						<div>
 							<Label htmlFor="name">Nombre</Label>
@@ -647,9 +676,16 @@ export function SettingsScreen() {
 					</div>
 				</div>
 
-				{/* Football Profile */}
-				<div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
-					<h3 className="text-base sm:text-lg font-bold text-gray-900 mb-4">Perfil futbolístico</h3>
+				{/* Football Profile - MODERNIZED */}
+				<div className="bg-gradient-to-br from-white to-green-50 border-2 border-green-200 rounded-2xl sm:rounded-3xl p-5 sm:p-8 mb-5 sm:mb-6 shadow-lg hover:shadow-xl transition-shadow">
+					<div className="flex items-center gap-2 sm:gap-3 mb-5 sm:mb-6">
+						<div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-md">
+							<svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+								<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
+							</svg>
+						</div>
+						<h3 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Perfil futbolístico</h3>
+					</div>
 					<div className="space-y-4">
 						<div>
 							<Label htmlFor="position">Posición preferida</Label>
@@ -702,16 +738,18 @@ export function SettingsScreen() {
 					</div>
 				</div>
 
-				{/* Notification Preferences */}
-				<div className="bg-white border-2 border-gray-200 rounded-xl sm:rounded-2xl p-5 sm:p-6 mb-5 sm:mb-6 shadow-sm">
-					<div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-5">
-						<Bell className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
-						<h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900">Notificaciones</h3>
+				{/* Notification Preferences - MODERNIZED */}
+				<div className="bg-gradient-to-br from-white to-blue-50 border-2 border-blue-200 rounded-2xl sm:rounded-3xl p-5 sm:p-8 mb-5 sm:mb-6 shadow-lg hover:shadow-xl transition-shadow">
+					<div className="flex items-center gap-2 sm:gap-3 mb-5 sm:mb-6">
+						<div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-md">
+							<Bell className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+						</div>
+						<h3 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Notificaciones</h3>
 					</div>
 					<div className="space-y-4">
 						{Object.entries(notificationPreferences).map(([key, value]) => (
-							<div key={key} className="flex items-center justify-between py-2 sm:py-3 min-h-[52px]">
-								<span className="text-sm sm:text-base text-gray-700 font-medium">
+							<div key={key} className="flex items-center justify-between py-3 sm:py-4 min-h-[56px] px-4 sm:px-5 bg-white rounded-xl hover:bg-gray-50 transition-colors border border-gray-100">
+								<span className="text-sm sm:text-base text-gray-800 font-medium">
 									{key === "matchInvitations" && "Invitaciones a partidos"}
 									{key === "friendRequests" && "Solicitudes de amistad"}
 									{key === "matchUpdates" && "Actualizaciones de partidos"}
@@ -721,11 +759,11 @@ export function SettingsScreen() {
 								</span>
 								<button
 									onClick={() => handleNotificationToggle(key as keyof typeof notificationPreferences)}
-									className={`relative inline-flex h-8 w-14 sm:h-9 sm:w-16 items-center rounded-full transition-all touch-manipulation active:scale-95 shadow-sm ${value ? "bg-green-600 hover:bg-green-700" : "bg-gray-300 hover:bg-gray-400"
+									className={`relative inline-flex h-8 w-14 sm:h-9 sm:w-16 items-center rounded-full transition-all duration-300 touch-manipulation active:scale-95 shadow-inner ${value ? "bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700" : "bg-gray-300 hover:bg-gray-400"
 										}`}
 								>
 									<span
-										className={`inline-block h-6 w-6 sm:h-7 sm:w-7 transform rounded-full bg-white transition-transform shadow-md ${value ? "translate-x-7 sm:translate-x-8" : "translate-x-1"
+										className={`inline-block h-6 w-6 sm:h-7 sm:w-7 transform rounded-full bg-white transition-all duration-300 shadow-lg ${value ? "translate-x-7 sm:translate-x-8 scale-110" : "translate-x-1 scale-100"
 											}`}
 									/>
 								</button>
