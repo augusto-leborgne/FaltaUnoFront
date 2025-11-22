@@ -204,7 +204,7 @@ export function MatchesMapView({
       })
 
       // ✅ Click en marker: animación + redirección (sin InfoWindow)
-      marker.addListener("click", () => {
+      marker.addListener("gmp-click", () => {
         // Aplicar animación de bounce al marker clickeado
         const pinElement = markerContent.querySelector('div > div') as HTMLElement
         if (pinElement) {
@@ -213,7 +213,7 @@ export function MatchesMapView({
             pinElement.style.animation = ''
           }, 750)
         }
-        
+
         // Redirigir (lógica original)
         if (onMarkerClick && match.id) onMarkerClick(match.id)
       })

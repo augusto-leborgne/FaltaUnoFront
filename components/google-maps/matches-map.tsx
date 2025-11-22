@@ -116,7 +116,7 @@ export function MatchesMap() {
         content: markerContent,
       });
 
-      marker.addListener("click", () => {
+      marker.addListener("gmp-click", () => {
         setSelectedMatch(m.id);
       });
 
@@ -132,11 +132,11 @@ export function MatchesMap() {
   }, [isLoaded, google, userLocation]);
 
   const handleBack = () => router.back();
-  
+
   const handleMatchClick = (matchId: number) => {
     const match = mapMatches.find(m => m.id === matchId);
     if (!match) return;
-    
+
     // Si el usuario es el organizador, ir a página de gestión
     if (user && match.organizadorId === user.id) {
       router.push(`/my-matches/${matchId}`);
@@ -148,7 +148,7 @@ export function MatchesMap() {
       router.push(`/matches/${matchId}`);
     }
   };
-  
+
   const handleListView = () => router.push("/matches");
 
   return (

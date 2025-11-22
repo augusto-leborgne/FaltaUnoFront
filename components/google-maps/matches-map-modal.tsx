@@ -105,7 +105,7 @@ export function MatchesMapModal({ isOpen, onClose }: MatchesMapModalProps) {
         content: markerContent,
       });
 
-      marker.addListener("click", () => {
+      marker.addListener("gmp-click", () => {
         setSelectedMatch(m);
       });
 

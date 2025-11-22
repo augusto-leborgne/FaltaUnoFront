@@ -38,7 +38,7 @@ export function GoogleMapsEmbed({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
-  
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -150,7 +150,7 @@ export function GoogleMapsEmbed({
               </div>`,
             });
 
-            marker.addListener("click", () => {
+            marker.addListener("gmp-click", () => {
               infoWindow.open(map, marker);
             });
           }
