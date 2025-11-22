@@ -87,14 +87,17 @@ export function SettingsScreen() {
 		// Check for stored data from photo navigation
 		const storedData = ProfileSetupStorage.load()
 		if (storedData) {
-			const blobUrl = ProfileSetupStorage.base64ToBlobUrl(storedData)
-			if (blobUrl) {
-				setAvatar(blobUrl)
-				if (storedData.photoFile) {
-					const file = ProfileSetupStorage.base64ToFile(storedData.photoFile)
+			// ⚡ FIX: Use base64 data directly, not blob URL (prevents ERR_INVALID_URL)
+			if (storedData.photoBase64) {
+				setAvatar(storedData.photoBase64)
+				logger.log("[Settings] Photo restored from storage (base64)")
+			}
+			if (storedData.photoFile) {
+				const file = ProfileSetupStorage.base64ToFile(storedData.photoFile)
+				if (file) {
 					setPhotoFile(file)
+					logger.log("[Settings] Photo file restored from storage")
 				}
-				logger.log("[Settings] Photo restored from storage")
 			}
 		}
 	}, [])
@@ -263,17 +266,34 @@ export function SettingsScreen() {
 	// Camera functions
 	const startCamera = async () => {
 		try {
+			logger.log("[Settings] Requesting camera access...")
 			const stream = await navigator.mediaDevices.getUserMedia({
-				video: { facingMode: 'user' }
+				video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }
 			})
+			logger.log("[Settings] Camera access granted, stream obtained")
+
 			setCameraStream(stream)
 			setShowCameraModal(true)
+
+			// ⚡ FIX: Wait for modal to render before setting video source
+			await new Promise(resolve => setTimeout(resolve, 100))
+
 			if (videoRef.current) {
 				videoRef.current.srcObject = stream
+				// Wait for video to be ready
+				await videoRef.current.play()
+				logger.log("[Settings] Video stream connected and playing")
+			} else {
+				logger.error("[Settings] Video ref not available after delay")
 			}
 		} catch (error) {
 			logger.error("[Settings] Error starting camera:", error)
-			alert("No se pudo acceder a la cámara")
+			const errorMessage = error instanceof Error ? error.message : "Error desconocido"
+			if (errorMessage.includes('Permission')) {
+				setError("Permiso de cámara denegado. Por favor, permite el acceso a la cámara en la configuración del navegador.")
+			} else {
+				setError("No se pudo acceder a la cámara. Verifica que esté conectada y no la esté usando otra aplicación.")
+			}
 		}
 	}
 

@@ -89,7 +89,7 @@ export function UserAvatar({
   const [loadedPhoto, setLoadedPhoto] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [hasError, setHasError] = useState(false)
-  
+
   // ⚡ OPTIMIZACIÓN: Cargar foto desde cache/servidor si se provee userId
   useEffect(() => {
     // Si el usuario está eliminado, no intentar cargar la foto
@@ -97,23 +97,23 @@ export function UserAvatar({
       setLoadedPhoto(null)
       return
     }
-    
+
     // Si ya tenemos photo directa, no necesitamos cargar
     if (photo) {
       setLoadedPhoto(photo)
       return
     }
-    
+
     // Si no hay userId, no hay nada que cargar
     if (!userId) {
       setLoadedPhoto(null)
       return
     }
-    
+
     // Cargar desde cache/servidor
     let cancelled = false
     setIsLoading(true)
-    
+
     PhotoCache.getPhoto(userId)
       .then(cachedPhoto => {
         if (!cancelled && cachedPhoto) {
@@ -132,28 +132,38 @@ export function UserAvatar({
           setIsLoading(false)
         }
       })
-    
+
     return () => {
       cancelled = true
     }
   }, [photo, userId, isDeleted])
-  
+
   // Normalizar la foto a data URI si es necesario
   const normalizedPhoto = React.useMemo(() => {
     const photoToUse = photo || loadedPhoto
     if (!photoToUse) return null
-    
+
     // Validar que no sea una data URI malformada (double-encoded)
     if (photoToUse.includes('data:image') && photoToUse.includes('data:text/html')) {
       console.error('[UserAvatar] Malformed data URI detected, ignoring photo')
       return null
     }
-    
+
     // Si ya tiene el prefijo data:image, usarla directamente
     if (photoToUse.startsWith('data:image')) {
       return photoToUse
     }
-    
+
+    // ⚡ FIX: Handle blob URLs - don't modify them, they're already valid
+    if (photoToUse.startsWith('blob:')) {
+      return photoToUse
+    }
+
+    // Handle HTTP/HTTPS URLs - don't modify them
+    if (photoToUse.startsWith('http://') || photoToUse.startsWith('https://')) {
+      return photoToUse
+    }
+
     // Si es base64 sin prefijo, agregar el prefijo
     return `data:image/jpeg;base64,${photoToUse}`
   }, [photo, loadedPhoto])
@@ -169,13 +179,13 @@ export function UserAvatar({
         .join("")
         .toUpperCase()
     }
-    
+
     if (name || surname) {
       const n = name?.[0] || ""
       const s = surname?.[0] || ""
       return (n + s).toUpperCase() || "U"
     }
-    
+
     return "U"
   }, [name, surname, fullName])
 
@@ -189,23 +199,23 @@ export function UserAvatar({
       "bg-pink-100 text-pink-700",
       "bg-yellow-100 text-yellow-700",
     ]
-    
+
     const charCode = initials.charCodeAt(0) || 0
     return colors[charCode % colors.length]
   }, [initials])
 
   return (
-    <Avatar 
+    <Avatar
       className={cn(
-        className, 
+        className,
         onClick && "cursor-pointer hover:opacity-80 transition-opacity",
         isLoading && "animate-pulse"
       )}
       onClick={onClick}
     >
       {normalizedPhoto && !hasError && (
-        <AvatarImage 
-          src={normalizedPhoto} 
+        <AvatarImage
+          src={normalizedPhoto}
           alt={fullName || `${name} ${surname}`.trim() || "Usuario"}
           loading={lazy ? "lazy" : "eager"}
           onError={(e) => {

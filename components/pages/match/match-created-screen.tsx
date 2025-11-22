@@ -30,7 +30,7 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
   const [loading, setLoading] = useState(true)
   const [invitando, setInvitando] = useState<Record<string, boolean>>({})
   const [invitados, setInvitados] = useState<Record<string, boolean>>({}) // ✅ Tracking de invitaciones exitosas
-  
+
   // Obtener matchId de props o de URL params
   const matchId = propMatchId || searchParams.get('matchId') || undefined
 
@@ -41,11 +41,14 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
   const loadAmigos = async () => {
     try {
       // Cargar amigos del usuario actual
+      logger.log("[MatchCreated] Loading friends...")
       const response = await AmistadAPI.listarAmigos()
-      
+      logger.log("[MatchCreated] API response:", response)
+
       if (response.success && response.data) {
+        logger.log("[MatchCreated] Raw friend data:", response.data)
         // Mapear los amigos del formato de AmistadDTO
-        setAmigos(response.data.map((amistad: any) => {
+        const mappedFriends = response.data.map((amistad: any) => {
           const amigo = amistad.amigo
           return {
             id: amigo.id,
@@ -53,13 +56,16 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
             apellido: amigo.apellido,
             foto_perfil: amigo.foto_perfil
           }
-        }))
+        })
+        logger.log("[MatchCreated] Mapped friends:", mappedFriends)
+        setAmigos(mappedFriends)
       } else {
+        logger.log("[MatchCreated] No friends found or API error")
         // Si no hay amigos, dejar vacío
         setAmigos([])
       }
     } catch (error) {
-      logger.error("Error cargando amigos:", error)
+      logger.error("[MatchCreated] Error loading friends:", error)
       // En caso de error, mostrar lista vacía
       setAmigos([])
     } finally {
@@ -78,14 +84,14 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
     }
 
     setInvitando(prev => ({ ...prev, [friendId]: true }))
-    
+
     try {
       const response = await PartidoAPI.invitarJugador(matchId, friendId)
-      
+
       if (response.success) {
         // ✅ Marcar como invitado exitosamente
         setInvitados(prev => ({ ...prev, [friendId]: true }))
-        
+
         toast({
           title: "✅ Invitación enviada",
           description: "Tu amigo recibirá una notificación"
@@ -95,11 +101,11 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
       }
     } catch (error: any) {
       logger.error("Error invitando:", error)
-      
+
       // ✅ MEJORADO: Error handling específico por código HTTP
       let errorTitle = "Error"
       let errorMessage = "No se pudo enviar la invitación"
-      
+
       if (error.message) {
         // Detectar tipos de error específicos
         if (error.message.includes("solicitud pendiente") || error.message.includes("ya tiene una")) {
@@ -121,7 +127,7 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
           errorMessage = error.message
         }
       }
-      
+
       toast({
         title: errorTitle,
         description: errorMessage,
@@ -142,7 +148,7 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Error</h1>
           <p className="text-gray-600 mb-6">No se pudo identificar el partido creado</p>
-          <Button 
+          <Button
             onClick={() => router.push("/my-matches")}
             className="bg-green-600 hover:bg-green-700 text-white"
           >
@@ -233,7 +239,7 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
                         </Avatar>
                         <span className="font-medium text-gray-900">{fullName}</span>
                       </div>
-                      
+
                       {/* ✅ MEJORADO: Mostrar estado de invitación */}
                       {isInvited ? (
                         <div className="flex items-center space-x-2 text-green-600 text-sm font-medium">
@@ -260,9 +266,9 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
                 })}
               </div>
 
-              <Button 
+              <Button
                 onClick={handleShareMatch}
-                variant="outline" 
+                variant="outline"
                 className="w-full bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
               >
                 <Share2 className="w-4 h-4 mr-2" />
@@ -272,9 +278,9 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
           ) : (
             <div className="text-center py-8">
               <p className="text-gray-500 mb-4">No hay amigos para invitar</p>
-              <Button 
+              <Button
                 onClick={handleShareMatch}
-                variant="outline" 
+                variant="outline"
                 className="w-full bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
               >
                 <Share2 className="w-4 h-4 mr-2" />
@@ -284,8 +290,8 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
           )}
         </div>
 
-        <Button 
-          onClick={handleFinish} 
+        <Button
+          onClick={handleFinish}
           className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-2xl"
         >
           Finalizar

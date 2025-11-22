@@ -158,15 +158,15 @@ export function CreateMatchScreen() {
     switch (field) {
       case "date":
         if (!value) return "Selecciona una fecha"
-        const selectedDate = new Date(value + "T00:00:00")
-        const today = new Date()
-        today.setHours(0, 0, 0, 0)
-        if (selectedDate < today) return "La fecha no puede ser en el pasado"
+        // ⚡ FIX: Use date-only comparison to avoid timezone offset issues
+        const today = new Date().toISOString().split('T')[0]
+        if (value < today) return "La fecha no puede ser en el pasado"
 
         // Máximo 1 año adelante
         const oneYearFromNow = new Date()
         oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1)
-        if (selectedDate > oneYearFromNow) return "La fecha no puede ser más de 1 año adelante"
+        const maxDate = oneYearFromNow.toISOString().split('T')[0]
+        if (value > maxDate) return "La fecha no puede ser más de 1 año adelante"
         return null
 
       case "time":
@@ -528,8 +528,8 @@ export function CreateMatchScreen() {
                 onClick={() => handleInputChange("type", type)}
                 disabled={isLoading}
                 className={`px-4 sm:px-5 py-3 sm:py-3.5 rounded-xl text-sm sm:text-base font-semibold border-2 transition-all touch-manipulation disabled:opacity-50 min-h-[48px] active:scale-95 ${formData.type === type
-                    ? "bg-green-600 text-white border-green-600 shadow-md"
-                    : "bg-white text-gray-700 border-gray-300 hover:border-gray-400 active:bg-gray-50"
+                  ? "bg-green-600 text-white border-green-600 shadow-md"
+                  : "bg-white text-gray-700 border-gray-300 hover:border-gray-400 active:bg-gray-50"
                   }`}
               >
                 {formatMatchType(type)}
@@ -551,8 +551,8 @@ export function CreateMatchScreen() {
                 onClick={() => handleInputChange("gender", gender)}
                 disabled={isLoading}
                 className={`flex-1 px-4 sm:px-5 py-3 sm:py-3.5 rounded-xl text-sm sm:text-base font-semibold border-2 transition-all touch-manipulation disabled:opacity-50 min-h-[48px] active:scale-95 ${formData.gender === gender
-                    ? "bg-orange-200 text-gray-900 border-orange-300 shadow-md"
-                    : "bg-white text-gray-700 border-gray-300 hover:border-gray-400 active:bg-gray-50"
+                  ? "bg-orange-200 text-gray-900 border-orange-300 shadow-md"
+                  : "bg-white text-gray-700 border-gray-300 hover:border-gray-400 active:bg-gray-50"
                   }`}
               >
                 {gender}
@@ -656,9 +656,9 @@ export function CreateMatchScreen() {
               min="0"
               max="1000000"
               step="10"
-              value={formData.totalPrice === 0 ? "" : formData.totalPrice}
+              value={formData.totalPrice}
               onChange={(e) => handleInputChange("totalPrice", e.target.value === "" ? 0 : parseFloat(e.target.value))}
-              placeholder="0"
+              placeholder="Ingresa 0 si es gratis"
               className={`pl-11 sm:pl-12 min-h-[48px] text-base rounded-xl border-2 ${fieldErrors.totalPrice ? 'border-red-500' : 'border-gray-300'}`}
               required
               disabled={isLoading}
