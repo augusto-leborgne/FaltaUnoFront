@@ -468,30 +468,30 @@ export function SettingsScreen() {
 		<div className="min-h-screen bg-white flex flex-col">
 			{/* Header */}
 			<div className="pt-12 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6 border-b border-gray-100">
-				<div className="flex items-center justify-between">
-					<div className="flex items-center gap-3">
+				<div className="flex items-center justify-between gap-2 sm:gap-3">
+					<div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
 						<button
 							onClick={handleBack}
-							className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+							className="p-2 sm:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation active:scale-95"
 						>
-							<ArrowLeft className="w-5 h-5 text-gray-600" />
+							<ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
 						</button>
-						<h1 className="text-xl font-bold text-gray-900">Configuración</h1>
+						<h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">Configuración</h1>
 					</div>
 					<Button
 						onClick={handleSave}
 						disabled={isSaving || Object.keys(fieldErrors).some(k => fieldErrors[k as keyof typeof fieldErrors])}
-						className="bg-green-600 hover:bg-green-700"
+						className="bg-green-600 hover:bg-green-700 active:bg-green-800 min-h-[48px] px-4 sm:px-6 text-sm sm:text-base font-semibold shadow-lg hover:shadow-xl touch-manipulation active:scale-95 flex items-center gap-2 whitespace-nowrap flex-shrink-0"
 					>
 						{isSaving ? (
 							<>
 								<LoadingSpinner size="sm" variant="white" />
-								<span className="ml-2">Guardando...</span>
+								<span>Guardando...</span>
 							</>
 						) : (
 							<>
-								<Save className="w-4 h-4 mr-2" />
-								Guardar
+								<Save className="w-5 h-5" />
+								<span className="hidden sm:inline">Guardar</span>
 							</>
 						)}
 					</Button>
@@ -683,15 +683,15 @@ export function SettingsScreen() {
 				</div>
 
 				{/* Notification Preferences */}
-				<div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
-					<div className="flex items-center gap-2 mb-4">
-						<Bell className="w-5 h-5 text-gray-600" />
-						<h3 className="text-base sm:text-lg font-bold text-gray-900">Notificaciones</h3>
+				<div className="bg-white border-2 border-gray-200 rounded-xl sm:rounded-2xl p-5 sm:p-6 mb-5 sm:mb-6 shadow-sm">
+					<div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-5">
+						<Bell className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
+						<h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900">Notificaciones</h3>
 					</div>
-					<div className="space-y-3">
+					<div className="space-y-4">
 						{Object.entries(notificationPreferences).map(([key, value]) => (
-							<div key={key} className="flex items-center justify-between py-2">
-								<span className="text-sm text-gray-700">
+							<div key={key} className="flex items-center justify-between py-2 sm:py-3 min-h-[52px]">
+								<span className="text-sm sm:text-base text-gray-700 font-medium">
 									{key === "matchInvitations" && "Invitaciones a partidos"}
 									{key === "friendRequests" && "Solicitudes de amistad"}
 									{key === "matchUpdates" && "Actualizaciones de partidos"}
@@ -701,11 +701,11 @@ export function SettingsScreen() {
 								</span>
 								<button
 									onClick={() => handleNotificationToggle(key as keyof typeof notificationPreferences)}
-									className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${value ? "bg-green-600" : "bg-gray-300"
+									className={`relative inline-flex h-8 w-14 sm:h-9 sm:w-16 items-center rounded-full transition-all touch-manipulation active:scale-95 shadow-sm ${value ? "bg-green-600 hover:bg-green-700" : "bg-gray-300 hover:bg-gray-400"
 										}`}
 								>
 									<span
-										className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${value ? "translate-x-6" : "translate-x-1"
+										className={`inline-block h-6 w-6 sm:h-7 sm:w-7 transform rounded-full bg-white transition-transform shadow-md ${value ? "translate-x-7 sm:translate-x-8" : "translate-x-1"
 											}`}
 									/>
 								</button>

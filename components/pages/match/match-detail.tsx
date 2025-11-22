@@ -72,7 +72,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
     enabled: !!match, // Solo conectar cuando el partido esté cargado
     onEvent: (event) => {
       logger.log('[MatchDetail] 📡 WebSocket event:', event.type, event)
-      
+
       switch (event.type) {
         case 'PARTIDO_UPDATED':
           // Actualizar datos del partido
@@ -91,12 +91,12 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
             })
           }
           break
-          
+
         case 'INSCRIPCION_CREATED':
           // Nueva inscripción - recargar jugadores
           loadMatch()
           break
-          
+
         case 'INSCRIPCION_STATUS_CHANGED':
           // Estado de inscripción cambiado
           if (event.inscripcion && event.inscripcion.usuarioId === currentUser?.id) {
@@ -104,19 +104,19 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
             setUserInscriptionStatus(event.newStatus || null)
             toast({
               title: event.newStatus === InscripcionEstado.ACEPTADO ? "¡Inscripción aceptada!" : "Inscripción rechazada",
-              description: event.newStatus === InscripcionEstado.ACEPTADO 
-                ? "Tu solicitud ha sido aceptada por el organizador" 
+              description: event.newStatus === InscripcionEstado.ACEPTADO
+                ? "Tu solicitud ha sido aceptada por el organizador"
                 : "Tu solicitud ha sido rechazada",
             })
           }
           loadMatch()
           break
-          
+
         case 'INSCRIPCION_CANCELLED':
           // Jugador abandonó - recargar datos
           loadMatch()
           break
-          
+
         case 'PARTIDO_CANCELLED':
           // Partido cancelado
           if (match) {
@@ -128,7 +128,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
             variant: "destructive",
           })
           break
-          
+
         case 'PARTIDO_COMPLETED':
           // Partido completado
           if (match) {
@@ -150,7 +150,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
       if (!match) {
         setIsLoading(true)
       }
-      
+
       setError("")
 
       // Evitar condiciones de carrera al volver desde otra pantalla:
@@ -170,7 +170,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
       }
 
       setMatch(response.data)
-      
+
       // ✅ Cargar jugadores y estado en background (no bloquear UI)
       Promise.all([
         // Cargar jugadores inscriptos (ACEPTADOS)
@@ -181,7 +181,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
         }).catch(err => {
           logger.error("[MatchDetail] Error cargando jugadores:", err)
         }),
-        
+
         // Cargar estado de inscripción del usuario
         (async () => {
           const user = AuthService.getUser()
@@ -198,7 +198,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
           }
         })()
       ])
-      
+
     } catch (err: any) {
       if (err?.name !== "AbortError") {
         setError(err instanceof Error ? err.message : "Error al cargar el partido")
@@ -260,11 +260,11 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
           }
         }
       )
-      
+
       if (pendingReviewsResponse.ok) {
         const reviewsData = await pendingReviewsResponse.json()
         const pendingReviews = Array.isArray(reviewsData.data) ? reviewsData.data : []
-        
+
         if (pendingReviews.length > 0) {
           logger.warn("[MatchDetail] Usuario tiene reviews pendientes:", pendingReviews.length)
           setError(`Debes calificar a ${pendingReviews.length} jugador${pendingReviews.length > 1 ? 'es' : ''} antes de unirte a un partido`)
@@ -272,7 +272,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
           return
         }
       }
-      
+
       const response = await InscripcionAPI.crear(match.id!, currentUser.id)
       if (response.success) {
         router.push(`/matches/${matchId}/confirmed`)
@@ -287,36 +287,36 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
       setIsJoining(false)
     }
   }
-  
+
   const handleLeaveMatch = async () => {
     if (!userInscripcionId) {
       setError("No se encontró la inscripción")
       return
     }
-    
+
     const confirmed = window.confirm(
       "¿Estás seguro de que quieres abandonar este partido? Perderás tu lugar y deberás volver a inscribirte si cambias de opinión."
     )
-    
+
     if (!confirmed) return
-    
+
     setIsLeaving(true)
     setError("")
-    
+
     try {
       const response = await InscripcionAPI.cancelar(userInscripcionId)
-      
+
       if (!response.success) {
         throw new Error(response.message || "Error al abandonar el partido")
       }
-      
+
       // Actualizar estado local
       setUserInscriptionStatus(null)
       setUserInscripcionId(null)
-      
+
       // Recargar datos del partido para actualizar contador
       await loadMatch()
-      
+
       logger.log("[MatchDetail] Usuario abandonó el partido exitosamente")
     } catch (err: any) {
       if (err?.name !== "AbortError") {
@@ -424,22 +424,22 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
       <div className="pt-12 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6 border-b border-gray-100">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3 sm:space-x-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
             <button
               onClick={handleBack}
-              className="p-2 -ml-2 hover:bg-gray-100 rounded-xl transition-colors touch-manipulation"
+              className="p-2 sm:p-2.5 -ml-2 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-95"
             >
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
+              <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
             </button>
-            <h1 className="text-xl font-bold text-gray-900">Detalle del partido</h1>
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">Detalle del partido</h1>
           </div>
           <button
             onClick={handleShareMatch}
-            className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+            className="p-2 sm:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-95 flex-shrink-0"
             title="Compartir partido"
           >
-            <Upload className="w-5 h-5 text-gray-600" />
+            <Upload className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
           </button>
         </div>
       </div>
@@ -447,60 +447,60 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
       <div className="flex-1 px-4 sm:px-6 py-4 sm:py-6 overflow-y-auto pb-24">
         {/* Estado cancelado/completado */}
         {isMatchCancelled && (
-          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-xl sm:rounded-2xl">
-            <p className="text-red-800 font-medium text-sm sm:text-base">⚠️ Partido cancelado</p>
-            <p className="text-red-600 text-xs sm:text-sm mt-1">Este partido ha sido cancelado por el organizador</p>
+          <div className="mb-4 sm:mb-6 p-4 sm:p-5 bg-red-50 border-2 border-red-200 rounded-xl sm:rounded-2xl">
+            <p className="text-red-800 font-semibold text-base sm:text-lg">⚠️ Partido cancelado</p>
+            <p className="text-red-600 text-sm sm:text-base mt-1.5">Este partido ha sido cancelado por el organizador</p>
           </div>
         )}
 
         {isMatchCompleted && (
-          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-xl sm:rounded-2xl">
-            <p className="text-blue-800 font-medium text-sm sm:text-base">✓ Partido completado</p>
-            <p className="text-blue-600 text-xs sm:text-sm mt-1">Este partido ya se ha jugado</p>
+          <div className="mb-4 sm:mb-6 p-4 sm:p-5 bg-blue-50 border-2 border-blue-200 rounded-xl sm:rounded-2xl">
+            <p className="text-blue-800 font-semibold text-base sm:text-lg">✓ Partido completado</p>
+            <p className="text-blue-600 text-sm sm:text-base mt-1.5">Este partido ya se ha jugado</p>
           </div>
         )}
 
         {/* Match Info Card */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
+        <div className="bg-white border-2 border-gray-200 rounded-xl sm:rounded-2xl p-5 sm:p-6 mb-5 sm:mb-6 shadow-sm">
           {/* Match Header */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-start justify-between mb-4 sm:mb-5 gap-3">
             <div className="flex gap-2 flex-wrap">
-              <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
+              <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100 text-sm sm:text-base px-3 py-1 font-semibold">
                 {formatMatchType(getTipoPartido(match))}
               </Badge>
               {Boolean((match as any).genero) && (
-                <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
+                <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 text-sm sm:text-base px-3 py-1 font-semibold">
                   {(match as any).genero}
                 </Badge>
               )}
             </div>
-            <Badge className={`${getSpotsLeftColor(spotsLeft)} hover:bg-current`}>
+            <Badge className={`${getSpotsLeftColor(spotsLeft)} hover:bg-current text-sm sm:text-base px-3 py-1 font-semibold whitespace-nowrap flex-shrink-0`}>
               {spotsLeft === 0 ? "Completo" : `Quedan ${spotsLeft}`}
             </Badge>
           </div>
 
           {/* Match Time */}
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-4 sm:mb-5 leading-tight">
             {formatMatchDate(match.fecha, match.hora)}
           </h2>
 
           {/* Match Details */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm mb-4">
-            <div className="flex items-center space-x-2 text-gray-600">
-              <MapPin className="w-4 h-4 flex-shrink-0" />
-              <span className="truncate">{nombreUbicacion}</span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm sm:text-base mb-5 sm:mb-6">
+            <div className="flex items-center space-x-2.5 text-gray-600 min-h-[36px]">
+              <MapPin className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
+              <span className="line-clamp-2">{nombreUbicacion}</span>
             </div>
-            <div className="flex items-center space-x-2 text-gray-600">
-              <DollarSign className="w-4 h-4 flex-shrink-0" />
-              <span>${getPrecioPorJugador(match)} / jugador</span>
+            <div className="flex items-center space-x-2.5 text-gray-600 min-h-[36px]">
+              <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
+              <span className="font-medium">${getPrecioPorJugador(match)} / jugador</span>
             </div>
-            <div className="flex items-center space-x-2 text-gray-600">
-              <Clock className="w-4 h-4 flex-shrink-0" />
-              <span>{getDuracionMinutos(match)} min</span>
+            <div className="flex items-center space-x-2.5 text-gray-600 min-h-[36px]">
+              <Clock className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
+              <span className="font-medium">{getDuracionMinutos(match)} min</span>
             </div>
-            <div className="flex items-center space-x-2 text-gray-600">
-              <Users className="w-4 h-4 flex-shrink-0" />
-              <span>
+            <div className="flex items-center space-x-2.5 text-gray-600 min-h-[36px]">
+              <Users className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
+              <span className="font-medium">
                 {getJugadoresActuales(match)}/{getCantidadJugadores(match)}
               </span>
             </div>
@@ -511,7 +511,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
             <div onClick={(e) => {
               e.stopPropagation()
               setShowMapModal(true)
-            }} className="cursor-pointer">
+            }} className="cursor-pointer touch-manipulation active:scale-[0.98] transition-transform rounded-xl overflow-hidden">
               <CompressedMap
                 location={(match as any).nombreUbicacion || ''}
                 lat={Number((match as any).latitud)}
@@ -524,26 +524,27 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
 
         {/* Organizer Section */}
         {Boolean((match as any).organizador) && (
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Organizador</h3>
+          <div className="bg-white border-2 border-gray-200 rounded-xl sm:rounded-2xl p-5 sm:p-6 mb-5 sm:mb-6 shadow-sm">
+            <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-4">Organizador</h3>
             <div
               onClick={() => handlePlayerClick((match as any).organizador?.id)}
-              className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors"
+              className="flex items-center space-x-3 sm:space-x-4 p-4 sm:p-5 bg-gray-50 rounded-xl hover:bg-gray-100 active:bg-gray-200 cursor-pointer transition-all touch-manipulation active:scale-[0.98] min-h-[80px]"
             >
-              <Avatar className="w-12 h-12">
+              <Avatar className="w-14 h-14 sm:w-16 sm:h-16 ring-2 ring-white shadow-sm flex-shrink-0">
                 {(match as any).organizador?.foto_perfil ? (
                   <AvatarImage src={`data:image/jpeg;base64,${(match as any).organizador.foto_perfil}`} />
                 ) : (
-                  <AvatarFallback className="bg-orange-100">
+                  <AvatarFallback className="bg-orange-100 text-orange-800 text-lg sm:text-xl font-bold">
                     {((match as any).organizador?.nombre?.[0] ?? "")}
                     {((match as any).organizador?.apellido?.[0] ?? "")}
                   </AvatarFallback>
                 )}
               </Avatar>
-              <div>
-                <span className="font-semibold text-gray-900 block">
+              <div className="flex-1 min-w-0">
+                <span className="font-semibold text-gray-900 block text-base sm:text-lg truncate">
                   {(match as any).organizador?.nombre} {(match as any).organizador?.apellido}
                 </span>
+                <span className="text-sm sm:text-base text-gray-500">Creador del partido</span>
               </div>
             </div>
           </div>
@@ -552,7 +553,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
         {/* Players Section - Jugadores Inscriptos */}
         {jugadores.length > 0 && (
           <div className="mb-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">
+            <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-4">
               Jugadores Inscriptos ({jugadores.filter((p: any) => p.id !== (match as any)?.organizadorId).length}/{getCantidadJugadores(match) - 1})
             </h3>
 
@@ -560,65 +561,66 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
               {jugadores
                 .filter((player: any) => player.id !== (match as any)?.organizadorId) // Excluir organizador de la lista
                 .map((player: any) => {
-                if (!player?.id) return null; // Skip invalid players
-                
-                return (
-                <div
-                  key={player.id}
-                  onClick={() => handlePlayerClick(player.id)}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors"
-                >
-                  <div className="flex items-center space-x-3">
-                    <Avatar className="w-12 h-12">
-                      {player.foto_perfil ? (
-                        <AvatarImage src={`data:image/jpeg;base64,${player.foto_perfil}`} />
-                      ) : (
-                        <AvatarFallback className="bg-gray-200">
-                          {(player?.nombre?.[0] ?? "")}
-                          {(player?.apellido?.[0] ?? "")}
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
-                    <div>
-                      <div className="font-semibold text-gray-900">
-                        {(player?.nombre ?? "")} {(player?.apellido ?? "")}
-                      </div>
-                      <div className="flex items-center space-x-2 text-sm text-gray-600">
-                        {player.posicion && <span>{player.posicion}</span>}
-                        {player.rating && (
-                          <>
-                            <span>•</span>
-                            <div className="flex items-center space-x-1">
-                              <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                              <span>{player.rating}</span>
-                            </div>
-                          </>
-                        )}
+                  if (!player?.id) return null; // Skip invalid players
+
+                  return (
+                    <div
+                      key={player.id}
+                      onClick={() => handlePlayerClick(player.id)}
+                      className="flex items-center justify-between p-4 sm:p-5 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 active:bg-gray-200 transition-all touch-manipulation active:scale-[0.98] min-h-[84px]"
+                    >
+                      <div className="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
+                        <Avatar className="w-14 h-14 sm:w-16 sm:h-16 ring-2 ring-white shadow-sm flex-shrink-0">
+                          {player.foto_perfil ? (
+                            <AvatarImage src={`data:image/jpeg;base64,${player.foto_perfil}`} />
+                          ) : (
+                            <AvatarFallback className="bg-gray-200 text-gray-700 text-lg sm:text-xl font-bold">
+                              {(player?.nombre?.[0] ?? "")}
+                              {(player?.apellido?.[0] ?? "")}
+                            </AvatarFallback>
+                          )}
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-gray-900 text-base sm:text-lg truncate">
+                            {(player?.nombre ?? "")} {(player?.apellido ?? "")}
+                          </div>
+                          <div className="flex items-center space-x-2 text-sm sm:text-base text-gray-600 flex-wrap">
+                            {player.posicion && <span className="truncate">{player.posicion}</span>}
+                            {player.rating && (
+                              <>
+                                {player.posicion && <span className="hidden sm:inline">•</span>}
+                                <div className="flex items-center space-x-1">
+                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                  <span className="font-medium">{player.rating}</span>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              )})}
+                  )
+                })}
             </div>
           </div>
         )}
 
         {/* Description */}
         {Boolean((match as any).descripcion) && (
-          <div className="mb-8">
-            <h3 className="text-lg font-bold text-gray-900 mb-3">Descripción</h3>
-            <div className="bg-gray-50 rounded-xl p-4">
-              <p className="text-gray-700 whitespace-pre-wrap">{(match as any).descripcion}</p>
+          <div className="mb-6">
+            <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-3 sm:mb-4">Descripción</h3>
+            <div className="bg-gray-50 rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-200">
+              <p className="text-gray-700 whitespace-pre-wrap leading-relaxed text-sm sm:text-base">{(match as any).descripcion}</p>
             </div>
           </div>
         )}
 
         {/* Join Button */}
-        <div className="pb-24">
+        <div className="pb-6">
           {canManage ? (
             <Button
               onClick={() => router.push(`/my-matches/${matchId}${fromAdmin ? '?fromAdmin=true' : ''}`)}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 text-lg font-semibold rounded-2xl"
+              className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white min-h-[56px] text-base sm:text-lg font-semibold rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl transition-all touch-manipulation active:scale-[0.98]"
             >
               Gestionar partido
             </Button>
@@ -627,7 +629,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
             <div className="space-y-3">
               <Button
                 onClick={() => router.push(`/matches/${matchId}/chat`)}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 text-lg font-semibold rounded-2xl"
+                className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white min-h-[56px] text-base sm:text-lg font-semibold rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl transition-all touch-manipulation active:scale-[0.98]"
               >
                 Ver chat del partido
               </Button>
@@ -637,7 +639,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
                   onClick={handleLeaveMatch}
                   disabled={isLeaving}
                   variant="outline"
-                  className="w-full border-red-300 text-red-600 hover:bg-red-50 py-3 text-base font-semibold rounded-xl"
+                  className="w-full border-2 border-red-300 text-red-600 hover:bg-red-50 active:bg-red-100 min-h-[52px] text-base font-semibold rounded-xl sm:rounded-2xl transition-all touch-manipulation active:scale-[0.98]"
                 >
                   {isLeaving ? (
                     <span className="flex items-center justify-center">
@@ -654,7 +656,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
             // ✅ Usuario tiene solicitud pendiente
             <Button
               disabled
-              className="w-full bg-gray-400 text-white py-4 text-lg font-semibold rounded-2xl cursor-not-allowed"
+              className="w-full bg-gray-400 text-white min-h-[56px] text-base sm:text-lg font-semibold rounded-xl sm:rounded-2xl cursor-not-allowed opacity-75"
             >
               Solicitud pendiente
             </Button>
@@ -663,7 +665,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
               <Button
                 onClick={handleJoinMatch}
                 disabled={isJoining || !canJoin}
-                className="w-full bg-green-600 hover:bg-green-700 text-white py-4 text-lg font-semibold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white min-h-[56px] text-base sm:text-lg font-semibold rounded-xl sm:rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all touch-manipulation active:scale-[0.98]"
               >
                 {isJoining ? (
                   <span className="flex items-center justify-center">
@@ -683,7 +685,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
                 )}
               </Button>
               {canJoin && (
-                <p className="text-center text-sm text-gray-500 mt-3">
+                <p className="text-center text-sm sm:text-base text-gray-500 mt-3 px-4">
                   Tu solicitud quedará pendiente de aprobación del organizador
                 </p>
               )}

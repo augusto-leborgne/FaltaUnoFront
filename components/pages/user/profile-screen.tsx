@@ -69,8 +69,8 @@ function ProfileScreenInner() {
 
   // Detectar si es iOS
   const isIOS = () => {
-    return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-           (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
   }
 
   const loadProfileData = useCallback(async () => {
@@ -97,7 +97,7 @@ function ProfileScreenInner() {
             .then(res => res.ok ? res.json() : null),
           { ttl: 5 * 60 * 1000 } // 5 minutos
         ),
-        
+
         // Friend requests pendientes (CACHED - 30s)
         apiCache.get(
           `amistades-pendientes-${user.id}`,
@@ -105,7 +105,7 @@ function ProfileScreenInner() {
             .then(res => res.ok ? res.json() : null),
           { ttl: 30 * 1000 } // 30 segundos
         ),
-        
+
         // Amigos aceptados (CACHED - 2 min)
         apiCache.get(
           `amigos-${user.id}`,
@@ -113,7 +113,7 @@ function ProfileScreenInner() {
             .then(res => res.ok ? res.json() : null),
           { ttl: 2 * 60 * 1000 } // 2 minutos
         ),
-        
+
         // ⚡ NUEVO: Contactos importados (CACHED - 5 min)
         apiCache.get(
           `contactos-${user.id}`,
@@ -137,7 +137,7 @@ function ProfileScreenInner() {
       if (friendsResult.status === 'fulfilled' && friendsResult.value) {
         const friendsData = friendsResult.value
         logger.log("[ProfileScreen] Raw friends data:", friendsData)
-        
+
         // El backend devuelve { success: true, data: [...] }
         let allFriends = []
         if (friendsData?.data && Array.isArray(friendsData.data)) {
@@ -145,38 +145,38 @@ function ProfileScreenInner() {
         } else if (Array.isArray(friendsData)) {
           allFriends = friendsData
         }
-        
+
         // Mapear amistades a amigos (igual que en friends-screen.tsx)
         const mappedFriends = allFriends.map((friendship: any) => {
           // Determinar cuál es el amigo (el que no es el usuario actual)
           const esSolicitante = friendship.usuarioId === user?.id
           const amigoData = esSolicitante ? friendship.amigo : friendship.usuario
-          
+
           return amigoData
         })
-        .filter((friend: any) => friend && friend.id && friend.id !== user?.id) // Filtrar nulos y usuario actual
-        
+          .filter((friend: any) => friend && friend.id && friend.id !== user?.id) // Filtrar nulos y usuario actual
+
         // Eliminar duplicados basándose en el ID del amigo
-        const uniqueFriends = mappedFriends.filter((friend: any, index: number, self: any[]) => 
+        const uniqueFriends = mappedFriends.filter((friend: any, index: number, self: any[]) =>
           index === self.findIndex((f: any) => f.id === friend.id)
         )
-        
+
         logger.log("[ProfileScreen] Processed friends (after deduplication):", uniqueFriends)
         setFriends(uniqueFriends)
       }
-      
+
       // ⚡ NUEVO: Procesar contactos
       if (contactsResult.status === 'fulfilled' && contactsResult.value) {
         const contactsData = contactsResult.value
         logger.log("[ProfileScreen] Raw contacts data:", contactsData)
-        
+
         let allContacts = []
         if (contactsData?.data && Array.isArray(contactsData.data)) {
           allContacts = contactsData.data
         } else if (Array.isArray(contactsData)) {
           allContacts = contactsData
         }
-        
+
         logger.log("[ProfileScreen] Processed contacts:", allContacts)
         setContacts(allContacts)
       }
@@ -238,10 +238,10 @@ function ProfileScreenInner() {
       `Te invito a unirte a Falta Uno, la app para organizar partidos de fútbol. ⚽\n\n` +
       `Descárgala aquí: https://faltauno-frontend-169771742214.us-central1.run.app`
     )
-    
+
     const phone = contact.celular?.replace(/[^0-9+]/g, '') // Limpiar número
     const whatsappUrl = `https://wa.me/${phone}?text=${message}`
-    
+
     window.open(whatsappUrl, '_blank')
     logger.log('[ProfileScreen] Invitación enviada por WhatsApp a:', contact.nombre)
   }
@@ -339,9 +339,9 @@ function ProfileScreenInner() {
   const averageRating =
     reviews.length > 0
       ? (
-          reviews.reduce((sum, r) => sum + (r.nivel + r.deportividad + r.companerismo) / 3, 0) /
-          reviews.length
-        ).toFixed(1)
+        reviews.reduce((sum, r) => sum + (r.nivel + r.deportividad + r.companerismo) / 3, 0) /
+        reviews.length
+      ).toFixed(1)
       : "0.0"
   const fullName = `${user.nombre || ""} ${user.apellido || ""}`.trim() || "Usuario"
 
@@ -349,9 +349,9 @@ function ProfileScreenInner() {
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
       <div className="pt-12 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6 border-b border-gray-100">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-gray-900">Mi Perfil</h1>
+            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Mi Perfil</h1>
             <BetaBadge />
             {user?.rol === "ADMIN" && (
               <div className="flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 border border-red-200">
@@ -364,37 +364,37 @@ function ProfileScreenInner() {
             {user?.rol === "ADMIN" && (
               <button
                 onClick={() => router.push("/admin")}
-                className="p-2 hover:bg-red-50 rounded-xl transition-colors"
+                className="p-2 sm:p-2.5 hover:bg-red-50 active:bg-red-100 rounded-xl transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation active:scale-95"
                 title="Panel de Administración"
               >
-                <Shield className="w-5 h-5 text-red-600" />
+                <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
               </button>
             )}
             <button
               onClick={handleSettingsClick}
-              className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+              className="p-2 sm:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation active:scale-95"
               title="Configuración"
             >
-              <Settings className="w-5 h-5 text-gray-600" />
+              <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
             </button>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 px-3 sm:px-6 py-4 sm:py-6 overflow-y-auto">
+      <div className="flex-1 px-3 sm:px-6 py-4 sm:py-6 overflow-y-auto pb-24 sm:pb-28">
         {/* Profile Card */}
-        <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
-          <div className="flex items-center space-x-3 sm:space-x-4 mb-4 sm:mb-6">
+        <div className="bg-white border-2 border-gray-200 rounded-xl sm:rounded-2xl p-5 sm:p-6 mb-5 sm:mb-6 shadow-sm">
+          <div className="flex items-center space-x-3 sm:space-x-4 mb-5 sm:mb-6">
             {/* ✅ OPTIMIZADO: UserAvatar con userId para carga automática */}
             <UserAvatar
               userId={user.id}
               name={user.nombre}
               surname={user.apellido}
-              className="w-16 h-16 sm:w-20 sm:h-20"
+              className="w-20 h-20 sm:w-24 sm:h-24 ring-2 ring-white shadow-md"
               onClick={handleSettingsClick}
             />
             <div className="flex-1 min-w-0">
-              <h2 className="text-lg sm:text-xl font-bold text-gray-900 truncate">{fullName}</h2>
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">{fullName}</h2>
               <p className="text-sm sm:text-base text-gray-600 truncate">{user.posicion || "Sin posición preferida"} • {averageRating}★</p>
               <p className="text-xs sm:text-sm text-gray-500">
                 Miembro desde {user.created_at ? new Date(user.created_at).getFullYear() : "..."}
@@ -403,22 +403,22 @@ function ProfileScreenInner() {
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-3 sm:mb-4">
-            <div className="text-center bg-gray-50 rounded-lg sm:rounded-xl p-2 sm:p-3">
-              <div className="text-base sm:text-lg font-bold text-gray-900">{edad !== null ? `${edad}` : "N/A"}</div>
-              <div className="text-xs sm:text-sm text-gray-600">Edad</div>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-5">
+            <div className="text-center bg-gray-50 rounded-xl p-3 sm:p-4">
+              <div className="text-lg sm:text-xl font-bold text-gray-900">{edad !== null ? `${edad}` : "N/A"}</div>
+              <div className="text-xs sm:text-sm text-gray-600 font-medium">Edad</div>
             </div>
-            <div className="text-center bg-gray-50 rounded-lg sm:rounded-xl p-2 sm:p-3">
-              <div className="text-base sm:text-lg font-bold text-gray-900">{user.altura ? `${user.altura}` : "N/A"}</div>
-              <div className="text-xs sm:text-sm text-gray-600">Altura (cm)</div>
+            <div className="text-center bg-gray-50 rounded-xl p-3 sm:p-4">
+              <div className="text-lg sm:text-xl font-bold text-gray-900">{user.altura ? `${user.altura}` : "N/A"}</div>
+              <div className="text-xs sm:text-sm text-gray-600 font-medium">Altura (cm)</div>
             </div>
-            <div className="text-center bg-gray-50 rounded-lg sm:rounded-xl p-2 sm:p-3">
-              <div className="text-base sm:text-lg font-bold text-gray-900">{user.peso ? `${user.peso}` : "N/A"}</div>
-              <div className="text-xs sm:text-sm text-gray-600">Peso (kg)</div>
+            <div className="text-center bg-gray-50 rounded-xl p-3 sm:p-4">
+              <div className="text-lg sm:text-xl font-bold text-gray-900">{user.peso ? `${user.peso}` : "N/A"}</div>
+              <div className="text-xs sm:text-sm text-gray-600 font-medium">Peso (kg)</div>
             </div>
-            <div className="text-center bg-gray-50 rounded-lg sm:rounded-xl p-2 sm:p-3">
-              <div className="text-base sm:text-lg font-bold text-gray-900">{averageRating}</div>
-              <div className="text-xs sm:text-sm text-gray-600">Rating</div>
+            <div className="text-center bg-gray-50 rounded-xl p-3 sm:p-4">
+              <div className="text-lg sm:text-xl font-bold text-gray-900">{averageRating}</div>
+              <div className="text-xs sm:text-sm text-gray-600 font-medium">Rating</div>
             </div>
           </div>
         </div>
@@ -435,8 +435,8 @@ function ProfileScreenInner() {
                 <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl">
                   <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
                     {/* ✅ Usar userId si hay ID del requester */}
-                    <UserAvatar 
-                      className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0" 
+                    <UserAvatar
+                      className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0"
                       fullName="Nueva solicitud"
                     />
                     <div className="min-w-0 flex-1">
@@ -523,9 +523,8 @@ function ProfileScreenInner() {
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`w-3 h-3 ${
-                                i < review.deportividad ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-                              }`}
+                              className={`w-3 h-3 ${i < review.deportividad ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                                }`}
                             />
                           ))}
                         </div>
@@ -536,9 +535,8 @@ function ProfileScreenInner() {
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`w-3 h-3 ${
-                                i < review.companerismo ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
-                              }`}
+                              className={`w-3 h-3 ${i < review.companerismo ? "fill-yellow-400 text-yellow-400" : "text-gray-300"
+                                }`}
                             />
                           ))}
                         </div>
@@ -572,7 +570,7 @@ function ProfileScreenInner() {
             <div className="space-y-2 sm:space-y-3">
               {friends.slice(0, 5).map((friend) => {
                 if (!friend) return null
-                
+
                 const friendName = `${friend.nombre} ${friend.apellido}`.trim() || "Usuario"
 
                 return (
@@ -582,10 +580,10 @@ function ProfileScreenInner() {
                     className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl cursor-pointer hover:bg-gray-100 transition-colors"
                   >
                     <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
-                      <UserAvatar 
+                      <UserAvatar
                         userId={friend.id}
-                        name={friend.nombre} 
-                        surname={friend.apellido} 
+                        name={friend.nombre}
+                        surname={friend.apellido}
                         className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0"
                         lazy
                       />
@@ -618,8 +616,8 @@ function ProfileScreenInner() {
               <p className="text-gray-500 mb-3 sm:mb-4 text-sm">
                 {isIOS() ? 'Invita a tus amigos a la app' : 'No tienes contactos sincronizados'}
               </p>
-              <Button 
-                onClick={isIOS() ? handleShareApp : handleSyncContacts} 
+              <Button
+                onClick={isIOS() ? handleShareApp : handleSyncContacts}
                 disabled={isSyncingContacts}
                 className="bg-green-600 hover:bg-green-700 text-xs sm:text-sm"
               >
@@ -651,10 +649,10 @@ function ProfileScreenInner() {
                     className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl cursor-pointer hover:bg-gray-100 transition-colors"
                   >
                     <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
-                      <UserAvatar 
+                      <UserAvatar
                         userId={contact.isOnApp ? contact.id : undefined}
-                        name={contact.nombre} 
-                        surname={contact.apellido} 
+                        name={contact.nombre}
+                        surname={contact.apellido}
                         className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0"
                         lazy
                       />
@@ -665,8 +663,8 @@ function ProfileScreenInner() {
                         )}
                       </div>
                     </div>
-                    <Badge className={contact.isOnApp 
-                      ? "bg-green-100 text-green-800 text-xs" 
+                    <Badge className={contact.isOnApp
+                      ? "bg-green-100 text-green-800 text-xs"
                       : "bg-gray-100 text-gray-600 text-xs"
                     }>
                       {contact.isOnApp ? 'En la app' : 'Invitar'}

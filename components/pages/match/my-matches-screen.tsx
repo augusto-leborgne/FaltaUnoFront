@@ -17,7 +17,7 @@ type Match = PartidoDTO
 
 export function MyMatchesScreen() {
   const router = useRouter()
-  
+
   const [activeTab, setActiveTab] = useState<"Creados" | "Inscriptos">("Creados")
   const [createdMatches, setCreatedMatches] = useState<Match[]>([])
   const [joinedMatches, setJoinedMatches] = useState<Match[]>([])
@@ -28,12 +28,12 @@ export function MyMatchesScreen() {
 
   useEffect(() => {
     loadMatches()
-    
+
     // Recargar cuando el usuario vuelve a la pantalla
     const handleFocus = () => {
       loadMatches()
     }
-    
+
     window.addEventListener('focus', handleFocus)
     return () => window.removeEventListener('focus', handleFocus)
   }, [])
@@ -44,7 +44,7 @@ export function MyMatchesScreen() {
       if (createdMatches.length === 0 && joinedMatches.length === 0) {
         setLoading(true)
       }
-      
+
       setError("")
 
       if (!AuthService.isLoggedIn()) {
@@ -115,7 +115,7 @@ export function MyMatchesScreen() {
 
   const formatLevel = (level?: string) => {
     if (!level) return "Intermedio"
-    
+
     const levelMap: Record<string, string> = {
       "PRINCIPIANTE": "Principiante",
       "INTERMEDIO": "Intermedio",
@@ -162,19 +162,19 @@ export function MyMatchesScreen() {
     const now = new Date()
     const matchDateTime = new Date(`${fecha}T${hora}`)
     const isPast = matchDateTime < now
-    
+
     let displayEstado = estado
-    
+
     // Rule 1: DISPONIBLE matches that passed their date/time → CANCELADO
     if (isPast && estado === "DISPONIBLE") {
       displayEstado = "CANCELADO"
     }
-    
+
     // Rule 2: CONFIRMADO matches that passed their date/time → COMPLETADO
     if (isPast && estado === "CONFIRMADO") {
       displayEstado = "COMPLETADO"
     }
-    
+
     const statusMap: Record<string, { label: string; className: string }> = {
       "CONFIRMADO": { label: "Confirmado", className: "bg-green-100 text-green-800" },
       "CANCELADO": { label: "Cancelado", className: "bg-red-100 text-red-800" },
@@ -228,14 +228,14 @@ export function MyMatchesScreen() {
       {/* Header - Responsive padding */}
       <div className="pt-safe-top bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="px-4 sm:px-6 md:px-8 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3">
             <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Mis Partidos</h1>
             <Button
               onClick={handleCreateMatch}
               size="sm"
-              className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-full p-2 sm:p-2.5 min-h-[36px] min-w-[36px] sm:min-h-[40px] sm:min-w-[40px] touch-manipulation shadow-md transition-transform active:scale-95"
+              className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-full p-2.5 sm:p-3 min-h-[44px] min-w-[44px] touch-manipulation shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center"
             >
-              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+              <Plus className="w-5 h-5 sm:w-6 sm:h-6" />
             </Button>
           </div>
         </div>
@@ -243,17 +243,16 @@ export function MyMatchesScreen() {
 
       <div className="flex-1 overflow-y-auto">
         {/* Tabs - Better mobile spacing */}
-        <div className="px-4 sm:px-6 md:px-8 pt-4 pb-3">
-          <div className="flex bg-gray-100 rounded-xl sm:rounded-2xl p-1">
+        <div className="px-4 sm:px-6 md:px-8 pt-4 sm:pt-5 pb-3 sm:pb-4">
+          <div className="flex bg-gray-100 rounded-xl sm:rounded-2xl p-1 sm:p-1.5">
             {(["Creados", "Inscriptos"] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`flex-1 py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg sm:rounded-xl text-sm sm:text-base font-medium transition-all duration-200 touch-manipulation ${
-                  activeTab === tab 
-                    ? "bg-white text-gray-900 shadow-sm" 
+                className={`flex-1 min-h-[44px] py-3 sm:py-3.5 px-3 sm:px-4 rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold transition-all duration-200 touch-manipulation active:scale-95 ${activeTab === tab
+                    ? "bg-white text-gray-900 shadow-md"
                     : "text-gray-600 hover:text-gray-900 active:bg-gray-50"
-                }`}
+                  }`}
               >
                 {tab}
               </button>
@@ -265,26 +264,26 @@ export function MyMatchesScreen() {
         <div className="px-4 sm:px-6 md:px-8 pb-24 sm:pb-28">
           {displayMatches.length === 0 ? (
             <div className="text-center py-12 sm:py-16">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
+              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5">
+                <Users className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400" />
               </div>
-              <p className="text-gray-700 font-medium mb-2 text-base sm:text-lg">
-                {activeTab === "Creados" 
-                  ? "No has creado partidos aún" 
+              <p className="text-gray-900 font-bold mb-2 text-lg sm:text-xl">
+                {activeTab === "Creados"
+                  ? "No has creado partidos aún"
                   : "No tienes partidos inscriptos"}
               </p>
-              <p className="text-sm sm:text-base text-gray-500 mb-6 px-4">
-                {activeTab === "Creados" 
-                  ? "Crea tu primer partido y empieza a organizar" 
+              <p className="text-sm sm:text-base text-gray-500 mb-6 sm:mb-8 px-4 max-w-sm mx-auto">
+                {activeTab === "Creados"
+                  ? "Crea tu primer partido y empieza a organizar"
                   : "Busca partidos y únete a la comunidad"}
               </p>
               <Button
                 onClick={() => activeTab === "Creados" ? handleCreateMatch() : router.push("/matches")}
-                className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white shadow-md transition-transform active:scale-95 touch-manipulation text-sm sm:text-base px-6 py-2.5"
+                className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white shadow-lg hover:shadow-xl transition-all active:scale-95 touch-manipulation text-sm sm:text-base px-6 sm:px-8 min-h-[48px] font-semibold"
               >
                 {activeTab === "Creados" ? (
                   <>
-                    <Plus className="w-4 h-4 mr-2" />
+                    <Plus className="w-5 h-5 mr-2" />
                     Crear Partido
                   </>
                 ) : (
@@ -302,19 +301,19 @@ export function MyMatchesScreen() {
                   <div
                     key={match.id}
                     onClick={() => handleMatchClick(match)}
-                    className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 cursor-pointer hover:shadow-lg hover:border-green-200 transition-all duration-200 touch-manipulation active:scale-[0.98] active:shadow-md"
+                    className="bg-white border-2 border-gray-200 rounded-xl sm:rounded-2xl p-5 sm:p-6 cursor-pointer hover:shadow-xl hover:border-green-300 transition-all duration-200 touch-manipulation active:scale-[0.98] active:shadow-lg min-h-[160px]"
                   >
                     {/* Header row - Badges */}
                     <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
-                      <div className="flex gap-1.5 sm:gap-2 flex-wrap">
-                        <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100 text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1">
+                      <div className="flex gap-2 flex-wrap">
+                        <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100 text-xs sm:text-sm px-2.5 py-1 sm:px-3 sm:py-1.5 font-semibold">
                           {formatMatchType(match.tipoPartido || 'FUTBOL_5')}
                         </Badge>
-                        <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1">
+                        <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 text-xs sm:text-sm px-2.5 py-1 sm:px-3 sm:py-1.5 font-semibold">
                           {match.genero || 'Mixto'}
                         </Badge>
                       </div>
-                      <div className="flex gap-1.5 flex-shrink-0">
+                      <div className="flex gap-1.5 sm:gap-2 flex-shrink-0 flex-wrap justify-end">
                         {getStatusBadge(match.estado, match.fecha, match.hora)}
                         {isActive && getSpotsLeftBadge(spotsLeft)}
                       </div>
@@ -322,40 +321,40 @@ export function MyMatchesScreen() {
 
                     {/* Date/Time - Bigger on mobile */}
                     <div className="mb-3 sm:mb-4">
-                      <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-2 leading-tight">
+                      <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-2 sm:mb-2.5 leading-tight">
                         {formatDate(match.fecha, match.hora)}
                       </h3>
-                      
+
                       {/* Price and Duration - Better mobile layout */}
-                      <div className="flex flex-wrap items-center text-gray-600 text-xs sm:text-sm gap-x-3 gap-y-1 mb-2">
-                        <div className="flex items-center space-x-1 font-medium">
-                          <span className="text-green-600 text-sm sm:text-base">${match.precioPorJugador}</span>
-                          <span className="text-gray-500">/ jugador</span>
+                      <div className="flex flex-wrap items-center text-gray-600 text-xs sm:text-sm gap-x-3 sm:gap-x-4 gap-y-1.5 mb-2 sm:mb-2.5">
+                        <div className="flex items-center space-x-1 font-semibold">
+                          <span className="text-green-600 text-base sm:text-lg">${match.precioPorJugador}</span>
+                          <span className="text-gray-500 font-normal text-xs sm:text-sm">/ jugador</span>
                         </div>
-                        <span className="text-gray-300">•</span>
-                        <div className="flex items-center space-x-1">
-                          <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                          <span>{match.duracionMinutos} min</span>
+                        <span className="text-gray-300 hidden sm:inline">•</span>
+                        <div className="flex items-center space-x-1.5">
+                          <Clock className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                          <span className="font-medium">{match.duracionMinutos} min</span>
                         </div>
                       </div>
-                      
+
                       {/* Location - Better truncation on mobile */}
-                      <div className="flex items-start text-gray-600 text-xs sm:text-sm">
-                        <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 flex-shrink-0 mt-0.5" />
-                        <span className="line-clamp-2 sm:line-clamp-1">{match.nombreUbicacion}</span>
+                      <div className="flex items-start text-gray-600 text-sm sm:text-base">
+                        <MapPin className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 flex-shrink-0 mt-0.5" />
+                        <span className="line-clamp-2 sm:line-clamp-1 font-medium">{match.nombreUbicacion}</span>
                       </div>
                     </div>
 
                     {/* Footer - Players count and action */}
-                    <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                      <div className="flex items-center space-x-1.5 sm:space-x-2">
-                        <Users className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
-                        <span className="text-xs sm:text-sm text-gray-600">
-                          <span className="font-semibold text-gray-900">{match.jugadoresActuales}</span>
-                          <span className="text-gray-400">/{match.cantidadJugadores}</span>
+                    <div className="flex items-center justify-between pt-3 sm:pt-4 border-t border-gray-200">
+                      <div className="flex items-center space-x-2">
+                        <Users className="w-5 h-5 sm:w-5.5 sm:h-5.5 text-gray-500" />
+                        <span className="text-sm sm:text-base text-gray-600">
+                          <span className="font-bold text-gray-900">{match.jugadoresActuales}</span>
+                          <span className="text-gray-400 font-medium">/{match.cantidadJugadores}</span>
                         </span>
                       </div>
-                      <span className="text-xs sm:text-sm text-green-600 font-semibold">
+                      <span className="text-sm sm:text-base text-green-600 font-bold">
                         {activeTab === "Creados" ? "Gestionar →" : "Ver detalles →"}
                       </span>
                     </div>
