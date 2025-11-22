@@ -91,7 +91,7 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<"stats" | "users" | "matches" | "reports">("stats")
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
-  
+
   // Estados para modales de detalles
   const [selectedUser, setSelectedUser] = useState<Usuario | null>(null)
   const [selectedMatch, setSelectedMatch] = useState<Partido | null>(null)
@@ -99,7 +99,7 @@ export default function AdminDashboard() {
   const [deleteConfirmText, setDeleteConfirmText] = useState("")
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [userToDelete, setUserToDelete] = useState<string | null>(null)
-  
+
   // Estados para panel de reportes
   const [reportFilter, setReportFilter] = useState<"all" | "pending" | "resolved">("pending")
   const [groupedView, setGroupedView] = useState(true)
@@ -108,24 +108,24 @@ export default function AdminDashboard() {
   const [reportToDismiss, setReportToDismiss] = useState<Report | null>(null)
   const [dismissAction, setDismissAction] = useState<"no_action" | "warn_reporter">("no_action")
   const [dismissNotes, setDismissNotes] = useState("")
-  
+
   // Estados para modal de baneo
   const [showBanModal, setShowBanModal] = useState(false)
   const [userToBan, setUserToBan] = useState<Usuario | null>(null)
   const [banReason, setBanReason] = useState("")
   const [banDuration, setBanDuration] = useState<number | null>(7) // 7 días por defecto
   const [banType, setBanType] = useState<"temporary" | "permanent">("temporary")
-  
+
   // Estados para filtros de usuarios
   const [userSearchQuery, setUserSearchQuery] = useState("")
   const [userRoleFilter, setUserRoleFilter] = useState<"all" | "admin" | "user">("all")
   const [userStatusFilter, setUserStatusFilter] = useState<"all" | "active" | "inactive" | "banned" | "deleted">("all")
-  
+
   // Estados para filtros de partidos
   const [matchSearchQuery, setMatchSearchQuery] = useState("")
   const [matchTypeFilter, setMatchTypeFilter] = useState<"all" | "FUTBOL_5" | "FUTBOL_7" | "FUTBOL_8" | "FUTBOL_9" | "FUTBOL_11">("all")
   const [matchStatusFilter, setMatchStatusFilter] = useState<"all" | "DISPONIBLE" | "CONFIRMADO" | "CANCELADO" | "COMPLETADO">("all")
-  
+
   // Estados para sorting de partidos
   const [matchSortField, setMatchSortField] = useState<"tipo" | "fecha" | "ubicacion" | "organizador" | null>(null)
   const [matchSortDirection, setMatchSortDirection] = useState<"asc" | "desc">("asc")
@@ -212,88 +212,87 @@ export default function AdminDashboard() {
     // Filtro de búsqueda por nombre, email o celular
     if (userSearchQuery) {
       const query = userSearchQuery.toLowerCase()
-      const matchesSearch = 
+      const matchesSearch =
         usuario.nombre?.toLowerCase().includes(query) ||
         usuario.apellido?.toLowerCase().includes(query) ||
-        usuario.email?.toLowerCase().includes(query) ||
         usuario.email?.toLowerCase().includes(query)
       if (!matchesSearch) return false
     }
-    
+
     // Filtro por rol
     if (userRoleFilter !== "all") {
       if (userRoleFilter === "admin" && usuario.rol !== "ADMIN") return false
       if (userRoleFilter === "user" && usuario.rol === "ADMIN") return false
     }
-    
+
     // Filtro por estado
     if (userStatusFilter !== "all") {
       const isDeleted = !!(usuario.deleted_at || usuario.deletedAt)
       const isBanned = !!usuario.bannedAt
-      const isActive = usuario.lastActivityAt && 
+      const isActive = usuario.lastActivityAt &&
         new Date(usuario.lastActivityAt).getTime() > Date.now() - 30 * 24 * 60 * 60 * 1000
-      
+
       if (userStatusFilter === "deleted" && !isDeleted) return false
       if (userStatusFilter === "banned" && !isBanned) return false
       if (userStatusFilter === "active" && (!isActive || isDeleted || isBanned)) return false
       if (userStatusFilter === "inactive" && (isActive || isDeleted || isBanned)) return false
     }
-    
+
     return true
   })
-  
+
   // Funciones de filtrado y sorting para partidos
   const filteredPartidos = partidos
     .filter(partido => {
       // Filtro de búsqueda por ubicación u organizador
       if (matchSearchQuery) {
         const query = matchSearchQuery.toLowerCase()
-        const matchesSearch = 
+        const matchesSearch =
           partido.nombre_ubicacion?.toLowerCase().includes(query) ||
           partido.organizador?.nombre?.toLowerCase().includes(query) ||
           partido.organizador?.apellido?.toLowerCase().includes(query)
         if (!matchesSearch) return false
       }
-      
+
       // Filtro por tipo
       if (matchTypeFilter !== "all" && partido.tipo_partido !== matchTypeFilter) {
         return false
       }
-      
+
       // Filtro por estado
       if (matchStatusFilter !== "all" && partido.estado !== matchStatusFilter) {
         return false
       }
-      
+
       return true
     })
     .sort((a, b) => {
       if (!matchSortField) return 0
-      
+
       const direction = matchSortDirection === "asc" ? 1 : -1
-      
+
       switch (matchSortField) {
         case "tipo":
           return direction * a.tipo_partido.localeCompare(b.tipo_partido)
-        
+
         case "fecha":
           const dateA = new Date(`${a.fecha} ${a.hora}`)
           const dateB = new Date(`${b.fecha} ${b.hora}`)
           return direction * (dateA.getTime() - dateB.getTime())
-        
+
         case "ubicacion":
           return direction * a.nombre_ubicacion.localeCompare(b.nombre_ubicacion)
-        
+
         case "organizador":
           const orgA = `${a.organizador?.nombre || ''} ${a.organizador?.apellido || ''}`.trim()
           const orgB = `${b.organizador?.nombre || ''} ${b.organizador?.apellido || ''}`.trim()
           return direction * orgA.localeCompare(orgB)
-        
+
         default:
           return 0
       }
     })
-  
+
   // Función para manejar click en columna sorteable
   const handleMatchSort = (field: "tipo" | "fecha" | "ubicacion" | "organizador") => {
     if (matchSortField === field) {
@@ -315,15 +314,15 @@ export default function AdminDashboard() {
 
       // Actualizar lista
       setUsuarios((prev) => prev.filter((u) => u.id !== userId))
-      
+
       // Actualizar stats
       if (stats) {
         setStats({ ...stats, totalUsuarios: stats.totalUsuarios - 1 })
       }
-      
+
       setSuccessMessage("Usuario eliminado correctamente")
       setTimeout(() => setSuccessMessage(null), 3000)
-      
+
       // Cerrar modal
       setShowDeleteModal(false)
       setUserToDelete(null)
@@ -355,7 +354,7 @@ export default function AdminDashboard() {
 
   const handleToggleRole = async (userId: string, currentRole: string) => {
     const newRole = currentRole === "ADMIN" ? "USER" : "ADMIN"
-    
+
     if (!confirm(`¿Cambiar rol a ${newRole}?`)) {
       return
     }
@@ -371,7 +370,7 @@ export default function AdminDashboard() {
       setUsuarios((prev) =>
         prev.map((u) => (u.id === userId ? { ...u, rol: newRole } : u))
       )
-      
+
       setSuccessMessage(`Rol cambiado a ${newRole} correctamente`)
       setTimeout(() => setSuccessMessage(null), 3000)
     } catch (error) {
@@ -394,12 +393,12 @@ export default function AdminDashboard() {
 
       // Actualizar lista
       setPartidos((prev) => prev.filter((p) => p.id !== matchId))
-      
+
       // Actualizar stats
       if (stats) {
         setStats({ ...stats, totalPartidos: stats.totalPartidos - 1 })
       }
-      
+
       setSuccessMessage("Partido eliminado correctamente")
       setTimeout(() => setSuccessMessage(null), 3000)
     } catch (error) {
@@ -436,7 +435,7 @@ export default function AdminDashboard() {
       setError(null)
       await authenticatedFetch(`${API_URL}/admin/usuarios/${userToBan.id}/ban`, {
         method: "PUT",
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           reason: banReason,
           durationDays: banType === "permanent" ? null : banDuration
         }),
@@ -508,7 +507,7 @@ export default function AdminDashboard() {
 
     try {
       setError(null)
-      
+
       // Si se decidió advertir al reportador, primero advertir
       if (dismissAction === "warn_reporter") {
         const warnReason = dismissNotes || "Reporte falso o malintencionado"
@@ -518,9 +517,9 @@ export default function AdminDashboard() {
 
       await authenticatedFetch(`${API_URL}/admin/reports/${reportToDismiss.id}/dismiss`, {
         method: "PUT",
-        body: JSON.stringify({ 
-          notes: dismissAction === "warn_reporter" 
-            ? `[REPORTADOR ADVERTIDO] ${dismissNotes}` 
+        body: JSON.stringify({
+          notes: dismissAction === "warn_reporter"
+            ? `[REPORTADOR ADVERTIDO] ${dismissNotes}`
             : dismissNotes || "Reporte desestimado"
         }),
       })
@@ -578,7 +577,7 @@ export default function AdminDashboard() {
     return Array.from(grouped.entries())
       .map(([userId, userReports]) => ({
         user: userReports[0].reportedUser,
-        reports: userReports.sort((a, b) => 
+        reports: userReports.sort((a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         ),
         totalReports: userReports.length,
@@ -650,7 +649,7 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
-      
+
       {successMessage && (
         <div className="mx-auto max-w-6xl px-4 pt-3 sm:pt-4">
           <div className="flex items-start sm:items-center gap-2 rounded-lg bg-green-50 border border-green-200 p-3 sm:p-4">
@@ -671,46 +670,42 @@ export default function AdminDashboard() {
         <div className="flex gap-1 sm:gap-2 border-b overflow-x-auto">
           <button
             onClick={() => setActiveTab("stats")}
-            className={`px-3 sm:px-4 py-2 font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${
-              activeTab === "stats"
+            className={`px-3 sm:px-4 py-2 font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${activeTab === "stats"
                 ? "border-b-2 border-blue-500 text-blue-600"
                 : "text-gray-600 hover:text-gray-900"
-            }`}
+              }`}
           >
-            <TrendingUp className="mb-1 inline h-3 w-3 sm:h-4 sm:w-4" /> 
+            <TrendingUp className="mb-1 inline h-3 w-3 sm:h-4 sm:w-4" />
             <span className="ml-1">Stats</span>
           </button>
           <button
             onClick={() => setActiveTab("users")}
-            className={`px-3 sm:px-4 py-2 font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${
-              activeTab === "users"
+            className={`px-3 sm:px-4 py-2 font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${activeTab === "users"
                 ? "border-b-2 border-blue-500 text-blue-600"
                 : "text-gray-600 hover:text-gray-900"
-            }`}
+              }`}
           >
-            <Users className="mb-1 inline h-3 w-3 sm:h-4 sm:w-4" /> 
+            <Users className="mb-1 inline h-3 w-3 sm:h-4 sm:w-4" />
             <span className="ml-1">Usuarios ({usuarios.length})</span>
           </button>
           <button
             onClick={() => setActiveTab("matches")}
-            className={`px-3 sm:px-4 py-2 font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${
-              activeTab === "matches"
+            className={`px-3 sm:px-4 py-2 font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${activeTab === "matches"
                 ? "border-b-2 border-blue-500 text-blue-600"
                 : "text-gray-600 hover:text-gray-900"
-            }`}
+              }`}
           >
-            <Calendar className="mb-1 inline h-3 w-3 sm:h-4 sm:w-4" /> 
+            <Calendar className="mb-1 inline h-3 w-3 sm:h-4 sm:w-4" />
             <span className="ml-1">Partidos ({partidos.length})</span>
           </button>
           <button
             onClick={() => setActiveTab("reports")}
-            className={`px-3 sm:px-4 py-2 font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${
-              activeTab === "reports"
+            className={`px-3 sm:px-4 py-2 font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${activeTab === "reports"
                 ? "border-b-2 border-blue-500 text-blue-600"
                 : "text-gray-600 hover:text-gray-900"
-            }`}
+              }`}
           >
-            <Flag className="mb-1 inline h-3 w-3 sm:h-4 sm:w-4" /> 
+            <Flag className="mb-1 inline h-3 w-3 sm:h-4 sm:w-4" />
             <span className="ml-1">Reportes ({reports.filter(r => r.status === 'PENDING').length})</span>
           </button>
         </div>
@@ -890,7 +885,7 @@ export default function AdminDashboard() {
                         className="w-full"
                       />
                     </div>
-                    
+
                     {/* Filtro por Rol */}
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -906,7 +901,7 @@ export default function AdminDashboard() {
                         <option value="user">Usuarios</option>
                       </select>
                     </div>
-                    
+
                     {/* Filtro por Estado */}
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -925,7 +920,7 @@ export default function AdminDashboard() {
                       </select>
                     </div>
                   </div>
-                  
+
                   {/* Contador de resultados */}
                   <div className="mt-3 text-xs text-gray-600">
                     Mostrando {filteredUsuarios.length} de {usuarios.length} usuario{usuarios.length !== 1 ? 's' : ''}
@@ -960,8 +955,8 @@ export default function AdminDashboard() {
                       </thead>
                       <tbody className="divide-y divide-gray-200">
                         {filteredUsuarios.map((usuario) => (
-                          <tr 
-                            key={usuario.id} 
+                          <tr
+                            key={usuario.id}
                             className="hover:bg-gray-50 cursor-pointer transition-colors"
                             onClick={() => router.push(`/users/${usuario.id}`)}
                           >
@@ -986,11 +981,10 @@ export default function AdminDashboard() {
                             </td>
                             <td className="px-3 py-2">
                               <span
-                                className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${
-                                  usuario.rol === "ADMIN"
+                                className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-semibold ${usuario.rol === "ADMIN"
                                     ? "bg-red-100 text-red-700"
                                     : "bg-gray-100 text-gray-700"
-                                }`}
+                                  }`}
                               >
                                 {usuario.rol === "ADMIN" ? (
                                   <Shield className="h-3 w-3" />
@@ -1009,8 +1003,8 @@ export default function AdminDashboard() {
                                 <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-orange-100 text-orange-700">
                                   Baneado
                                 </span>
-                              ) : usuario.lastActivityAt && 
-                                 new Date(usuario.lastActivityAt).getTime() > Date.now() - 30 * 24 * 60 * 60 * 1000 ? (
+                              ) : usuario.lastActivityAt &&
+                                new Date(usuario.lastActivityAt).getTime() > Date.now() - 30 * 24 * 60 * 60 * 1000 ? (
                                 <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-green-100 text-green-700">
                                   Activo
                                 </span>
@@ -1089,11 +1083,10 @@ export default function AdminDashboard() {
                         </div>
                         <div className="flex flex-col gap-1 items-end shrink-0">
                           <span
-                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${
-                              usuario.rol === "ADMIN"
+                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold ${usuario.rol === "ADMIN"
                                 ? "bg-red-100 text-red-700"
                                 : "bg-gray-100 text-gray-700"
-                            }`}
+                              }`}
                           >
                             {usuario.rol === "ADMIN" ? (
                               <Shield className="h-3 w-3" />
@@ -1110,8 +1103,8 @@ export default function AdminDashboard() {
                             <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-orange-100 text-orange-700">
                               Baneado
                             </span>
-                          ) : usuario.lastActivityAt && 
-                             new Date(usuario.lastActivityAt).getTime() > Date.now() - 30 * 24 * 60 * 60 * 1000 ? (
+                          ) : usuario.lastActivityAt &&
+                            new Date(usuario.lastActivityAt).getTime() > Date.now() - 30 * 24 * 60 * 60 * 1000 ? (
                             <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold bg-green-100 text-green-700">
                               Activo
                             </span>
@@ -1187,7 +1180,7 @@ export default function AdminDashboard() {
                         className="w-full"
                       />
                     </div>
-                    
+
                     {/* Filtro por Tipo */}
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -1206,7 +1199,7 @@ export default function AdminDashboard() {
                         <option value="FUTBOL_11">Fútbol 11</option>
                       </select>
                     </div>
-                    
+
                     {/* Filtro por Estado */}
                     <div>
                       <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -1225,7 +1218,7 @@ export default function AdminDashboard() {
                       </select>
                     </div>
                   </div>
-                  
+
                   {/* Contador de resultados */}
                   <div className="mt-3 text-xs text-gray-600">
                     Mostrando {filteredPartidos.length} de {partidos.length} partido{partidos.length !== 1 ? 's' : ''}
@@ -1238,54 +1231,54 @@ export default function AdminDashboard() {
                     <table className="w-full">
                       <thead className="bg-gray-50">
                         <tr>
-                          <th 
+                          <th
                             className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600 cursor-pointer hover:bg-gray-100 select-none"
                             onClick={() => handleMatchSort("tipo")}
                           >
                             <div className="flex items-center gap-1">
                               Tipo
                               {matchSortField === "tipo" && (
-                                matchSortDirection === "asc" ? 
-                                  <ChevronUp className="w-4 h-4" /> : 
+                                matchSortDirection === "asc" ?
+                                  <ChevronUp className="w-4 h-4" /> :
                                   <ChevronDown className="w-4 h-4" />
                               )}
                             </div>
                           </th>
-                          <th 
+                          <th
                             className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600 cursor-pointer hover:bg-gray-100 select-none"
                             onClick={() => handleMatchSort("fecha")}
                           >
                             <div className="flex items-center gap-1">
                               Fecha/Hora
                               {matchSortField === "fecha" && (
-                                matchSortDirection === "asc" ? 
-                                  <ChevronUp className="w-4 h-4" /> : 
+                                matchSortDirection === "asc" ?
+                                  <ChevronUp className="w-4 h-4" /> :
                                   <ChevronDown className="w-4 h-4" />
                               )}
                             </div>
                           </th>
-                          <th 
+                          <th
                             className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600 cursor-pointer hover:bg-gray-100 select-none"
                             onClick={() => handleMatchSort("ubicacion")}
                           >
                             <div className="flex items-center gap-1">
                               Ubicación
                               {matchSortField === "ubicacion" && (
-                                matchSortDirection === "asc" ? 
-                                  <ChevronUp className="w-4 h-4" /> : 
+                                matchSortDirection === "asc" ?
+                                  <ChevronUp className="w-4 h-4" /> :
                                   <ChevronDown className="w-4 h-4" />
                               )}
                             </div>
                           </th>
-                          <th 
+                          <th
                             className="px-4 py-3 text-left text-xs font-medium uppercase text-gray-600 cursor-pointer hover:bg-gray-100 select-none"
                             onClick={() => handleMatchSort("organizador")}
                           >
                             <div className="flex items-center gap-1">
                               Organizador
                               {matchSortField === "organizador" && (
-                                matchSortDirection === "asc" ? 
-                                  <ChevronUp className="w-4 h-4" /> : 
+                                matchSortDirection === "asc" ?
+                                  <ChevronUp className="w-4 h-4" /> :
                                   <ChevronDown className="w-4 h-4" />
                               )}
                             </div>
@@ -1300,8 +1293,8 @@ export default function AdminDashboard() {
                       </thead>
                       <tbody className="divide-y divide-gray-200">
                         {filteredPartidos.map((partido) => (
-                          <tr 
-                            key={partido.id} 
+                          <tr
+                            key={partido.id}
                             className="hover:bg-gray-50 cursor-pointer transition-colors"
                             onClick={() => router.push(`/matches/${partido.id}?fromAdmin=true`)}
                           >
@@ -1309,13 +1302,12 @@ export default function AdminDashboard() {
                               <div className="flex flex-col gap-1">
                                 <span className="font-medium">{formatMatchType(partido.tipo_partido)}</span>
                                 <div className="flex gap-1.5 flex-wrap">
-                                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                                    partido.estado === 'DISPONIBLE' ? 'bg-green-100 text-green-800' :
-                                    partido.estado === 'CONFIRMADO' ? 'bg-blue-100 text-blue-800' :
-                                    partido.estado === 'CANCELADO' ? 'bg-red-100 text-red-800' :
-                                    partido.estado === 'COMPLETADO' ? 'bg-purple-100 text-purple-800' :
-                                    'bg-gray-100 text-gray-800'
-                                  }`}>
+                                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${partido.estado === 'DISPONIBLE' ? 'bg-green-100 text-green-800' :
+                                      partido.estado === 'CONFIRMADO' ? 'bg-blue-100 text-blue-800' :
+                                        partido.estado === 'CANCELADO' ? 'bg-red-100 text-red-800' :
+                                          partido.estado === 'COMPLETADO' ? 'bg-purple-100 text-purple-800' :
+                                            'bg-gray-100 text-gray-800'
+                                    }`}>
                                     {partido.estado}
                                   </span>
                                   {partido.genero && (
@@ -1405,13 +1397,12 @@ export default function AdminDashboard() {
                             {formatMatchType(partido.tipo_partido)}
                           </h3>
                           <div className="flex flex-wrap gap-1.5 mb-2">
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                              partido.estado === 'DISPONIBLE' ? 'bg-green-100 text-green-800' :
-                              partido.estado === 'CONFIRMADO' ? 'bg-blue-100 text-blue-800' :
-                              partido.estado === 'CANCELADO' ? 'bg-red-100 text-red-800' :
-                              partido.estado === 'COMPLETADO' ? 'bg-purple-100 text-purple-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${partido.estado === 'DISPONIBLE' ? 'bg-green-100 text-green-800' :
+                                partido.estado === 'CONFIRMADO' ? 'bg-blue-100 text-blue-800' :
+                                  partido.estado === 'CANCELADO' ? 'bg-red-100 text-red-800' :
+                                    partido.estado === 'COMPLETADO' ? 'bg-purple-100 text-purple-800' :
+                                      'bg-gray-100 text-gray-800'
+                              }`}>
                               {partido.estado}
                             </span>
                             {partido.genero && (
@@ -1495,32 +1486,29 @@ export default function AdminDashboard() {
                 <div className="bg-white rounded-lg border p-4 mb-4 space-y-4">
                   {/* Filtros de estado */}
                   <div className="flex flex-wrap gap-2">
-                    <button 
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        reportFilter === 'pending'
-                          ? 'bg-orange-500 text-white' 
+                    <button
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${reportFilter === 'pending'
+                          ? 'bg-orange-500 text-white'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                        }`}
                       onClick={() => setReportFilter('pending')}
                     >
                       Pendientes ({reports.filter(r => r.status === 'PENDING').length})
                     </button>
-                    <button 
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        reportFilter === 'resolved'
-                          ? 'bg-green-500 text-white' 
+                    <button
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${reportFilter === 'resolved'
+                          ? 'bg-green-500 text-white'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                        }`}
                       onClick={() => setReportFilter('resolved')}
                     >
                       Resueltos ({reports.filter(r => r.status === 'RESOLVED' || r.status === 'DISMISSED').length})
                     </button>
-                    <button 
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        reportFilter === 'all'
-                          ? 'bg-blue-500 text-white' 
+                    <button
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${reportFilter === 'all'
+                          ? 'bg-blue-500 text-white'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
+                        }`}
                       onClick={() => setReportFilter('all')}
                     >
                       Todos ({reports.length})
@@ -1532,22 +1520,20 @@ export default function AdminDashboard() {
                     <span className="text-sm font-medium text-gray-700">Vista:</span>
                     <div className="flex gap-2">
                       <button
-                        className={`p-2 rounded-lg transition-colors ${
-                          groupedView
+                        className={`p-2 rounded-lg transition-colors ${groupedView
                             ? 'bg-blue-500 text-white'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
+                          }`}
                         onClick={() => setGroupedView(true)}
                         title="Agrupar por usuario"
                       >
                         <Users className="h-4 w-4" />
                       </button>
                       <button
-                        className={`p-2 rounded-lg transition-colors ${
-                          !groupedView
+                        className={`p-2 rounded-lg transition-colors ${!groupedView
                             ? 'bg-blue-500 text-white'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
+                          }`}
                         onClick={() => setGroupedView(false)}
                         title="Ver lista"
                       >
@@ -1627,12 +1613,11 @@ export default function AdminDashboard() {
                               <div key={report.id} className="p-4 bg-white">
                                 <div className="flex items-start justify-between mb-2">
                                   <div className="flex items-center gap-2 min-w-0">
-                                    <div className={`w-2 h-2 rounded-full shrink-0 ${
-                                      report.status === 'PENDING' ? 'bg-orange-500' :
-                                      report.status === 'UNDER_REVIEW' ? 'bg-blue-500' :
-                                      report.status === 'RESOLVED' ? 'bg-green-500' :
-                                      'bg-gray-400'
-                                    }`} />
+                                    <div className={`w-2 h-2 rounded-full shrink-0 ${report.status === 'PENDING' ? 'bg-orange-500' :
+                                        report.status === 'UNDER_REVIEW' ? 'bg-blue-500' :
+                                          report.status === 'RESOLVED' ? 'bg-green-500' :
+                                            'bg-gray-400'
+                                      }`} />
                                     <div className="min-w-0">
                                       <div className="font-medium text-gray-900 text-sm">
                                         {report.reason.replace(/_/g, ' ')}
@@ -1642,12 +1627,11 @@ export default function AdminDashboard() {
                                       </div>
                                     </div>
                                   </div>
-                                  <span className={`px-2 py-1 rounded text-xs font-medium shrink-0 ${
-                                    report.status === 'PENDING' ? 'bg-orange-100 text-orange-700' :
-                                    report.status === 'UNDER_REVIEW' ? 'bg-blue-100 text-blue-700' :
-                                    report.status === 'RESOLVED' ? 'bg-green-100 text-green-700' :
-                                    'bg-gray-100 text-gray-700'
-                                  }`}>
+                                  <span className={`px-2 py-1 rounded text-xs font-medium shrink-0 ${report.status === 'PENDING' ? 'bg-orange-100 text-orange-700' :
+                                      report.status === 'UNDER_REVIEW' ? 'bg-blue-100 text-blue-700' :
+                                        report.status === 'RESOLVED' ? 'bg-green-100 text-green-700' :
+                                          'bg-gray-100 text-gray-700'
+                                    }`}>
                                     {report.status}
                                   </span>
                                 </div>
@@ -1741,12 +1725,11 @@ export default function AdminDashboard() {
                       >
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-3">
-                            <div className={`w-2 h-2 rounded-full ${
-                              report.status === 'PENDING' ? 'bg-orange-500' :
-                              report.status === 'UNDER_REVIEW' ? 'bg-blue-500' :
-                              report.status === 'RESOLVED' ? 'bg-green-500' :
-                              'bg-gray-400'
-                            }`} />
+                            <div className={`w-2 h-2 rounded-full ${report.status === 'PENDING' ? 'bg-orange-500' :
+                                report.status === 'UNDER_REVIEW' ? 'bg-blue-500' :
+                                  report.status === 'RESOLVED' ? 'bg-green-500' :
+                                    'bg-gray-400'
+                              }`} />
                             <div>
                               <div className="font-medium text-gray-900">
                                 {report.reason.replace(/_/g, ' ')}
@@ -1762,12 +1745,11 @@ export default function AdminDashboard() {
                               </div>
                             </div>
                           </div>
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            report.status === 'PENDING' ? 'bg-orange-100 text-orange-700' :
-                            report.status === 'UNDER_REVIEW' ? 'bg-blue-100 text-blue-700' :
-                            report.status === 'RESOLVED' ? 'bg-green-100 text-green-700' :
-                            'bg-gray-100 text-gray-700'
-                          }`}>
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${report.status === 'PENDING' ? 'bg-orange-100 text-orange-700' :
+                              report.status === 'UNDER_REVIEW' ? 'bg-blue-100 text-blue-700' :
+                                report.status === 'RESOLVED' ? 'bg-green-100 text-green-700' :
+                                  'bg-gray-100 text-gray-700'
+                            }`}>
                             {report.status}
                           </span>
                         </div>
@@ -1838,11 +1820,11 @@ export default function AdminDashboard() {
 
       {/* Modal de Detalles de Usuario */}
       {selectedUser && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-0 sm:p-4"
           onClick={() => setSelectedUser(null)}
         >
-          <div 
+          <div
             className="max-w-full sm:max-w-2xl w-full bg-white sm:rounded-lg shadow-xl overflow-hidden max-h-screen overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
@@ -1898,11 +1880,10 @@ export default function AdminDashboard() {
                   </div>
                   <p className="pl-6">
                     <span
-                      className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${
-                        selectedUser.rol === "ADMIN"
+                      className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${selectedUser.rol === "ADMIN"
                           ? "bg-red-100 text-red-700"
                           : "bg-gray-100 text-gray-700"
-                      }`}
+                        }`}
                     >
                       {selectedUser.rol === "ADMIN" ? (
                         <Shield className="h-3 w-3" />
@@ -1976,11 +1957,11 @@ export default function AdminDashboard() {
 
       {/* Modal de Detalles de Partido */}
       {selectedMatch && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-0 sm:p-4"
           onClick={() => setSelectedMatch(null)}
         >
-          <div 
+          <div
             className="max-w-full sm:max-w-2xl w-full bg-white sm:rounded-lg shadow-xl overflow-hidden max-h-screen overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
@@ -2088,11 +2069,11 @@ export default function AdminDashboard() {
 
       {/* Modal de Confirmación de Eliminación */}
       {showDeleteModal && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
           onClick={closeDeleteModal}
         >
-          <div 
+          <div
             className="max-w-md w-full bg-white rounded-lg shadow-xl p-6"
             onClick={(e) => e.stopPropagation()}
           >
@@ -2162,11 +2143,11 @@ export default function AdminDashboard() {
 
       {/* Modal de Baneo de Usuario */}
       {showBanModal && userToBan && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
           onClick={closeBanModal}
         >
-          <div 
+          <div
             className="max-w-md w-full bg-white rounded-lg shadow-xl p-6"
             onClick={(e) => e.stopPropagation()}
           >
@@ -2304,11 +2285,11 @@ export default function AdminDashboard() {
 
       {/* Modal de Desestimar Reporte */}
       {showDismissModal && reportToDismiss && (
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
           onClick={closeDismissModal}
         >
-          <div 
+          <div
             className="max-w-md w-full bg-white rounded-lg shadow-xl p-6"
             onClick={(e) => e.stopPropagation()}
           >
@@ -2409,7 +2390,7 @@ export default function AdminDashboard() {
                     <div className="text-xs text-orange-800">
                       <p className="font-medium mb-1">Se registrará advertencia</p>
                       <p>
-                        Esto quedará registrado en el historial del reportador. 
+                        Esto quedará registrado en el historial del reportador.
                         Si acumula múltiples reportes falsos, podrá ser sancionado.
                       </p>
                     </div>
