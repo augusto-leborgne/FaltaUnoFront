@@ -27,11 +27,11 @@ export function ProfileSetupForm() {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const cameraInputRef = useRef<HTMLInputElement | null>(null)
   const formRef = useRef<HTMLFormElement | null>(null)
-  
+
   // Refs for controlling prefill logic
   const isInitialMount = useRef(true)
   const hasPrefilled = useRef(false)
-  
+
   // Refs para dropdowns
   const positionDropdownRef = useRef<HTMLDivElement | null>(null)
   const positionButtonRef = useRef<HTMLButtonElement | null>(null)
@@ -56,7 +56,7 @@ export function ProfileSetupForm() {
   const [showGeneroDropdown, setShowGeneroDropdown] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({})
-  
+
   // Click outside handlers para cerrar dropdowns
   useClickOutside(positionDropdownRef, () => setShowPositionDropdown(false), showPositionDropdown)
   useClickOutside(generoDropdownRef, () => setShowGeneroDropdown(false), showGeneroDropdown)
@@ -88,12 +88,12 @@ export function ProfileSetupForm() {
         if (!value || value.trim().length < 2) return "Mínimo 2 caracteres"
         if (value.trim().length > 50) return "Máximo 50 caracteres"
         return null
-      
+
       case 'surname':
         if (!value || value.trim().length < 2) return "Mínimo 2 caracteres"
         if (value.trim().length > 50) return "Máximo 50 caracteres"
         return null
-      
+
       case 'fechaNacimiento':
         if (!value) return "Requerido"
         const birthDate = new Date(value)
@@ -102,27 +102,27 @@ export function ProfileSetupForm() {
         if (age < 13) return "Mínimo 13 años"
         if (age > 100) return "Fecha inválida"
         return null
-      
+
       case 'genero':
         if (!value) return "Requerido"
         return null
-      
+
       case 'position':
         if (!value) return "Requerido"
         return null
-      
+
       case 'height':
         if (!value) return "Requerido"
         const h = Number(value)
         if (isNaN(h) || h < 100 || h > 250) return "100-250 cm"
         return null
-      
+
       case 'weight':
         if (!value) return "Requerido"
         const w = Number(value)
         if (isNaN(w) || w < 30 || w > 200) return "30-200 kg"
         return null
-      
+
       case 'photo':
         if (!value) return "Foto obligatoria"
         // ⚡ LÍMITES COMO INSTAGRAM: 30MB (antes era 5MB)
@@ -133,11 +133,11 @@ export function ProfileSetupForm() {
           return "Solo imágenes"
         }
         return null
-      
+
       case 'address':
         if (!value || value.trim().length < 5) return "Mínimo 5 caracteres"
         return null
-      
+
       default:
         return null
     }
@@ -153,17 +153,34 @@ export function ProfileSetupForm() {
   const generos = ["Hombre", "Mujer"]
 
   useEffect(() => {
-    // Prefill form data from existing authenticated user to avoid losing inputs
-    // ⚡ CRITICAL FIX: Run ONLY ONCE on initial mount to prevent infinite re-renders
+    // ✅ FIX: Load from localStorage first, then prefill from user if needed
+    // This preserves user input across refreshes
     if (!isInitialMount.current) return;
     if (hasPrefilled.current) return;
-    if (!user) return;
-    
+
     isInitialMount.current = false;
     hasPrefilled.current = true;
-    
+
     try {
-      // Pre-rellenar desde user
+      // Try to load from localStorage first
+      const savedData = localStorage.getItem('profileSetupFormData');
+      if (savedData) {
+        const parsed = JSON.parse(savedData);
+        logger.log('[ProfileSetup] Loaded form data from localStorage');
+        setFormData(prev => ({
+          ...prev,
+          ...parsed,
+          // Don't restore photo from localStorage (it's a File object)
+          photo: prev.photo,
+          photoPreviewUrl: prev.photoPreviewUrl,
+        }));
+        return; // Don't prefill from user if we have saved data
+      }
+
+      // If no saved data and we have user, prefill from user
+      if (!user) return;
+
+      logger.log('[ProfileSetup] Prefilling from user object');
       setFormData((prev) => {
         // Pre-rellenar campos individuales que estén vacíos
         return {
@@ -179,10 +196,34 @@ export function ProfileSetupForm() {
         }
       })
     } catch (e) {
-      logger.error('[ProfileSetup] Error prefill desde user:', e)
+      logger.error('[ProfileSetup] Error loading saved data:', e)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // ⚡ EMPTY DEPS - Run ONLY on mount
+
+  // ✅ NEW: Save form data to localStorage on change
+  useEffect(() => {
+    // Don't save on initial mount
+    if (isInitialMount.current) return;
+
+    try {
+      // Save form data (excluding photo which is a File object)
+      const dataToSave = {
+        name: formData.name,
+        surname: formData.surname,
+        fechaNacimiento: formData.fechaNacimiento,
+        genero: formData.genero,
+        position: formData.position,
+        height: formData.height,
+        weight: formData.weight,
+        address: formData.address,
+      };
+      localStorage.setItem('profileSetupFormData', JSON.stringify(dataToSave));
+    } catch (e) {
+      logger.error('[ProfileSetup] Error saving form data:', e);
+    }
+  }, [formData.name, formData.surname, formData.fechaNacimiento, formData.genero,
+  formData.position, formData.height, formData.weight, formData.address])
 
   useEffect(() => {
     return () => {
@@ -348,15 +389,15 @@ export function ProfileSetupForm() {
     // Convert to blob and create file
     canvas.toBlob((blob) => {
       if (!blob) return
-      
+
       const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' })
-      
+
       // Process the captured photo like uploaded photos
       const reader = new FileReader()
       reader.onload = () => {
         if (reader.result) {
           setImageToCrop(reader.result as string)
-          
+
           // ⚡ FIX: Reset crop to circular centered position for camera photo
           setCrop({
             unit: '%',
@@ -370,7 +411,7 @@ export function ProfileSetupForm() {
         }
       }
       reader.readAsDataURL(file)
-      
+
       stopCamera()
     }, 'image/jpeg', 0.92)
   }
@@ -398,16 +439,16 @@ export function ProfileSetupForm() {
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0] ?? null
     if (!f) return
-    
+
     // ⚡ LÍMITES COMO INSTAGRAM: 30MB, 8K resolution (8192x8192)
     const MAX_SIZE = 30 * 1024 * 1024 // 30MB
     const MAX_DIMENSION = 8192
-    
+
     if (f.size > MAX_SIZE) {
       setGeneralError("La imagen no puede superar 30MB")
       return
     }
-    
+
     const reader = new FileReader()
     reader.onload = () => {
       const img = document.createElement('img')
@@ -417,13 +458,13 @@ export function ProfileSetupForm() {
           return
         }
         setImageToCrop(reader.result as string)
-        
+
         // ⚡ FIX: Reset crop to circular centered position when new image loads
         const minDimension = Math.min(img.width, img.height)
         const size = 50 // 50% of image
         const offsetX = 25 // Center horizontally
         const offsetY = 25 // Center vertically
-        
+
         setCrop({
           unit: '%',
           width: size,
@@ -437,7 +478,7 @@ export function ProfileSetupForm() {
       img.src = reader.result as string
     }
     reader.readAsDataURL(f)
-    
+
     e.target.value = ''
   }
 
@@ -470,16 +511,16 @@ export function ProfileSetupForm() {
 
     canvas.toBlob((blob) => {
       if (!blob) return
-      
+
       const file = new File([blob], 'profile-photo.jpg', { type: 'image/jpeg' })
-      
+
       if (formData.photoPreviewUrl) URL.revokeObjectURL(formData.photoPreviewUrl)
-      
+
       setFormData((p) => ({ ...p, photo: file, photoPreviewUrl: URL.createObjectURL(file) }))
-      
+
       const photoError = validateField('photo', file)
       setFieldErrors(prev => ({ ...prev, photo: photoError || undefined }))
-      
+
       setShowCropModal(false)
       setImageToCrop('')
     }, 'image/jpeg', 0.92) // Calidad 92% - buen balance
@@ -489,14 +530,14 @@ export function ProfileSetupForm() {
     // ⚡ CRÍTICO: preventDefault ANTES de cualquier otra cosa
     e.preventDefault()
     e.stopPropagation()
-    
+
     try {
       setGeneralError("")
       logger.log("[ProfileSetup] Form submitted")
 
       const errors: Record<string, string> = {}
       const fieldsToValidate = ['name', 'surname', 'fechaNacimiento', 'genero', 'position', 'height', 'weight', 'photo', 'address']
-      
+
       fieldsToValidate.forEach(key => {
         const error = validateField(key, formData[key as keyof typeof formData])
         if (error) errors[key] = error
@@ -534,7 +575,7 @@ export function ProfileSetupForm() {
       // ⚡ CORREGIDO: Leer de sessionStorage (verify-email ahora guarda ahí)
       let verifiedEmail: string | null = null
       let passwordHash: string | null = null
-      
+
       if (typeof window !== 'undefined') {
         const pendingData = sessionStorage.getItem('pendingVerification')
         if (pendingData) {
@@ -547,13 +588,13 @@ export function ProfileSetupForm() {
           }
         }
       }
-      
+
       const isNewRegistration = !!(verifiedEmail && passwordHash)
       logger.log("[ProfileSetup] Mode:", isNewRegistration ? "NEW REGISTRATION" : "PROFILE UPDATE")
 
       if (isNewRegistration) {
         logger.log("[ProfileSetup] Completing registration for:", verifiedEmail)
-        
+
         const photoBase64 = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader()
           reader.onloadend = () => resolve((reader.result as string).split(',')[1])
@@ -589,7 +630,7 @@ export function ProfileSetupForm() {
         }
 
         const data = await response.json()
-        
+
         if (!data.success || !data.data) {
           throw new Error(data.message || 'Error al completar el registro')
         }
@@ -597,7 +638,7 @@ export function ProfileSetupForm() {
         sessionStorage.removeItem('pendingVerification')
 
         const { token, usuario } = data.data
-        
+
         if (token) {
           AuthService.setToken(token)
         } else {
@@ -605,15 +646,18 @@ export function ProfileSetupForm() {
         }
 
         logger.log("[ProfileSetup] Registration completed")
-        
+
+        // ✅ Clear saved form data after successful registration
+        localStorage.removeItem('profileSetupFormData')
+
         // ⚡ CRITICAL FIX: Update context with user data from registration
         setUser(usuario)
-        
+
         // Navigation flag already set at the beginning of function
         await new Promise(resolve => setTimeout(resolve, 200))
-        
+
         const isComplete = usuario.perfilCompleto === true
-        
+
         if (isComplete) {
           logger.log("[ProfileSetup] Registration complete, redirecting to /home")
           router.replace('/home')
@@ -655,7 +699,7 @@ export function ProfileSetupForm() {
           direccion: formData.address,
           placeDetails: formData.placeDetails ? JSON.stringify(formData.placeDetails) : null,
         }
-        
+
         // ⚡ IMPROVED: Use retry logic for critical profile update
         const perfilRes = await withRetry(
           () => UsuarioAPI.actualizarPerfil(payload),
@@ -664,13 +708,13 @@ export function ProfileSetupForm() {
             delayMs: 1500,
             shouldRetry: (error) => {
               // Retry on network errors or 5xx
-              return error.name === 'AbortError' || 
-                     error.message?.includes('timeout') ||
-                     (error.status >= 500 && error.status < 600)
+              return error.name === 'AbortError' ||
+                error.message?.includes('timeout') ||
+                (error.status >= 500 && error.status < 600)
             }
           }
         )
-        
+
         if (!perfilRes?.success) {
           const errorMsg = perfilRes?.message || "No se pudo actualizar el perfil"
           logger.error("[ProfileSetup] Profile update error:", errorMsg)
@@ -678,7 +722,7 @@ export function ProfileSetupForm() {
         }
 
         logger.log("[ProfileSetup] Profile updated")
-        
+
         // Navigation flag already set at the beginning of function
         await new Promise(resolve => setTimeout(resolve, 200))
 
@@ -686,7 +730,7 @@ export function ProfileSetupForm() {
         // Como NO refrescamos usuario, debemos verificar llamando al backend directamente
         logger.log("[ProfileSetup] Fetching updated profile state...")
         const checkRes = await UsuarioAPI.getMe()
-        
+
         if (checkRes?.success && checkRes.data) {
           const updatedUser = checkRes.data
           logger.log("[ProfileSetup] Profile state verified:", {
@@ -694,14 +738,16 @@ export function ProfileSetupForm() {
             perfilCompleto: updatedUser.perfilCompleto,
             hasFotoPerfil: updatedUser.hasFotoPerfil,
           })
-          
+
           // ⚡ CRITICAL FIX: Update context with latest user data to prevent redirect loops
           setUser(updatedUser)
-          
+
           const isComplete = updatedUser.perfilCompleto === true
-          
+
           if (isComplete) {
             logger.log("[ProfileSetup] Profile complete, redirecting to /home")
+            // ✅ Clear saved form data after successful update
+            localStorage.removeItem('profileSetupFormData')
             router.replace('/home')
           } else {
             logger.warn("[ProfileSetup] Profile incomplete - staying on /profile-setup")
@@ -740,10 +786,10 @@ export function ProfileSetupForm() {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-4 sm:py-8 pb-16 sm:pb-20">
-        <form 
+        <form
           ref={formRef}
           onSubmit={handleSubmit}
-          className="space-y-6" 
+          className="space-y-6"
         >
           {/* Foto de perfil - Diseño destacado */}
           <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-8 border border-gray-100">
@@ -751,9 +797,9 @@ export function ProfileSetupForm() {
               <div className="relative group mb-3 sm:mb-4">
                 <Avatar className="w-24 h-24 sm:w-32 sm:h-32 border-2 sm:border-4 border-primary/20 shadow-xl relative overflow-hidden transition-transform active:scale-105">
                   {formData.photoPreviewUrl ? (
-                    <Image 
-                      src={formData.photoPreviewUrl} 
-                      alt="Foto de perfil" 
+                    <Image
+                      src={formData.photoPreviewUrl}
+                      alt="Foto de perfil"
                       width={128}
                       height={128}
                       className="object-cover"
@@ -804,22 +850,22 @@ export function ProfileSetupForm() {
                 </p>
               )}
               {/* Input para galería */}
-              <input 
-                ref={fileInputRef} 
+              <input
+                ref={fileInputRef}
                 id="file-input"
-                type="file" 
-                accept="image/*" 
-                onChange={handlePhotoChange} 
+                type="file"
+                accept="image/*"
+                onChange={handlePhotoChange}
                 className="hidden"
               />
-              {/* ⚡ Input para cámara - capture="user" para cámara frontal */}  
-              <input 
-                ref={cameraInputRef} 
+              {/* ⚡ Input para cámara - capture="user" para cámara frontal */}
+              <input
+                ref={cameraInputRef}
                 id="camera-input"
-                type="file" 
-                accept="image/*" 
+                type="file"
+                accept="image/*"
                 capture="user"
-                onChange={handlePhotoChange} 
+                onChange={handlePhotoChange}
                 className="hidden"
               />
             </div>
@@ -833,7 +879,7 @@ export function ProfileSetupForm() {
               </div>
               Información personal
             </h2>
-            
+
             <div className="space-y-3 sm:space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
@@ -952,7 +998,7 @@ export function ProfileSetupForm() {
               </div>
               Información deportiva
             </h2>
-            
+
             <div className="space-y-3 sm:space-y-4">
               <div>
                 <label className="text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5 block">Posición preferida *</label>
@@ -1184,7 +1230,7 @@ export function ProfileSetupForm() {
                 style={{ transform: 'scaleX(-1)' }} // Unmirror the camera view
               />
               <canvas ref={canvasRef} className="hidden" />
-              
+
               {/* Camera overlay guide - Responsive sizing */}
               <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
                 <div className="w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 lg:w-72 lg:h-72 xl:w-80 xl:h-80 border-2 border-white/50 rounded-full"></div>
