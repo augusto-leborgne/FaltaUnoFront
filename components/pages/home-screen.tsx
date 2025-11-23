@@ -16,7 +16,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useNotifications } from "@/hooks/use-notifications"
 import { useCurrentUser } from "@/hooks/use-current-user"
 import { apiCache } from "@/lib/api-cache-manager"
-import { formatDateShort, formatMatchType } from "@/lib/utils"
+import { formatDateShort, formatMatchType, formatMatchDate, getSpotsLeftColor } from "@/lib/utils"
 
 interface Partido {
   id: string
@@ -489,7 +489,7 @@ export function HomeScreen() {
                   {/* Match Info */}
                   <div className="mb-3 sm:mb-4">
                     <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-2 leading-tight">
-                      {formatDate(match.fecha, match.hora)}
+                      {formatMatchDate(match.fecha, match.hora)}
                     </h3>
 
                     {/* Price and Duration */}
