@@ -114,7 +114,7 @@ function VerifyEmailContent() {
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
     const pastedData = e.clipboardData.getData('text').trim();
-    
+
     // Solo aceptar 6 dígitos
     if (!/^\d{6}$/.test(pastedData)) return;
 
@@ -126,7 +126,7 @@ function VerifyEmailContent() {
   // Verificar código
   const handleVerify = async () => {
     const codeString = code.join('');
-    
+
     if (codeString.length !== 6) {
       setError('Por favor ingresa el código completo');
       return;
@@ -197,14 +197,22 @@ function VerifyEmailContent() {
           }
         }
 
-        // Redirect: Always go to phone verification since it's now mandatory
+        // ✅ FIX: Use proper post-auth redirect (profile-setup or verificacion or home)
         setTimeout(() => {
-          router.push('/phone-verification');
+          // If we have user data, use proper routing
+          if (returnedUser) {
+            const { decidePostAuthRoute } = require('@/lib/navigation');
+            const nextRoute = decidePostAuthRoute(returnedUser);
+            router.push(nextRoute);
+          } else {
+            // Fallback: go to profile setup
+            router.push('/profile-setup');
+          }
         }, 2500);
       } else {
         // Mensajes de error específicos del backend
         const errorMsg = data.message || 'Código inválido o expirado'
-        
+
         if (errorMsg.toLowerCase().includes('expirado') || errorMsg.toLowerCase().includes('expired')) {
           setError('El código ha expirado. Por favor solicita uno nuevo haciendo clic en "Reenviar código".')
         } else if (errorMsg.toLowerCase().includes('incorrecto') || errorMsg.toLowerCase().includes('incorrect') || errorMsg.toLowerCase().includes('invalid')) {
@@ -214,14 +222,14 @@ function VerifyEmailContent() {
         } else {
           setError(errorMsg)
         }
-        
+
         setSuccess(false);
         setCode(['', '', '', '', '', '']);
         inputRefs.current[0]?.focus();
       }
     } catch (err: any) {
       logger.error('Error verificando código:', err);
-      
+
       // ✅ Mensajes de error mejorados
       if (err.name === 'AbortError') {
         setError('La conexión tardó demasiado. Verifica tu internet e intenta nuevamente.');
@@ -268,13 +276,13 @@ function VerifyEmailContent() {
         setResendCooldown(60); // 60 segundos de cooldown
         setCode(['', '', '', '', '', '']);
         inputRefs.current[0]?.focus();
-        
+
         // Mostrar mensaje de éxito brevemente
         setSuccess(true);
         setTimeout(() => setSuccess(false), 3000);
       } else {
         const errorMsg = data.message || 'Error al reenviar el código'
-        
+
         if (errorMsg.toLowerCase().includes('no encontrado') || errorMsg.toLowerCase().includes('not found')) {
           setError('No se encontró tu solicitud de registro. Por favor regístrate nuevamente.');
         } else if (errorMsg.toLowerCase().includes('cooldown') || errorMsg.toLowerCase().includes('wait')) {
@@ -285,7 +293,7 @@ function VerifyEmailContent() {
       }
     } catch (err: any) {
       logger.error('Error reenviando código:', err);
-      
+
       // ✅ Mensajes de error mejorados
       if (err.name === 'AbortError') {
         setError('La conexión tardó demasiado. Verifica tu internet e intenta nuevamente.');
@@ -315,11 +323,10 @@ function VerifyEmailContent() {
       <div className="max-w-md w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 transition-all ${
-            success 
-              ? 'bg-green-500 animate-in zoom-in-50' 
+          <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 transition-all ${success
+              ? 'bg-green-500 animate-in zoom-in-50'
               : 'bg-green-100'
-          }`}>
+            }`}>
             {success ? (
               <CheckCircle2 className="w-8 h-8 text-white" />
             ) : (
@@ -379,11 +386,12 @@ function VerifyEmailContent() {
                     }
                   }}
                   onKeyDown={(e) => handleKeyDown(index, e)}
-                  className={`w-12 h-14 text-center text-2xl font-bold border-2 transition-all ${
-                    success 
-                      ? 'border-green-500 bg-green-50 text-green-700' 
-                      : 'focus:border-green-500 focus:ring-green-500'
-                  }`}
+                  className={`w-14 h-16 sm:w-16 sm:h-18 text-center text-3xl sm:text-4xl font-bold border-2 rounded-xl transition-all shadow-sm ${success
+                      ? 'border-green-500 bg-green-50 text-green-700'
+                      : digit
+                        ? 'border-green-500 bg-green-50 text-green-700 scale-105'
+                        : 'border-gray-300 hover:border-green-400 focus:border-green-500 focus:ring-2 focus:ring-green-200'
+                    }`}
                   disabled={isVerifying || success}
                 />
               ))}
@@ -392,14 +400,12 @@ function VerifyEmailContent() {
 
           {/* Timer */}
           <div className="text-center">
-            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${
-              timeLeft < 60 
-                ? 'bg-red-100 text-red-700' 
+            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${timeLeft < 60
+                ? 'bg-red-100 text-red-700'
                 : 'bg-green-100 text-green-700'
-            }`}>
-              <div className={`w-2 h-2 rounded-full ${
-                timeLeft < 60 ? 'bg-red-500 animate-pulse' : 'bg-green-500'
-              }`} />
+              }`}>
+              <div className={`w-2 h-2 rounded-full ${timeLeft < 60 ? 'bg-red-500 animate-pulse' : 'bg-green-500'
+                }`} />
               <span className="text-sm font-medium">
                 {timeLeft > 0 ? (
                   <>Expira en {formatTime(timeLeft)}</>

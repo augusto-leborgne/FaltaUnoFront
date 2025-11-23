@@ -20,6 +20,7 @@ import {
   InscripcionAPI,
   InscripcionEstado
 } from "@/lib/api"
+import { formatMatchDate } from "@/lib/utils" // ✅ FIX: Import for date formatting without timezone issues
 
 export function MatchesListing() {
   const router = useRouter()
@@ -227,35 +228,8 @@ export function MatchesListing() {
     return type.replace("FUTBOL_", "Fútbol ")
   }
 
-  const formatDate = (dateString: string, timeString: string) => {
-    try {
-      const date = new Date(dateString)
-      const today = new Date()
-      const tomorrow = new Date(today)
-      tomorrow.setDate(tomorrow.getDate() + 1)
-
-      today.setHours(0, 0, 0, 0)
-      tomorrow.setHours(0, 0, 0, 0)
-      const compareDate = new Date(date)
-      compareDate.setHours(0, 0, 0, 0)
-
-      const time = timeString.substring(0, 5)
-      const day = date.getDate().toString().padStart(2, '0')
-      const month = (date.getMonth() + 1).toString().padStart(2, '0')
-
-      if (compareDate.getTime() === today.getTime()) {
-        return `Hoy ${day}/${month} ${time}`
-      } else if (compareDate.getTime() === tomorrow.getTime()) {
-        return `Mañana ${day}/${month} ${time}`
-      } else {
-        const weekday = date.toLocaleDateString("es-ES", { weekday: "long" })
-        const formattedWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1)
-        return `${formattedWeekday} ${day}/${month} ${time}`
-      }
-    } catch {
-      return `${dateString} ${timeString}`
-    }
-  }
+  // ✅ FIX: Use formatMatchDate from utils to avoid timezone offset
+  // (removed local formatDate function that was causing date offset issues)
 
   const getSpotsLeftColor = (spotsLeft: number) => {
     if (spotsLeft === 0) return "bg-red-100 text-red-800"
@@ -353,8 +327,8 @@ export function MatchesListing() {
                   key={filter.label}
                   onClick={() => toggleFilter(filter.label)}
                   className={`px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-semibold transition-all duration-200 touch-manipulation min-h-[44px] whitespace-nowrap active:scale-95 ${selectedFilters.includes(filter.label)
-                      ? "bg-orange-500 text-white shadow-lg"
-                      : "bg-white text-gray-700 border-2 border-gray-200 hover:bg-orange-50 active:bg-orange-100 hover:border-orange-300"
+                    ? "bg-orange-500 text-white shadow-lg"
+                    : "bg-white text-gray-700 border-2 border-gray-200 hover:bg-orange-50 active:bg-orange-100 hover:border-orange-300"
                     }`}
                 >
                   {filter.label}
@@ -412,8 +386,8 @@ export function MatchesListing() {
                         key={type}
                         onClick={() => toggleFilter(type)}
                         className={`px-3 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-200 touch-manipulation ${selectedFilters.includes(type)
-                            ? "bg-orange-500 text-white shadow-md"
-                            : "bg-gray-50 text-gray-700 border border-gray-200 hover:bg-orange-50 active:border-orange-300"
+                          ? "bg-orange-500 text-white shadow-md"
+                          : "bg-gray-50 text-gray-700 border border-gray-200 hover:bg-orange-50 active:border-orange-300"
                           }`}
                       >
                         {type}
@@ -486,7 +460,7 @@ export function MatchesListing() {
                     {/* Match Info */}
                     <div className="mb-3 sm:mb-4">
                       <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-2 sm:mb-2.5 leading-tight">
-                        {formatDate(match.fecha, match.hora)}
+                        {formatMatchDate(match.fecha, match.hora)}
                       </h3>
 
                       {/* Price and Duration */}

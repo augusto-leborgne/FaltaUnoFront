@@ -1079,7 +1079,13 @@ export default function AdminDashboard() {
                             {usuario.nombre} {usuario.apellido}
                           </h3>
                           <p className="text-xs text-gray-600 truncate">{usuario.email}</p>
-                          <p className="text-xs text-gray-500">{(usuario as any).celular || "Sin celular"}</p>
+                          <p className="text-xs text-gray-500">
+                            {(usuario as any).cedulaVerificada ? (
+                              <span className="text-green-600 font-medium">✓ Cédula verificada</span>
+                            ) : (
+                              <span className="text-orange-600">Cédula sin verificar</span>
+                            )}
+                          </p>
                         </div>
                         <div className="flex flex-col gap-1 items-end shrink-0">
                           <span

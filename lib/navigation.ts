@@ -51,12 +51,8 @@ function isProfileIncomplete(user?: Usuario | null): boolean {
 function needsIdVerification(user?: Usuario | null): boolean {
   if (!user) return false
 
-  // TODO: Verificación de cédula deshabilitada temporalmente
-  // return false siempre - no requerir verificación
-  return false
-
-  /* CÓDIGO ORIGINAL - Mantener para futura implementación de badge verificado
-  // Booleans directos
+  // ✅ FIX: Enable cedula verification requirement
+  // Check if cedula is verified
   const b1 = asBool((user as any)?.cedulaVerificada)
   if (b1 !== undefined) return !b1
 
@@ -75,25 +71,24 @@ function needsIdVerification(user?: Usuario | null): boolean {
   if (isApprovedStatus(estado)) return false
   if (isPendingOrFailedStatus(estado)) return true
 
-  // ✅ FIX: Si no hay información explícita de verificación, NO requerimos verificación
-  // (cedulaVerificada es opcional - si está undefined, asumimos que está OK)
+  // If no explicit verification info, cedula verification is optional
+  // (cedulaVerificada is optional - if undefined, assume OK)
   return false
-  */
 }
 
 // API pública ---------------------------------------------------------
 
 export function decidePostAuthRoute(user?: Usuario | null): string {
   if (!user) return PROFILE_SETUP_ROUTE
-  
+
   // Flujo simplificado:
   // 1. Si perfil incompleto -> profile-setup (incluye foto, datos básicos)
   // 2. Si perfil completo -> home
-  
+
   if (isProfileIncomplete(user)) return PROFILE_SETUP_ROUTE
-  
+
   if (needsIdVerification(user)) return VERIFICATION_ROUTE
-  
+
   return HOME_ROUTE
 }
 
