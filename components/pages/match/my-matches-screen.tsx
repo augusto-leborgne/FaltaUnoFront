@@ -224,7 +224,7 @@ export function MyMatchesScreen() {
   const displayMatches = activeTab === "Creados" ? createdMatches : joinedMatches
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col pb-24 sm:pb-24">
       {/* Header - Responsive padding */}
       <div className="pt-safe-top bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="px-4 sm:px-6 md:px-8 py-3 sm:py-4">
@@ -250,8 +250,8 @@ export function MyMatchesScreen() {
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`flex-1 min-h-[44px] py-3 sm:py-3.5 px-3 sm:px-4 rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold transition-all duration-200 touch-manipulation active:scale-95 ${activeTab === tab
-                    ? "bg-white text-gray-900 shadow-md"
-                    : "text-gray-600 hover:text-gray-900 active:bg-gray-50"
+                  ? "bg-white text-gray-900 shadow-md"
+                  : "text-gray-600 hover:text-gray-900 active:bg-gray-50"
                   }`}
               >
                 {tab}

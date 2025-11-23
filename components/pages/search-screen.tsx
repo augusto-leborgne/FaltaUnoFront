@@ -367,7 +367,7 @@ export function SearchScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col pb-24 sm:pb-24">
       {/* Header */}
       <div className="pt-12 sm:pt-16 pb-4 px-4 sm:px-6 border-b border-gray-100">
         <div className="flex items-center justify-between mb-4 gap-3">
@@ -416,8 +416,8 @@ export function SearchScreen() {
               key={f}
               onClick={() => setFilter(f as any)}
               className={`px-4 sm:px-5 py-2.5 rounded-full text-sm sm:text-base font-medium transition-all whitespace-nowrap min-h-[44px] touch-manipulation active:scale-95 ${filter === f
-                  ? "bg-green-600 text-white shadow-md"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300"
+                ? "bg-green-600 text-white shadow-md"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300"
                 }`}
             >
               {f.charAt(0).toUpperCase() + f.slice(1)}
@@ -427,8 +427,8 @@ export function SearchScreen() {
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full text-sm sm:text-base font-medium transition-all whitespace-nowrap min-h-[44px] touch-manipulation active:scale-95 ${hasActiveFilters
-                ? "bg-orange-100 text-orange-800 border-2 border-orange-300 shadow-sm"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300"
+              ? "bg-orange-100 text-orange-800 border-2 border-orange-300 shadow-sm"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300"
               }`}
           >
             <SlidersHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -450,8 +450,8 @@ export function SearchScreen() {
                     key={g}
                     onClick={() => setFilters(prev => ({ ...prev, genero: g as any }))}
                     className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all min-h-[44px] touch-manipulation active:scale-95 ${filters.genero === g
-                        ? "bg-primary text-white shadow-md"
-                        : "bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300 active:bg-gray-50"
+                      ? "bg-primary text-white shadow-md"
+                      : "bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300 active:bg-gray-50"
                       }`}
                   >
                     {g === "todos" ? "Todos" : g.charAt(0) + g.slice(1).toLowerCase()}
@@ -469,8 +469,8 @@ export function SearchScreen() {
                     key={n}
                     onClick={() => setFilters(prev => ({ ...prev, nivel: n as any }))}
                     className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all min-h-[44px] touch-manipulation active:scale-95 ${filters.nivel === n
-                        ? "bg-primary text-white shadow-md"
-                        : "bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300 active:bg-gray-50"
+                      ? "bg-primary text-white shadow-md"
+                      : "bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300 active:bg-gray-50"
                       }`}
                   >
                     {n === "todos" ? "Todos" : n}
@@ -489,8 +489,8 @@ export function SearchScreen() {
                       key={t}
                       onClick={() => setFilters(prev => ({ ...prev, tipoPartido: t as any }))}
                       className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all min-h-[44px] touch-manipulation active:scale-95 ${filters.tipoPartido === t
-                          ? "bg-primary text-white shadow-md"
-                          : "bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300 active:bg-gray-50"
+                        ? "bg-primary text-white shadow-md"
+                        : "bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300 active:bg-gray-50"
                         }`}
                     >
                       {t === "todos" ? "Todos" : formatMatchType(t)}
@@ -539,8 +539,8 @@ export function SearchScreen() {
                   setResults(sortResults(results))
                 }}
                 className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap min-h-[44px] touch-manipulation active:scale-95 ${sortBy === value
-                    ? "bg-green-600 text-white shadow-md"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300"
+                  ? "bg-green-600 text-white shadow-md"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300"
                   }`}
               >
                 <Icon className="w-4 h-4" />

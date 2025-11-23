@@ -502,7 +502,7 @@ export function SettingsScreen() {
 	}
 
 	return (
-		<div className="min-h-screen bg-white flex flex-col">
+		<div className="min-h-screen bg-white flex flex-col pb-24 sm:pb-24">
 			{/* Header */}
 			<div className="pt-12 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6 border-b border-gray-100">
 				<div className="flex items-center justify-between gap-2 sm:gap-3">

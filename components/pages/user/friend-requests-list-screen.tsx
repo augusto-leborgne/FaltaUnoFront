@@ -42,7 +42,7 @@ export function FriendRequestsListScreen() {
     try {
       setLoading(true)
       setError(null)
-      
+
       const token = AuthService.getToken()
       if (!token) {
         router.push("/login")
@@ -55,7 +55,7 @@ export function FriendRequestsListScreen() {
       }
 
       logger.log("[FriendRequestsList] Cargando solicitudes pendientes...")
-      
+
       const response = await AmistadAPI.listarSolicitudesPendientes()
       logger.log("[FriendRequestsList] Solicitudes recibidas:", response)
 
@@ -76,7 +76,7 @@ export function FriendRequestsListScreen() {
             },
             fechaSolicitud: solicitud.fechaSolicitud || solicitud.fecha_solicitud || solicitud.createdAt || new Date().toISOString(),
           }))
-        
+
         logger.log("[FriendRequestsList] Solicitudes mapeadas:", mappedRequests)
         setFriendRequests(mappedRequests)
       } else {
@@ -94,9 +94,9 @@ export function FriendRequestsListScreen() {
     setProcessingId(solicitudId)
     try {
       logger.log("[FriendRequestsList] Aceptando solicitud:", solicitudId)
-      
+
       const response = await AmistadAPI.aceptarSolicitud(solicitudId)
-      
+
       if (response.success) {
         // Remover de la lista
         setFriendRequests(prev => prev.filter(req => req.solicitudId !== solicitudId))
@@ -116,9 +116,9 @@ export function FriendRequestsListScreen() {
     setProcessingId(solicitudId)
     try {
       logger.log("[FriendRequestsList] Rechazando solicitud:", solicitudId)
-      
+
       const response = await AmistadAPI.rechazarSolicitud(solicitudId)
-      
+
       if (response.success) {
         // Remover de la lista
         setFriendRequests(prev => prev.filter(req => req.solicitudId !== solicitudId))
@@ -145,7 +145,7 @@ export function FriendRequestsListScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col pb-24 sm:pb-24">
       {/* Header */}
       <div className="pt-16 pb-6 px-6 border-b border-gray-100">
         <div className="flex items-center gap-4 mb-4">
@@ -171,7 +171,7 @@ export function FriendRequestsListScreen() {
         {error && (
           <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl">
             <p className="text-red-600 text-sm mb-3">{error}</p>
-            <Button 
+            <Button
               onClick={loadFriendRequests}
               className="w-full bg-red-600 hover:bg-red-700"
               size="sm"
@@ -199,7 +199,7 @@ export function FriendRequestsListScreen() {
           <div className="space-y-3">
             {friendRequests.map((request) => {
               if (!request?.usuario) return null;
-              
+
               const fullName = `${request.usuario.nombre || ""} ${request.usuario.apellido || ""}`.trim() || "Usuario"
               const initials = `${request.usuario.nombre?.[0] || ""}${request.usuario.apellido?.[0] || ""}`.toUpperCase() || "?"
               const isProcessing = processingId === request.solicitudId

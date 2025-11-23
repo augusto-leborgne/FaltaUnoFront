@@ -33,7 +33,7 @@ export function ReviewsScreen() {
     try {
       const token = AuthService.getToken()
       const user = AuthService.getUser()
-      
+
       if (!token || !user?.id) {
         router.push("/login")
         return
@@ -64,7 +64,7 @@ export function ReviewsScreen() {
   const handleBack = () => router.back()
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col pb-24 sm:pb-24">
       <div className="pt-16 pb-6 px-6 border-b border-gray-100">
         <div className="flex items-center space-x-4">
           <button onClick={handleBack} className="p-2 sm:p-3 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
@@ -74,7 +74,7 @@ export function ReviewsScreen() {
         </div>
       </div>
 
-            <div className="flex-1 px-6 py-6 pb-24">
+      <div className="flex-1 px-6 py-6 pb-24">
         {loading ? (
           <div className="text-center py-12">
             <LoadingSpinner size="lg" variant="green" />
@@ -88,7 +88,7 @@ export function ReviewsScreen() {
           <div className="space-y-4">
             {reviews.map((review) => {
               const avgRating = Math.round((review.nivel + review.deportividad + review.companerismo) / 3)
-              
+
               return (
                 <div key={review.id} className="bg-gray-50 rounded-xl p-4">
                   <div className="flex items-center justify-between mb-3">
@@ -99,16 +99,15 @@ export function ReviewsScreen() {
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
-                          className={`w-3 h-3 ${
-                            i < avgRating
+                          className={`w-3 h-3 ${i < avgRating
                               ? "fill-yellow-400 text-yellow-400"
                               : "text-gray-300"
-                          }`}
+                            }`}
                         />
                       ))}
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-3 gap-1.5 sm:gap-2 mb-2">
                     <div className="text-center">
                       <div className="text-xs text-gray-600 mb-1">Nivel</div>
@@ -116,11 +115,10 @@ export function ReviewsScreen() {
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
-                            className={`w-3 h-3 ${
-                              i < review.nivel
+                            className={`w-3 h-3 ${i < review.nivel
                                 ? "fill-yellow-400 text-yellow-400"
                                 : "text-gray-300"
-                            }`}
+                              }`}
                           />
                         ))}
                       </div>
@@ -131,11 +129,10 @@ export function ReviewsScreen() {
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
-                            className={`w-3 h-3 ${
-                              i < review.deportividad
+                            className={`w-3 h-3 ${i < review.deportividad
                                 ? "fill-yellow-400 text-yellow-400"
                                 : "text-gray-300"
-                            }`}
+                              }`}
                           />
                         ))}
                       </div>
@@ -146,17 +143,16 @@ export function ReviewsScreen() {
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
-                            className={`w-3 h-3 ${
-                              i < review.companerismo
+                            className={`w-3 h-3 ${i < review.companerismo
                                 ? "fill-yellow-400 text-yellow-400"
                                 : "text-gray-300"
-                            }`}
+                              }`}
                           />
                         ))}
                       </div>
                     </div>
                   </div>
-                  
+
                   {review.comentario && (
                     <p className="text-sm text-gray-600 mb-1">{review.comentario}</p>
                   )}

@@ -35,18 +35,18 @@ export function ContactsScreen() {
       if (amigos.length === 0) {
         setLoading(true)
       }
-      
+
       setError(null)
-      
+
       if (!AuthService.isLoggedIn()) {
         router.push("/login")
         return
       }
 
       logger.log("[ContactsScreen] Cargando amigos...")
-      
+
       const response = await AmistadAPI.listarAmigos()
-      
+
       logger.log("[ContactsScreen] Amigos response:", response)
 
       if (!response.success || !response.data) {
@@ -57,7 +57,7 @@ export function ContactsScreen() {
       const friendsList: Usuario[] = response.data
         .map((amistad: any) => amistad.amigo)
         .filter((amigo: any) => amigo != null && amigo.id && amigo.nombre && amigo.apellido) // ✅ Filter out null/undefined/invalid users
-      
+
       logger.log("[ContactsScreen] Amigos procesados:", friendsList.length)
       setAmigos(friendsList)
     } catch (error) {
@@ -70,7 +70,7 @@ export function ContactsScreen() {
 
   const handleSearch = async (query: string) => {
     setSearchQuery(query)
-    
+
     if (query.trim().length < 2) {
       setSearchResults([])
       setIsSearchMode(false)
@@ -81,15 +81,15 @@ export function ContactsScreen() {
       setSearching(true)
       setIsSearchMode(true)
       setError(null)
-      
+
       const response = await UsuarioAPI.list()
-      
+
       if (response.success && response.data) {
         const currentUser = AuthService.getUser()
         const filtered = response.data.filter((u: Usuario) => {
           // ✅ Filter out null/undefined/invalid users
           if (!u || !u.id || !u.nombre || !u.apellido) return false
-          
+
           const fullName = `${u.nombre} ${u.apellido}`.toLowerCase()
           const matchesSearch = fullName.includes(query.toLowerCase())
           const isNotCurrentUser = u.id !== currentUser?.id
@@ -122,12 +122,12 @@ export function ContactsScreen() {
 
   const handleSendFriendRequest = async () => {
     if (!selectedUser) return
-    
+
     setIsSendingRequest(true)
     try {
       logger.log("[ContactsScreen] Enviando solicitud a:", selectedUser.id)
       const response = await AmistadAPI.enviarSolicitud(selectedUser.id!)
-      
+
       if (response.success) {
         alert("Solicitud de amistad enviada. Se notificará al usuario.")
         setSelectedUser(null)
@@ -150,9 +150,8 @@ export function ContactsScreen() {
       <div
         key={user.id}
         onClick={() => !isFriend && handleUserClick(user)}
-        className={`flex items-center justify-between p-4 bg-gray-50 rounded-xl transition-colors ${
-          !isFriend ? "cursor-pointer hover:bg-gray-100 active:scale-[0.98]" : ""
-        }`}
+        className={`flex items-center justify-between p-4 bg-gray-50 rounded-xl transition-colors ${!isFriend ? "cursor-pointer hover:bg-gray-100 active:scale-[0.98]" : ""
+          }`}
       >
         <div className="flex items-center space-x-3">
           <Avatar className="w-12 h-12">
@@ -191,7 +190,7 @@ export function ContactsScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col pb-24 sm:pb-24">
       {/* Header */}
       <div className="pt-16 pb-6 px-6 border-b border-gray-100">
         <div className="flex items-center space-x-4 mb-4">
@@ -226,7 +225,7 @@ export function ContactsScreen() {
         {error && (
           <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl">
             <p className="text-red-600 text-sm mb-3">{error}</p>
-            <Button 
+            <Button
               onClick={() => {
                 setError(null)
                 if (!isSearchMode) {

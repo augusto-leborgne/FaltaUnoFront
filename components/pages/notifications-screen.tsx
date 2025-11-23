@@ -101,7 +101,7 @@ export function NotificationsScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col pb-24 sm:pb-24">
       {/* Header */}
       <div className="pt-12 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6 border-b border-gray-100">
         <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-5">
@@ -141,8 +141,8 @@ export function NotificationsScreen() {
               key={value}
               onClick={() => setFiltro(value)}
               className={`px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl whitespace-nowrap transition-all font-semibold text-sm sm:text-base touch-manipulation min-h-[44px] active:scale-95 ${filtro === value
-                  ? "bg-orange-500 text-white shadow-lg"
-                  : "bg-orange-50 text-gray-700 hover:bg-orange-100 active:bg-orange-200"
+                ? "bg-orange-500 text-white shadow-lg"
+                : "bg-orange-50 text-gray-700 hover:bg-orange-100 active:bg-orange-200"
                 }`}
             >
               {label}
@@ -174,7 +174,7 @@ export function NotificationsScreen() {
             >
               <div className="flex items-start gap-3">
                 <div className={`p-2 rounded-full flex-shrink-0 ${notif.prioridad === "URGENTE" ? "bg-red-100" :
-                    notif.prioridad === "ALTA" ? "bg-yellow-100" : "bg-blue-100"
+                  notif.prioridad === "ALTA" ? "bg-yellow-100" : "bg-blue-100"
                   }`}>
                   {getIcono(notif.tipo)}
                 </div>

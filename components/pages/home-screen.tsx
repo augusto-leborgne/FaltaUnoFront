@@ -287,7 +287,7 @@ export function HomeScreen() {
   const user = AuthService.getUser()
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-b from-primary/5 via-background to-background flex flex-col overflow-x-hidden">
+    <div className="min-h-screen w-full bg-gradient-to-b from-primary/5 via-background to-background flex flex-col overflow-x-hidden pb-24 sm:pb-24">
       {/* HERO HEADER */}
       <div className="w-full pt-12 sm:pt-16 pb-6 sm:pb-8 px-4 sm:px-6 max-w-full">
         <div className="flex items-center justify-between mb-4 sm:mb-6 w-full">

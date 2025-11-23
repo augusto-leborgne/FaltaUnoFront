@@ -234,7 +234,7 @@ export function MatchesListing() {
   // ============================================
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col pb-24 sm:pb-24">
       {/* Header - Responsive sticky */}
       <div className="pt-safe-top bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="px-4 sm:px-6 md:px-8 py-3 sm:py-4">

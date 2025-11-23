@@ -38,41 +38,41 @@ export function ChatsScreen() {
 
     try {
       setError("")
-      
+
       // ⚡ OPTIMIZACIÓN: Cargar partidos con caché corto para móvil (balance entre velocidad y frescura)
       const response = await apiCache.get(
         `mis-partidos-${currentUser.id}`,
         () => PartidoAPI.misPartidos(currentUser.id),
         { ttl: 5 * 1000 } // 5 segundos - mucho más fresco para móvil
       )
-      
+
       if (!response.success || !response.data) {
         throw new Error(response.message || "Error al cargar partidos")
       }
 
       const partidosInscritos = response.data
-      
+
       // ✅ FIX: Filtrar solo partidos DISPONIBLE o CONFIRMADO
       // No mostrar partidos CANCELADO ni COMPLETADO en chats
-      const partidosActivos = partidosInscritos.filter(p => 
+      const partidosActivos = partidosInscritos.filter(p =>
         p.estado === 'DISPONIBLE' || p.estado === 'CONFIRMADO'
       )
-      
+
       if (partidosActivos.length === 0) {
         setPartidos([])
         setLoading(false)
         return
       }
-      
+
       // ⚡ MEGA OPTIMIZACIÓN: Solo cargar último mensaje de primeros 20 partidos
       // El resto se muestra sin último mensaje (más rápido)
       const partidosToLoad = partidosActivos.slice(0, 20) // Aumentado a 20 para mejor UX
-      
+
       const partidosWithMessages = await Promise.all(
         partidosToLoad.map(async (partido) => {
           try {
             if (!partido.id) return partido
-            
+
             // ⚡ Cargar SOLO el último mensaje - MÁXIMA VELOCIDAD
             const messagesResponse = await apiCache.get(
               `ultimo-mensaje-${partido.id}`,
@@ -89,18 +89,18 @@ export function ChatsScreen() {
               },
               { ttl: 10 * 1000 } // 10 segundos - más cache para evitar requests repetidos
             )
-            
+
             if (messagesResponse.success && messagesResponse.data && messagesResponse.data.length > 0) {
               const lastMessage = messagesResponse.data[0] // Solo hay 1 mensaje
-              
+
               // ⚡ Detección rápida de no leídos (solo verificar último mensaje)
               const lastVisitKey = `chat_visit_${partido.id}`
               const lastVisitStr = localStorage.getItem(lastVisitKey)
               const lastVisit = lastVisitStr ? new Date(lastVisitStr) : new Date(0)
-              
+
               const messageDate = new Date(lastMessage.createdAt || '')
               const isUnread = messageDate > lastVisit && lastMessage.usuarioId !== currentUser.id
-              
+
               return {
                 ...partido,
                 unreadCount: isUnread ? 1 : 0,
@@ -115,20 +115,20 @@ export function ChatsScreen() {
           }
         })
       )
-      
+
       // Agregar partidos restantes SIN mensajes (lazy - no bloquea UI)
       const remainingPartidos = partidosActivos.slice(20).map(p => p as PartidoWithUnread)
       const allPartidos = [...partidosWithMessages, ...remainingPartidos]
-      
+
       // Ordenar: primero con no leídos, luego por fecha más reciente
       allPartidos.sort((a, b) => {
         // Primero los que tienen mensajes no leídos
         const aUnread = (a as PartidoWithUnread).unreadCount || 0
         const bUnread = (b as PartidoWithUnread).unreadCount || 0
-        
+
         if (aUnread > 0 && bUnread === 0) return -1
         if (aUnread === 0 && bUnread > 0) return 1
-        
+
         // Luego por fecha
         const dateA = new Date((a.fecha || '') + 'T' + (a.hora || ''))
         const dateB = new Date((b.fecha || '') + 'T' + (b.hora || ''))
@@ -146,11 +146,11 @@ export function ChatsScreen() {
 
   const handleChatClick = (partidoId: string | undefined) => {
     if (!partidoId) return
-    
+
     // ⚡ Actualizar timestamp de última visita (clave unificada)
     const lastVisitKey = `chat_visit_${partidoId}`
     localStorage.setItem(lastVisitKey, new Date().toISOString())
-    
+
     router.push(`/matches/${partidoId}/chat`)
   }
 
@@ -164,7 +164,7 @@ export function ChatsScreen() {
       } else {
         date = new Date(dateString);
       }
-      
+
       const today = new Date()
       const tomorrow = new Date(today)
       tomorrow.setDate(tomorrow.getDate() + 1)
@@ -198,7 +198,7 @@ export function ChatsScreen() {
 
   const formatMessageTime = (timestamp: string | undefined) => {
     if (!timestamp) return ""
-    
+
     try {
       const date = new Date(timestamp)
       const now = new Date()
@@ -206,12 +206,12 @@ export function ChatsScreen() {
       const diffMins = Math.floor(diffMs / 60000)
       const diffHours = Math.floor(diffMs / 3600000)
       const diffDays = Math.floor(diffMs / 86400000)
-      
+
       if (diffMins < 1) return "Ahora"
       if (diffMins < 60) return `${diffMins}m`
       if (diffHours < 24) return `${diffHours}h`
       if (diffDays < 7) return `${diffDays}d`
-      
+
       return date.toLocaleDateString("es-ES", { day: "numeric", month: "short" })
     } catch {
       return ""
@@ -233,7 +233,7 @@ export function ChatsScreen() {
   // RENDER - MAIN
   // ============================================
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col pb-24 sm:pb-24">
       {/* Header Compacto como Partidos y Mis Partidos */}
       <div className="pt-safe-top bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="px-4 sm:px-6 md:px-8 py-3 sm:py-4">
@@ -281,16 +281,15 @@ export function ChatsScreen() {
           <div className="space-y-3">
             {partidos.map((partido) => {
               const spotsLeft = (partido.cantidadJugadores ?? 0) - (partido.jugadoresActuales ?? 0)
-              
+
               return (
                 <button
                   key={partido.id}
                   onClick={() => handleChatClick(partido.id)}
-                  className={`w-full bg-white border rounded-2xl p-4 transition-all text-left hover:shadow-lg hover:border-green-200 active:scale-[0.98] touch-manipulation ${
-                    (partido.unreadCount || 0) > 0 
-                      ? 'border-blue-200 bg-blue-50' 
+                  className={`w-full bg-white border rounded-2xl p-4 transition-all text-left hover:shadow-lg hover:border-green-200 active:scale-[0.98] touch-manipulation ${(partido.unreadCount || 0) > 0
+                      ? 'border-blue-200 bg-blue-50'
                       : 'border-gray-200'
-                  }`}
+                    }`}
                 >
                   {/* Header row - Badges */}
                   <div className="flex items-start justify-between mb-2 gap-2">
@@ -317,9 +316,8 @@ export function ChatsScreen() {
                   {/* Último mensaje si existe */}
                   {partido.lastMessage && (
                     <div className="mb-2">
-                      <p className={`text-xs sm:text-sm truncate ${
-                        (partido.unreadCount || 0) > 0 ? 'text-gray-900 font-medium' : 'text-gray-600'
-                      }`}>
+                      <p className={`text-xs sm:text-sm truncate ${(partido.unreadCount || 0) > 0 ? 'text-gray-900 font-medium' : 'text-gray-600'
+                        }`}>
                         {partido.lastMessage}
                       </p>
                       <span className="text-[10px] sm:text-xs text-gray-400">
@@ -344,9 +342,8 @@ export function ChatsScreen() {
                         </span>
                       </div>
                     </div>
-                    <ChevronRight className={`w-4 h-4 flex-shrink-0 ${
-                      (partido.unreadCount || 0) > 0 ? 'text-blue-600' : 'text-gray-400'
-                    }`} />
+                    <ChevronRight className={`w-4 h-4 flex-shrink-0 ${(partido.unreadCount || 0) > 0 ? 'text-blue-600' : 'text-gray-400'
+                      }`} />
                   </div>
                 </button>
               )
