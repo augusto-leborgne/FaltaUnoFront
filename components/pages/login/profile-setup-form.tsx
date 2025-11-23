@@ -780,10 +780,11 @@ export function ProfileSetupForm() {
           const isComplete = updatedUser.perfilCompleto === true
 
           if (isComplete) {
-            logger.log("[ProfileSetup] Profile complete, redirecting to /home")
+            logger.log("[ProfileSetup] Profile complete, checking cedula verification")
             // ✅ Clear saved form data after successful update
             localStorage.removeItem('profileSetupFormData')
-            router.replace('/home')
+            // ✅ Use postAuthRedirect to check for cedula verification
+            postAuthRedirect(updatedUser)
           } else {
             logger.warn("[ProfileSetup] Profile incomplete - staying on /profile-setup")
             setGeneralError("Por favor completa todos los campos requeridos")
