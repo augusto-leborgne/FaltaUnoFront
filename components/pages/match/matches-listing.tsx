@@ -5,8 +5,7 @@ import { logger } from '@/lib/logger'
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { MapPin, Plus, Search, Filter, X, AlertCircle } from "lucide-react"
+import { MapPin, Plus, Filter, X, AlertCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { AuthService } from "@/lib/auth"
@@ -30,7 +29,6 @@ export function MatchesListing() {
   const [loading, setLoading] = useState(false) // Cambiar a false para mostrar UI inmediatamente
   const [error, setError] = useState("")
   const [selectedFilters, setSelectedFilters] = useState<string[]>([])
-  const [searchQuery, setSearchQuery] = useState("")
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
   const [selectedMatchId, setSelectedMatchId] = useState<string | undefined>()
   const [userInscriptions, setUserInscriptions] = useState<Map<string, { estado: InscripcionEstado | null }>>(new Map())
@@ -59,7 +57,7 @@ export function MatchesListing() {
 
     window.addEventListener('focus', handleFocus)
     return () => window.removeEventListener('focus', handleFocus)
-  }, [selectedFilters, searchQuery])
+  }, [selectedFilters])
 
   // ============================================
   // FUNCIONES DE CARGA
@@ -95,11 +93,6 @@ export function MatchesListing() {
           filtros.tipoPartido = `FUTBOL_${numero}`
         }
       })
-
-      // Búsqueda por texto
-      if (searchQuery.trim()) {
-        filtros.search = searchQuery.trim()
-      }
 
       // Solo partidos disponibles y futuros
       filtros.estado = PartidoEstado.DISPONIBLE
@@ -199,7 +192,6 @@ export function MatchesListing() {
 
   const clearFilters = () => {
     setSelectedFilters([])
-    setSearchQuery("")
   }
 
   const handleMatchClick = (matchId: string) => {
@@ -279,25 +271,6 @@ export function MatchesListing() {
 
         {/* Search and Filters */}
         <div className="px-4 sm:px-6 md:px-8 pt-4 sm:pt-5 pb-3 sm:pb-4">
-          {/* Search Bar */}
-          <div className="relative mb-4">
-            <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <Input
-              placeholder="Buscar por ubicación..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-11 sm:pl-12 pr-12 bg-gray-50 border-2 border-gray-200 rounded-xl min-h-[48px] text-base"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-2 top-1/2 transform -translate-y-1/2 touch-manipulation p-2 hover:bg-gray-200 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-95"
-              >
-                <X className="w-5 h-5 text-gray-400" />
-              </button>
-            )}
-          </div>
-
           {/* Interactive Map - Responsive height */}
           <MatchesMapView
             matches={matches}
@@ -413,15 +386,15 @@ export function MatchesListing() {
               </div>
               <p className="text-gray-700 font-medium mb-2 text-base sm:text-lg">No se encontraron partidos</p>
               <p className="text-sm sm:text-base text-gray-500 mb-6 px-4">
-                {selectedFilters.length > 0 || searchQuery
+                {selectedFilters.length > 0
                   ? "Intenta ajustar los filtros"
                   : "Crea un nuevo partido"}
               </p>
               <Button
-                onClick={selectedFilters.length > 0 || searchQuery ? clearFilters : handleCreateMatch}
+                onClick={selectedFilters.length > 0 ? clearFilters : handleCreateMatch}
                 className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white shadow-md transition-transform active:scale-95 touch-manipulation text-sm sm:text-base px-6 py-2.5"
               >
-                {selectedFilters.length > 0 || searchQuery ? (
+                {selectedFilters.length > 0 ? (
                   "Limpiar filtros"
                 ) : (
                   <>
