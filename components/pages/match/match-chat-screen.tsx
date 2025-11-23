@@ -361,7 +361,22 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
       if (response.success && response.data) {
         // Filtrar cualquier mensaje temporal optimista para evitar duplicados
         const serverMessages = response.data.filter(m => !m.id.startsWith('temp-'))
-        setMessages(serverMessages)
+
+        // ✅ FIX: Merge instead of replace to prevent UI flash
+        setMessages(prev => {
+          // Keep optimistic messages and merge with server messages
+          const optimistic = prev.filter(m => m.id.startsWith('temp-'))
+          const serverIds = new Set(serverMessages.map(m => m.id))
+
+          // Remove any non-optimistic messages that are now in server response
+          // (to avoid duplicates while keeping optimistic ones)
+          const keptMessages = prev.filter(m =>
+            m.id.startsWith('temp-') || !serverIds.has(m.id)
+          )
+
+          // Merge: server messages + optimistic messages
+          return [...serverMessages, ...optimistic]
+        })
       }
 
     } catch (err) {
@@ -429,13 +444,13 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
       const response = await MensajeAPI.crear(matchId, {
         contenido: tempMessage
       })
-
       if (!response.success) {
         throw new Error(response.message || "Error al enviar mensaje")
       }
 
-      // ⚡ Recargar mensajes - loadMessages filtrará automáticamente los temp-
-      await loadMessages(true)
+      // ✅ FIX: Don't call loadMessages here - WebSocket already handles the new message
+      // Calling loadMessages causes UI flash because it replaces the entire messages array
+      // The WebSocket event (lines 68-110) already replaced the optimistic message with the real one
 
       // Enfocar input nuevamente
       inputRef.current?.focus()
