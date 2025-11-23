@@ -75,7 +75,26 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
           return prev
         }
 
-        // ⚡ FIX: Detectar mensajes muy recientes con mismo contenido (posible duplicado)
+        // ⚡ FIX: Check for optimistic message FIRST (before duplicate detection)
+        // This ensures temp messages are properly replaced
+        const hasOptimistic = prev.some(m => m.id.startsWith('temp-') &&
+          m.usuarioId === event.mensaje.usuarioId &&
+          m.contenido === event.mensaje.contenido)
+
+        if (hasOptimistic) {
+          logger.log('[MatchChat] Replacing optimistic message with real one')
+          // Reemplazar el mensaje optimista con el real
+          return prev.map(m =>
+            m.id.startsWith('temp-') &&
+              m.usuarioId === event.mensaje.usuarioId &&
+              m.contenido === event.mensaje.contenido
+              ? event.mensaje
+              : m
+          )
+        }
+
+        // ⚡ FIX: Only check for very recent duplicates if NOT an optimistic replacement
+        // (this prevents real duplicates from other sources)
         const isVeryRecent = prev.some(m =>
           m.usuarioId === event.mensaje.usuarioId &&
           m.contenido === event.mensaje.contenido &&
@@ -85,22 +104,6 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         if (isVeryRecent) {
           logger.log('[MatchChat] Skipping very recent duplicate')
           return prev
-        }
-
-        // Reemplazar mensaje optimista si existe (enviado por este usuario)
-        const hasOptimistic = prev.some(m => m.id.startsWith('temp-') &&
-          m.usuarioId === event.mensaje.usuarioId &&
-          m.contenido === event.mensaje.contenido)
-
-        if (hasOptimistic) {
-          // Reemplazar el mensaje optimista con el real
-          return prev.map(m =>
-            m.id.startsWith('temp-') &&
-              m.usuarioId === event.mensaje.usuarioId &&
-              m.contenido === event.mensaje.contenido
-              ? event.mensaje
-              : m
-          )
         }
 
         return [...prev, event.mensaje]
@@ -795,16 +798,16 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
 
                     <div
                       className={`inline-block px-2.5 sm:px-3 py-1.5 sm:py-2 transition-all group-hover:scale-[1.01] ${isOwn
-                          ? `bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white shadow-md hover:shadow-lg ${isFirstInGroup && isLastInGroup ? 'rounded-2xl' :
-                            isFirstInGroup ? 'rounded-t-2xl rounded-bl-2xl rounded-br-md' :
-                              isLastInGroup ? 'rounded-b-2xl rounded-tl-2xl rounded-tr-md' :
-                                'rounded-l-2xl rounded-r-md'
-                          }`
-                          : `bg-white text-gray-900 border border-gray-200 shadow-sm hover:shadow-md ${isFirstInGroup && isLastInGroup ? 'rounded-2xl' :
-                            isFirstInGroup ? 'rounded-t-2xl rounded-br-2xl rounded-bl-md' :
-                              isLastInGroup ? 'rounded-b-2xl rounded-tr-2xl rounded-tl-md' :
-                                'rounded-r-2xl rounded-l-md'
-                          }`
+                        ? `bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white shadow-md hover:shadow-lg ${isFirstInGroup && isLastInGroup ? 'rounded-2xl' :
+                          isFirstInGroup ? 'rounded-t-2xl rounded-bl-2xl rounded-br-md' :
+                            isLastInGroup ? 'rounded-b-2xl rounded-tl-2xl rounded-tr-md' :
+                              'rounded-l-2xl rounded-r-md'
+                        }`
+                        : `bg-white text-gray-900 border border-gray-200 shadow-sm hover:shadow-md ${isFirstInGroup && isLastInGroup ? 'rounded-2xl' :
+                          isFirstInGroup ? 'rounded-t-2xl rounded-br-2xl rounded-bl-md' :
+                            isLastInGroup ? 'rounded-b-2xl rounded-tr-2xl rounded-tl-md' :
+                              'rounded-r-2xl rounded-l-md'
+                        }`
                         }`}
                     >
                       {/* Nombre - COMPACTO */}
