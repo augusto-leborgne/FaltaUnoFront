@@ -11,6 +11,7 @@ import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { AuthService } from "@/lib/auth"
 import { PartidoAPI, PartidoDTO } from "@/lib/api"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { formatMatchDate } from "@/lib/utils"
 
 // Usar PartidoDTO del API
 type Match = PartidoDTO
@@ -125,36 +126,7 @@ export function MyMatchesScreen() {
     return levelMap[level] || level
   }
 
-  const formatDate = (dateString: string, timeString: string) => {
-    try {
-      const date = new Date(dateString)
-      const today = new Date()
-      const tomorrow = new Date(today)
-      tomorrow.setDate(tomorrow.getDate() + 1)
 
-      today.setHours(0, 0, 0, 0)
-      tomorrow.setHours(0, 0, 0, 0)
-      const compareDate = new Date(date)
-      compareDate.setHours(0, 0, 0, 0)
-
-      const time = timeString.substring(0, 5)
-      const day = date.getDate().toString().padStart(2, '0')
-      const month = (date.getMonth() + 1).toString().padStart(2, '0')
-
-      if (compareDate.getTime() === today.getTime()) {
-        return `Hoy ${day}/${month} ${time}`
-      } else if (compareDate.getTime() === tomorrow.getTime()) {
-        return `Mañana ${day}/${month} ${time}`
-      } else {
-        const weekday = date.toLocaleDateString("es-ES", { weekday: "long" })
-        // ✅ Capitalize first letter
-        const formattedWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1)
-        return `${formattedWeekday} ${day}/${month} ${time}`
-      }
-    } catch {
-      return `${dateString} ${timeString}`
-    }
-  }
 
   const getStatusBadge = (estado: string, fecha: string, hora: string) => {
     // ✅ Apply backend business rules for status display
@@ -322,7 +294,7 @@ export function MyMatchesScreen() {
                     {/* Date/Time - Bigger on mobile */}
                     <div className="mb-3 sm:mb-4">
                       <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-2 sm:mb-2.5 leading-tight">
-                        {formatDate(match.fecha, match.hora)}
+                        {formatMatchDate(match.fecha, match.hora)}
                       </h3>
 
                       {/* Price and Duration - Better mobile layout */}
