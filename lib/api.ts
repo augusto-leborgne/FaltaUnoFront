@@ -15,10 +15,10 @@ import { AppMetrics } from "./observability";
 const getApiBase = (): string => {
   // ✅ Backend en Cloud Run con HTTPS - Comunicación directa sin proxy
   const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-169771742214.us-central1.run.app';
-  
+
   logger.debug('[API Config] Using Cloud Run backend URL:', backendUrl);
   logger.debug('[API Config] Environment:', typeof window === 'undefined' ? 'SERVER (SSR)' : 'BROWSER');
-  
+
   return backendUrl;
 };
 
@@ -93,14 +93,14 @@ const isRetryableError = (error: any, statusCode?: number): boolean => {
   if (statusCode && RETRY_CONFIG.retryableStatusCodes.includes(statusCode)) {
     return true
   }
-  
+
   // Check error messages
   if (error instanceof Error) {
-    return RETRY_CONFIG.retryableErrors.some(msg => 
+    return RETRY_CONFIG.retryableErrors.some(msg =>
       error.message.includes(msg) || error.toString().includes(msg)
     )
   }
-  
+
   return false
 }
 
@@ -194,7 +194,7 @@ export interface PartidoDTO {
   organizadorId?: string;  // Frontend
   created_at?: string; // Backend
   createdAt?: string;  // Frontend
-  
+
   // Relaciones
   organizador?: UsuarioMinDTO;
   jugadores?: UsuarioMinDTO[];
@@ -341,7 +341,7 @@ async function apiFetch<T>(
     // Obtener token (no esperamos aquí para no añadir latencia a todas las peticiones)
     const token = customToken || (!skipAuth ? AuthService.getToken() : null);
     const hadToken = !!token // si al momento de construir la petición había token
-    
+
     // ⚡ VALIDACIÓN CRÍTICA: Verificar que el token no esté corrupto antes de usarlo
     if (token && !skipAuth) {
       if (AuthService.isTokenExpired(token)) {
@@ -351,23 +351,23 @@ async function apiFetch<T>(
         throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.');
       }
     }
-    
+
     // Construir URL completa
     const fullUrl = normalizeUrl(`${API_BASE}${endpoint}`);
 
     // Preparar headers
     const headers = new Headers(fetchOptions.headers);
-    
+
     // Content-Type solo si no es FormData
     if (!headers.has('Content-Type') && !(fetchOptions.body instanceof FormData)) {
       headers.set('Content-Type', 'application/json');
     }
-    
+
     // Authorization header
     if (token && !skipAuth) {
       headers.set('Authorization', `Bearer ${token}`);
     }
-    
+
     // Add connection management headers to prevent drops
     if (!headers.has('Connection')) {
       headers.set('Connection', 'keep-alive');
@@ -391,41 +391,41 @@ async function apiFetch<T>(
       }, 30000); // 30 segundos timeout
 
       // Manejo de 401 - Sesión expirada
-          if (response.status === 401) {
-            // Intentar parsear el body para obtener mensajes estructurados (útil en login)
-            try {
-              const rawText = await response.clone().text();
-              const parsed = rawText ? JSON.parse(rawText) : {};
-              const parsedMessage = parsed?.message || parsed?.error || parsed?.data?.message || parsed?.data?.error;
+      if (response.status === 401) {
+        // Intentar parsear el body para obtener mensajes estructurados (útil en login)
+        try {
+          const rawText = await response.clone().text();
+          const parsed = rawText ? JSON.parse(rawText) : {};
+          const parsedMessage = parsed?.message || parsed?.error || parsed?.data?.message || parsed?.data?.error;
 
-              // Si tenemos token y no queremos evitar logout automático, revisar expiración
-              if (hadToken && !skipAutoLogout) {
-                if (token && AuthService.isTokenExpired(token)) {
-                  logger.warn('[API] 401 Unauthorized - Token expirado');
-                  logger.warn('[API] 🚪 LOGOUT INMEDIATO - Redirigiendo a login...');
-                  AuthService.logout();
-                  throw new Error(parsedMessage || 'Tu sesión ha expirado. Por favor inicia sesión nuevamente.');
-                } else {
-                  logger.warn('[API] 401 pero token aún válido - NO haciendo logout automático');
-                  throw new Error(parsedMessage || 'Error de autenticación. Si acabas de registrarte, verifica tu email primero.');
-                }
-              }
-
-              // No hay token (por ejemplo: endpoint de login). Si el backend devolvió un mensaje, úsalo.
-              logger.warn('[API] 401 recibido - no se hace logout automático');
-              throw new Error(parsedMessage || 'Email o contraseña incorrectos. Si acabas de registrarte, verifica tu email primero.');
-            } catch (parseErr) {
-              // Si falla el parseo, volver al comportamiento genérico
-              if (hadToken && !skipAutoLogout) {
-                if (token && AuthService.isTokenExpired(token)) {
-                  AuthService.logout();
-                  throw new Error('Tu sesión ha expirado. Por favor inicia sesión nuevamente.');
-                } else {
-                  throw new Error('Error de autenticación. Si acabas de registrarte, verifica tu email primero.');
-                }
-              }
-              throw new Error('Email o contraseña incorrectos. Si acabas de registrarte, verifica tu email primero.');
+          // Si tenemos token y no queremos evitar logout automático, revisar expiración
+          if (hadToken && !skipAutoLogout) {
+            if (token && AuthService.isTokenExpired(token)) {
+              logger.warn('[API] 401 Unauthorized - Token expirado');
+              logger.warn('[API] 🚪 LOGOUT INMEDIATO - Redirigiendo a login...');
+              AuthService.logout();
+              throw new Error(parsedMessage || 'Tu sesión ha expirado. Por favor inicia sesión nuevamente.');
+            } else {
+              logger.warn('[API] 401 pero token aún válido - NO haciendo logout automático');
+              throw new Error(parsedMessage || 'Error de autenticación. Si acabas de registrarte, verifica tu email primero.');
             }
+          }
+
+          // No hay token (por ejemplo: endpoint de login). Si el backend devolvió un mensaje, úsalo.
+          logger.warn('[API] 401 recibido - no se hace logout automático');
+          throw new Error(parsedMessage || 'Email o contraseña incorrectos. Si acabas de registrarte, verifica tu email primero.');
+        } catch (parseErr) {
+          // Si falla el parseo, volver al comportamiento genérico
+          if (hadToken && !skipAutoLogout) {
+            if (token && AuthService.isTokenExpired(token)) {
+              AuthService.logout();
+              throw new Error('Tu sesión ha expirado. Por favor inicia sesión nuevamente.');
+            } else {
+              throw new Error('Error de autenticación. Si acabas de registrarte, verifica tu email primero.');
+            }
+          }
+          throw new Error('Email o contraseña incorrectos. Si acabas de registrarte, verifica tu email primero.');
+        }
       }
 
       // Manejo de 403 - Sin permisos
@@ -452,7 +452,7 @@ async function apiFetch<T>(
       if (!response.ok && isRetryableError(null, response.status)) {
         const errorMessage = `Server error ${response.status}: ${response.statusText}`
         logger.warn(`${logPrefix} Retryable error:`, errorMessage)
-        
+
         // Retry if we haven't exceeded max attempts
         if (attemptNumber < RETRY_CONFIG.maxRetries) {
           const delay = getRetryDelay(attemptNumber)
@@ -460,13 +460,13 @@ async function apiFetch<T>(
           await sleep(delay)
           return attemptFetch(attemptNumber + 1)
         }
-        
+
         throw new Error(errorMessage)
       }
 
       // Obtener texto de respuesta
       const responseText = await response.text();
-      
+
       // Intentar parsear JSON
       let responseData: any;
       try {
@@ -478,12 +478,12 @@ async function apiFetch<T>(
 
       // Si la respuesta no es OK
       if (!response.ok) {
-        const errorMessage = responseData.message 
-          || responseData.error 
+        const errorMessage = responseData.message
+          || responseData.error
           || `Error ${response.status}: ${response.statusText}`;
-        
+
         logger.error(`[API] Error ${response.status}:`, errorMessage);
-        
+
         throw new Error(errorMessage);
       }
 
@@ -500,26 +500,26 @@ async function apiFetch<T>(
       } else {
         logger.log(`[API] ✓ ${endpoint} completado`);
       }
-      
+
       // Track successful API call metrics
       const duration = performance.now() - startTime;
       AppMetrics.apiCall(endpoint, fetchOptions.method || 'GET', response.status, duration);
-      
+
       return normalizedResponse;
 
     } catch (error) {
       logger.error(`${logPrefix} Error en ${endpoint}:`, error);
-      
+
       // Track failed API call metrics
       const duration = performance.now() - startTime;
       AppMetrics.apiCall(endpoint, fetchOptions.method || 'GET', 0, duration);
       AppMetrics.error('api_error', endpoint);
-      
+
       // Handle abort errors (timeouts) - don't retry user-initiated aborts
       if (error instanceof Error && error.name === 'AbortError') {
         throw new Error('La solicitud tardó demasiado tiempo. Por favor intenta nuevamente.');
       }
-      
+
       // Handle network errors with retry
       if (isRetryableError(error)) {
         if (attemptNumber < RETRY_CONFIG.maxRetries) {
@@ -532,11 +532,11 @@ async function apiFetch<T>(
           throw new Error('Error de conexión persistente. Verifica tu conexión a internet o intenta más tarde.');
         }
       }
-      
+
       if (error instanceof Error) {
         throw error;
       }
-      
+
       throw new Error('Error de red. Verifica tu conexión.');
     }
   }
@@ -571,8 +571,8 @@ function normalizePartido(raw: any): PartidoDTO {
   // Calcular precio por jugador si no viene
   const precioTotal = raw.precioTotal ?? raw.precio_total ?? 0;
   const cantidadJugadores = raw.cantidadJugadores ?? raw.cantidad_jugadores ?? 1;
-  const precioPorJugador = raw.precioPorJugador 
-    ?? raw.precio_por_jugador 
+  const precioPorJugador = raw.precioPorJugador
+    ?? raw.precio_por_jugador
     ?? (cantidadJugadores > 0 ? precioTotal / cantidadJugadores : 0);
 
   // Normalizar organizador
@@ -734,7 +734,7 @@ export const UsuarioAPI = {
    */
   list: async () => {
     try {
-      return await apiFetch<Usuario[]>('/api/usuarios', { 
+      return await apiFetch<Usuario[]>('/api/usuarios', {
         skipAutoLogout: true // Don't auto-logout on 401, handle error gracefully
       });
     } catch (error) {
@@ -756,20 +756,20 @@ export const UsuarioAPI = {
       const payload = { ...usuario };
       // No enviar foto_perfil en creación (se sube después)
       delete payload.foto_perfil;
-      
+
       logger.log('[UsuarioAPI.crear] Payload:', payload);
-      
+
       const response = await apiFetch<{ token?: string; user: Usuario }>('/api/usuarios', {
         method: 'POST',
         body: JSON.stringify(payload),
         skipAuth: true
       });
-      
+
       // Track successful registration
       if (response.success) {
         AppMetrics.userRegister();
       }
-      
+
       return response;
     } catch (error) {
       logger.error('[UsuarioAPI.crear] Error:', error);
@@ -881,7 +881,7 @@ export const PartidoAPI = {
    */
   crear: async (partido: Partial<PartidoDTO>) => {
     logger.log("[PartidoAPI.crear] Datos recibidos:", partido);
-    
+
     // Validar campos requeridos
     if (!partido.fecha) {
       return {
@@ -890,7 +890,7 @@ export const PartidoAPI = {
         data: null
       };
     }
-    
+
     if (!partido.hora) {
       return {
         success: false,
@@ -898,7 +898,7 @@ export const PartidoAPI = {
         data: null
       };
     }
-    
+
     if (!partido.nombreUbicacion && !partido.nombre_ubicacion) {
       return {
         success: false,
@@ -906,7 +906,7 @@ export const PartidoAPI = {
         data: null
       };
     }
-    
+
     // Construir payload con snake_case para el backend
     const payload = {
       tipo_partido: partido.tipoPartido ?? partido.tipo_partido ?? 'FUTBOL_5',
@@ -952,10 +952,10 @@ export const PartidoAPI = {
         data: normalizePartido(response.data),
         message: "Partido creado exitosamente"
       };
-      
+
     } catch (error: any) {
       logger.error("[PartidoAPI.crear] Error capturado:", error);
-      
+
       return {
         success: false,
         message: error.message || "Error al crear el partido",
@@ -970,12 +970,12 @@ export const PartidoAPI = {
    */
   get: async (id: string) => {
     logger.log("[PartidoAPI.get] Solicitando partido ID:", id);
-    
+
     try {
       const response = await apiFetch<any>(`/api/partidos/${id}`);
-      
+
       logger.log("[PartidoAPI.get] Respuesta raw:", response);
-      
+
       if (!response.success) {
         logger.error("[PartidoAPI.get] Error en respuesta:", response.message);
         return {
@@ -984,7 +984,7 @@ export const PartidoAPI = {
           data: null
         };
       }
-      
+
       // Verificar que tengamos datos válidos
       if (!response.data) {
         logger.error("[PartidoAPI.get] Respuesta sin datos");
@@ -994,17 +994,17 @@ export const PartidoAPI = {
           data: null
         };
       }
-      
+
       // Normalizar y retornar
       return {
         success: true,
         data: normalizePartido(response.data),
         message: response.message
       };
-      
+
     } catch (error: any) {
       logger.error("[PartidoAPI.get] Error capturado:", error);
-      
+
       // Manejar 404 específicamente
       if (error.message?.includes('404')) {
         return {
@@ -1014,7 +1014,7 @@ export const PartidoAPI = {
           error: error.message
         };
       }
-      
+
       // Otros errores
       return {
         success: false,
@@ -1037,10 +1037,10 @@ export const PartidoAPI = {
     search?: string;
   }) => {
     logger.log("[PartidoAPI.list] Filtros:", filtros);
-    
+
     try {
       const params = new URLSearchParams();
-      
+
       if (filtros) {
         // Solo enviar filtros con valores definidos
         Object.entries(filtros).forEach(([key, value]) => {
@@ -1052,16 +1052,16 @@ export const PartidoAPI = {
 
       const query = params.toString();
       const endpoint = query ? `/api/partidos?${query}` : '/api/partidos';
-      
+
       logger.log("[PartidoAPI.list] Endpoint:", endpoint);
 
       const response = await apiFetch<any>(endpoint);
-      
+
       logger.log("[PartidoAPI.list] Respuesta raw:", response);
-      
+
       // Extraer array de partidos de diferentes formatos de respuesta
       let partidos: any[] = [];
-      
+
       if (Array.isArray(response)) {
         partidos = response;
       } else if (Array.isArray(response.data)) {
@@ -1072,9 +1072,9 @@ export const PartidoAPI = {
         logger.warn("[PartidoAPI.list] Formato de respuesta inesperado");
         partidos = [];
       }
-      
+
       logger.log("[PartidoAPI.list] Partidos a normalizar:", partidos.length);
-      
+
       // Normalizar cada partido de forma segura
       const normalized = partidos
         .map((p: any) => {
@@ -1087,18 +1087,18 @@ export const PartidoAPI = {
           }
         })
         .filter(Boolean) as PartidoDTO[];
-      
+
       logger.log("[PartidoAPI.list] Partidos normalizados exitosamente:", normalized.length);
-      
+
       return {
         success: true,
         data: normalized,
         message: `${normalized.length} partidos encontrados`
       };
-      
+
     } catch (error: any) {
       logger.error("[PartidoAPI.list] Error:", error);
-      
+
       return {
         success: false,
         data: [],
@@ -1114,39 +1114,39 @@ export const PartidoAPI = {
    */
   actualizar: async (id: string, cambios: Partial<PartidoDTO>, partidoActual?: PartidoDTO) => {
     logger.log("[PartidoAPI.actualizar] ID:", id, "Cambios:", cambios);
-    
+
     // Convertir solo los campos que cambiaron a snake_case
     const payload: any = {};
-    
-    if (cambios.tipoPartido !== undefined) 
+
+    if (cambios.tipoPartido !== undefined)
       payload.tipo_partido = cambios.tipoPartido;
-    if (cambios.genero !== undefined) 
+    if (cambios.genero !== undefined)
       payload.genero = cambios.genero;
-    if (cambios.fecha !== undefined) 
+    if (cambios.fecha !== undefined)
       payload.fecha = cambios.fecha;
-    if (cambios.hora !== undefined) 
+    if (cambios.hora !== undefined)
       payload.hora = cambios.hora;
-    if (cambios.nombreUbicacion !== undefined) 
+    if (cambios.nombreUbicacion !== undefined)
       payload.nombre_ubicacion = cambios.nombreUbicacion;
-    if (cambios.cantidadJugadores !== undefined) 
+    if (cambios.cantidadJugadores !== undefined)
       payload.cantidad_jugadores = cambios.cantidadJugadores;
-    if (cambios.duracionMinutos !== undefined) 
+    if (cambios.duracionMinutos !== undefined)
       payload.duracion_minutos = cambios.duracionMinutos;
-    if (cambios.descripcion !== undefined) 
+    if (cambios.descripcion !== undefined)
       payload.descripcion = cambios.descripcion;
-    if (cambios.precioTotal !== undefined) 
+    if (cambios.precioTotal !== undefined)
       payload.precio_total = cambios.precioTotal;
-    if (cambios.direccionUbicacion !== undefined) 
+    if (cambios.direccionUbicacion !== undefined)
       payload.direccion_ubicacion = cambios.direccionUbicacion;
-    if (cambios.latitud !== undefined) 
+    if (cambios.latitud !== undefined)
       payload.latitud = cambios.latitud;
-    if (cambios.longitud !== undefined) 
+    if (cambios.longitud !== undefined)
       payload.longitud = cambios.longitud;
-    if (cambios.nivel !== undefined) 
+    if (cambios.nivel !== undefined)
       payload.nivel = cambios.nivel;
-    
+
     logger.log("[PartidoAPI.actualizar] Payload (solo cambios):", payload);
-    
+
     const response = await apiFetch<any>(`/api/partidos/${id}`, {
       method: 'PUT',
       body: JSON.stringify(payload)
@@ -1168,11 +1168,11 @@ export const PartidoAPI = {
       method: 'POST',
       body: motivo ? JSON.stringify({ motivo }) : undefined
     });
-    
+
     if (response.success) {
       AppMetrics.partidoCancelled();
     }
-    
+
     return response;
   },
 
@@ -1180,11 +1180,11 @@ export const PartidoAPI = {
     const response = await apiFetch<void>(`/api/partidos/${id}/confirmar`, {
       method: 'POST'
     });
-    
+
     if (response.success) {
       AppMetrics.incrementCounter('faltauno_partidos_confirmed_frontend_total');
     }
-    
+
     return response;
   },
 
@@ -1192,17 +1192,17 @@ export const PartidoAPI = {
     const response = await apiFetch<void>(`/api/partidos/${id}/completar`, {
       method: 'POST'
     });
-    
+
     if (response.success) {
       AppMetrics.incrementCounter('faltauno_partidos_completed_frontend_total');
     }
-    
+
     return response;
   },
 
   getJugadores: async (id: string) => {
     const response = await apiFetch<any>(`/api/partidos/${id}/jugadores`);
-    
+
     // Normalizar jugadores
     const jugadores = (response.data ?? []).map((j: any) => ({
       id: j.id,
@@ -1212,7 +1212,7 @@ export const PartidoAPI = {
       posicion: j.posicion,
       rating: j.rating
     }));
-    
+
     return {
       ...response,
       data: jugadores
@@ -1236,14 +1236,14 @@ export const PartidoAPI = {
    */
   listByUser: async (usuarioId: string) => {
     logger.log("[PartidoAPI.listByUser] Usuario ID:", usuarioId);
-    
+
     try {
       const response = await apiFetch<any>(`/api/partidos/usuario/${usuarioId}`);
-      
+
       logger.log("[PartidoAPI.listByUser] Respuesta raw:", response);
-      
+
       let partidos: any[] = [];
-      
+
       if (Array.isArray(response)) {
         partidos = response;
       } else if (Array.isArray(response.data)) {
@@ -1253,7 +1253,7 @@ export const PartidoAPI = {
       } else {
         partidos = [];
       }
-      
+
       const normalized = partidos.map((p: any) => {
         try {
           return normalizePartido(p);
@@ -1262,15 +1262,15 @@ export const PartidoAPI = {
           return null;
         }
       }).filter(Boolean) as PartidoDTO[];
-      
+
       return {
         success: true,
         data: normalized
       };
-      
+
     } catch (error) {
       logger.error("[PartidoAPI.listByUser] Error:", error);
-      
+
       if (error instanceof Error && error.message.includes('500')) {
         return {
           success: false,
@@ -1278,7 +1278,7 @@ export const PartidoAPI = {
           message: "Error del servidor al cargar partidos"
         };
       }
-      
+
       throw error;
     }
   },
@@ -1288,7 +1288,7 @@ export const PartidoAPI = {
    */
   invitarJugador: async (partidoId: string, usuarioId: string) => {
     logger.log("[PartidoAPI.invitarJugador] Partido:", partidoId, "Usuario:", usuarioId);
-    
+
     return apiFetch<{ success: boolean; message?: string }>(
       `/api/partidos/${partidoId}/invitar`,
       {
@@ -1303,15 +1303,15 @@ export const PartidoAPI = {
    */
   misPartidos: async (usuarioId: string) => {
     logger.log("[PartidoAPI.misPartidos] Usuario:", usuarioId);
-    
+
     try {
       const response = await apiFetch<any>(`/api/partidos/usuario/${usuarioId}`);
-      
+
       logger.log("[PartidoAPI.misPartidos] Respuesta raw:", response);
-      
+
       // Extraer array de partidos
       let partidos: any[] = [];
-      
+
       if (Array.isArray(response)) {
         partidos = response;
       } else if (Array.isArray(response.data)) {
@@ -1319,7 +1319,7 @@ export const PartidoAPI = {
       } else if (response.data && typeof response.data === 'object') {
         partidos = response.data.items || response.data.content || [];
       }
-      
+
       // Normalizar de forma segura
       const normalized = partidos
         .map((p: any) => {
@@ -1331,15 +1331,15 @@ export const PartidoAPI = {
           }
         })
         .filter(Boolean) as PartidoDTO[];
-      
+
       return {
         success: true,
         data: normalized
       };
-      
+
     } catch (error: any) {
       logger.error("[PartidoAPI.misPartidos] Error:", error);
-      
+
       // Si es 404 o 500, retornar array vacío
       if (error.message?.includes('404') || error.message?.includes('500')) {
         logger.warn("[PartidoAPI.misPartidos] Backend no disponible, retornando array vacío");
@@ -1349,7 +1349,7 @@ export const PartidoAPI = {
           message: "No hay partidos disponibles"
         };
       }
-      
+
       throw error;
     }
   },
@@ -1416,7 +1416,7 @@ export const InscripcionAPI = {
    */
   getPendientes: async (partidoId: string) => {
     logger.log("[InscripcionAPI.getPendientes] Partido ID:", partidoId);
-    
+
     const response = await apiFetch<InscripcionDTO[]>(
       `/api/partidos/${partidoId}/solicitudes`
     );
@@ -1428,7 +1428,7 @@ export const InscripcionAPI = {
       data: response.data.map(normalizeInscripcion)
     };
   },
-  
+
   /**
    * Aceptar inscripción
    */
@@ -1944,3 +1944,49 @@ export function mapFormDataToPartidoDTO(formData: {
  * Alias de apiFetch para componentes que prefieren el nombre "apiClient"
  */
 export const apiClient = apiFetch;
+
+// ============================================
+// PHOTO VALIDATION API
+// ============================================
+
+export interface PhotoValidationResult {
+  success: boolean;
+  valid: boolean;
+  hasFace: boolean;
+  faceCount: number;
+  isAppropriate: boolean;
+  confidence: number;
+  message: string;
+  reason?: string;
+}
+
+/**
+ * API para validación de fotos de perfil
+ * Valida que la foto tenga exactamente 1 rostro y contenido apropiado
+ */
+export const PhotoValidationAPI = {
+  /**
+   * Valida una foto de perfil
+   * @param file Archivo de imagen a validar
+   * @returns Resultado de validación
+   */
+  validate: async (file: File): Promise<PhotoValidationResult> => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_BASE}/api/photos/validate`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${AuthService.getToken()}`
+      },
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Error al validar foto' }));
+      throw new Error(errorData.message || 'Error al validar foto');
+    }
+
+    return response.json();
+  }
+};

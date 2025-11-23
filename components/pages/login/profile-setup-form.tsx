@@ -13,7 +13,7 @@ import { User, ChevronDown, AlertCircle, X, Camera, Upload } from "lucide-react"
 import AddressAutocomplete from "@/components/google-maps/address-autocomplete"
 import { AuthService } from "@/lib/auth"
 import { useAuth } from "@/hooks/use-auth"
-import { UsuarioAPI } from "@/lib/api"
+import { UsuarioAPI, PhotoValidationAPI } from "@/lib/api"
 import { usePostAuthRedirect } from "@/lib/navigation"
 import ReactCrop, { type Crop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
@@ -436,7 +436,7 @@ export function ProfileSetupForm() {
 
 
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0] ?? null
     if (!f) return
 
@@ -447,6 +447,41 @@ export function ProfileSetupForm() {
     if (f.size > MAX_SIZE) {
       setGeneralError("La imagen no puede superar 30MB")
       return
+    }
+
+    // ✅ NEW: Validate photo with Google Cloud Vision API
+    setIsUploading(true)
+    setGeneralError("")
+
+    try {
+      logger.log('[ProfileSetup] Validating photo...', f.name)
+      const validationResult = await PhotoValidationAPI.validate(f)
+
+      if (!validationResult.valid) {
+        logger.warn('[ProfileSetup] Photo validation failed:', validationResult.message)
+
+        // Provide specific error messages
+        if (validationResult.faceCount === 0) {
+          setGeneralError("No se detectó ningún rostro en la foto. Por favor sube una foto donde se vea tu rostro claramente")
+        } else if (validationResult.faceCount > 1) {
+          setGeneralError(`Se detectaron ${validationResult.faceCount} rostros. Por favor sube una foto con una sola persona`)
+        } else if (!validationResult.isAppropriate) {
+          setGeneralError("La foto contiene contenido inapropiado. Por favor elige otra imagen")
+        } else {
+          setGeneralError(validationResult.message || "La foto no cumple con los requisitos")
+        }
+
+        setIsUploading(false)
+        return
+      }
+
+      logger.log('[ProfileSetup] Photo validated successfully')
+    } catch (error) {
+      logger.error('[ProfileSetup] Error validating photo:', error)
+      // Allow photo if validation fails (graceful degradation)
+      logger.warn('[ProfileSetup] Allowing photo despite validation error')
+    } finally {
+      setIsUploading(false)
     }
 
     const reader = new FileReader()
