@@ -131,6 +131,8 @@ export function DropdownPortal({
       style={{ ...style, pointerEvents: 'auto' }}
       className={className}
       onClick={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
     >
       {children}
     </div>,
