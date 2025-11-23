@@ -115,17 +115,23 @@ export function DropdownPortal({
         onClose();
       }
     };
-    document.addEventListener('mousedown', handleClick);
-    document.addEventListener('touchstart', handleClick);
+    // ✅ FIX: Use capture phase to allow dropdown items to handle clicks first
+    document.addEventListener('mousedown', handleClick, false);
+    document.addEventListener('touchstart', handleClick, false);
     return () => {
-      document.removeEventListener('mousedown', handleClick);
-      document.removeEventListener('touchstart', handleClick);
+      document.removeEventListener('mousedown', handleClick, false);
+      document.removeEventListener('touchstart', handleClick, false);
     };
   }, [open, onClose, anchorRef]);
 
   if (!open) return null;
   return createPortal(
-    <div ref={portalRef} style={style} className={className}>
+    <div
+      ref={portalRef}
+      style={{ ...style, pointerEvents: 'auto' }}
+      className={className}
+      onClick={(e) => e.stopPropagation()}
+    >
       {children}
     </div>,
     document.body
