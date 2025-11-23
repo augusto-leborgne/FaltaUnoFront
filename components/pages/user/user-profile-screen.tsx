@@ -68,7 +68,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       if (!user) {
         setLoading(true)
       }
-      
+
       setError(null)
 
       // Esperar un tick para evitar condiciones de carrera con la lectura del token
@@ -83,7 +83,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       const userRes = await fetch(`${API_BASE}/api/usuarios/${userId}`, {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       })
-      
+
       if (!userRes.ok) {
         // Manejar usuario eliminado (HTTP 410 Gone) o no encontrado (HTTP 404)
         if (userRes.status === 410) {
@@ -94,7 +94,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
         }
         throw new Error(`Error ${userRes.status}: No se pudo cargar el perfil`)
       }
-      
+
       const userJson = await userRes.json()
       if (!userJson?.data) throw new Error("Usuario no encontrado")
       setUser(userJson.data)
@@ -114,7 +114,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       const pendientesRecibidasResponse = await AmistadAPI.listarSolicitudesPendientes()
 
       // Obtener amigos del usuario actual
-      const misAmigos = amigosResponse.success && amigosResponse.data ? 
+      const misAmigos = amigosResponse.success && amigosResponse.data ?
         amigosResponse.data.map((amistad: any) => amistad.amigo?.id || amistad.amigoId) : []
 
       // Obtener amigos del usuario que estamos viendo
@@ -126,12 +126,12 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
           if (userFriendsRes.ok) {
             const userFriendsJson = await userFriendsRes.json()
             const susAmigos = userFriendsJson?.data || []
-            
+
             // Encontrar amigos en común
-            const amigosEnComun = susAmigos.filter((amigo: any) => 
+            const amigosEnComun = susAmigos.filter((amigo: any) =>
               misAmigos.includes(amigo.amigo?.id || amigo.amigoId)
             ).map((amistad: any) => amistad.amigo)
-            
+
             setMutualFriends(amigosEnComun)
             logger.log("[UserProfile] Amigos en común encontrados:", amigosEnComun.length)
           }
@@ -142,7 +142,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
 
       // Verificar si ya son amigos
       if (amigosResponse.success && amigosResponse.data) {
-        const esAmigo = amigosResponse.data.some((amistad: any) => 
+        const esAmigo = amigosResponse.data.some((amistad: any) =>
           amistad.amigo?.id === userId
         )
         if (esAmigo) {
@@ -204,7 +204,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
   const handleSendFriendRequest = async () => {
     try {
       const response = await AmistadAPI.enviarSolicitud(userId)
-      
+
       if (response.success) {
         setFriendStatus('pending-sent')
       } else {
@@ -228,7 +228,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
         throw new Error("No se pudo obtener la lista de amigos")
       }
 
-      const amistad = amigosResponse.data.find((a: any) => 
+      const amistad = amigosResponse.data.find((a: any) =>
         (a.amigo?.id === userId) || (a.amigoId === userId)
       )
 
@@ -237,7 +237,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       }
 
       const response = await AmistadAPI.eliminarAmistad(amistad.id)
-      
+
       if (response.success) {
         setFriendStatus('none')
         setMutualFriends([]) // Limpiar amigos en común
@@ -247,6 +247,70 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
     } catch (error) {
       logger.error("Error removing friend:", error)
       alert("Error al eliminar amigo")
+    }
+  }
+
+  const handleAcceptFriendRequest = async () => {
+    try {
+      // Find the friend request from the user
+      const pendientesRecibidasResponse = await AmistadAPI.listarSolicitudesPendientes()
+      if (!pendientesRecibidasResponse.success || !pendientesRecibidasResponse.data) {
+        throw new Error("No se pudo obtener la lista de solicitudes")
+      }
+
+      const solicitud = pendientesRecibidasResponse.data.find((s: any) =>
+        s.usuarioId === userId || s.usuario?.id === userId
+      )
+
+      if (!solicitud || !solicitud.id) {
+        throw new Error("No se encontró la solicitud")
+      }
+
+      const response = await AmistadAPI.aceptarSolicitud(solicitud.id)
+
+      if (response.success) {
+        setFriendStatus('friends')
+        // Reload to get mutual friends
+        await loadUserProfile()
+      } else {
+        alert(response.message || "Error al aceptar solicitud")
+      }
+    } catch (error) {
+      logger.error("Error accepting friend request:", error)
+      alert("Error al aceptar solicitud")
+    }
+  }
+
+  const handleRejectFriendRequest = async () => {
+    if (!confirm("¿Estás seguro de rechazar esta solicitud?")) {
+      return
+    }
+
+    try {
+      // Find the friend request from the user
+      const pendientesRecibidasResponse = await AmistadAPI.listarSolicitudesPendientes()
+      if (!pendientesRecibidasResponse.success || !pendientesRecibidasResponse.data) {
+        throw new Error("No se pudo obtener la lista de solicitudes")
+      }
+
+      const solicitud = pendientesRecibidasResponse.data.find((s: any) =>
+        s.usuarioId === userId || s.usuario?.id === userId
+      )
+
+      if (!solicitud || !solicitud.id) {
+        throw new Error("No se encontró la solicitud")
+      }
+
+      const response = await AmistadAPI.rechazarSolicitud(solicitud.id)
+
+      if (response.success) {
+        setFriendStatus('none')
+      } else {
+        alert(response.message || "Error al rechazar solicitud")
+      }
+    } catch (error) {
+      logger.error("Error rejecting friend request:", error)
+      alert("Error al rechazar solicitud")
     }
   }
 
@@ -399,9 +463,9 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
   const averageRating =
     reviews.length > 0
       ? (
-          reviews.reduce((sum, r) => sum + (r.nivel + r.deportividad + r.companerismo) / 3, 0) /
-          reviews.length
-        ).toFixed(1)
+        reviews.reduce((sum, r) => sum + (r.nivel + r.deportividad + r.companerismo) / 3, 0) /
+        reviews.length
+      ).toFixed(1)
       : "0.0"
 
   return (
@@ -512,13 +576,22 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                 Solicitud enviada
               </Button>
             ) : friendStatus === 'pending-received' ? (
-              <Button
-                onClick={() => router.push('/friend-requests')}
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 rounded-xl"
-              >
-                <UserPlus className="w-4 h-4 mr-2" />
-                Ver solicitud recibida
-              </Button>
+              <div className="space-y-2">
+                <Button
+                  onClick={handleAcceptFriendRequest}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl"
+                >
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Aceptar solicitud
+                </Button>
+                <Button
+                  onClick={handleRejectFriendRequest}
+                  variant="outline"
+                  className="w-full border-red-200 text-red-600 hover:bg-red-50 py-3 rounded-xl"
+                >
+                  Rechazar solicitud
+                </Button>
+              </div>
             ) : (
               <Button
                 onClick={handleSendFriendRequest}
@@ -531,7 +604,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
             {friendStatus === 'pending-sent' && (
               <p className="text-sm text-orange-600 font-medium text-center">✓ Solicitud enviada correctamente</p>
             )}
-            
+
             {/* Report Button */}
             <Button
               onClick={() => setReportModalOpen(true)}
@@ -665,9 +738,8 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`w-3 h-3 ${
-                                i < review.deportividad ? "fill-accent text-accent" : "text-muted-foreground"
-                              }`}
+                              className={`w-3 h-3 ${i < review.deportividad ? "fill-accent text-accent" : "text-muted-foreground"
+                                }`}
                             />
                           ))}
                         </div>
@@ -678,9 +750,8 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`w-3 h-3 ${
-                                i < review.companerismo ? "fill-accent text-accent" : "text-muted-foreground"
-                              }`}
+                              className={`w-3 h-3 ${i < review.companerismo ? "fill-accent text-accent" : "text-muted-foreground"
+                                }`}
                             />
                           ))}
                         </div>
