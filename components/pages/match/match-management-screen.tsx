@@ -34,10 +34,10 @@ import { formatMatchType, formatMatchDate } from "@/lib/utils"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useWebSocket } from "@/hooks/use-websocket"
 import { apiCache } from "@/lib/api-cache-manager"
-import { 
-  PartidoAPI, 
-  InscripcionAPI, 
-  PartidoDTO, 
+import {
+  PartidoAPI,
+  InscripcionAPI,
+  PartidoDTO,
   InscripcionDTO,
   PartidoEstado,
   InscripcionEstado
@@ -51,7 +51,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { toast } = useToast()
-  
+
   // Estados
   const [match, setMatch] = useState<PartidoDTO | null>(null)
   const [solicitudes, setSolicitudes] = useState<InscripcionDTO[]>([])
@@ -62,7 +62,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
   const [showMapModal, setShowMapModal] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [isCancelling, setIsCancelling] = useState(false)
-  
+
   const [editData, setEditData] = useState({
     fecha: "",
     hora: "",
@@ -84,7 +84,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
     enabled: !!match, // Solo conectar cuando el partido esté cargado
     onEvent: (event) => {
       logger.log('[MatchManagement] 📡 WebSocket event:', event.type, event)
-      
+
       switch (event.type) {
         case 'PARTIDO_UPDATED':
           // Actualizar datos del partido
@@ -103,7 +103,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
             })
           }
           break
-          
+
         case 'INSCRIPCION_CREATED':
           // Nueva solicitud de inscripción
           if (canManage && event.inscripcion) {
@@ -116,11 +116,11 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
           // Recargar para actualizar contador de jugadores
           loadMatchData()
           break
-          
+
         case 'INSCRIPCION_STATUS_CHANGED':
           // Inscripción aceptada/rechazada
           if (event.inscripcion) {
-            setSolicitudes(prev => 
+            setSolicitudes(prev =>
               prev.filter(s => s.id !== event.inscripcion.id)
             )
           }
@@ -131,7 +131,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
             description: `La solicitud ha sido ${event.newStatus?.toLowerCase()}`,
           })
           break
-          
+
         case 'INSCRIPCION_CANCELLED':
           // Un jugador canceló su inscripción
           loadMatchData()
@@ -141,7 +141,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
             variant: "destructive",
           })
           break
-          
+
         case 'PARTIDO_CANCELLED':
           // Partido cancelado
           if (match) {
@@ -153,7 +153,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
             variant: "destructive",
           })
           break
-          
+
         case 'PARTIDO_COMPLETED':
           // Partido completado
           if (match) {
@@ -205,14 +205,14 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
 
       // Cargar partido
       const matchResponse = await PartidoAPI.get(matchId)
-      
+
       if (!matchResponse.success || !matchResponse.data) {
         throw new Error(matchResponse.message || "Error al cargar el partido")
       }
 
       const matchData = matchResponse.data
       setMatch(matchData)
-      
+
       // Inicializar datos de edición
       setEditData({
         fecha: matchData.fecha,
@@ -226,7 +226,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
       // ✅ SOLO cargar solicitudes si el usuario es el organizador
       const currentUser = AuthService.getUser()
       const isOrganizer = currentUser?.id === matchData.organizadorId
-      
+
       if (isOrganizer) {
         try {
           logger.log("[MatchManagement] Usuario es organizador, cargando solicitudes...")
@@ -281,7 +281,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
     // Validar que la fecha/hora sea futura
     const selectedDateTime = new Date(`${editData.fecha}T${editData.hora}`)
     const now = new Date()
-    
+
     if (selectedDateTime <= now) {
       toast({
         title: "Error",
@@ -313,13 +313,13 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
 
       // Recargar datos primero
       await loadMatchData()
-      
+
       // Invalidar caché para forzar actualización en otras pantallas
       if (currentUser?.id) {
         apiCache.invalidatePattern(`partidos`) // Invalida TODOS los listados
         apiCache.invalidatePattern(`partido-${matchId}`)
       }
-      
+
       toast({
         title: "¡Partido actualizado!",
         description: "Los cambios se han guardado correctamente",
@@ -378,7 +378,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
       if (solicitud) {
         // Remover de solicitudes
         setSolicitudes(prev => prev.filter(s => s.id !== inscripcionId))
-        
+
         // Actualizar contador de jugadores inmediatamente
         setMatch(prev => prev ? {
           ...prev,
@@ -402,13 +402,13 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
 
     } catch (err) {
       logger.error("[MatchManagement] Error aceptando:", err)
-      
+
       // ✅ REVERTIR cambio optimista en caso de error
       await loadMatchData()
-      
+
       // ✅ MEJORADO: Mensajes de error más específicos
       let errorMessage = "Error al aceptar solicitud"
-      
+
       if (err instanceof Error) {
         if (err.message.includes("500")) {
           errorMessage = "Error del servidor. Por favor intenta nuevamente en unos segundos."
@@ -420,7 +420,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
           errorMessage = err.message
         }
       }
-      
+
       toast({
         title: "Error al aceptar",
         description: errorMessage,
@@ -442,10 +442,10 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
 
     } catch (err) {
       logger.error("[MatchManagement] Error rechazando:", err)
-      
+
       // ✅ MEJORADO: Mensajes de error más específicos
       let errorMessage = "Error al rechazar solicitud"
-      
+
       if (err instanceof Error) {
         if (err.message.includes("500")) {
           errorMessage = "Error del servidor. Por favor intenta nuevamente en unos segundos."
@@ -457,7 +457,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
           errorMessage = err.message
         }
       }
-      
+
       toast({
         title: "Error al rechazar",
         description: errorMessage,
@@ -607,14 +607,14 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
 
   const handleCancelMatch = async () => {
     if (!match) return
-    
+
     if (!confirm("¿Estás seguro de que quieres cancelar el partido? Esta acción no se puede deshacer.")) {
       return
     }
-    
+
     try {
       const response = await PartidoAPI.cancelar(matchId)
-      
+
       if (response.success) {
         toast({
           title: "Partido cancelado",
@@ -651,21 +651,21 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
     if (!match) return null
 
     const statusMap: Record<PartidoEstado, { label: string; className: string }> = {
-      [PartidoEstado.CONFIRMADO]: { 
-        label: "Confirmado", 
-        className: "bg-green-100 text-green-800" 
+      [PartidoEstado.CONFIRMADO]: {
+        label: "Confirmado",
+        className: "bg-green-100 text-green-800"
       },
-      [PartidoEstado.CANCELADO]: { 
-        label: "Cancelado", 
-        className: "bg-red-100 text-red-800" 
+      [PartidoEstado.CANCELADO]: {
+        label: "Cancelado",
+        className: "bg-red-100 text-red-800"
       },
-      [PartidoEstado.COMPLETADO]: { 
-        label: "Completado", 
-        className: "bg-blue-100 text-blue-800" 
+      [PartidoEstado.COMPLETADO]: {
+        label: "Completado",
+        className: "bg-blue-100 text-blue-800"
       },
-      [PartidoEstado.DISPONIBLE]: { 
-        label: "Disponible", 
-        className: "bg-green-100 text-green-800" 
+      [PartidoEstado.DISPONIBLE]: {
+        label: "Disponible",
+        className: "bg-green-100 text-green-800"
       },
     }
 
@@ -734,8 +734,8 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
       <div className="pt-16 pb-6 px-6 border-b border-gray-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <button 
-              onClick={handleBack} 
+            <button
+              onClick={handleBack}
               className="p-2 -ml-2 hover:bg-gray-100 rounded-xl transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-gray-600" />
@@ -897,18 +897,18 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                         setEditData({ ...editData, hora: '' })
                         return
                       }
-                      
+
                       const newTime = `${e.target.value}:00`
                       const selectedDate = editData.fecha
                       const today = new Date().toISOString().split('T')[0]
-                      
+
                       // Solo validar hora si la fecha es HOY
                       if (selectedDate === today) {
                         const now = new Date()
                         const [hours, minutes] = e.target.value.split(':')
                         const selectedDateTime = new Date()
                         selectedDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0)
-                        
+
                         if (selectedDateTime <= now) {
                           toast({
                             title: "Hora inválida",
@@ -918,7 +918,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                           return
                         }
                       }
-                      
+
                       setEditData({ ...editData, hora: newTime })
                     }}
                     className="rounded-lg sm:rounded-xl text-sm sm:text-base h-10 sm:h-auto"
@@ -988,7 +988,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
 
               {/* Botones de guardar/cancelar al final del formulario */}
               <div className="flex gap-2 sm:gap-3 pt-3 border-t border-gray-100">
-                <Button 
+                <Button
                   onClick={handleCancelEdit}
                   variant="outline"
                   disabled={isSaving}
@@ -997,8 +997,8 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                   <X className="w-4 h-4 mr-1 sm:mr-2" />
                   Cancelar
                 </Button>
-                <Button 
-                  onClick={handleSave} 
+                <Button
+                  onClick={handleSave}
                   disabled={isSaving}
                   className="flex-1 bg-green-600 hover:bg-green-700 text-sm sm:text-base py-2.5 sm:py-3"
                 >
@@ -1114,7 +1114,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
         {/* Registered Players */}
         <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
           <h3 className="text-lg font-bold text-gray-900 mb-4">
-            Jugadores inscriptos ({match.jugadores?.length || 0})
+            Jugadores inscriptos ({match.jugadores?.filter(p => p.id !== match.organizadorId).length || 0})
           </h3>
 
           {match.jugadores && match.jugadores.length > 0 ? (
@@ -1122,45 +1122,45 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
               {match.jugadores
                 .filter((player) => player.id !== match.organizadorId)
                 .map((player) => (
-                <div 
-                  key={player.id} 
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-xl"
-                >
                   <div
-                    className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity flex-1"
-                    onClick={() => handlePlayerClick(player.id)}
+                    key={player.id}
+                    className="flex items-center justify-between p-4 bg-gray-50 rounded-xl"
                   >
-                    <Avatar className="w-12 h-12">
-                      {player.foto_perfil ? (
-                        <AvatarImage src={`data:image/jpeg;base64,${player.foto_perfil}`} />
-                      ) : (
-                        <AvatarFallback className="bg-gray-200">
-                          {player.nombre?.[0] ?? ""}{player.apellido?.[0] ?? ""}
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
-                    <div>
-                      <div className="font-semibold text-gray-900">
-                        {player.nombre} {player.apellido}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {player.posicion && `${player.posicion} • `}
-                        {player.rating && `⭐ ${player.rating}`}
+                    <div
+                      className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity flex-1"
+                      onClick={() => handlePlayerClick(player.id)}
+                    >
+                      <Avatar className="w-12 h-12">
+                        {player.foto_perfil ? (
+                          <AvatarImage src={`data:image/jpeg;base64,${player.foto_perfil}`} />
+                        ) : (
+                          <AvatarFallback className="bg-gray-200">
+                            {player.nombre?.[0] ?? ""}{player.apellido?.[0] ?? ""}
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
+                      <div>
+                        <div className="font-semibold text-gray-900">
+                          {player.nombre} {player.apellido}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {player.posicion && `${player.posicion} • `}
+                          {player.rating && `⭐ ${player.rating}`}
+                        </div>
                       </div>
                     </div>
+                    {canRemovePlayers && player.id !== currentUser?.id && (
+                      <Button
+                        onClick={() => handleRemovePlayer(player.id)}
+                        size="sm"
+                        variant="outline"
+                        className="border-red-200 text-red-600 hover:bg-red-50 p-2"
+                      >
+                        <UserMinus className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
-                  {canRemovePlayers && player.id !== currentUser?.id && (
-                    <Button
-                      onClick={() => handleRemovePlayer(player.id)}
-                      size="sm"
-                      variant="outline"
-                      className="border-red-200 text-red-600 hover:bg-red-50 p-2"
-                    >
-                      <UserMinus className="w-4 h-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
+                ))}
             </div>
           ) : (
             <div className="text-center py-8">
@@ -1183,8 +1183,8 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                 if (!usuario) return null
 
                 return (
-                  <div 
-                    key={solicitud.id} 
+                  <div
+                    key={solicitud.id}
                     className="flex items-center justify-between p-4 bg-gray-50 rounded-xl"
                   >
                     <div
