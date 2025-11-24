@@ -23,7 +23,7 @@ function VerifyEmailContent() {
   const [isResending, setIsResending] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(15 * 60); // 15 minutos en segundos
+  const [timeLeft, setTimeLeft] = useState(5 * 60); // 5 minutos en segundos
   const [canResend, setCanResend] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
 
@@ -271,7 +271,7 @@ function VerifyEmailContent() {
 
       if (data.success) {
         // Reset timer y código
-        setTimeLeft(15 * 60);
+        setTimeLeft(5 * 60);
         setCanResend(false);
         setResendCooldown(60); // 60 segundos de cooldown
         setCode(['', '', '', '', '', '']);
@@ -324,8 +324,8 @@ function VerifyEmailContent() {
         {/* Header */}
         <div className="text-center mb-8">
           <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 transition-all ${success
-              ? 'bg-green-500 animate-in zoom-in-50'
-              : 'bg-green-100'
+            ? 'bg-green-500 animate-in zoom-in-50'
+            : 'bg-green-100'
             }`}>
             {success ? (
               <CheckCircle2 className="w-8 h-8 text-white" />
@@ -387,10 +387,10 @@ function VerifyEmailContent() {
                   }}
                   onKeyDown={(e) => handleKeyDown(index, e)}
                   className={`w-14 h-16 sm:w-16 sm:h-18 text-center text-3xl sm:text-4xl font-bold border-2 rounded-xl transition-all shadow-sm ${success
-                      ? 'border-green-500 bg-green-50 text-green-700'
-                      : digit
-                        ? 'border-green-500 bg-green-50 text-green-700 scale-105'
-                        : 'border-gray-300 hover:border-green-400 focus:border-green-500 focus:ring-2 focus:ring-green-200'
+                    ? 'border-green-500 bg-green-50 text-green-700'
+                    : digit
+                      ? 'border-green-500 bg-green-50 text-green-700 scale-105'
+                      : 'border-gray-300 hover:border-green-400 focus:border-green-500 focus:ring-2 focus:ring-green-200'
                     }`}
                   disabled={isVerifying || success}
                 />
@@ -401,8 +401,8 @@ function VerifyEmailContent() {
           {/* Timer */}
           <div className="text-center">
             <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${timeLeft < 60
-                ? 'bg-red-100 text-red-700'
-                : 'bg-green-100 text-green-700'
+              ? 'bg-red-100 text-red-700'
+              : 'bg-green-100 text-green-700'
               }`}>
               <div className={`w-2 h-2 rounded-full ${timeLeft < 60 ? 'bg-red-500 animate-pulse' : 'bg-green-500'
                 }`} />
@@ -496,7 +496,7 @@ function VerifyEmailContent() {
             <p className="text-xs font-medium text-gray-700">💡 Consejos:</p>
             <ul className="text-xs text-gray-600 space-y-1">
               <li>• Revisa tu bandeja de spam si no ves el email</li>
-              <li>• El código es válido por 15 minutos</li>
+              <li>• El código es válido por 5 minutos</li>
               <li>• Puedes pegar el código directamente</li>
             </ul>
           </div>
