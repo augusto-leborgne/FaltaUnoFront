@@ -22,8 +22,9 @@ export function ForgotPasswordScreen() {
 
     try {
       logger.info("[ForgotPassword] Solicitando recuperación para:", email)
-      
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/auth/password/forgot`, {
+
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-169771742214.us-central1.run.app'
+      const response = await fetch(`${API_URL}/api/auth/password/forgot`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -36,16 +37,16 @@ export function ForgotPasswordScreen() {
       if (!response.ok || !data.success) {
         throw new Error(data.message || 'Error al enviar el email')
       }
-      
+
       // ⚡ NUEVO: Si el backend devuelve resetLink, estamos en modo desarrollo
       if (data.data && data.data.resetLink) {
         logger.warn("[ForgotPassword] ⚠️ Modo desarrollo - Link recibido del backend")
         setResetLink(data.data.resetLink)
       }
-      
+
       setSuccess(true)
       logger.info("[ForgotPassword] ✅ Email de recuperación enviado")
-      
+
       // Solo redirigir automáticamente si NO hay link (modo producción)
       if (!data.data?.resetLink) {
         setTimeout(() => {
@@ -84,14 +85,14 @@ export function ForgotPasswordScreen() {
                 Revisa tu bandeja de entrada y sigue las instrucciones para restablecer tu contraseña.
               </p>
             </div>
-            
+
             {/* ⚡ NUEVO: Mostrar link directo en modo desarrollo */}
             {resetLink && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
                 <p className="text-sm font-semibold text-yellow-800 mb-2">
                   🔧 Modo Desarrollo - Link directo:
                 </p>
-                <a 
+                <a
                   href={resetLink}
                   className="text-sm text-blue-600 hover:text-blue-800 underline break-all"
                   target="_blank"
@@ -104,7 +105,7 @@ export function ForgotPasswordScreen() {
                 </p>
               </div>
             )}
-            
+
             {!resetLink && (
               <p className="text-sm text-gray-500">
                 Redirigiendo al login...

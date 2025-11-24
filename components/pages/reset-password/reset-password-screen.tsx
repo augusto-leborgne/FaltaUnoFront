@@ -30,11 +30,12 @@ export function ResetPasswordScreen() {
       }
 
       try {
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-169771742214.us-central1.run.app'
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || ''}/api/auth/password/validate-token?token=${encodeURIComponent(token)}`
+          `${API_URL}/api/auth/password/validate-token?token=${encodeURIComponent(token)}`
         )
         const data = await response.json()
-        
+
         if (response.ok && data.success && data.data) {
           setTokenValido(true)
         } else {
@@ -70,8 +71,9 @@ export function ResetPasswordScreen() {
 
     try {
       logger.info("[ResetPassword] Restableciendo contraseña...")
-      
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/auth/password/reset`, {
+
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://faltauno-backend-169771742214.us-central1.run.app'
+      const response = await fetch(`${API_URL}/api/auth/password/reset`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -87,10 +89,10 @@ export function ResetPasswordScreen() {
       if (!response.ok || !data.success) {
         throw new Error(data.message || 'Error al restablecer la contraseña')
       }
-      
+
       setSuccess(true)
       logger.info("[ResetPassword] ✅ Contraseña restablecida")
-      
+
       // Redirigir al login después de 3 segundos
       setTimeout(() => {
         router.push("/login")
