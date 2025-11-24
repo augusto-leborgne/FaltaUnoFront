@@ -142,9 +142,14 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
 
       // Verificar si ya son amigos
       if (amigosResponse.success && amigosResponse.data) {
-        const esAmigo = amigosResponse.data.some((amistad: any) =>
-          amistad.amigo?.id === userId
-        )
+        const esAmigo = amigosResponse.data.some((amistad: any) => {
+          // Check both directions: current user could be usuario1 or usuario2
+          const friendId1 = amistad.usuario1Id || amistad.usuario1_id
+          const friendId2 = amistad.usuario2Id || amistad.usuario2_id
+          const amigoId = amistad.amigo?.id || amistad.amigoId
+
+          return amigoId === userId || friendId1 === userId || friendId2 === userId
+        })
         if (esAmigo) {
           setFriendStatus('friends')
           setLoading(false)
