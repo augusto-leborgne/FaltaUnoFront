@@ -370,7 +370,7 @@ export function SettingsScreen() {
 		}, 'image/jpeg', 0.95)
 	}
 
-	const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+	const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0]
 		if (!file) return
 
@@ -388,6 +388,43 @@ export function SettingsScreen() {
 			setError("La imagen no puede superar 30MB")
 			return
 		}
+
+		// ✅ NEW: Validate photo with Google Cloud Vision API
+		setError("")
+		setIsSaving(true)
+
+		try {
+			logger.log('[Settings] Validating photo...', file.name)
+			const { PhotoValidationAPI } = await import('@/lib/api')
+			const validationResult = await PhotoValidationAPI.validate(file)
+
+			if (!validationResult.valid) {
+				logger.warn('[Settings] Photo validation failed:', validationResult.message)
+
+				// Provide specific error messages
+				if (validationResult.faceCount === 0) {
+					setError("No se detectó ningún rostro en la foto. Por favor sube una foto donde se vea tu rostro claramente")
+				} else if (validationResult.faceCount > 1) {
+					setError(`Se detectaron ${validationResult.faceCount} rostros. Por favor sube una foto con una sola persona`)
+				} else if (!validationResult.isAppropriate) {
+					setError("La foto contiene contenido inapropiado. Por favor elige otra imagen")
+				} else {
+					setError(validationResult.message || "La foto no cumple con los requisitos")
+				}
+
+				setIsSaving(false)
+				e.target.value = '' // Reset input
+				return
+			}
+
+			logger.log('[Settings] Photo validated successfully')
+		} catch (error) {
+			logger.error('[Settings] Error validating photo:', error)
+			// Allow upload if validation fails (graceful degradation)
+			logger.warn('[Settings] Proceeding with upload despite validation error')
+		}
+
+		setIsSaving(false)
 
 		const reader = new FileReader()
 		reader.onload = () => {
