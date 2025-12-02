@@ -432,7 +432,10 @@ function ProfileScreenInner() {
             </div>
             <div className="space-y-2 sm:space-y-3">
               {friendRequests.slice(0, 3).map((request) => (
-                <div className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl">
+                <div
+                  key={request.id || `${request.requesterId}-${request.createdAt}`}
+                  className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg sm:rounded-xl"
+                >
                   <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
                     {/* ✅ Usar userId si hay ID del requester */}
                     <UserAvatar

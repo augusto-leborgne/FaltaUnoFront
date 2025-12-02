@@ -326,14 +326,14 @@ export function RegisterScreen() {
               <div className="mt-2 p-2.5 sm:p-3 bg-blue-50 border border-blue-200 rounded-lg sm:rounded-xl">
                 <p className="text-xs text-blue-700 font-medium mb-1">💡 ¿Usas Gmail?</p>
                 <p className="text-xs text-blue-600 mb-2">
-                  Para una mejor experiencia, te recomendamos usar <strong>"Continuar con Google"</strong> en lugar de crear una contraseña.
+                  Para una mejor experiencia, te recomendamos usar <strong>Continuar con Google</strong> en lugar de crear una contraseña.
                 </p>
                 <button
                   type="button"
                   onClick={() => handleSocialAuth('google')}
                   className="text-xs text-blue-600 font-semibold underline active:text-blue-800"
                 >
-                  Ir a "Continuar con Google"
+                  Ir a Continuar con Google
                 </button>
               </div>
             )}

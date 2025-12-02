@@ -1,21 +1,3 @@
-  const describePhotoValidation = (result: { message?: string; faceCount?: number; isAppropriate?: boolean; reason?: string }) => {
-    if (!result) return "La foto no cumple con los requisitos";
-
-    if (result.faceCount === 0) {
-      return "No se detectó ningún rostro. Sube una foto donde se vea tu cara.";
-    }
-
-    if (result.faceCount && result.faceCount > 1) {
-      return "Solo se permite una persona en la foto.";
-    }
-
-    if (result.isAppropriate === false) {
-      return "La foto contiene contenido inapropiado. Elige otra.";
-    }
-
-    return result.message || "La foto no cumple con los requisitos";
-  };
-
 "use client"
 
 import { logger } from '@/lib/logger'
@@ -38,6 +20,24 @@ import 'react-image-crop/dist/ReactCrop.css'
 import { withRetry, formatErrorMessage } from '@/lib/api-utils'
 import { useClickOutside } from '@/hooks/use-click-outside'
 import { cn } from '@/lib/utils'
+
+const describePhotoValidation = (result: { message?: string; faceCount?: number; isAppropriate?: boolean; reason?: string }) => {
+  if (!result) return "La foto no cumple con los requisitos";
+
+  if (result.faceCount === 0) {
+    return "No se detectó ningún rostro. Sube una foto donde se vea tu cara.";
+  }
+
+  if (result.faceCount && result.faceCount > 1) {
+    return "Solo se permite una persona en la foto.";
+  }
+
+  if (result.isAppropriate === false) {
+    return "La foto contiene contenido inapropiado. Elige otra.";
+  }
+
+  return result.message || "La foto no cumple con los requisitos";
+};
 
 export function ProfileSetupForm() {
   const router = useRouter()
