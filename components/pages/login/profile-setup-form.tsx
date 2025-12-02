@@ -471,15 +471,17 @@ export function ProfileSetupForm() {
           setGeneralError(validationResult.message || "La foto no cumple con los requisitos")
         }
 
-        setIsUploading(false)
         return
       }
 
       logger.log('[ProfileSetup] Photo validated successfully')
     } catch (error) {
       logger.error('[ProfileSetup] Error validating photo:', error)
-      // Allow photo if validation fails (graceful degradation)
-      logger.warn('[ProfileSetup] Allowing photo despite validation error')
+      const fallbackMessage = error instanceof Error
+        ? error.message
+        : 'No se pudo validar la foto. Por favor intenta nuevamente.'
+      setGeneralError(fallbackMessage)
+      return
     } finally {
       setIsUploading(false)
     }

@@ -1982,11 +1982,35 @@ export const PhotoValidationAPI = {
       body: formData
     });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'Error al validar foto' }));
-      throw new Error(errorData.message || 'Error al validar foto');
+    let payload: PhotoValidationResult | null = null;
+
+    try {
+      payload = await response.json();
+    } catch (error) {
+      payload = null;
     }
 
-    return response.json();
+    if (!response.ok) {
+      if (payload) {
+        return {
+          success: payload.success ?? false,
+          valid: payload.valid ?? false,
+          hasFace: payload.hasFace ?? false,
+          faceCount: payload.faceCount ?? 0,
+          isAppropriate: payload.isAppropriate ?? false,
+          confidence: payload.confidence ?? 0,
+          message: payload.message ?? 'La foto no cumple con los requisitos',
+          reason: payload.reason,
+        };
+      }
+
+      throw new Error('Error al validar foto');
+    }
+
+    if (!payload) {
+      throw new Error('Respuesta inválida del validador de fotos');
+    }
+
+    return payload;
   }
 };
