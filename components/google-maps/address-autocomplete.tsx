@@ -112,7 +112,7 @@ export function AddressAutocomplete({
 
   // ✅ MODERNO: Buscar predicciones con AutocompleteSuggestion
   const fetchPredictions = async (input: string) => {
-    if (!window.google?.maps?.places?.AutocompleteSuggestion || !input.trim()) {
+    if (!window.google?.maps?.importLibrary || !input.trim()) {
       setSuggestions([]);
       setIsSearching(false);
       return;
@@ -121,19 +121,23 @@ export function AddressAutocomplete({
     setIsSearching(true);
 
     try {
+      // ✅ Ensure Places library is loaded
+      const { AutocompleteSuggestion } = await window.google.maps.importLibrary("places") as any;
+      
       const request: any = {
         input: input.trim(),
-        includedPrimaryTypes: ['street_address', 'premise', 'subpremise', 'establishment'], // Direcciones y lugares específicos
-        // ✅ SIMPLE: Solo usar includedRegionCodes (suficiente para filtrar por país)
-        includedRegionCodes: ['UY'], // ISO 3166-1 alpha-2 code para Uruguay
-        language: 'es', // Idioma español
-        region: 'uy', // Región Uruguay
+        includedPrimaryTypes: ['street_address', 'premise', 'subpremise', 'establishment'],
+        includedRegionCodes: ['UY'],
+        language: 'es',
+        region: 'uy',
         sessionToken: sessionTokenRef.current || undefined,
       };
 
+      logger.log("[AddressAutocomplete] 🔍 Request:", request);
+
       // ✅ NUEVA API: fetchAutocompleteSuggestions (retorna Promise)
       const response: any = 
-        await (window.google.maps.places.AutocompleteSuggestion as any).fetchAutocompleteSuggestions(request);
+        await AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
 
       const autocompleteSuggestions = response.suggestions || [];
 
@@ -171,8 +175,21 @@ export function AddressAutocomplete({
 
       setSuggestions(predictions);
       setIsSearching(false);
-    } catch (error) {
-      logger.warn("[AddressAutocomplete] Error en predicciones:", error);
+    } catch (error: any) {
+      logger.error("[AddressAutocomplete] ❌ Error en predicciones:", {
+        message: error?.message,
+        stack: error?.stack,
+        error: error,
+        type: typeof error,
+        status: error?.status,
+        statusText: error?.statusText,
+      });
+      
+      // Try to extract more details from the error
+      if (error?.message) {
+        logger.error("[AddressAutocomplete] Error message:", error.message);
+      }
+      
       setSuggestions([]);
       setIsSearching(false);
     }
