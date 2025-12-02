@@ -9,7 +9,7 @@ steps:
       - '--build-arg'
       - 'NEXT_PUBLIC_API_URL=${_NEXT_PUBLIC_API_URL}'
       - '--build-arg'
-      - 'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${_NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}'
+      - 'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=$$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY'
       - '--build-arg'
       - 'NEXT_PUBLIC_GRAFANA_ENABLED=${_NEXT_PUBLIC_GRAFANA_ENABLED}'
       - '--build-arg'
@@ -17,20 +17,27 @@ steps:
       - '--build-arg'
       - 'NEXT_PUBLIC_GRAFANA_USER=${_NEXT_PUBLIC_GRAFANA_USER}'
       - '--build-arg'
-      - 'NEXT_PUBLIC_GRAFANA_API_KEY=${_NEXT_PUBLIC_GRAFANA_API_KEY}'
+      - 'NEXT_PUBLIC_GRAFANA_API_KEY=$$NEXT_PUBLIC_GRAFANA_API_KEY'
       - '--build-arg'
       - 'BUILD_TIMESTAMP=${BUILD_ID}'
       - '.'
+    secretEnv:
+      - 'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY'
+      - 'NEXT_PUBLIC_GRAFANA_API_KEY'
 images:
   - 'us-central1-docker.pkg.dev/master-might-274420/cloud-run-source-deploy/faltauno-frontend:${SHORT_SHA}-prod'
 timeout: 1200s
 options:
   machineType: 'E2_HIGHCPU_8'
+availableSecrets:
+  secretManager:
+    - versionName: 'projects/master-might-274420/secrets/NEXT_PUBLIC_GOOGLE_MAPS_API_KEY/versions/latest'
+      env: 'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY'
+    - versionName: 'projects/master-might-274420/secrets/NEXT_PUBLIC_GRAFANA_API_KEY/versions/latest'
+      env: 'NEXT_PUBLIC_GRAFANA_API_KEY'
 
 substitutions:
   _NEXT_PUBLIC_API_URL: 'https://faltauno-backend-169771742214.us-central1.run.app'
-  _NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: 'AIzaSyDJrnK-dzqA3wf6mNYvizZtcGn_uw_0hpA'
   _NEXT_PUBLIC_GRAFANA_ENABLED: 'true'
   _NEXT_PUBLIC_GRAFANA_PROMETHEUS_URL: 'https://prometheus-prod-56-prod-us-east-2.grafana.net/api/prom/push'
   _NEXT_PUBLIC_GRAFANA_USER: '2802365'
-  _NEXT_PUBLIC_GRAFANA_API_KEY: 'SECRET_GRAFANA_API_KEY'
