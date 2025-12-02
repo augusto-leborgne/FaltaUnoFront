@@ -37,6 +37,43 @@ export function VerificationScreen() {
     return null;
   };
 
+  const describeBackendCedulaError = (message?: string) => {
+    if (!message) {
+      return {} as { inlineMessage?: string; globalMessage?: string };
+    }
+
+    const normalized = message
+      .normalize("NFD")
+      .replace(/[^\u0000-\u007E]/g, "")
+      .toLowerCase();
+
+    if (normalized.includes("ya esta registr")) {
+      return {
+        inlineMessage: "Esta cédula ya está asociada a otra cuenta.",
+        globalMessage: "Ya existe una cuenta verificada con esta cédula. Si crees que es un error, contáctanos para ayudarte."
+      };
+    }
+
+    if (normalized.includes("cedula invalida")) {
+      return {
+        inlineMessage: "No pudimos validar esta cédula con el registro oficial.",
+        globalMessage: message
+      };
+    }
+
+    return { globalMessage: message };
+  };
+
+  const applyCedulaErrorFeedback = (message?: string, fallback?: string) => {
+    const { inlineMessage, globalMessage } = describeBackendCedulaError(message);
+
+    if (inlineMessage) {
+      setFieldError(inlineMessage);
+    }
+
+    setError(globalMessage || message || fallback || "No se pudo verificar la cédula");
+  };
+
   const handleCedulaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setCedula(value);
@@ -48,6 +85,7 @@ export function VerificationScreen() {
     e.preventDefault();
     setIsVerifying(true);
     setError("");
+    setFieldError("");
     
     try {
       logger.log("[VerificationScreen] Verificando cédula:", cedula);
@@ -101,15 +139,16 @@ export function VerificationScreen() {
           router.push("/home");
         } else {
           logger.log("[VerificationScreen] Cédula no verificada");
-          setError(res.message ?? "Cédula inválida");
+          applyCedulaErrorFeedback(res.message, "Cédula inválida");
         }
       } else {
         logger.log("[VerificationScreen] Error en verificación:", res.message);
-        setError(res.message ?? "No se pudo verificar la cédula");
+        applyCedulaErrorFeedback(res.message, "No se pudo verificar la cédula");
       }
     } catch (err) {
       logger.error("[VerificationScreen] Error:", err);
-      setError("Error al verificar la identidad. Intenta nuevamente.");
+      const fallback = err instanceof Error ? err.message : undefined;
+      applyCedulaErrorFeedback(fallback, "Error al verificar la identidad. Intenta nuevamente.");
     } finally {
       setIsVerifying(false);
     }
