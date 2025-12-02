@@ -1,3 +1,21 @@
+  const describePhotoValidation = (result: { message?: string; faceCount?: number; isAppropriate?: boolean; reason?: string }) => {
+    if (!result) return "La foto no cumple con los requisitos";
+
+    if (result.faceCount === 0) {
+      return "No se detectó ningún rostro. Sube una foto donde se vea tu cara.";
+    }
+
+    if (result.faceCount && result.faceCount > 1) {
+      return "Solo se permite una persona en la foto.";
+    }
+
+    if (result.isAppropriate === false) {
+      return "La foto contiene contenido inapropiado. Elige otra.";
+    }
+
+    return result.message || "La foto no cumple con los requisitos";
+  };
+
 "use client"
 
 import { logger } from '@/lib/logger'
@@ -19,6 +37,7 @@ import ReactCrop, { type Crop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
 import { withRetry, formatErrorMessage } from '@/lib/api-utils'
 import { useClickOutside } from '@/hooks/use-click-outside'
+import { cn } from '@/lib/utils'
 
 export function ProfileSetupForm() {
   const router = useRouter()
@@ -56,6 +75,7 @@ export function ProfileSetupForm() {
   const [showGeneroDropdown, setShowGeneroDropdown] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({})
+  const [photoError, setPhotoError] = useState<string>("")
 
   // Click outside handlers para cerrar dropdowns
   useClickOutside(positionDropdownRef, () => setShowPositionDropdown(false), showPositionDropdown)
@@ -445,46 +465,14 @@ export function ProfileSetupForm() {
     const MAX_DIMENSION = 8192
 
     if (f.size > MAX_SIZE) {
-      setGeneralError("La imagen no puede superar 30MB")
+      setPhotoError("La imagen no puede superar 30MB")
+      setFieldErrors(prev => ({ ...prev, photo: "La imagen no puede superar 30MB" }))
       return
     }
 
-    // ✅ NEW: Validate photo with Google Cloud Vision API
-    setIsUploading(true)
+    setPhotoError("")
+    setFieldErrors(prev => ({ ...prev, photo: undefined }))
     setGeneralError("")
-
-    try {
-      logger.log('[ProfileSetup] Validating photo...', f.name)
-      const validationResult = await PhotoValidationAPI.validate(f)
-
-      if (!validationResult.valid) {
-        logger.warn('[ProfileSetup] Photo validation failed:', validationResult.message)
-
-        // Provide specific error messages
-        if (validationResult.faceCount === 0) {
-          setGeneralError("No se detectó ningún rostro en la foto. Por favor sube una foto donde se vea tu rostro claramente")
-        } else if (validationResult.faceCount > 1) {
-          setGeneralError(`Se detectaron ${validationResult.faceCount} rostros. Por favor sube una foto con una sola persona`)
-        } else if (!validationResult.isAppropriate) {
-          setGeneralError("La foto contiene contenido inapropiado. Por favor elige otra imagen")
-        } else {
-          setGeneralError(validationResult.message || "La foto no cumple con los requisitos")
-        }
-
-        return
-      }
-
-      logger.log('[ProfileSetup] Photo validated successfully')
-    } catch (error) {
-      logger.error('[ProfileSetup] Error validating photo:', error)
-      const fallbackMessage = error instanceof Error
-        ? error.message
-        : 'No se pudo validar la foto. Por favor intenta nuevamente.'
-      setGeneralError(fallbackMessage)
-      return
-    } finally {
-      setIsUploading(false)
-    }
 
     const reader = new FileReader()
     reader.onload = () => {
@@ -546,20 +534,43 @@ export function ProfileSetupForm() {
       targetSize
     )
 
-    canvas.toBlob((blob) => {
+    canvas.toBlob(async (blob) => {
       if (!blob) return
 
       const file = new File([blob], 'profile-photo.jpg', { type: 'image/jpeg' })
 
-      if (formData.photoPreviewUrl) URL.revokeObjectURL(formData.photoPreviewUrl)
+      setIsUploading(true)
+      setFieldErrors(prev => ({ ...prev, photo: undefined }))
 
-      setFormData((p) => ({ ...p, photo: file, photoPreviewUrl: URL.createObjectURL(file) }))
+      try {
+        logger.log('[ProfileSetup] Validating cropped photo...')
+        const validationResult = await PhotoValidationAPI.validate(file)
 
-      const photoError = validateField('photo', file)
-      setFieldErrors(prev => ({ ...prev, photo: photoError || undefined }))
+        if (!validationResult.valid) {
+          logger.warn('[ProfileSetup] Cropped photo failed validation:', validationResult.message)
+          const inlineMessage = describePhotoValidation(validationResult)
+          setPhotoError(inlineMessage)
+          setPhotoError(inlineMessage)
+          setFieldErrors(prev => ({ ...prev, photo: inlineMessage }))
+          return
+        }
 
-      setShowCropModal(false)
-      setImageToCrop('')
+        if (formData.photoPreviewUrl) URL.revokeObjectURL(formData.photoPreviewUrl)
+        setPhotoError("")
+        setFormData((p) => ({ ...p, photo: file, photoPreviewUrl: URL.createObjectURL(file) }))
+        setShowCropModal(false)
+        setImageToCrop('')
+      } catch (error) {
+        logger.error('[ProfileSetup] Error validating cropped photo:', error)
+        const fallbackMessage = error instanceof Error
+          ? error.message
+          : 'No se pudo validar la foto. Intenta nuevamente.'
+        setPhotoError(fallbackMessage)
+        setPhotoError(fallbackMessage)
+        setFieldErrors(prev => ({ ...prev, photo: fallbackMessage }))
+      } finally {
+        setIsUploading(false)
+      }
     }, 'image/jpeg', 0.92) // Calidad 92% - buen balance
   }
 
@@ -881,10 +892,10 @@ export function ProfileSetupForm() {
                   Galería
                 </label>
               </div>
-              {fieldErrors.photo && (
+              {photoError && (
                 <p className="text-xs sm:text-sm text-red-500 mt-2 flex items-center gap-1">
                   <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  {fieldErrors.photo}
+                  {photoError}
                 </p>
               )}
               {/* Input para galería */}
@@ -1160,8 +1171,8 @@ export function ProfileSetupForm() {
 
       {/* Modal de crop MEJORADO - Responsivo */}
       {showCropModal && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-1 sm:p-4">
-          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-[98vw] sm:max-w-lg shadow-2xl flex flex-col overflow-hidden max-h-[98vh] sm:max-h-[90vh]">
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-xl flex items-center justify-center z-50 p-4">
+          <div className="bg-white/95 rounded-[32px] w-full max-w-[420px] aspect-square flex flex-col overflow-hidden border border-white/20 shadow-[0_35px_120px_rgba(15,23,42,0.55)]">
             <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary/10 to-orange-50 flex-shrink-0">
               <h3 className="text-sm sm:text-base font-bold text-gray-900">Ajusta tu foto</h3>
               <button
@@ -1177,8 +1188,9 @@ export function ProfileSetupForm() {
             </div>
 
             <div className="flex-1 overflow-hidden bg-gray-50">
-              <div className="h-full flex items-center justify-center p-2 sm:p-4">
-                <div className="w-full max-w-[95vw] sm:max-w-md md:max-w-lg lg:max-w-xl flex items-center justify-center">
+              <div className="h-full flex items-center justify-center p-4">
+                <div className="relative w-full h-full">
+                  <div className="absolute inset-0 m-4 rounded-[28px] bg-black overflow-hidden shadow-[inset_0_0_40px_rgba(0,0,0,0.4)]">
                   <ReactCrop
                     crop={crop}
                     onChange={(c) => {
@@ -1205,15 +1217,16 @@ export function ProfileSetupForm() {
                     keepSelection
                     minWidth={120}
                     minHeight={120}
-                    className="w-full max-h-[70vh]"
+                    className="w-full h-full"
                   >
                     <img
                       ref={imageRef}
                       src={imageToCrop}
                       alt="Recortar"
-                      className="max-w-full max-h-[70vh] object-contain"
+                      className="w-full h-full object-cover"
                     />
                   </ReactCrop>
+                  </div>
                 </div>
               </div>
             </div>
