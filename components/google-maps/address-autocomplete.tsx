@@ -112,17 +112,25 @@ export function AddressAutocomplete({
 
   // ✅ MODERNO: Buscar predicciones con AutocompleteSuggestion
   const fetchPredictions = async (input: string) => {
+    console.log("🔍 [fetchPredictions] Called with input:", input);
+    console.log("🔍 [fetchPredictions] Google Maps available:", !!window.google?.maps);
+    console.log("🔍 [fetchPredictions] importLibrary available:", !!window.google?.maps?.importLibrary);
+    
     if (!window.google?.maps?.importLibrary || !input.trim()) {
+      console.log("⚠️ [fetchPredictions] Early return - no importLibrary or empty input");
       setSuggestions([]);
       setIsSearching(false);
       return;
     }
 
     setIsSearching(true);
+    console.log("🔍 [fetchPredictions] Starting search...");
 
     try {
+      console.log("🔍 [fetchPredictions] Importing places library...");
       // ✅ Ensure Places library is loaded
       const { AutocompleteSuggestion } = await window.google.maps.importLibrary("places") as any;
+      console.log("✅ [fetchPredictions] Places library imported, AutocompleteSuggestion:", !!AutocompleteSuggestion);
       
       // ✅ Properly formatted request according to Places API (New) spec
       const request: any = {
@@ -134,16 +142,19 @@ export function AddressAutocomplete({
         sessionToken: sessionTokenRef.current,
       };
 
-      logger.log("[AddressAutocomplete] 🔍 Request:", request);
-      logger.log("[AddressAutocomplete] 🔍 Session token:", sessionTokenRef.current);
+      console.log("🔍 [fetchPredictions] Request object:", request);
+      console.log("🔍 [fetchPredictions] Calling fetchAutocompleteSuggestions...");
 
       // ✅ NUEVA API: fetchAutocompleteSuggestions (retorna Promise)
       const response: any = 
         await AutocompleteSuggestion.fetchAutocompleteSuggestions(request);
+      
+      console.log("✅ [fetchPredictions] Response received:", response);
 
       const autocompleteSuggestions = response.suggestions || [];
 
-      logger.log("[AddressAutocomplete] 🔍 Suggestions raw:", autocompleteSuggestions);
+      console.log("🔍 [fetchPredictions] Suggestions count:", autocompleteSuggestions.length);
+      console.log("🔍 [fetchPredictions] Suggestions raw:", autocompleteSuggestions);
 
       // Convertir AutocompleteSuggestion[] a AutocompletePrediction[] para compatibilidad
       const predictions: any[] = autocompleteSuggestions.map((suggestion: any) => {
@@ -173,11 +184,29 @@ export function AddressAutocomplete({
         };
       });
 
-      logger.log("[AddressAutocomplete] ✅ Predictions procesadas:", predictions);
+      console.log("✅ [fetchPredictions] Predictions processed:", predictions.length, "items");
+      console.log("✅ [fetchPredictions] Predictions:", predictions);
 
       setSuggestions(predictions);
       setIsSearching(false);
     } catch (error: any) {
+      console.error("❌❌❌ [fetchPredictions] ERROR CAUGHT:", error);
+      console.error("❌ Error type:", typeof error);
+      console.error("❌ Error message:", error?.message);
+      console.error("❌ Error stack:", error?.stack);
+      console.error("❌ Full error object:", JSON.stringify(error, null, 2));
+      
+      // Check if it's a network error
+      if (error?.response) {
+        console.error("❌ Response status:", error.response.status);
+        console.error("❌ Response data:", error.response.data);
+      }
+      
+      // Check if it's a Google Maps API error
+      if (error?.code) {
+        console.error("❌ API error code:", error.code);
+      }
+      
       logger.error("[AddressAutocomplete] ❌ Error en predicciones:", {
         message: error?.message,
         stack: error?.stack,
@@ -187,11 +216,6 @@ export function AddressAutocomplete({
         statusText: error?.statusText,
       });
       
-      // Try to extract more details from the error
-      if (error?.message) {
-        logger.error("[AddressAutocomplete] Error message:", error.message);
-      }
-      
       setSuggestions([]);
       setIsSearching(false);
     }
@@ -199,6 +223,7 @@ export function AddressAutocomplete({
 
   // Manejar cambio de input
   const handleInputChange = (newValue: string) => {
+    console.log("⌨️ [handleInputChange] Input changed to:", newValue);
     setQuery(newValue);
     setHasSelectedAddress(false); // Usuario está escribiendo manualmente
     setValidationError(null); // Limpiar error al escribir
@@ -211,10 +236,13 @@ export function AddressAutocomplete({
 
     // Debounce de 300ms
     if (newValue.trim().length >= 1) {
+      console.log("⏱️ [handleInputChange] Setting debounce timer (300ms)");
       debounceTimerRef.current = setTimeout(() => {
+        console.log("⏱️ [handleInputChange] Debounce timer fired, calling fetchPredictions");
         fetchPredictions(newValue);
       }, 300);
     } else {
+      console.log("⚠️ [handleInputChange] Empty input, clearing suggestions");
       setSuggestions([]);
       setIsSearching(false);
     }
