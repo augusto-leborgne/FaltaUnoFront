@@ -124,16 +124,18 @@ export function AddressAutocomplete({
       // ✅ Ensure Places library is loaded
       const { AutocompleteSuggestion } = await window.google.maps.importLibrary("places") as any;
       
+      // ✅ Properly formatted request according to Places API (New) spec
       const request: any = {
         input: input.trim(),
-        includedPrimaryTypes: ['street_address', 'premise', 'subpremise', 'establishment'],
-        includedRegionCodes: ['UY'],
-        language: 'es',
-        region: 'uy',
-        sessionToken: sessionTokenRef.current || undefined,
+        locationRestriction: {
+          country: "uy"
+        },
+        languageCode: "es",
+        sessionToken: sessionTokenRef.current,
       };
 
       logger.log("[AddressAutocomplete] 🔍 Request:", request);
+      logger.log("[AddressAutocomplete] 🔍 Session token:", sessionTokenRef.current);
 
       // ✅ NUEVA API: fetchAutocompleteSuggestions (retorna Promise)
       const response: any = 
