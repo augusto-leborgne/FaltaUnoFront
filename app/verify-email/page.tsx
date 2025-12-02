@@ -32,6 +32,15 @@ function VerifyEmailContent() {
   // ✅ Detectar si el usuario viene de login (ya tiene token)
   const isFromLogin = useRef(!!AuthService.getToken());
 
+  const focusInput = (index: number) => {
+    const input = inputRefs.current[index];
+    if (!input) return;
+    requestAnimationFrame(() => {
+      input.focus();
+      input.select();
+    });
+  };
+
   // Redirect si no hay email
   useEffect(() => {
     if (!email) {
@@ -81,20 +90,30 @@ function VerifyEmailContent() {
   };
 
   // Manejar cambio en input de código
-  const handleCodeChange = (index: number, value: string) => {
-    // Solo permitir números
-    if (value && !/^\d$/.test(value)) return;
+  const handleCodeChange = (index: number, rawValue: string) => {
+    const digitsOnly = rawValue.replace(/[^\d]/g, '');
 
-    const newCode = [...code];
-    newCode[index] = value;
-    setCode(newCode);
+    const updatedCode = [...code];
+
+    if (!digitsOnly) {
+      updatedCode[index] = '';
+      setCode(updatedCode);
+      setError('');
+      return;
+    }
+
+    let currentIndex = index;
+    digitsOnly.split('').forEach((digit) => {
+      if (currentIndex > 5) return;
+      updatedCode[currentIndex] = digit;
+      currentIndex += 1;
+    });
+
+    setCode(updatedCode);
     setError('');
 
-    // Auto-focus al siguiente input si se ingresó un dígito
-    if (value && index < 5) {
-      setTimeout(() => {
-        inputRefs.current[index + 1]?.focus();
-      }, 0);
+    if (currentIndex <= 5) {
+      setTimeout(() => focusInput(currentIndex), 0);
     }
   };
 
@@ -376,16 +395,8 @@ function VerifyEmailContent() {
                   maxLength={1}
                   value={digit}
                   onChange={(e) => handleCodeChange(index, e.target.value)}
-                  onInput={(e) => {
-                    const target = e.target as HTMLInputElement;
-                    const value = target.value;
-                    if (value && /^\d$/.test(value) && index < 5) {
-                      setTimeout(() => {
-                        inputRefs.current[index + 1]?.focus();
-                      }, 10);
-                    }
-                  }}
                   onKeyDown={(e) => handleKeyDown(index, e)}
+                  onFocus={(e) => e.target.select()}
                   className={`w-14 h-16 sm:w-16 sm:h-18 text-center text-3xl sm:text-4xl font-bold border-2 rounded-xl transition-all shadow-sm ${success
                     ? 'border-green-500 bg-green-50 text-green-700'
                     : digit
