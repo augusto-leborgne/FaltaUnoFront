@@ -133,12 +133,11 @@ export function AddressAutocomplete({
       console.log("✅ [fetchPredictions] Places library imported, AutocompleteSuggestion:", !!AutocompleteSuggestion);
       
       // ✅ Properly formatted request according to Places API (New) spec
+      // Only street addresses with numbers and specific places
       const request: any = {
         input: input.trim(),
-        locationRestriction: {
-          country: "uy"
-        },
-        languageCode: "es",
+        includedPrimaryTypes: ['street_address', 'premise', 'establishment'], // Only specific addresses and places
+        includedRegionCodes: ['uy'], // Uruguay only
         sessionToken: sessionTokenRef.current,
       };
 
