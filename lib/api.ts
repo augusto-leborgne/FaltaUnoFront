@@ -171,6 +171,11 @@ export interface LoginResponseData {
   requiresOnboardingAction?: boolean;
 }
 
+export interface EmailCheckResponse {
+  exists: boolean;
+  hasDeletedRecoverable?: boolean;
+}
+
 // ============================================
 // INTERFACES DE PARTIDOS
 // ============================================
@@ -755,6 +760,26 @@ export const UsuarioAPI = {
         message: error instanceof Error ? error.message : 'Error al iniciar sesión',
         error: error instanceof Error ? error.message : 'Error desconocido'
       };
+    }
+  },
+
+  checkEmailStatus: async (email: string) => {
+    try {
+      return await apiFetch<EmailCheckResponse>(
+        `/api/auth/check-email?email=${encodeURIComponent(email)}`,
+        {
+          method: 'GET',
+          skipAuth: true,
+        }
+      );
+    } catch (error) {
+      logger.error('[UsuarioAPI.checkEmailStatus] Error:', error);
+      return {
+        success: false,
+        data: { exists: false },
+        message: error instanceof Error ? error.message : 'Error verificando email',
+        error: error instanceof Error ? error.message : 'Error desconocido',
+      } as ApiResponse<EmailCheckResponse>;
     }
   },
 
