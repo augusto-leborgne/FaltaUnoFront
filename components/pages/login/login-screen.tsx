@@ -126,31 +126,47 @@ export function LoginScreen() {
           postAuthRedirect(enrichedUser, { onboarding: onboardingStatus, query: verifyEmailQuery })
         }
       } else {
-        const errorMsg = res?.message || res?.error || "Credenciales inválidas"
-        
-        // ✅ NUEVO: Detectar respuesta específica de email no verificado desde backend
-        if (res?.data?.emailNotVerified === true) {
-          logger.log("[LoginScreen] Email no verificado detectado desde backend")
-          setError("Tu cuenta aún no ha sido verificada. Redirigiendo a verificación...")
-          setTimeout(() => {
-            router.push(`/verify-email?email=${encodeURIComponent(res.data.email || email)}`)
-          }, 1500)
+        const rawMessage = (res?.message || res?.error || '').trim()
+        const fallbackMessage = rawMessage || 'No pudimos iniciar sesión. Intenta nuevamente.'
+        const credentialErrorMessage = 'Email o contraseña incorrectos.'
+
+        if (res?.data?.emailNotVerified && email) {
+          logger.log('[LoginScreen] Email pendiente de verificación, redirigiendo sin mostrar alerta')
+          router.push(`/verify-email?email=${encodeURIComponent(email)}`)
           return
         }
-        
-        // ✅ Detectar si el email no está verificado (fallback)
-        if (errorMsg.toLowerCase().includes("no autorizado") || 
-            errorMsg.toLowerCase().includes("unauthorized") ||
-            errorMsg.toLowerCase().includes("not verified") ||
-            errorMsg.toLowerCase().includes("no verificado")) {
-          logger.log("[LoginScreen] Usuario no autorizado, posiblemente email no verificado")
-          setError("Tu cuenta aún no ha sido verificada. Redirigiendo a verificación...")
-          setTimeout(() => {
-            router.push(`/verify-email?email=${encodeURIComponent(email)}`)
-          }, 1500)
-        } else {
-          setError(errorMsg)
+
+        const shouldResolveCredentials = (res?.data?.errorCode === 'BAD_CREDENTIALS') ||
+          /contraseña|password|credenciales|unauthorized|no autorizado/i.test(fallbackMessage)
+
+        if (email && shouldResolveCredentials) {
+          try {
+            const status = await UsuarioAPI.checkEmailStatus(email)
+            if (status?.success && status.data) {
+              if (!status.data.exists) {
+                setError('No encontramos una cuenta con este email.')
+                return
+              }
+
+              if (status.data.hasDeletedRecoverable) {
+                setError('Tu cuenta fue eliminada y puede recuperarse. Contacta soporte para reactivarla.')
+                return
+              }
+
+              setError('La contraseña no es correcta.')
+              return
+            }
+          } catch (statusError) {
+            logger.warn('[LoginScreen] No se pudo verificar el estado del email:', statusError)
+          }
         }
+
+        if (shouldResolveCredentials) {
+          setError(credentialErrorMessage)
+          return
+        }
+
+        setError(fallbackMessage)
       }
     } catch (err) {
       logger.error("[LoginScreen] Error login:", err)
@@ -160,9 +176,9 @@ export function LoginScreen() {
       
       if (err instanceof Error) {
         const errMsg = err.message.toLowerCase()
-        
+
         if (errMsg.includes("unauthorized") || errMsg.includes("no autorizado")) {
-          errorMessage = "Email o contraseña incorrectos. Si acabas de registrarte, verifica tu email primero."
+          errorMessage = "Email o contraseña incorrectos."
         } else if (errMsg.includes("network") || errMsg.includes("failed to fetch")) {
           errorMessage = "No se pudo conectar al servidor. Verifica tu conexión a internet."
         } else if (errMsg.includes("timeout")) {
