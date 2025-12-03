@@ -3,6 +3,7 @@ import { keysToCamelCase, keysToSnakeCase, dualCaseKeys } from "./case-converter
 import { logger } from "./logger";
 import { fetchWithTimeout, fetchWithRetry } from "./fetch-with-timeout";
 import { AppMetrics } from "./observability";
+import { OnboardingStatus, OnboardingStep, resolveOnboardingRoute } from "./onboarding";
 
 // ============================================
 // CONFIGURACIÓN CENTRALIZADA
@@ -147,6 +148,9 @@ export interface Usuario {
   lastActivityAt?: string; // ISO 8601 timestamp
   createdAt?: string; // ISO 8601 timestamp
   deletedAt?: string; // ISO 8601 timestamp (mismo que deleted_at, para consistencia)
+  onboarding?: OnboardingStatus;
+  onboardingNextStep?: OnboardingStep;
+  requiresOnboardingAction?: boolean;
 }
 
 export interface UsuarioMinDTO {
@@ -157,6 +161,14 @@ export interface UsuarioMinDTO {
   posicion?: string;
   rating?: number;
   deleted_at?: string; // ISO datetime string if user is deleted
+}
+
+export interface LoginResponseData {
+  token: string;
+  user: Usuario;
+  onboarding?: OnboardingStatus;
+  nextStep?: OnboardingStep;
+  requiresOnboardingAction?: boolean;
 }
 
 // ============================================
@@ -448,6 +460,57 @@ async function apiFetch<T>(
         throw new Error('Demasiados intentos. Por favor espera unos minutos antes de intentar nuevamente.');
       }
 
+      // Manejo de 428 - Onboarding incompleto
+      if (response.status === 428) {
+        try {
+          const rawText = await response.clone().text();
+          const parsed = rawText ? JSON.parse(rawText) : {};
+          const onboardingPayload = parsed?.data?.onboarding ?? parsed?.onboarding;
+          const nextStep = (parsed?.data?.nextStep ?? parsed?.nextStep ?? onboardingPayload?.nextStep) as OnboardingStep | undefined;
+          const requiresAction = typeof (parsed?.data?.requiresOnboardingAction ?? parsed?.requiresOnboardingAction ?? onboardingPayload?.requiresAction) === 'boolean'
+            ? (parsed?.data?.requiresOnboardingAction ?? parsed?.requiresOnboardingAction ?? onboardingPayload?.requiresAction)
+            : true;
+          const message = parsed?.message || parsed?.error || onboardingPayload?.blockingReason || 'Debes completar el onboarding antes de continuar.';
+
+          const onboardingError: any = new Error(message);
+          onboardingError.code = 'ONBOARDING_REQUIRED';
+          onboardingError.onboarding = onboardingPayload;
+          onboardingError.nextStep = nextStep;
+          onboardingError.requiresAction = requiresAction;
+
+          if (typeof window !== 'undefined') {
+            try {
+              window.dispatchEvent(new CustomEvent('onboardingRequired', {
+                detail: { onboarding: onboardingPayload, nextStep, message },
+              }));
+            } catch (eventError) {
+              logger.warn('[API] No se pudo despachar onboardingRequired:', eventError);
+            }
+
+            if (requiresAction) {
+              try {
+                sessionStorage.setItem('onboarding:last-block', JSON.stringify({
+                  at: Date.now(),
+                  nextStep,
+                  message,
+                }));
+              } catch (storageError) {
+                logger.warn('[API] No se pudo persistir el estado de onboarding:', storageError);
+              }
+
+              const target = resolveOnboardingRoute(nextStep);
+              if (target && window.location.pathname !== target) {
+                window.location.replace(target);
+              }
+            }
+          }
+
+          throw onboardingError;
+        } catch (parseErr) {
+          throw new Error('Debes completar el onboarding antes de continuar.');
+        }
+      }
+
       // Check if status code is retryable
       if (!response.ok && isRetryableError(null, response.status)) {
         const errorMessage = `Server error ${response.status}: ${response.statusText}`
@@ -664,7 +727,7 @@ export const UsuarioAPI = {
    */
   login: async (email: string, password: string) => {
     try {
-      const response = await apiFetch<{ token: string; user: Usuario }>(
+      const response = await apiFetch<LoginResponseData>(
         '/api/auth/login-json',
         {
           method: 'POST',

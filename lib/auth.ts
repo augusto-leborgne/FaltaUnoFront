@@ -4,6 +4,7 @@ import { keysToCamelCase } from "./case-converter"
 import { logger } from "./logger"
 import { fetchWithTimeout } from "./fetch-with-timeout"
 import type { Usuario } from "./api"
+import { mergeOnboardingStatus } from "./onboarding"
 
 const TOKEN_KEY = "authToken"
 const USER_KEY = "user"
@@ -133,56 +134,61 @@ export class AuthService {
   // USER MANAGEMENT
   // =========================
 
-  static setUser(user: Usuario): void {
-    if (typeof window === "undefined") return
+  static setUser(user: Usuario): Usuario {
+    if (typeof window === "undefined") {
+      return user
+    }
+
     try {
-      // ⚡ CRÍTICO: NO guardar foto_perfil en localStorage (puede exceder quota)
-      // La foto se carga desde el servidor cuando se necesita
+      const onboarding = mergeOnboardingStatus((user as any)?.onboarding, {
+        emailVerified: user.emailVerified ?? false,
+        perfilCompleto: user.perfilCompleto ?? true,
+        cedulaVerificada: user.cedulaVerificada ?? false,
+      })
+
       const { foto_perfil, fotoPerfil, ...userWithoutPhoto } = user as any
-      
-      // ⚡ CRÍTICO: Preservar TODOS los campos importantes del perfil
-      const normalized = {
+      const normalized: any = {
         ...userWithoutPhoto,
-        // Guardar solo un flag indicando si tiene foto
-        hasFotoPerfil: !!(foto_perfil || fotoPerfil),
-        // ⚡ NUEVO: Asegurar que perfilCompleto esté definido
-        perfilCompleto: user.perfilCompleto ?? true, // Default a true si no está definido
-        cedulaVerificada: user.cedulaVerificada ?? false, // Default a false
+        hasFotoPerfil: userWithoutPhoto.hasFotoPerfil ?? !!(foto_perfil || fotoPerfil),
+        perfilCompleto: onboarding.perfilCompleto,
+        cedulaVerificada: onboarding.cedulaVerificada,
+        emailVerified: onboarding.emailVerified,
+        onboarding,
+        onboardingNextStep: onboarding.nextStep,
+        requiresOnboardingAction: onboarding.requiresAction,
       }
-      // timestamp para soportar una "grace window" tras actualizaciones optimistas
-      ;(normalized as any).userLastUpdatedAt = Date.now()
-      
+
+      normalized.userLastUpdatedAt = Date.now()
+
       localStorage.setItem(USER_KEY, JSON.stringify(normalized))
       logger?.debug?.("[AuthService] Usuario guardado (sin foto):", normalized?.email)
       logger?.debug?.("[AuthService] Perfil completo:", normalized.perfilCompleto)
-      
-      // ⚡ OPCIONAL: Guardar foto en IndexedDB si existe (mejor para datos grandes)
-      // Por ahora simplemente no la guardamos - se cargará del servidor cuando se necesite
-      
-      window.dispatchEvent(new CustomEvent("userUpdated", { detail: user })) // Dispatch con foto completa
+
+      window.dispatchEvent(new CustomEvent("userUpdated", { detail: normalized }))
+      return normalized as Usuario
     } catch (error) {
       logger?.error?.("[AuthService] Error guardando usuario:", error)
-      
-      // ⚡ RECUPERACIÓN: Si falla por quota, intentar limpiar y reintentar
+
       if (error instanceof Error && error.name === 'QuotaExceededError') {
         logger?.warn?.("[AuthService] localStorage lleno, limpiando datos antiguos...")
         try {
-          // Limpiar datos de cache antiguos
           const keys = Object.keys(localStorage)
           for (const k of keys) {
             if (k.startsWith("match_") || k.startsWith("cache_") || k.startsWith("old_")) {
               localStorage.removeItem(k)
             }
           }
-          
-          // Reintentar sin foto
+
           const { foto_perfil, fotoPerfil, ...userWithoutPhoto } = user as any
           localStorage.setItem(USER_KEY, JSON.stringify(userWithoutPhoto))
           logger?.debug?.("[AuthService] Usuario guardado después de limpieza")
+          return userWithoutPhoto as Usuario
         } catch (retryError) {
           logger?.error?.("[AuthService] Error en reintento:", retryError)
         }
       }
+
+      return user
     }
   }
 
@@ -482,14 +488,14 @@ export class AuthService {
         // Remove alias fotoPerfil if present
         delete merged.fotoPerfil
 
-        // Persist merged user
-        this.setUser(merged)
+        const normalizedUser = this.setUser(merged as Usuario)
         logger?.debug?.("[AuthService] ✅ Usuario actualizado desde servidor (merged):", {
-          email: merged.email,
-          perfilCompleto: merged.perfilCompleto,
-          cedulaVerificada: merged.cedulaVerificada,
+          email: normalizedUser.email,
+          perfilCompleto: normalizedUser.perfilCompleto,
+          cedulaVerificada: normalizedUser.cedulaVerificada,
+          onboardingNextStep: normalizedUser.onboardingNextStep,
         })
-        return merged as Usuario
+        return normalizedUser
         
       } catch (e) {
         logger?.error?.(`[AuthService] Error en fetchCurrentUser (intento ${attempt}/${retries}):`, e)

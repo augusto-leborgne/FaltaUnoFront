@@ -27,9 +27,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Wrapper para setUser que preserva firma del contexto
   const setUser = useCallback((u: Usuario | null) => {
     logger.debug("[AuthProvider] setUser llamado:", u?.email || "null");
-    setUserState(u);
     if (u) {
-      AuthService.setUser(u);
+      const normalized = AuthService.setUser(u);
+      setUserState(normalized);
+    } else {
+      setUserState(null);
+      AuthService.removeUser();
     }
   }, []);
 

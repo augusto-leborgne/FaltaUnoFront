@@ -11,6 +11,7 @@ import { AuthService } from "@/lib/auth"
 import { useAuth } from "@/hooks/use-auth"
 import { usePostAuthRedirect } from "@/lib/navigation" // ← decide /profile-setup o /home
 import { InlineSpinner, LoadingSpinner } from "@/components/ui/loading-spinner"
+import { mergeOnboardingStatus } from "@/lib/onboarding"
 
 export function LoginScreen() {
   const router = useRouter()
@@ -76,40 +77,53 @@ export function LoginScreen() {
       if (res?.success && res.data) {
         const token = res.data.token
         const user = res.data.user
+        const onboardingPayload = res.data.onboarding ?? null
 
         if (token) {
           AuthService.setToken(token)
           logger.log("[LoginScreen] Token guardado")
         }
 
-        if (user) {
-          AuthService.setUser(user)
-          setUser(user)
+        const enrichedUser = user
+          ? ({
+              ...user,
+              onboarding: onboardingPayload ?? user.onboarding,
+              onboardingNextStep:
+                res.data.nextStep ?? onboardingPayload?.nextStep ?? user.onboardingNextStep,
+              requiresOnboardingAction:
+                res.data.requiresOnboardingAction ??
+                onboardingPayload?.requiresAction ??
+                user.requiresOnboardingAction,
+            } as Usuario)
+          : null
+
+        if (enrichedUser) {
+          AuthService.setUser(enrichedUser)
+          setUser(enrichedUser)
           logger.log("[LoginScreen] Usuario guardado y contexto actualizado")
         }
 
-        // ✅ Verificar si el email está verificado
-        if (user && !user.emailVerified) {
-          logger.log("[LoginScreen] Email no verificado, redirigiendo a verify-email")
-          router.push(`/verify-email?email=${encodeURIComponent(user.email)}`)
-          return
-        }
+        const onboardingStatus = mergeOnboardingStatus(onboardingPayload, {
+          emailVerified: enrichedUser?.emailVerified,
+          perfilCompleto: enrichedUser?.perfilCompleto,
+          cedulaVerificada: enrichedUser?.cedulaVerificada,
+        })
 
-        // Redirección correcta: validar returnTo contra estado del usuario
+        const verifyEmailQuery = onboardingStatus.nextStep === "VERIFY_EMAIL"
+          ? { email: enrichedUser?.email ?? email }
+          : undefined
+
         if (returnTo) {
-          // Solo redirigir a returnTo si el usuario tiene perfil completo y verificado
-          const canAccessReturnTo = user?.perfilCompleto && (user?.cedulaVerificada || true) // cedulaVerificada es opcional
-          
-          if (canAccessReturnTo) {
+          if (!onboardingStatus.requiresAction) {
             logger.log("[LoginScreen] Redirigiendo a returnTo:", returnTo)
             router.push(returnTo)
           } else {
-            logger.log("[LoginScreen] Usuario no puede acceder a returnTo, redirigiendo según estado")
-            postAuthRedirect(user)
+            logger.log("[LoginScreen] Usuario con onboarding pendiente, ignorando returnTo")
+            postAuthRedirect(enrichedUser, { onboarding: onboardingStatus, query: verifyEmailQuery })
           }
         } else {
           logger.log("[LoginScreen] Redirección post-auth (profile-setup/home)")
-          postAuthRedirect(user)
+          postAuthRedirect(enrichedUser, { onboarding: onboardingStatus, query: verifyEmailQuery })
         }
       } else {
         const errorMsg = res?.message || res?.error || "Credenciales inválidas"
