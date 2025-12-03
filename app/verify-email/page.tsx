@@ -349,21 +349,20 @@ function VerifyEmailContent() {
       return;
     }
 
-    const digits = sanitized.slice(0, CODE_LENGTH - index).split('');
-    const nextCode = [...code];
-    let lastFilledIndex = index;
-
-    digits.forEach((digit, offset) => {
-      const position = index + offset;
-      if (position < CODE_LENGTH) {
-        nextCode[position] = digit;
-        lastFilledIndex = position;
-      }
+    // Tomar solo el último dígito ingresado
+    const lastDigit = sanitized.slice(-1);
+    
+    setCode((prev) => {
+      const next = [...prev];
+      next[index] = lastDigit;
+      return next;
     });
 
-    setCode(nextCode);
-    focusInput(Math.min(lastFilledIndex + 1, CODE_LENGTH - 1));
-  }, [code, focusInput, isVerifying, success]);
+    // Auto-avanzar al siguiente campo
+    if (index < CODE_LENGTH - 1) {
+      focusInput(index + 1);
+    }
+  }, [focusInput, isVerifying, success]);
 
   const handleKeyDown = useCallback((index: number, event: ReactKeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Backspace') {
@@ -473,14 +472,14 @@ function VerifyEmailContent() {
         </div>
 
         {/* Card principal */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
+        <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-8 space-y-4 sm:space-y-6">
           {/* Inputs de código */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3 text-center">
+            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3 text-center">
               Ingresa el código de verificación
             </label>
             <div
-              className="flex gap-2 sm:gap-3 justify-center flex-nowrap overflow-x-auto sm:overflow-visible px-1"
+              className="flex gap-1.5 sm:gap-2 justify-center items-center"
               onPaste={handlePaste}
             >
               {code.map((digit, index) => (
@@ -500,7 +499,7 @@ function VerifyEmailContent() {
                   pattern="[0-9]*"
                   enterKeyHint={index === CODE_LENGTH - 1 ? 'done' : 'next'}
                   aria-label={`Dígito ${index + 1} del código`}
-                  className={`w-12 h-14 sm:w-14 sm:h-16 flex-shrink-0 text-center text-2xl sm:text-3xl font-bold border-2 rounded-xl transition-all shadow-sm ${success
+                  className={`w-11 h-12 sm:w-14 sm:h-16 flex-shrink-0 text-center text-xl sm:text-3xl font-bold border-2 rounded-lg sm:rounded-xl transition-all shadow-sm p-0 leading-none ${success
                     ? 'border-green-500 bg-green-50 text-green-700'
                     : digit
                       ? 'border-green-500 bg-green-50 text-green-700 scale-105'
@@ -514,13 +513,13 @@ function VerifyEmailContent() {
 
           {/* Timer */}
           <div className="text-center">
-            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${timeLeft < 60
+            <div className={`inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full ${timeLeft < 60
               ? 'bg-red-100 text-red-700'
               : 'bg-green-100 text-green-700'
               }`}>
               <div className={`w-2 h-2 rounded-full ${timeLeft < 60 ? 'bg-red-500 animate-pulse' : 'bg-green-500'
                 }`} />
-              <span className="text-sm font-medium">
+              <span className="text-xs sm:text-sm font-medium">
                 {timeLeft > 0 ? (
                   <>Expira en {formatTime(timeLeft)}</>
                 ) : (
@@ -607,9 +606,9 @@ function VerifyEmailContent() {
           )}
 
           {/* Consejos */}
-          <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-            <p className="text-xs font-medium text-gray-700">💡 Consejos:</p>
-            <ul className="text-xs text-gray-600 space-y-1">
+          <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-1.5 sm:space-y-2">
+            <p className="text-[10px] sm:text-xs font-medium text-gray-700">💡 Consejos:</p>
+            <ul className="text-[10px] sm:text-xs text-gray-600 space-y-0.5 sm:space-y-1">
               <li>• Revisa tu bandeja de spam si no ves el email</li>
               <li>• El código es válido por 5 minutos</li>
               <li>• Puedes pegar el código directamente</li>
@@ -618,7 +617,7 @@ function VerifyEmailContent() {
         </div>
 
         {/* Botón volver */}
-        <div className="mt-6 text-center">
+        <div className="mt-4 sm:mt-6 text-center">
           <Button
             onClick={() => router.push('/register')}
             variant="ghost"
