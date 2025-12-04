@@ -550,13 +550,14 @@ export function ProfileSetupForm() {
           logger.warn('[ProfileSetup] Cropped photo failed validation:', validationResult.message)
           const inlineMessage = describePhotoValidation(validationResult)
           setPhotoError(inlineMessage)
-          setPhotoError(inlineMessage)
           setFieldErrors(prev => ({ ...prev, photo: inlineMessage }))
+          // Keep modal open so user can adjust crop or cancel
           return
         }
 
         if (formData.photoPreviewUrl) URL.revokeObjectURL(formData.photoPreviewUrl)
         setPhotoError("")
+        setFieldErrors(prev => ({ ...prev, photo: undefined }))
         setFormData((p) => ({ ...p, photo: file, photoPreviewUrl: URL.createObjectURL(file) }))
         setShowCropModal(false)
         setImageToCrop('')
@@ -566,8 +567,8 @@ export function ProfileSetupForm() {
           ? error.message
           : 'No se pudo validar la foto. Intenta nuevamente.'
         setPhotoError(fallbackMessage)
-        setPhotoError(fallbackMessage)
         setFieldErrors(prev => ({ ...prev, photo: fallbackMessage }))
+        // Keep modal open on error
       } finally {
         setIsUploading(false)
       }
@@ -1169,67 +1170,70 @@ export function ProfileSetupForm() {
         </form>
       </div>
 
-      {/* Modal de crop MEJORADO - Responsivo */}
+      {/* Modal de crop MEJORADO - Como Instagram/Facebook */}
       {showCropModal && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-xl flex items-center justify-center z-50 p-4">
-          <div className="bg-white/95 rounded-[32px] w-full max-w-[420px] aspect-square flex flex-col overflow-hidden border border-white/20 shadow-[0_35px_120px_rgba(15,23,42,0.55)]">
-            <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary/10 to-orange-50 flex-shrink-0">
-              <h3 className="text-sm sm:text-base font-bold text-gray-900">Ajusta tu foto</h3>
+        <div className="fixed inset-0 bg-black flex items-center justify-center z-[100]">
+          <div className="w-full h-full sm:w-auto sm:h-auto sm:max-w-[90vw] sm:max-h-[90vh] bg-white sm:rounded-2xl flex flex-col overflow-hidden">
+            <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-white flex-shrink-0">
+              <h3 className="text-base font-semibold text-gray-900">Ajustar foto de perfil</h3>
               <button
                 type="button"
                 onClick={() => {
                   setShowCropModal(false)
                   setImageToCrop('')
+                  setPhotoError('')
                 }}
-                className="p-2 active:bg-white rounded-lg sm:rounded-xl transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center"
               >
-                <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
+                <X className="w-5 h-5 text-gray-600" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-hidden bg-gray-50">
-              <div className="h-full flex items-center justify-center p-2 sm:p-4">
-                <div className="relative w-full" style={{ maxHeight: '400px', height: '400px' }}>
-                  <div className="w-full h-full rounded-[28px] bg-black overflow-hidden shadow-[inset_0_0_40px_rgba(0,0,0,0.4)] flex items-center justify-center">
-                  <ReactCrop
-                    crop={crop}
-                    onChange={(c) => {
-                      // Allow resizing while maintaining circular aspect ratio
-                      // Use the larger dimension to determine the size
-                      const size = Math.max(c.width, c.height);
-                      setCrop({
-                        ...c,
-                        width: size,
-                        height: size
-                      });
+            {photoError && (
+              <div className="px-4 py-3 bg-red-50 border-b border-red-100 flex items-start gap-2">
+                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-red-700 flex-1">{photoError}</p>
+              </div>
+            )}
+
+            <div className="flex-1 overflow-hidden bg-gray-900 relative" style={{ minHeight: '400px' }}>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <ReactCrop
+                  crop={crop}
+                  onChange={(c) => {
+                    const size = Math.max(c.width, c.height);
+                    setCrop({
+                      ...c,
+                      width: size,
+                      height: size
+                    });
+                  }}
+                  onComplete={(c) => {
+                    const size = Math.max(c.width, c.height);
+                    setCompletedCrop({
+                      ...c,
+                      width: size,
+                      height: size
+                    });
+                  }}
+                  aspect={1}
+                  circularCrop
+                  keepSelection
+                  minWidth={100}
+                  minHeight={100}
+                  className="max-h-full"
+                >
+                  <img
+                    ref={imageRef}
+                    src={imageToCrop}
+                    alt="Recortar"
+                    style={{
+                      maxHeight: '70vh',
+                      maxWidth: '100%',
+                      display: 'block'
                     }}
-                    onComplete={(c) => {
-                      // Ensure completed crop is also circular
-                      const size = Math.max(c.width, c.height);
-                      setCompletedCrop({
-                        ...c,
-                        width: size,
-                        height: size
-                      });
-                    }}
-                    aspect={1}
-                    circularCrop
-                    keepSelection
-                    minWidth={120}
-                    minHeight={120}
-                    className="max-w-full max-h-full"
-                    style={{ maxHeight: '400px' }}
-                  >
-                    <img
-                      ref={imageRef}
-                      src={imageToCrop}
-                      alt="Recortar"
-                      className="max-w-full max-h-full"
-                      style={{ maxHeight: '400px', width: 'auto', height: 'auto', objectFit: 'contain' }}
-                    />
-                  </ReactCrop>
-                  </div>
-                </div>
+                  />
+                </ReactCrop>
               </div>
             </div>
 

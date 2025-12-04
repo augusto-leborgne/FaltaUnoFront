@@ -80,6 +80,7 @@ export function SettingsScreen() {
 		y: 15
 	})
 	const [completedCrop, setCompletedCrop] = useState<Crop | null>(null)
+	const [photoError, setPhotoError] = useState<string>("")
 
 	useEffect(() => {
 		loadUserData()
@@ -393,37 +394,7 @@ export function SettingsScreen() {
 		setError("")
 		setIsSaving(true)
 
-		try {
-			logger.log('[Settings] Validating photo...', file.name)
-			const { PhotoValidationAPI } = await import('@/lib/api')
-			const validationResult = await PhotoValidationAPI.validate(file)
-
-			if (!validationResult.valid) {
-				logger.warn('[Settings] Photo validation failed:', validationResult.message)
-
-				// Provide specific error messages
-				if (validationResult.faceCount === 0) {
-					setError("No se detectó ningún rostro en la foto. Por favor sube una foto donde se vea tu rostro claramente")
-				} else if (validationResult.faceCount > 1) {
-					setError(`Se detectaron ${validationResult.faceCount} rostros. Por favor sube una foto con una sola persona`)
-				} else if (!validationResult.isAppropriate) {
-					setError("La foto contiene contenido inapropiado. Por favor elige otra imagen")
-				} else {
-					setError(validationResult.message || "La foto no cumple con los requisitos")
-				}
-
-				setIsSaving(false)
-				e.target.value = '' // Reset input
-				return
-			}
-
-			logger.log('[Settings] Photo validated successfully')
-		} catch (error) {
-			logger.error('[Settings] Error validating photo:', error)
-			// Allow upload if validation fails (graceful degradation)
-			logger.warn('[Settings] Proceeding with upload despite validation error')
-		}
-
+		// Don't validate before crop - do it after
 		setIsSaving(false)
 
 		const reader = new FileReader()
@@ -465,7 +436,6 @@ export function SettingsScreen() {
 			return
 		}
 
-		// Resize to 400x400 for optimal quality and file size
 		const targetSize = 400
 		canvas.width = targetSize
 		canvas.height = targetSize
@@ -491,19 +461,49 @@ export function SettingsScreen() {
 			targetSize
 		)
 
-		canvas.toBlob((blob) => {
-			if (blob) {
-				logger.log("[Settings] Cropped image created, size:", blob.size)
-				const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' })
+		canvas.toBlob(async (blob) => {
+			if (!blob) return
+
+			const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' })
+
+			setIsSaving(true)
+			setPhotoError('')
+
+			try {
+				logger.log('[Settings] Validating cropped photo...')
+				const { PhotoValidationAPI } = await import('@/lib/api')
+				const validationResult = await PhotoValidationAPI.validate(file)
+
+				if (!validationResult.valid) {
+					logger.warn('[Settings] Cropped photo failed validation:', validationResult.message)
+					
+					if (validationResult.faceCount === 0) {
+						setPhotoError("No se detectó ningún rostro. Ajusta el recorte para que se vea tu cara claramente.")
+					} else if (validationResult.faceCount && validationResult.faceCount > 1) {
+						setPhotoError("Se detectaron múltiples rostros. La foto debe tener solo una persona.")
+					} else if (validationResult.isAppropriate === false) {
+						setPhotoError("La foto contiene contenido inapropiado. Elige otra imagen.")
+					} else {
+						setPhotoError(validationResult.message || "La foto no cumple con los requisitos.")
+					}
+
+					setIsSaving(false)
+					return
+				}
+
+				logger.log("[Settings] Cropped image validated successfully")
 				setPhotoFile(file)
 				const url = URL.createObjectURL(blob)
 				setAvatar(url)
 				setShowCropModal(false)
 				setImageToCrop("")
+				setPhotoError('')
 				setError("") // Clear any previous errors
-			} else {
-				logger.error("[Settings] Failed to create blob from cropped image")
-				setError("Error al procesar la imagen")
+			} catch (error) {
+				logger.error('[Settings] Error validating cropped photo:', error)
+				setPhotoError(error instanceof Error ? error.message : 'No se pudo validar la foto. Intenta nuevamente.')
+			} finally {
+				setIsSaving(false)
 			}
 		}, 'image/jpeg', 0.92)
 	}
@@ -882,62 +882,69 @@ export function SettingsScreen() {
 				</div>
 			)}
 
-			{/* Crop Modal */}
+			{/* Crop Modal - Improved */}
 			{showCropModal && imageToCrop && (
-				<div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
-					<div className="w-full h-full sm:h-auto sm:max-w-2xl sm:rounded-2xl bg-white overflow-hidden flex flex-col max-h-screen">
-						<div className="p-4 border-b border-gray-200 flex items-center justify-between flex-shrink-0">
-							<h3 className="text-base sm:text-lg font-bold text-gray-900">Ajustar foto</h3>
+				<div className="fixed inset-0 bg-black flex items-center justify-center z-[100]">
+					<div className="w-full h-full sm:w-auto sm:h-auto sm:max-w-[90vw] sm:max-h-[90vh] bg-white sm:rounded-2xl flex flex-col overflow-hidden">
+						<div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-white flex-shrink-0">
+							<h3 className="text-base font-semibold text-gray-900">Ajustar foto de perfil</h3>
 							<button
 								onClick={() => {
 									setShowCropModal(false)
 									setImageToCrop("")
+									setPhotoError('')
 								}}
-								className="p-2 hover:bg-gray-100 rounded-xl transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+								className="p-2 hover:bg-gray-100 rounded-full transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center"
 							>
 								<X className="w-5 h-5 text-gray-600" />
 							</button>
 						</div>
-						<div className="flex-1 overflow-hidden p-4 sm:p-6 flex items-center justify-center bg-gray-50">
-							<div className="relative w-full" style={{ maxHeight: '500px', height: '500px' }}>
-								<div className="w-full h-full flex items-center justify-center">
-									<ReactCrop
-										crop={crop}
-										onChange={(c) => {
-											// Enforce circular aspect ratio by keeping width and height equal
-											const size = Math.max(c.width, c.height);
-											setCrop({
-												...c,
-												width: size,
-												height: size
-											});
+
+						{photoError && (
+							<div className="px-4 py-3 bg-red-50 border-b border-red-100 flex items-start gap-2">
+								<AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+								<p className="text-sm text-red-700 flex-1">{photoError}</p>
+							</div>
+						)}
+
+						<div className="flex-1 overflow-hidden bg-gray-900 relative" style={{ minHeight: '400px' }}>
+							<div className="absolute inset-0 flex items-center justify-center">
+								<ReactCrop
+									crop={crop}
+									onChange={(c) => {
+										const size = Math.max(c.width, c.height);
+										setCrop({
+											...c,
+											width: size,
+											height: size
+										});
+									}}
+									onComplete={(c) => {
+										const size = Math.max(c.width, c.height);
+										setCompletedCrop({
+											...c,
+											width: size,
+											height: size
+										});
+									}}
+									aspect={1}
+									circularCrop
+									keepSelection
+									minWidth={100}
+									minHeight={100}
+									className="max-h-full"
+								>
+									<img
+										ref={imageRef}
+										src={imageToCrop}
+										alt="Recortar"
+										style={{
+											maxHeight: '70vh',
+											maxWidth: '100%',
+											display: 'block'
 										}}
-										onComplete={(c) => {
-											// Ensure completed crop is also circular
-											const size = Math.max(c.width, c.height);
-											setCompletedCrop({
-												...c,
-												width: size,
-												height: size
-											});
-										}}
-										aspect={1}
-										circularCrop
-										keepSelection
-										minWidth={120}
-										minHeight={120}
-										className="max-w-full max-h-full"
-										style={{ maxHeight: '500px' }}
-									>
-										<img
-											ref={imageRef}
-											src={imageToCrop}
-											alt="Crop"
-											className="max-w-full max-h-full"
-											style={{ maxHeight: '500px', width: 'auto', height: 'auto', objectFit: 'contain' }}
-										/>
-									</ReactCrop>
-								</div>
+									/>
+								</ReactCrop>
 							</div>
 						</div>
 						<div className="p-4 bg-white border-t border-gray-200 flex gap-3 flex-shrink-0">
@@ -951,6 +958,7 @@ export function SettingsScreen() {
 								onClick={() => {
 									setShowCropModal(false)
 									setImageToCrop("")
+									setPhotoError('')
 								}}
 								variant="outline"
 								className="flex-1 min-h-[48px] text-base"
