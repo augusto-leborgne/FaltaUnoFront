@@ -232,7 +232,21 @@ export function ProfileSetupForm() {
           // ✅ Update context with fresh data
           setUser(freshUser);
           
-          // ✅ Prefill form with fresh backend data
+          // ✅ Load address and placeDetails from localStorage (not stored in backend)
+          let savedAddress = "";
+          let savedPlaceDetails = null;
+          try {
+            const savedData = localStorage.getItem('profileSetupFormData');
+            if (savedData) {
+              const parsed = JSON.parse(savedData);
+              savedAddress = parsed.address || "";
+              savedPlaceDetails = parsed.placeDetails || null;
+            }
+          } catch (e) {
+            logger.warn('[ProfileSetup] Error loading address from localStorage:', e);
+          }
+
+          // ✅ Prefill form with fresh backend data + localStorage address
           setFormData((prev) => ({
             ...prev,
             name: freshUser.nombre || freshUser.name || prev.name || "",
@@ -242,12 +256,12 @@ export function ProfileSetupForm() {
             position: freshUser.posicion || freshUser.position || prev.position || "",
             height: freshUser.altura ? String(freshUser.altura) : (prev.height || ""),
             weight: freshUser.peso ? String(freshUser.peso) : (prev.weight || ""),
-            address: freshUser.direccion || freshUser.ubicacion || prev.address || "",
+            address: savedAddress || prev.address || "",
+            placeDetails: savedPlaceDetails || prev.placeDetails,
             photoPreviewUrl: freshUser.fotoPerfil ? `data:image/jpeg;base64,${freshUser.fotoPerfil}` : prev.photoPreviewUrl,
           }));
           
-          // ✅ Clear localStorage after loading from backend (fresh data takes priority)
-          localStorage.removeItem('profileSetupFormData');
+          // ✅ Don't clear localStorage - keep address data
           return;
         }
         
@@ -305,7 +319,7 @@ export function ProfileSetupForm() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // ⚡ EMPTY DEPS - Run ONLY on mount
 
-  // ✅ NEW: Save form data to localStorage on change
+  // ✅ NEW: Save form data to localStorage on change (including address and placeDetails)
   useEffect(() => {
     // Don't save on initial mount
     if (isInitialMount.current) return;
@@ -321,13 +335,14 @@ export function ProfileSetupForm() {
         height: formData.height,
         weight: formData.weight,
         address: formData.address,
+        placeDetails: formData.placeDetails, // ✅ Save Google Maps place details
       };
       localStorage.setItem('profileSetupFormData', JSON.stringify(dataToSave));
     } catch (e) {
       logger.error('[ProfileSetup] Error saving form data:', e);
     }
   }, [formData.name, formData.surname, formData.fechaNacimiento, formData.genero,
-  formData.position, formData.height, formData.weight, formData.address])
+  formData.position, formData.height, formData.weight, formData.address, formData.placeDetails])
 
   useEffect(() => {
     return () => {
