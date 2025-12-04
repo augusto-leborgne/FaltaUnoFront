@@ -1188,9 +1188,9 @@ export function ProfileSetupForm() {
             </div>
 
             <div className="flex-1 overflow-hidden bg-gray-50">
-              <div className="h-full flex items-center justify-center p-4">
-                <div className="relative w-full h-full">
-                  <div className="absolute inset-0 m-4 rounded-[28px] bg-black overflow-hidden shadow-[inset_0_0_40px_rgba(0,0,0,0.4)]">
+              <div className="h-full flex items-center justify-center p-2 sm:p-4">
+                <div className="relative w-full" style={{ maxHeight: '400px', height: '400px' }}>
+                  <div className="w-full h-full rounded-[28px] bg-black overflow-hidden shadow-[inset_0_0_40px_rgba(0,0,0,0.4)] flex items-center justify-center">
                   <ReactCrop
                     crop={crop}
                     onChange={(c) => {
@@ -1217,13 +1217,15 @@ export function ProfileSetupForm() {
                     keepSelection
                     minWidth={120}
                     minHeight={120}
-                    className="w-full h-full"
+                    className="max-w-full max-h-full"
+                    style={{ maxHeight: '400px' }}
                   >
                     <img
                       ref={imageRef}
                       src={imageToCrop}
                       alt="Recortar"
-                      className="w-full h-full object-cover"
+                      className="max-w-full max-h-full"
+                      style={{ maxHeight: '400px', width: 'auto', height: 'auto', objectFit: 'contain' }}
                     />
                   </ReactCrop>
                   </div>

@@ -898,41 +898,47 @@ export function SettingsScreen() {
 								<X className="w-5 h-5 text-gray-600" />
 							</button>
 						</div>
-						<div className="flex-1 overflow-auto p-4 sm:p-6">
-							<ReactCrop
-								crop={crop}
-								onChange={(c) => {
-									// Enforce circular aspect ratio by keeping width and height equal
-									const size = Math.max(c.width, c.height);
-									setCrop({
-										...c,
-										width: size,
-										height: size
-									});
-								}}
-								onComplete={(c) => {
-									// Ensure completed crop is also circular
-									const size = Math.max(c.width, c.height);
-									setCompletedCrop({
-										...c,
-										width: size,
-										height: size
-									});
-								}}
-								aspect={1}
-								circularCrop
-								keepSelection
-								minWidth={120}
-								minHeight={120}
-								className="max-w-full"
-							>
-								<img
-									ref={imageRef}
-									src={imageToCrop}
-									alt="Crop"
-									className="max-w-full h-auto"
-								/>
-							</ReactCrop>
+						<div className="flex-1 overflow-hidden p-4 sm:p-6 flex items-center justify-center bg-gray-50">
+							<div className="relative w-full" style={{ maxHeight: '500px', height: '500px' }}>
+								<div className="w-full h-full flex items-center justify-center">
+									<ReactCrop
+										crop={crop}
+										onChange={(c) => {
+											// Enforce circular aspect ratio by keeping width and height equal
+											const size = Math.max(c.width, c.height);
+											setCrop({
+												...c,
+												width: size,
+												height: size
+											});
+										}}
+										onComplete={(c) => {
+											// Ensure completed crop is also circular
+											const size = Math.max(c.width, c.height);
+											setCompletedCrop({
+												...c,
+												width: size,
+												height: size
+											});
+										}}
+										aspect={1}
+										circularCrop
+										keepSelection
+										minWidth={120}
+										minHeight={120}
+										className="max-w-full max-h-full"
+										style={{ maxHeight: '500px' }}
+									>
+										<img
+											ref={imageRef}
+											src={imageToCrop}
+											alt="Crop"
+											className="max-w-full max-h-full"
+											style={{ maxHeight: '500px', width: 'auto', height: 'auto', objectFit: 'contain' }}
+										/>
+									</ReactCrop>
+								</div>
+							</div>
 						</div>
 						<div className="p-4 bg-white border-t border-gray-200 flex gap-3 flex-shrink-0">
 							<Button
