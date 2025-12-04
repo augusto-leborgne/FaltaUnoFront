@@ -170,23 +170,29 @@ export function VerificationScreen() {
       <div className="pt-20 pb-12 text-center">
         <Shield className="w-16 h-16 text-green-600 mx-auto mb-6" />
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Verificación de Identidad</h1>
-        <p className="text-gray-600 px-6">Ingresa tu cédula para verificar tu identidad</p>
+        <p className="text-gray-600 px-6">Ingresá tu cédula para verificar tu identidad</p>
       </div>
 
       <div className="flex-1 px-6">
         {error && <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Número de cédula
+            </label>
             <Input
               type="text"
-              placeholder="Número de cédula (ej: 1.234.567-8)"
+              placeholder="12345678 (sin puntos ni guiones)"
               value={cedula}
               onChange={handleCedulaChange}
               className={fieldError ? 'border-red-500' : ''}
-              maxLength={10}
+              maxLength={8}
               required
               disabled={isVerifying}
             />
+            <p className="text-xs text-gray-500 mt-1.5">
+              Ingresá solo números, sin puntos ni guiones
+            </p>
             {fieldError && (
               <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
                 <AlertCircle className="w-4 h-4" />
