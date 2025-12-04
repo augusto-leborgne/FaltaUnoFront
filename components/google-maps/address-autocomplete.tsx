@@ -35,6 +35,8 @@ export function AddressAutocomplete({
   const [isSearching, setIsSearching] = useState(false);
   const [hasSelectedAddress, setHasSelectedAddress] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [showMap, setShowMap] = useState(false);
   
   // ✅ MODERNO: Solo necesitamos sessionToken (no más PlacesService)
   const sessionTokenRef = useRef<google.maps.places.AutocompleteSessionToken | null>(null);
@@ -374,9 +376,20 @@ export function AddressAutocomplete({
         setValidationError("Debes seleccionar una dirección completa con número de calle o un lugar específico de Google Maps");
         setQuery("");
         setHasSelectedAddress(false);
+        setSelectedLocation(null);
+        setShowMap(false);
         onChange("", null);
         isSelectingRef.current = false; // Limpiar flag
         return;
+      }
+      
+      // Guardar ubicación para mostrar mapa
+      if (place.location) {
+        setSelectedLocation({
+          lat: place.location.lat(),
+          lng: place.location.lng()
+        });
+        setShowMap(true);
       }
       
       onChange(prediction.description, placeResult);
@@ -399,6 +412,8 @@ export function AddressAutocomplete({
     setSuggestions([]);
     setHasSelectedAddress(false); // Resetear estado de selección
     setValidationError(null); // Limpiar error
+    setSelectedLocation(null);
+    setShowMap(false);
     onChange("", null);
   };
 
@@ -478,6 +493,35 @@ export function AddressAutocomplete({
       {validationError && (
         <div className="mt-2 text-xs text-red-600">
           {validationError}
+        </div>
+      )}
+
+      {/* Mapa pequeño de preview */}
+      {showMap && selectedLocation && (
+        <div className="mt-3 rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+          <div className="bg-gray-50 px-3 py-2 border-b border-gray-200 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-green-600" />
+              <span className="text-xs font-medium text-gray-700">Vista previa de ubicación</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowMap(false)}
+              className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded hover:bg-gray-100"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+          <div className="relative w-full h-32 sm:h-40 bg-gray-100">
+            <iframe
+              width="100%"
+              height="100%"
+              style={{ border: 0 }}
+              loading="lazy"
+              src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&q=${selectedLocation.lat},${selectedLocation.lng}&zoom=16`}
+              allowFullScreen
+            />
+          </div>
         </div>
       )}
 
