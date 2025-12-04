@@ -513,13 +513,10 @@ export function AddressAutocomplete({
             </button>
           </div>
           <div className="relative w-full h-32 sm:h-40 bg-gray-100">
-            <iframe
-              width="100%"
-              height="100%"
-              style={{ border: 0 }}
-              loading="lazy"
-              src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&q=${selectedLocation.lat},${selectedLocation.lng}&zoom=16`}
-              allowFullScreen
+            <img
+              src={`https://maps.googleapis.com/maps/api/staticmap?center=${selectedLocation.lat},${selectedLocation.lng}&zoom=16&size=600x300&scale=2&markers=color:green%7C${selectedLocation.lat},${selectedLocation.lng}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`}
+              alt="Vista del mapa"
+              className="w-full h-full object-cover"
             />
           </div>
         </div>
