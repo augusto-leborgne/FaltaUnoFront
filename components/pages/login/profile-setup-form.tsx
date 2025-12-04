@@ -434,8 +434,9 @@ export function ProfileSetupForm() {
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
 
-    // Draw the video frame to canvas
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+    // Draw the video frame to canvas (flipped horizontally to match mirrored preview)
+    ctx.scale(-1, 1)
+    ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height)
 
     // Convert to blob and create file
     canvas.toBlob((blob) => {

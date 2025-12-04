@@ -347,7 +347,9 @@ export function SettingsScreen() {
 		}
 
 		logger.log("[Settings] Capturing photo from camera")
-		ctx.drawImage(video, 0, 0)
+		// Flip horizontally to match the mirrored preview
+		ctx.scale(-1, 1)
+		ctx.drawImage(video, -canvas.width, 0)
 		canvas.toBlob((blob) => {
 			if (blob) {
 				logger.log("[Settings] Photo captured, showing crop modal")
@@ -849,6 +851,7 @@ export function SettingsScreen() {
 								playsInline
 								muted
 								className="w-full h-auto max-h-[70vh] object-contain rounded-lg"
+								style={{ transform: 'scaleX(-1)' }}
 							/>
 							<canvas ref={canvasRef} className="hidden" />
 							{/* Visual guide overlay */}
