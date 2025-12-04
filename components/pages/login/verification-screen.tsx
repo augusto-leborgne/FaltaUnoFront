@@ -4,7 +4,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
-import { Shield, CheckCircle, AlertCircle } from "lucide-react";
+import { Shield, CheckCircle, AlertCircle, ArrowLeft } from "lucide-react";
 import { UsuarioAPI } from "@/lib/api";
 import { AuthService } from "@/lib/auth";
 import { useAuth } from "@/hooks/use-auth";
@@ -213,6 +213,19 @@ export function VerificationScreen() {
             <LoadingSpinner size="xl" variant="green" text="Consultando registro uruguayo..." />
           </div>
         )}
+
+        {/* Botón volver */}
+        <div className="mt-6 text-center">
+          <Button
+            onClick={() => router.push('/profile-setup')}
+            variant="ghost"
+            size="sm"
+            disabled={isVerifying}
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Volver al perfil
+          </Button>
+        </div>
       </div>
     </div>
   );
