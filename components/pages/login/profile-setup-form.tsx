@@ -21,22 +21,53 @@ import { withRetry, formatErrorMessage } from '@/lib/api-utils'
 import { useClickOutside } from '@/hooks/use-click-outside'
 import { cn } from '@/lib/utils'
 
-const describePhotoValidation = (result: { message?: string; faceCount?: number; isAppropriate?: boolean; reason?: string }) => {
+const describePhotoValidation = (result: { message?: string; faceCount?: number; isAppropriate?: boolean; reason?: string; confidence?: number }) => {
   if (!result) return "La foto no cumple con los requisitos";
 
-  if (result.faceCount === 0) {
-    return "No se detectó ningún rostro. Sube una foto donde se vea tu cara.";
-  }
+  // Usar el mensaje del servidor si está disponible (ya es específico)
+  if (result.message) return result.message;
 
-  if (result.faceCount && result.faceCount > 1) {
-    return "Solo se permite una persona en la foto.";
+  // Fallbacks por si el mensaje no viene del servidor
+  switch (result.reason) {
+    case "NO_FACE":
+      return "No se detectó ningún rostro. Asegúrate de que tu cara sea visible y esté bien iluminada.";
+    case "MULTIPLE_FACES":
+      return `Se detectaron ${result.faceCount || 'múltiples'} rostros. Solo se permite una persona en la foto.`;
+    case "LOW_CONFIDENCE":
+      return "La calidad de la foto es muy baja. Por favor toma una foto más clara.";
+    case "BLURRY_IMAGE":
+      return "La foto está borrosa o desenfocada. Toma una foto más nítida.";
+    case "POOR_LIGHTING":
+      return "La foto está muy oscura. Asegúrate de tener buena iluminación.";
+    case "EXTREME_ANGLE":
+      return "Tu rostro debe estar de frente a la cámara. Evita ángulos extremos.";
+    case "FACE_OCCLUDED":
+      return "Tu rostro debe estar completamente visible. Evita cubrirlo con accesorios.";
+    case "INAPPROPRIATE_EXPRESSION":
+      return "Por favor usa una foto con expresión neutra o sonriente para tu perfil.";
+    case "ADULT_CONTENT":
+      return "La foto contiene contenido adulto. Usa una foto apropiada para tu perfil.";
+    case "VIOLENT_CONTENT":
+      return "La foto contiene contenido violento. Elige una foto apropiada.";
+    case "RACY_CONTENT":
+      return "La foto contiene contenido sugerente. Por favor elige otra imagen.";
+    case "SPOOF_CONTENT":
+      return "La foto parece ser falsa o modificada. Usa una foto real.";
+    case "API_ERROR":
+      return "No se pudo validar la foto. Por favor intenta nuevamente.";
+    default:
+      // Fallbacks antiguos
+      if (result.faceCount === 0) {
+        return "No se detectó ningún rostro. Sube una foto donde se vea tu cara.";
+      }
+      if (result.faceCount && result.faceCount > 1) {
+        return "Solo se permite una persona en la foto.";
+      }
+      if (result.isAppropriate === false) {
+        return "La foto contiene contenido inapropiado. Elige otra.";
+      }
+      return "La foto no cumple con los requisitos";
   }
-
-  if (result.isAppropriate === false) {
-    return "La foto contiene contenido inapropiado. Elige otra.";
-  }
-
-  return result.message || "La foto no cumple con los requisitos";
 };
 
 export function ProfileSetupForm() {
