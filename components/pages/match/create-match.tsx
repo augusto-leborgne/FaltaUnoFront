@@ -520,14 +520,14 @@ export function CreateMatchScreen() {
           <label className="block text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4">
             Tipo de partido <span className="text-red-500">*</span>
           </label>
-          <div className="flex gap-2 sm:gap-3 flex-wrap">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
             {Object.values(TipoPartido).map((type) => (
               <button
                 key={type}
                 type="button"
                 onClick={() => handleInputChange("type", type)}
                 disabled={isLoading}
-                className={`px-4 sm:px-5 py-3 sm:py-3.5 rounded-xl text-sm sm:text-base font-semibold border-2 transition-all touch-manipulation disabled:opacity-50 min-h-[48px] active:scale-95 ${formData.type === type
+                className={`px-3 sm:px-5 py-3 sm:py-3.5 rounded-xl text-sm sm:text-base font-semibold border-2 transition-all touch-manipulation disabled:opacity-50 min-h-[52px] active:scale-95 flex items-center justify-center ${formData.type === type
                   ? "bg-green-600 text-white border-green-600 shadow-md"
                   : "bg-white text-gray-700 border-gray-300 hover:border-gray-400 active:bg-gray-50"
                   }`}
@@ -543,14 +543,14 @@ export function CreateMatchScreen() {
           <label className="block text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4">
             Género <span className="text-red-500">*</span>
           </label>
-          <div className="flex gap-2 sm:gap-3">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
             {["Mixto", "Hombres", "Mujeres"].map((gender) => (
               <button
                 key={gender}
                 type="button"
                 onClick={() => handleInputChange("gender", gender)}
                 disabled={isLoading}
-                className={`flex-1 px-4 sm:px-5 py-3 sm:py-3.5 rounded-xl text-sm sm:text-base font-semibold border-2 transition-all touch-manipulation disabled:opacity-50 min-h-[48px] active:scale-95 ${formData.gender === gender
+                className={`px-2 sm:px-5 py-3 sm:py-3.5 rounded-xl text-sm sm:text-base font-semibold border-2 transition-all touch-manipulation disabled:opacity-50 min-h-[52px] active:scale-95 flex items-center justify-center ${formData.gender === gender
                   ? "bg-orange-200 text-gray-900 border-orange-300 shadow-md"
                   : "bg-white text-gray-700 border-gray-300 hover:border-gray-400 active:bg-gray-50"
                   }`}
@@ -562,8 +562,8 @@ export function CreateMatchScreen() {
         </div>
 
         {/* Fecha y Hora */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 mb-5 sm:mb-6">
-          <div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-5 mb-5 sm:mb-6">
+          <div className="w-full">
             <label className="block text-sm sm:text-base font-semibold text-gray-900 mb-2 sm:mb-3">
               Fecha <span className="text-red-500">*</span>
             </label>
@@ -575,7 +575,7 @@ export function CreateMatchScreen() {
                 onChange={(e) => handleInputChange("date", e.target.value)}
                 min={today}
                 max={maxDate}
-                className={`pl-11 sm:pl-12 min-h-[48px] text-base rounded-xl border-2 ${fieldErrors.date ? 'border-red-500' : 'border-gray-300'}`}
+                className={`pl-11 sm:pl-12 min-h-[52px] text-base rounded-xl border-2 w-full ${fieldErrors.date ? 'border-red-500' : 'border-gray-300'}`}
                 required
                 disabled={isLoading}
               />
@@ -587,7 +587,7 @@ export function CreateMatchScreen() {
               </p>
             )}
           </div>
-          <div>
+          <div className="w-full">
             <label className="block text-sm sm:text-base font-semibold text-gray-900 mb-2 sm:mb-3">
               Hora <span className="text-red-500">*</span>
             </label>
@@ -596,7 +596,7 @@ export function CreateMatchScreen() {
               <select
                 value={formData.time}
                 onChange={(e) => handleInputChange("time", e.target.value)}
-                className={`w-full pl-11 sm:pl-12 pr-4 min-h-[48px] rounded-xl border-2 ${fieldErrors.time ? 'border-red-500' : 'border-gray-300'} bg-white text-gray-900 text-base font-medium focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation`}
+                className={`w-full pl-11 sm:pl-12 pr-4 min-h-[52px] rounded-xl border-2 ${fieldErrors.time ? 'border-red-500' : 'border-gray-300'} bg-white text-gray-900 text-base font-medium focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation`}
                 required
                 disabled={isLoading}
               >
@@ -659,7 +659,7 @@ export function CreateMatchScreen() {
               value={formData.totalPrice}
               onChange={(e) => handleInputChange("totalPrice", e.target.value === "" ? 0 : parseFloat(e.target.value))}
               placeholder="Ingresa 0 si es gratis"
-              className={`pl-11 sm:pl-12 min-h-[48px] text-base rounded-xl border-2 ${fieldErrors.totalPrice ? 'border-red-500' : 'border-gray-300'}`}
+              className={`pl-11 sm:pl-12 min-h-[52px] text-base rounded-xl border-2 w-full ${fieldErrors.totalPrice ? 'border-red-500' : 'border-gray-300'}`}
               required
               disabled={isLoading}
             />
@@ -687,7 +687,7 @@ export function CreateMatchScreen() {
             <select
               value={formData.duration || 60}
               onChange={(e) => handleInputChange("duration", parseInt(e.target.value))}
-              className={`w-full pl-11 sm:pl-12 pr-4 min-h-[48px] rounded-xl border-2 ${fieldErrors.duration ? 'border-red-500' : 'border-gray-300'} bg-white text-gray-900 text-base font-medium focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation`}
+              className={`w-full pl-11 sm:pl-12 pr-4 min-h-[52px] rounded-xl border-2 ${fieldErrors.duration ? 'border-red-500' : 'border-gray-300'} bg-white text-gray-900 text-base font-medium focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation`}
               disabled={isLoading}
             >
               <option value={60}>60 minutos</option>
@@ -713,7 +713,7 @@ export function CreateMatchScreen() {
             placeholder="Describe la cancha (ubicación exacta, tipo de superficie, vestuarios disponibles, estacionamiento, etc.)"
             value={formData.description}
             onChange={(e) => handleInputChange("description", e.target.value)}
-            className={`min-h-[48px] py-3 sm:py-4 px-4 rounded-xl sm:rounded-2xl resize-none text-base border-2 ${fieldErrors.description ? 'border-red-500' : 'border-gray-300'}`}
+            className={`min-h-[120px] py-3 sm:py-4 px-4 rounded-xl sm:rounded-2xl resize-none text-base border-2 w-full ${fieldErrors.description ? 'border-red-500' : 'border-gray-300'}`}
             rows={4}
             disabled={isLoading}
             maxLength={500}
