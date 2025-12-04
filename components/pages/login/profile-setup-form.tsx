@@ -211,51 +211,97 @@ export function ProfileSetupForm() {
   const generos = ["Hombre", "Mujer"]
 
   useEffect(() => {
-    // ✅ FIX: Load from localStorage first, then prefill from user if needed
-    // This preserves user input across refreshes
+    // ✅ FIX: Always load from user object first (most recent data from backend)
+    // This ensures data is current when returning from cedula verification
     if (!isInitialMount.current) return;
     if (hasPrefilled.current) return;
 
     isInitialMount.current = false;
     hasPrefilled.current = true;
 
-    try {
-      // Try to load from localStorage first
-      const savedData = localStorage.getItem('profileSetupFormData');
-      if (savedData) {
-        const parsed = JSON.parse(savedData);
-        logger.log('[ProfileSetup] Loaded form data from localStorage');
-        setFormData(prev => ({
-          ...prev,
-          ...parsed,
-          // Don't restore photo from localStorage (it's a File object)
-          photo: prev.photo,
-          photoPreviewUrl: prev.photoPreviewUrl,
-        }));
-        return; // Don't prefill from user if we have saved data
-      }
-
-      // If no saved data and we have user, prefill from user
-      if (!user) return;
-
-      logger.log('[ProfileSetup] Prefilling from user object');
-      setFormData((prev) => {
-        // Pre-rellenar campos individuales que estén vacíos
-        return {
-          ...prev,
-          name: prev.name || (user as any).nombre || (user as any).name || "",
-          surname: prev.surname || (user as any).apellido || "",
-          fechaNacimiento: prev.fechaNacimiento || (user as any).fechaNacimiento || (user as any).fecha_nacimiento || "",
-          genero: prev.genero || (user as any).genero || "",
-          position: prev.position || (user as any).posicion || (user as any).position || "",
-          height: prev.height || ((user as any).altura ? String((user as any).altura) : ""),
-          weight: prev.weight || ((user as any).peso ? String((user as any).peso) : ""),
-          address: prev.address || (user as any).direccion || (user as any).ubicacion || "",
+    const loadUserData = async () => {
+      try {
+        // ✅ Always fetch fresh user data from backend first
+        logger.log('[ProfileSetup] Fetching fresh user data from backend...');
+        const userRes = await UsuarioAPI.getMe();
+        
+        if (userRes?.success && userRes.data) {
+          const freshUser = userRes.data;
+          logger.log('[ProfileSetup] Fresh user data loaded, prefilling form');
+          
+          // ✅ Update context with fresh data
+          setUser(freshUser);
+          
+          // ✅ Prefill form with fresh backend data
+          setFormData((prev) => ({
+            ...prev,
+            name: freshUser.nombre || freshUser.name || prev.name || "",
+            surname: freshUser.apellido || prev.surname || "",
+            fechaNacimiento: freshUser.fechaNacimiento || freshUser.fecha_nacimiento || prev.fechaNacimiento || "",
+            genero: freshUser.genero || prev.genero || "",
+            position: freshUser.posicion || freshUser.position || prev.position || "",
+            height: freshUser.altura ? String(freshUser.altura) : (prev.height || ""),
+            weight: freshUser.peso ? String(freshUser.peso) : (prev.weight || ""),
+            address: freshUser.direccion || freshUser.ubicacion || prev.address || "",
+            photoPreviewUrl: freshUser.fotoPerfil ? `data:image/jpeg;base64,${freshUser.fotoPerfil}` : prev.photoPreviewUrl,
+          }));
+          
+          // ✅ Clear localStorage after loading from backend (fresh data takes priority)
+          localStorage.removeItem('profileSetupFormData');
+          return;
         }
-      })
-    } catch (e) {
-      logger.error('[ProfileSetup] Error loading saved data:', e)
-    }
+        
+        // Fallback: If backend call fails, try localStorage
+        const savedData = localStorage.getItem('profileSetupFormData');
+        if (savedData) {
+          const parsed = JSON.parse(savedData);
+          logger.log('[ProfileSetup] Backend failed, loaded form data from localStorage');
+          setFormData(prev => ({
+            ...prev,
+            ...parsed,
+            photo: prev.photo,
+            photoPreviewUrl: prev.photoPreviewUrl,
+          }));
+          return;
+        }
+
+        // Last fallback: use context user if available
+        if (user) {
+          logger.log('[ProfileSetup] Using context user as fallback');
+          setFormData((prev) => ({
+            ...prev,
+            name: prev.name || (user as any).nombre || (user as any).name || "",
+            surname: prev.surname || (user as any).apellido || "",
+            fechaNacimiento: prev.fechaNacimiento || (user as any).fechaNacimiento || (user as any).fecha_nacimiento || "",
+            genero: prev.genero || (user as any).genero || "",
+            position: prev.position || (user as any).posicion || (user as any).position || "",
+            height: prev.height || ((user as any).altura ? String((user as any).altura) : ""),
+            weight: prev.weight || ((user as any).peso ? String((user as any).peso) : ""),
+            address: prev.address || (user as any).direccion || (user as any).ubicacion || "",
+          }));
+        }
+      } catch (e) {
+        logger.error('[ProfileSetup] Error loading user data:', e);
+        // Try localStorage as fallback on error
+        try {
+          const savedData = localStorage.getItem('profileSetupFormData');
+          if (savedData) {
+            const parsed = JSON.parse(savedData);
+            logger.log('[ProfileSetup] Error occurred, loaded from localStorage');
+            setFormData(prev => ({
+              ...prev,
+              ...parsed,
+              photo: prev.photo,
+              photoPreviewUrl: prev.photoPreviewUrl,
+            }));
+          }
+        } catch (storageError) {
+          logger.error('[ProfileSetup] Error loading from localStorage:', storageError);
+        }
+      }
+    };
+
+    loadUserData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // ⚡ EMPTY DEPS - Run ONLY on mount
 
