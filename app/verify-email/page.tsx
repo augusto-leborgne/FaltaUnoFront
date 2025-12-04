@@ -61,6 +61,7 @@ function VerifyEmailContent() {
   const [isResending, setIsResending] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [hasAttemptedVerify, setHasAttemptedVerify] = useState(false);
   const [resendSuccess, setResendSuccess] = useState(false);
   const [expiresAt, setExpiresAt] = useState(initialExpiresAt);
   const [timeLeft, setTimeLeft] = useState(() => Math.max(0, Math.floor((initialExpiresAt - Date.now()) / 1000)));
@@ -160,6 +161,7 @@ function VerifyEmailContent() {
 
       setIsVerifying(true);
       setError('');
+      setHasAttemptedVerify(true);
 
       try {
         const controller = new AbortController();
@@ -303,6 +305,7 @@ function VerifyEmailContent() {
         setResendAvailableAt(nextResendAvailable);
         setResendCooldown(Math.max(0, Math.ceil((nextResendAvailable - now) / 1000)));
         setCode(createEmptyCode());
+        setHasAttemptedVerify(false);
         focusInput(0);
 
         setResendSuccess(true);
@@ -339,12 +342,12 @@ function VerifyEmailContent() {
 
 
 
-  // Auto-verificar cuando se completen los 6 dígitos
+  // Auto-verificar cuando se completen los 6 dígitos (solo una vez por código)
   useEffect(() => {
-    if (code.every(digit => digit !== '') && !isVerifying && !success) {
+    if (code.every(digit => digit !== '') && !isVerifying && !success && !hasAttemptedVerify) {
       handleVerify();
     }
-  }, [code, handleVerify, isVerifying, success]);
+  }, [code, handleVerify, isVerifying, success, hasAttemptedVerify]);
 
   if (!email) {
     return null; // Se redirigirá automáticamente
@@ -414,6 +417,10 @@ function VerifyEmailContent() {
                     newCode.push('');
                   }
                   setCode(newCode);
+                  setError('');
+                  if (hasAttemptedVerify) {
+                    setHasAttemptedVerify(false);
+                  }
                 }}
                 onKeyDown={(e) => {
                   if (e.key === 'Backspace' && code.join('').length === 0) {
@@ -438,19 +445,25 @@ function VerifyEmailContent() {
               
               {/* Visualización de dígitos */}
               <div className="flex gap-1.5 sm:gap-2 justify-center items-center pointer-events-none">
-                {code.map((digit, index) => (
-                  <div
-                    key={index}
-                    className={`w-11 h-12 sm:w-14 sm:h-16 flex items-center justify-center text-xl sm:text-3xl font-bold border-2 rounded-lg sm:rounded-xl transition-all shadow-sm ${success
-                      ? 'border-green-500 bg-green-50 text-green-700'
-                      : digit
-                        ? 'border-green-500 bg-green-50 text-green-700 scale-105'
-                        : 'border-gray-300 bg-white'
-                    }`}
-                  >
-                    {digit || ''}
-                  </div>
-                ))}
+                {code.map((digit, index) => {
+                  const isCurrent = code.join('').length === index && !success;
+                  return (
+                    <div
+                      key={index}
+                      className={`w-11 h-12 sm:w-14 sm:h-16 flex items-center justify-center text-xl sm:text-3xl font-bold border-2 rounded-lg sm:rounded-xl transition-all shadow-sm ${
+                        success
+                          ? 'border-green-500 bg-green-50 text-green-700'
+                          : isCurrent
+                          ? 'border-green-600 border-4 bg-white text-gray-900 scale-105'
+                          : digit
+                          ? 'border-gray-400 bg-white text-gray-900'
+                          : 'border-gray-300 bg-white text-gray-400'
+                      }`}
+                    >
+                      {digit || ''}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
