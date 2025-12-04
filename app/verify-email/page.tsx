@@ -358,9 +358,11 @@ function VerifyEmailContent() {
       return next;
     });
 
-    // Auto-avanzar al siguiente campo
+    // Auto-avanzar al siguiente campo después del render
     if (index < CODE_LENGTH - 1) {
-      focusInput(index + 1);
+      setTimeout(() => {
+        focusInput(index + 1);
+      }, 0);
     }
   }, [focusInput, isVerifying, success]);
 
