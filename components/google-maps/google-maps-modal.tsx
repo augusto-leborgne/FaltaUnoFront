@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { X, ExternalLink } from "lucide-react";
 import { useGoogleMaps } from "@/lib/google-maps-loader"; // adjust path
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useDisableBodyScroll } from "@/hooks/use-disable-body-scroll";
 
 interface GoogleMapsModalProps {
   isOpen: boolean;
@@ -18,6 +19,9 @@ export function GoogleMapsModal({ isOpen, onClose, location, lat, lng }: GoogleM
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const markerRef = useRef<google.maps.marker.AdvancedMarkerElement | null>(null);
   const { isLoaded, error, google } = useGoogleMaps();
+
+  // Disable body scroll when modal is open
+  useDisableBodyScroll(isOpen);
 
   useEffect(() => {
     if (!isOpen) return;

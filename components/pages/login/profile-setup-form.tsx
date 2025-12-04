@@ -19,6 +19,7 @@ import ReactCrop, { type Crop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
 import { withRetry, formatErrorMessage } from '@/lib/api-utils'
 import { useClickOutside } from '@/hooks/use-click-outside'
+import { useDisableBodyScroll } from '@/hooks/use-disable-body-scroll'
 import { cn } from '@/lib/utils'
 
 const describePhotoValidation = (result: { message?: string; faceCount?: number; isAppropriate?: boolean; reason?: string; confidence?: number }) => {
@@ -477,6 +478,9 @@ export function ProfileSetupForm() {
       startCamera()
     }
   }, [showCameraModal])
+
+  // Disable body scroll when modals are open
+  useDisableBodyScroll(showCameraModal || showCropModal)
 
   // Cleanup camera stream on unmount
   useEffect(() => {

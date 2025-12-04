@@ -16,6 +16,7 @@ import ReactCrop, { type Crop } from 'react-image-crop'
 import 'react-image-crop/dist/ReactCrop.css'
 import { PhotoCache } from "@/lib/photo-cache"
 import { ProfileSetupStorage, type ProfileSetupData } from "@/lib/profile-setup-storage"
+import { useDisableBodyScroll } from "@/hooks/use-disable-body-scroll"
 
 const positions = ["Arquero", "Defensa", "Mediocampista", "Delantero"]
 
@@ -102,6 +103,9 @@ export function SettingsScreen() {
 			}
 		}
 	}, [])
+
+	// Disable body scroll when modals are open
+	useDisableBodyScroll(showCameraModal || showCropModal)
 
 	const loadUserData = async () => {
 		try {

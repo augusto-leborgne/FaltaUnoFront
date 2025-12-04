@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { X, MapPin } from "lucide-react";
 import { useGoogleMaps } from "@/lib/google-maps-loader"; // adjust path
+import { useDisableBodyScroll } from "@/hooks/use-disable-body-scroll";
 
 type MapMatch = {
   id: number;
@@ -32,6 +33,9 @@ export function MatchesMapModal({ isOpen, onClose }: MatchesMapModalProps) {
   const mapInstanceRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.marker.AdvancedMarkerElement[]>([]);
   const [selectedMatch, setSelectedMatch] = useState<MapMatch | null>(null);
+
+  // Disable body scroll when modal is open
+  useDisableBodyScroll(isOpen);
 
   useEffect(() => {
     if (!isOpen) return;

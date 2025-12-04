@@ -5,6 +5,7 @@ import { X, AlertTriangle } from "lucide-react"
 import { Button } from "./button"
 import { API_BASE } from "@/lib/api"
 import AuthService from "@/lib/auth"
+import { useDisableBodyScroll } from "@/hooks/use-disable-body-scroll"
 
 interface ReportModalProps {
   isOpen: boolean
@@ -31,6 +32,9 @@ export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName 
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
+
+  // Disable body scroll when modal is open
+  useDisableBodyScroll(isOpen)
 
   if (!isOpen) return null
 
