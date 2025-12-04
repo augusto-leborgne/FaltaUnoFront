@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect, useRef, Suspense, useCallback } from 'react'
-import type { ClipboardEvent as ReactClipboardEvent, KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { API_URL } from '@/lib/api'
@@ -338,95 +337,7 @@ function VerifyEmailContent() {
     }
   };
 
-  const handleCodeChange = useCallback((index: number, rawValue: string) => {
-    if (isVerifying || success) {
-      return;
-    }
 
-    const sanitized = rawValue.replace(/\D/g, '');
-
-    if (!sanitized) {
-      setCode((prev) => {
-        const next = [...prev];
-        next[index] = '';
-        return next;
-      });
-      return;
-    }
-
-    // Tomar solo el último dígito ingresado
-    const lastDigit = sanitized.slice(-1);
-    
-    const newCode = [...code];
-    newCode[index] = lastDigit;
-    setCode(newCode);
-
-    // Auto-avanzar inmediatamente usando ref
-    if (index < CODE_LENGTH - 1) {
-      const nextInput = inputRefs.current[index + 1];
-      if (nextInput) {
-        nextInput.focus();
-        nextInput.select();
-      }
-    }
-  }, [code, isVerifying, success]);
-
-  const handleKeyDown = useCallback((index: number, event: ReactKeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Backspace') {
-      event.preventDefault();
-      if (code[index]) {
-        const next = [...code];
-        next[index] = '';
-        setCode(next);
-      } else if (index > 0) {
-        const next = [...code];
-        next[index - 1] = '';
-        setCode(next);
-        focusInput(index - 1);
-      }
-      return;
-    }
-
-    if (event.key === 'ArrowLeft' && index > 0) {
-      event.preventDefault();
-      focusInput(index - 1);
-      return;
-    }
-
-    if (event.key === 'ArrowRight' && index < CODE_LENGTH - 1) {
-      event.preventDefault();
-      focusInput(index + 1);
-      return;
-    }
-
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      if (code.every((digit) => digit !== '') && !isVerifying && !success) {
-        handleVerify();
-      }
-    }
-  }, [code, focusInput, handleVerify, isVerifying, success]);
-
-  const handlePaste = useCallback((event: ReactClipboardEvent<HTMLDivElement>) => {
-    event.preventDefault();
-
-    if (isVerifying || success) {
-      return;
-    }
-
-    const pasted = event.clipboardData.getData('text').replace(/\D/g, '').slice(0, CODE_LENGTH);
-    if (!pasted) {
-      return;
-    }
-
-    const nextCode = createEmptyCode();
-    pasted.split('').forEach((digit, idx) => {
-      nextCode[idx] = digit;
-    });
-
-    setCode(nextCode);
-    focusInput(Math.min(pasted.length, CODE_LENGTH) - 1);
-  }, [focusInput, isVerifying, success]);
 
   // Auto-verificar cuando se completen los 6 dígitos
   useEffect(() => {
@@ -485,36 +396,62 @@ function VerifyEmailContent() {
             <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2 sm:mb-3 text-center">
               Ingresa el código de verificación
             </label>
-            <div
-              className="flex gap-1.5 sm:gap-2 justify-center items-center"
-              onPaste={handlePaste}
-            >
-              {code.map((digit, index) => (
-                <Input
-                  key={index}
-                  ref={(el) => {
-                    inputRefs.current[index] = el;
-                  }}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleCodeChange(index, e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(index, e)}
-                  onFocus={(e) => e.target.select()}
-                  autoComplete="one-time-code"
-                  pattern="[0-9]*"
-                  enterKeyHint={index === CODE_LENGTH - 1 ? 'done' : 'next'}
-                  aria-label={`Dígito ${index + 1} del código`}
-                  className={`w-11 h-12 sm:w-14 sm:h-16 flex-shrink-0 text-center text-xl sm:text-3xl font-bold border-2 rounded-lg sm:rounded-xl transition-all shadow-sm p-0 leading-none ${success
-                    ? 'border-green-500 bg-green-50 text-green-700'
-                    : digit
-                      ? 'border-green-500 bg-green-50 text-green-700 scale-105'
-                      : 'border-gray-300 hover:border-green-400 focus:border-green-500 focus:ring-2 focus:ring-green-200'
+            <div className="relative">
+              {/* Input oculto que captura todo el código */}
+              <input
+                ref={(el) => {
+                  if (el) inputRefs.current[0] = el;
+                }}
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={CODE_LENGTH}
+                value={code.join('')}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '').slice(0, CODE_LENGTH);
+                  const newCode = value.split('');
+                  while (newCode.length < CODE_LENGTH) {
+                    newCode.push('');
+                  }
+                  setCode(newCode);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Backspace' && code.join('').length === 0) {
+                    e.preventDefault();
+                  }
+                }}
+                onPaste={(e) => {
+                  const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, CODE_LENGTH);
+                  if (pasted) {
+                    const newCode = pasted.split('');
+                    while (newCode.length < CODE_LENGTH) {
+                      newCode.push('');
+                    }
+                    setCode(newCode);
+                  }
+                }}
+                autoComplete="one-time-code"
+                disabled={isVerifying || success}
+                className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-default"
+                autoFocus
+              />
+              
+              {/* Visualización de dígitos */}
+              <div className="flex gap-1.5 sm:gap-2 justify-center items-center pointer-events-none">
+                {code.map((digit, index) => (
+                  <div
+                    key={index}
+                    className={`w-11 h-12 sm:w-14 sm:h-16 flex items-center justify-center text-xl sm:text-3xl font-bold border-2 rounded-lg sm:rounded-xl transition-all shadow-sm ${success
+                      ? 'border-green-500 bg-green-50 text-green-700'
+                      : digit
+                        ? 'border-green-500 bg-green-50 text-green-700 scale-105'
+                        : 'border-gray-300 bg-white'
                     }`}
-                  disabled={isVerifying || success}
-                />
-              ))}
+                  >
+                    {digit || ''}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 
