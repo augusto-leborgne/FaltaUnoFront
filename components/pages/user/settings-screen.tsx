@@ -82,6 +82,7 @@ export function SettingsScreen() {
 	})
 	const [completedCrop, setCompletedCrop] = useState<Crop | null>(null)
 	const [photoError, setPhotoError] = useState<string>("")
+	const photoOptionsRef = useRef<HTMLDivElement | null>(null)
 
 	useEffect(() => {
 		loadUserData()
@@ -103,6 +104,20 @@ export function SettingsScreen() {
 			}
 		}
 	}, [])
+
+	// Close photo options when clicking outside
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (showPhotoOptions && photoOptionsRef.current && !photoOptionsRef.current.contains(event.target as Node)) {
+				setShowPhotoOptions(false)
+			}
+		}
+
+		if (showPhotoOptions) {
+			document.addEventListener('mousedown', handleClickOutside)
+			return () => document.removeEventListener('mousedown', handleClickOutside)
+		}
+	}, [showPhotoOptions])
 
 	// Disable body scroll when modals are open
 	useDisableBodyScroll(showCameraModal || showCropModal)
@@ -611,46 +626,63 @@ export function SettingsScreen() {
 								className="w-24 h-24 sm:w-32 sm:h-32"
 							/>
 							<button
-								onClick={() => setShowPhotoOptions(!showPhotoOptions)}
-								className="absolute bottom-0 right-0 p-2 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-full shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center"
+								type="button"
+								onClick={(e) => {
+									e.preventDefault()
+									e.stopPropagation()
+									setShowPhotoOptions(!showPhotoOptions)
+								}}
+								className="absolute bottom-0 right-0 w-10 h-10 sm:w-12 sm:h-12 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-full shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center"
 							>
-								<Camera className="w-4 h-4" />
+								<Camera className="w-4 h-4 sm:w-5 sm:h-5" />
 							</button>
-						</div>
-
-						{showPhotoOptions && (
-							<div className="flex flex-col gap-2 w-full">
-								<Button
-									onClick={() => fileInputRef.current?.click()}
-									variant="outline"
-									className="flex items-center justify-center gap-2 min-h-[48px] w-full"
-								>
-									<Upload className="w-5 h-5" />
-									<span>Subir foto</span>
-								</Button>
-								<Button
-									onClick={startCamera}
-									variant="outline"
-									className="flex items-center justify-center gap-2 min-h-[48px] w-full"
-								>
-									<Camera className="w-5 h-5" />
-									<span>Tomar foto</span>
-								</Button>
-								{avatar && (
-									<Button
-										onClick={() => {
-											setAvatar("")
-											setPhotoFile(null)
+							{/* Popover con opciones de foto */}
+							{showPhotoOptions && (
+								<div ref={photoOptionsRef} className="absolute bottom-0 right-12 sm:right-14 z-50 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden min-w-[160px] animate-in fade-in zoom-in-95 duration-200">
+									<button
+										type="button"
+										onClick={(e) => {
+											e.preventDefault()
+											e.stopPropagation()
+											startCamera()
 										}}
-										variant="outline"
-										className="flex items-center justify-center gap-2 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 min-h-[48px] w-full"
+										className="w-full px-4 py-3 text-left hover:bg-gray-50 active:bg-gray-100 flex items-center gap-3 text-sm font-medium text-gray-700 transition-colors"
 									>
-										<X className="w-5 h-5" />
-										<span>Eliminar foto</span>
-									</Button>
-								)}
-							</div>
-						)}
+										<Camera className="w-4 h-4 text-green-600" />
+										<span>Tomar foto</span>
+									</button>
+									<button
+										type="button"
+										onClick={(e) => {
+											e.preventDefault()
+											e.stopPropagation()
+											fileInputRef.current?.click()
+											setShowPhotoOptions(false)
+										}}
+										className="w-full px-4 py-3 text-left hover:bg-gray-50 active:bg-gray-100 flex items-center gap-3 text-sm font-medium text-gray-700 border-t border-gray-100 transition-colors"
+									>
+										<Upload className="w-4 h-4 text-green-600" />
+										<span>Subir foto</span>
+									</button>
+									{avatar && (
+										<button
+											type="button"
+											onClick={(e) => {
+												e.preventDefault()
+												e.stopPropagation()
+												setAvatar("")
+												setPhotoFile(null)
+												setShowPhotoOptions(false)
+											}}
+											className="w-full px-4 py-3 text-left hover:bg-red-50 active:bg-red-100 flex items-center gap-3 text-sm font-medium text-red-600 border-t border-gray-100 transition-colors"
+										>
+											<X className="w-4 h-4" />
+											<span>Eliminar foto</span>
+										</button>
+									)}
+								</div>
+							)}
+						</div>
 
 						<input
 							ref={fileInputRef}

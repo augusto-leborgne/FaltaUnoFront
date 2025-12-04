@@ -134,6 +134,7 @@ export function ProfileSetupForm() {
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const photoOptionsRef = useRef<HTMLDivElement | null>(null)
 
   const validateField = (field: string, value: any): string | null => {
     switch (field) {
@@ -478,6 +479,20 @@ export function ProfileSetupForm() {
       startCamera()
     }
   }, [showCameraModal])
+
+  // Close photo options when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showPhotoOptions && photoOptionsRef.current && !photoOptionsRef.current.contains(event.target as Node)) {
+        setShowPhotoOptions(false)
+      }
+    }
+
+    if (showPhotoOptions) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showPhotoOptions])
 
   // Disable body scroll when modals are open
   useDisableBodyScroll(showCameraModal || showCropModal)
@@ -901,40 +916,51 @@ export function ProfileSetupForm() {
                   )}
                 </Avatar>
                 <button
-                  onClick={() => setShowPhotoOptions(!showPhotoOptions)}
-                  className="absolute bottom-0 right-0 bg-primary text-white rounded-full p-2 sm:p-3 shadow-lg active:bg-primary/90 transition-all active:scale-110 cursor-pointer"
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setShowPhotoOptions(!showPhotoOptions)
+                  }}
+                  className="absolute bottom-0 right-0 bg-primary text-white rounded-full w-10 h-10 sm:w-12 sm:h-12 shadow-lg active:bg-primary/90 transition-all active:scale-110 cursor-pointer flex items-center justify-center"
                 >
                   <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
+                {/* Popover con opciones de foto */}
+                {showPhotoOptions && (
+                  <div ref={photoOptionsRef} className="absolute bottom-0 right-12 sm:right-14 z-50 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden min-w-[160px] animate-in fade-in zoom-in-95 duration-200">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        openCamera()
+                      }}
+                      className="w-full px-4 py-3 text-left hover:bg-gray-50 active:bg-gray-100 flex items-center gap-3 text-sm font-medium text-gray-700 transition-colors"
+                    >
+                      <Camera className="w-4 h-4 text-primary" />
+                      <span>Cámara</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        fileInputRef.current?.click()
+                        setShowPhotoOptions(false)
+                      }}
+                      className="w-full px-4 py-3 text-left hover:bg-gray-50 active:bg-gray-100 flex items-center gap-3 text-sm font-medium text-gray-700 border-t border-gray-100 transition-colors"
+                    >
+                      <Upload className="w-4 h-4 text-primary" />
+                      <span>Galería</span>
+                    </button>
+                  </div>
+                )}
               </div>
               <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">Foto de perfil</h3>
               <p className="text-xs sm:text-sm text-gray-500 mb-2 sm:mb-3 px-2">
                 {formData.photo ? "¡Foto cargada! Puedes cambiarla" : "Agrega una foto para que te reconozcan"}
               </p>
-              {/* Opciones de foto - mostradas al clickear el ícono de cámara */}
-              {showPhotoOptions && (
-                <div className="flex flex-col gap-2 sm:gap-3 w-full max-w-sm">
-                  <label
-                    htmlFor="camera-input"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      openCamera()
-                    }}
-                    className="bg-primary active:bg-primary/90 text-white shadow-md text-sm sm:text-base py-2 sm:py-2.5 rounded-md cursor-pointer text-center flex items-center justify-center min-h-[44px] touch-manipulation"
-                  >
-                    <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-                    Cámara
-                  </label>
-                  <label
-                    htmlFor="file-input"
-                    onClick={() => setShowPhotoOptions(false)}
-                    className="active:bg-gray-50 text-sm sm:text-base py-2 sm:py-2.5 rounded-md cursor-pointer text-center flex items-center justify-center border border-gray-300 min-h-[44px] touch-manipulation"
-                  >
-                    <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-                    Galería
-                  </label>
-                </div>
-              )}
               {photoError && (
                 <p className="text-xs sm:text-sm text-red-500 mt-2 flex items-center gap-1">
                   <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
