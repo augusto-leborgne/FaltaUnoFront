@@ -128,6 +128,7 @@ export function ProfileSetupForm() {
   const imageRef = useRef<HTMLImageElement | null>(null)
 
   // Camera states
+  const [showPhotoOptions, setShowPhotoOptions] = useState(false)
   const [showCameraModal, setShowCameraModal] = useState(false)
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
@@ -287,9 +288,11 @@ export function ProfileSetupForm() {
     // Try to use getUserMedia for desktop, fallback to file input for mobile
     if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
       setShowCameraModal(true)
+      setShowPhotoOptions(false)
     } else {
       // Fallback for older browsers or when getUserMedia is not available
       cameraInputRef.current?.click()
+      setShowPhotoOptions(false)
     }
   }
 
@@ -893,38 +896,41 @@ export function ProfileSetupForm() {
                     </AvatarFallback>
                   )}
                 </Avatar>
-                <label
-                  htmlFor="file-input"
+                <button
+                  onClick={() => setShowPhotoOptions(!showPhotoOptions)}
                   className="absolute bottom-0 right-0 bg-primary text-white rounded-full p-2 sm:p-3 shadow-lg active:bg-primary/90 transition-all active:scale-110 cursor-pointer"
                 >
                   <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
-                </label>
+                </button>
               </div>
               <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">Foto de perfil</h3>
               <p className="text-xs sm:text-sm text-gray-500 mb-2 sm:mb-3 px-2">
                 {formData.photo ? "¡Foto cargada! Puedes cambiarla" : "Agrega una foto para que te reconozcan"}
               </p>
-              {/* ⚡ NUEVO: Dos botones - Cámara + Galería (como Instagram) */}
-              <div className="flex gap-2 sm:gap-3 w-full max-w-sm">
-                <label
-                  htmlFor="camera-input"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    openCamera()
-                  }}
-                  className="flex-1 bg-primary active:bg-primary/90 text-white shadow-md text-sm sm:text-base py-2 sm:py-2.5 rounded-md cursor-pointer text-center flex items-center justify-center min-h-[44px] touch-manipulation"
-                >
-                  <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-                  Cámara
-                </label>
-                <label
-                  htmlFor="file-input"
-                  className="flex-1 active:bg-gray-50 text-sm sm:text-base py-2 sm:py-2.5 rounded-md cursor-pointer text-center flex items-center justify-center border border-gray-300 min-h-[44px] touch-manipulation"
-                >
-                  <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-                  Galería
-                </label>
-              </div>
+              {/* Opciones de foto - mostradas al clickear el ícono de cámara */}
+              {showPhotoOptions && (
+                <div className="flex flex-col gap-2 sm:gap-3 w-full max-w-sm">
+                  <label
+                    htmlFor="camera-input"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      openCamera()
+                    }}
+                    className="bg-primary active:bg-primary/90 text-white shadow-md text-sm sm:text-base py-2 sm:py-2.5 rounded-md cursor-pointer text-center flex items-center justify-center min-h-[44px] touch-manipulation"
+                  >
+                    <Camera className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+                    Cámara
+                  </label>
+                  <label
+                    htmlFor="file-input"
+                    onClick={() => setShowPhotoOptions(false)}
+                    className="active:bg-gray-50 text-sm sm:text-base py-2 sm:py-2.5 rounded-md cursor-pointer text-center flex items-center justify-center border border-gray-300 min-h-[44px] touch-manipulation"
+                  >
+                    <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+                    Galería
+                  </label>
+                </div>
+              )}
               {photoError && (
                 <p className="text-xs sm:text-sm text-red-500 mt-2 flex items-center gap-1">
                   <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
