@@ -49,8 +49,13 @@ function VerifyEmailContent() {
 
   const expirationKey = email ? `verify-email:expires:${email}` : null;
   const resendKey = email ? `verify-email:resend:${email}` : null;
-  const initialExpiresAt = getStoredTimestamp(expirationKey, Date.now() + CODE_EXPIRATION_MS);
-  const initialResendAvailableAt = getStoredTimestamp(resendKey, Date.now());
+  
+  // Si el código está expirado, resetear al entrar
+  const storedExpiration = getStoredTimestamp(expirationKey, 0);
+  const now = Date.now();
+  const isExpired = storedExpiration > 0 && storedExpiration < now;
+  const initialExpiresAt = isExpired ? now + CODE_EXPIRATION_MS : getStoredTimestamp(expirationKey, now + CODE_EXPIRATION_MS);
+  const initialResendAvailableAt = getStoredTimestamp(resendKey, now);
 
   const [code, setCode] = useState<string[]>(createEmptyCode);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -352,19 +357,19 @@ function VerifyEmailContent() {
     // Tomar solo el último dígito ingresado
     const lastDigit = sanitized.slice(-1);
     
-    setCode((prev) => {
-      const next = [...prev];
-      next[index] = lastDigit;
-      return next;
-    });
+    const newCode = [...code];
+    newCode[index] = lastDigit;
+    setCode(newCode);
 
-    // Auto-avanzar al siguiente campo después del render
+    // Auto-avanzar inmediatamente usando ref
     if (index < CODE_LENGTH - 1) {
-      setTimeout(() => {
-        focusInput(index + 1);
-      }, 0);
+      const nextInput = inputRefs.current[index + 1];
+      if (nextInput) {
+        nextInput.focus();
+        nextInput.select();
+      }
     }
-  }, [focusInput, isVerifying, success]);
+  }, [code, isVerifying, success]);
 
   const handleKeyDown = useCallback((index: number, event: ReactKeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Backspace') {
