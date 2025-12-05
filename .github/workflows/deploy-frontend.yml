@@ -52,7 +52,7 @@ jobs:
           BUILD_ID=$(gcloud builds submit \
             --config=cloudbuild-prod.yaml \
             --project=${{ env.GCP_PROJECT_ID }} \
-            --substitutions="SHORT_SHA=$SHORT_SHA,_NEXT_PUBLIC_API_URL=$BACKEND_URL,_NEXT_PUBLIC_GRAFANA_ENABLED=true,_NEXT_PUBLIC_GRAFANA_PROMETHEUS_URL=https://prometheus-prod-56-prod-us-east-2.grafana.net/api/prom/push,_NEXT_PUBLIC_GRAFANA_USER=2802365" \
+            --substitutions="_SHORT_SHA=$SHORT_SHA,_NEXT_PUBLIC_API_URL=$BACKEND_URL,_NEXT_PUBLIC_GRAFANA_ENABLED=true,_NEXT_PUBLIC_GRAFANA_PROMETHEUS_URL=https://prometheus-prod-56-prod-us-east-2.grafana.net/api/prom/push,_NEXT_PUBLIC_GRAFANA_USER=2802365" \
             --async \
             --format="value(id)")
           
