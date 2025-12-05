@@ -156,28 +156,28 @@ export function VerificationScreen() {
 
   if (isVerified) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6">
-        <CheckCircle className="w-24 h-24 text-green-500 mx-auto mb-6" />
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">¡Verificación exitosa!</h1>
-        <p className="text-gray-600 mb-8">Tu identidad ha sido confirmada. Bienvenido a Falta Uno.</p>
-        <div className="animate-pulse text-green-600">Redirigiendo...</div>
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center px-3 xs:px-4 sm:px-6 safe-top safe-bottom">
+        <CheckCircle className="w-20 h-20 xs:w-24 xs:h-24 sm:w-28 sm:h-28 text-green-500 mx-auto mb-5 xs:mb-6" />
+        <h1 className="text-lg xs:text-xl sm:text-2xl font-bold text-gray-900 mb-3 xs:mb-4">¡Verificación exitosa!</h1>
+        <p className="text-xs xs:text-sm sm:text-base text-gray-600 mb-6 xs:mb-8 text-center">Tu identidad ha sido confirmada. Bienvenido a Falta Uno.</p>
+        <div className="animate-pulse text-green-600 text-xs xs:text-sm">Redirigiendo...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      <div className="pt-20 pb-12 text-center">
-        <Shield className="w-16 h-16 text-green-600 mx-auto mb-6" />
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Verificación de Identidad</h1>
-        <p className="text-gray-600 px-6">Ingresá tu cédula para verificar tu identidad</p>
+    <div className="min-h-screen bg-white flex flex-col safe-top safe-bottom">
+      <div className="pt-16 xs:pt-20 sm:pt-24 pb-10 xs:pb-12 text-center safe-top">
+        <Shield className="w-14 h-14 xs:w-16 xs:h-16 sm:w-18 sm:h-18 text-green-600 mx-auto mb-5 xs:mb-6" />
+        <h1 className="text-lg xs:text-xl sm:text-2xl font-bold text-gray-900 mb-1.5 xs:mb-2">Verificación de Identidad</h1>
+        <p className="text-xs xs:text-sm sm:text-base text-gray-600 px-3 xs:px-4 sm:px-6">Ingresá tu cédula para verificar tu identidad</p>
       </div>
 
-      <div className="flex-1 px-6">
-        {error && <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl">{error}</div>}
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="flex-1 px-3 xs:px-4 sm:px-6 pb-20 xs:pb-24 sm:pb-28 safe-bottom">
+        {error && <div className="mb-3 xs:mb-4 p-3 xs:p-4 bg-red-50 border border-red-200 rounded-xl xs:rounded-2xl text-xs xs:text-sm">{error}</div>}
+        <form onSubmit={handleSubmit} className="space-y-5 xs:space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2">
               Número de cédula
             </label>
             <Input
@@ -185,17 +185,17 @@ export function VerificationScreen() {
               placeholder="12345678 (sin puntos ni guiones)"
               value={cedula}
               onChange={handleCedulaChange}
-              className={fieldError ? 'border-red-500' : ''}
+              className={`min-h-[48px] text-base ${fieldError ? 'border-red-500' : ''}`}
               maxLength={8}
               required
               disabled={isVerifying}
             />
-            <p className="text-xs text-gray-500 mt-1.5">
+            <p className="text-[10px] xs:text-xs text-gray-500 mt-1 xs:mt-1.5">
               Ingresá solo números, sin puntos ni guiones
             </p>
             {fieldError && (
-              <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
-                <AlertCircle className="w-4 h-4" />
+              <p className="text-xs xs:text-sm text-red-500 mt-1 xs:mt-1.5 flex items-center gap-1">
+                <AlertCircle className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
                 {fieldError}
               </p>
             )}
@@ -203,26 +203,27 @@ export function VerificationScreen() {
           <Button 
             type="submit" 
             disabled={isVerifying || !!fieldError || !cedula} 
-            className="w-full bg-green-600 text-white py-4 rounded-2xl"
+            className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white py-3.5 xs:py-4 min-h-[48px] rounded-xl xs:rounded-2xl touch-manipulation active:scale-[0.98]"
           >
             {isVerifying ? "Verificando..." : "Verificar Identidad"}
           </Button>
         </form>
         {isVerifying && (
-          <div className="mt-8 text-center">
+          <div className="mt-6 xs:mt-8 text-center">
             <LoadingSpinner size="xl" variant="green" text="Consultando registro uruguayo..." />
           </div>
         )}
 
         {/* Botón volver */}
-        <div className="mt-6 text-center">
+        <div className="mt-5 xs:mt-6 text-center">
           <Button
             onClick={() => router.push('/profile-setup')}
             variant="ghost"
             size="sm"
             disabled={isVerifying}
+            className="min-h-[44px] touch-manipulation text-xs xs:text-sm"
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
+            <ArrowLeft className="mr-1.5 xs:mr-2 h-3.5 w-3.5 xs:h-4 xs:w-4" />
             Volver al perfil
           </Button>
         </div>
