@@ -429,7 +429,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white px-3 xs:px-4 sm:px-6">
+      <div className="min-h-screen flex items-center justify-center bg-white px-2 xs:px-3 sm:px-4 md:px-6">
         <LoadingSpinner size="lg" variant="green" text="Cargando perfil..." />
       </div>
     )
@@ -438,22 +438,22 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
   if (error || !user) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <div className="pt-14 xs:pt-16 sm:pt-18 pb-4 xs:pb-5 sm:pb-6 px-3 xs:px-4 sm:px-6 border-b border-border">
-          <div className="flex items-center space-x-3 xs:space-x-4">
-            <button onClick={handleBack} className="p-2 xs:p-2.5 sm:p-3 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 transition-transform">
+        <div className="pt-12 xs:pt-14 sm:pt-16 md:pt-18 pb-2 xs:pb-3 sm:pb-4 sm:pb-5 md:pb-6 px-2 xs:px-3 sm:px-4 md:px-6 border-b border-border">
+          <div className="flex items-center space-x-3 xs:space-x-2 xs:space-x-3 sm:space-x-4">
+            <button onClick={handleBack} className="p-2 xs:p-2.5 sm:p-3 -ml-2 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] flex items-center justify-center active:scale-95 transition-transform">
               <ArrowLeft className="w-4 xs:w-5 h-4 xs:h-5 text-muted-foreground" />
             </button>
-            <h1 className="text-base xs:text-lg sm:text-xl md:text-xl font-bold text-foreground">Perfil de usuario</h1>
+            <h1 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl md:text-xl font-bold text-foreground">Perfil de usuario</h1>
           </div>
         </div>
 
-        <div className="flex-1 flex items-center justify-center px-3 xs:px-4 sm:px-6">
+        <div className="flex-1 flex items-center justify-center px-2 xs:px-3 sm:px-4 md:px-6">
           <div className="text-center max-w-md mx-auto">
             <p className="text-xs xs:text-sm sm:text-base text-red-600 mb-2 font-medium">{error || "Usuario no encontrado"}</p>
             <p className="text-xs xs:text-sm text-muted-foreground mb-3 xs:mb-4">ID: {userId}</p>
             <div className="flex gap-2 xs:gap-3 justify-center">
-              <Button onClick={handleBack} variant="outline" className="min-h-[44px] px-4 xs:px-5 text-sm xs:text-base">Volver</Button>
-              <Button onClick={loadUserProfile} className="bg-primary hover:bg-primary/90 min-h-[44px] px-4 xs:px-5 text-sm xs:text-base">Reintentar</Button>
+              <Button onClick={handleBack} variant="outline" className="min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] px-4 xs:px-5 text-sm xs:text-base">Volver</Button>
+              <Button onClick={loadUserProfile} className="bg-primary hover:bg-primary/90 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] px-4 xs:px-5 text-sm xs:text-base">Reintentar</Button>
             </div>
           </div>
         </div>
@@ -476,25 +476,25 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <div className="pt-14 xs:pt-16 sm:pt-18 pb-4 xs:pb-5 sm:pb-6 px-3 xs:px-4 sm:px-6 border-b border-border">
-        <div className="flex items-center space-x-3 xs:space-x-4">
-          <button onClick={handleBack} className="p-2 xs:p-2.5 sm:p-3 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 transition-transform">
+      <div className="pt-12 xs:pt-14 sm:pt-16 md:pt-18 pb-2 xs:pb-3 sm:pb-4 sm:pb-5 md:pb-6 px-2 xs:px-3 sm:px-4 md:px-6 border-b border-border">
+        <div className="flex items-center space-x-3 xs:space-x-2 xs:space-x-3 sm:space-x-4">
+          <button onClick={handleBack} className="p-2 xs:p-2.5 sm:p-3 -ml-2 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] flex items-center justify-center active:scale-95 transition-transform">
             <ArrowLeft className="w-4 xs:w-5 h-4 xs:h-5 text-muted-foreground" />
           </button>
-          <h1 className="text-base xs:text-lg sm:text-xl md:text-xl font-bold text-foreground">Perfil de usuario</h1>
+          <h1 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl md:text-xl font-bold text-foreground">Perfil de usuario</h1>
         </div>
       </div>
 
-      <div className="flex-1 px-3 xs:px-4 sm:px-6 py-4 xs:py-5 sm:py-6 pb-18 xs:pb-20 sm:pb-22 md:pb-24">
+      <div className="flex-1 px-2 xs:px-3 sm:px-4 md:px-6 py-3 xs:py-4 sm:py-5 md:py-6 pb-18 xs:pb-20 sm:pb-22 md:pb-24">
         {/* User Info */}
         <div className="max-w-3xl mx-auto">
-        <div className="bg-card border border-border rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-4 xs:mb-5 sm:mb-6">
-          <div className="flex items-center space-x-3 xs:space-x-4 mb-4 xs:mb-5 sm:mb-6">
+        <div className="bg-card border border-border rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-3 xs:mb-4 sm:mb-5 md:mb-6">
+          <div className="flex items-center space-x-3 xs:space-x-2 xs:space-x-3 sm:space-x-4 mb-3 xs:mb-4 sm:mb-5 md:mb-6">
             <Avatar className="w-16 xs:w-18 sm:w-20 h-16 xs:h-18 sm:h-20">
               {fotoBase64 ? (
                 <AvatarImage src={`data:image/jpeg;base64,${fotoBase64}`} alt={fullName} />
               ) : (
-                <AvatarFallback className="bg-muted text-2xl">
+                <AvatarFallback className="bg-muted text-lg xs:text-xl sm:text-2xl">
                   {fullName
                     .split(" ")
                     .map((n) => n[0])
@@ -504,7 +504,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
               )}
             </Avatar>
             <div className="flex-1 min-w-0">
-              <h2 className="text-base xs:text-lg sm:text-xl md:text-xl font-bold text-foreground truncate">{fullName}</h2>
+              <h2 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl md:text-xl font-bold text-foreground truncate">{fullName}</h2>
               <p className="text-xs xs:text-sm text-muted-foreground truncate">{(user as any).posicion || "Sin posición preferida"}</p>
               {(user as any).ubicacion && (
                 <p className="text-xs xs:text-sm text-muted-foreground truncate">{(user as any).ubicacion}</p>
@@ -514,24 +514,24 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-3 gap-2 xs:gap-3 sm:gap-4 mb-4 xs:mb-5 sm:mb-6">
+          <div className="grid grid-cols-3 gap-2 xs:gap-3 sm:gap-4 mb-3 xs:mb-4 sm:mb-5 md:mb-6">
             <div className="text-center">
-              <div className="text-sm xs:text-base sm:text-lg md:text-base font-bold text-foreground">{edad !== null ? `${edad}` : "-"}</div>
+              <div className="text-xs xs:text-sm sm:text-base md:text-lg md:text-base font-bold text-foreground">{edad !== null ? `${edad}` : "-"}</div>
               <div className="text-xs xs:text-sm text-muted-foreground">Edad</div>
             </div>
             <div className="text-center">
-              <div className="text-sm xs:text-base sm:text-lg md:text-base font-bold text-foreground">{user.altura ?? "-"}</div>
+              <div className="text-xs xs:text-sm sm:text-base md:text-lg md:text-base font-bold text-foreground">{user.altura ?? "-"}</div>
               <div className="text-xs xs:text-sm text-muted-foreground">Altura</div>
             </div>
             <div className="text-center">
-              <div className="text-sm xs:text-base sm:text-lg md:text-base font-bold text-foreground">{user.peso ?? "-"}</div>
+              <div className="text-xs xs:text-sm sm:text-base md:text-lg md:text-base font-bold text-foreground">{user.peso ?? "-"}</div>
               <div className="text-xs xs:text-sm text-muted-foreground">Peso</div>
             </div>
           </div>
 
           {/* Amigos en común */}
           {mutualFriends.length > 0 && (
-            <div className="mb-4 xs:mb-5 sm:mb-6 p-3 xs:p-4 bg-gray-50 rounded-lg xs:rounded-xl">
+            <div className="mb-3 xs:mb-4 sm:mb-5 md:mb-6 p-3 xs:p-4 bg-gray-50 rounded-lg xs:rounded-xl">
               <div className="text-xs xs:text-sm font-semibold text-gray-900 mb-2 xs:mb-3">
                 Amigos en común ({mutualFriends.length})
               </div>
@@ -540,7 +540,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                   <div
                     key={friend.id}
                     onClick={() => router.push(`/users/${friend.id}`)}
-                    className="flex items-center space-x-1.5 xs:space-x-2 bg-white px-2 xs:px-3 py-1.5 xs:py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100 active:scale-95 transition-all min-h-[44px]"
+                    className="flex items-center space-x-1.5 xs:space-x-2 bg-white px-2 xs:px-3 py-1.5 xs:py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100 active:scale-95 transition-all min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px]"
                   >
                     <Avatar className="w-5 xs:w-6 h-5 xs:h-6">
                       {friend.foto_perfil || friend.fotoPerfil ? (
@@ -569,14 +569,14 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
               <Button
                 onClick={handleRemoveFriend}
                 variant="outline"
-                className="w-full border-red-200 text-red-600 hover:bg-red-50 min-h-[48px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
+                className="w-full border-red-200 text-red-600 hover:bg-red-50 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
               >
                 Eliminar amigo
               </Button>
             ) : friendStatus === 'pending-sent' ? (
               <Button
                 disabled
-                className="w-full bg-orange-100 text-orange-700 min-h-[48px] py-2.5 xs:py-3 rounded-xl cursor-not-allowed text-sm xs:text-base"
+                className="w-full bg-orange-100 text-orange-700 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] py-2.5 xs:py-3 rounded-xl cursor-not-allowed text-sm xs:text-base"
               >
                 <UserPlus className="w-3.5 xs:w-4 h-3.5 xs:h-4 mr-1.5 xs:mr-2" />
                 Solicitud enviada
@@ -585,7 +585,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
               <div className="space-y-2">
                 <Button
                   onClick={handleAcceptFriendRequest}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white min-h-[48px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
                 >
                   <UserPlus className="w-3.5 xs:w-4 h-3.5 xs:h-4 mr-1.5 xs:mr-2" />
                   Aceptar solicitud
@@ -593,7 +593,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                 <Button
                   onClick={handleRejectFriendRequest}
                   variant="outline"
-                  className="w-full border-red-200 text-red-600 hover:bg-red-50 min-h-[48px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
+                  className="w-full border-red-200 text-red-600 hover:bg-red-50 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
                 >
                   Rechazar solicitud
                 </Button>
@@ -601,7 +601,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
             ) : (
               <Button
                 onClick={handleSendFriendRequest}
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground min-h-[48px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
               >
                 <UserPlus className="w-3.5 xs:w-4 h-3.5 xs:h-4 mr-1.5 xs:mr-2" />
                 Enviar solicitud de amistad
@@ -615,7 +615,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
             <Button
               onClick={() => setReportModalOpen(true)}
               variant="outline"
-              className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 min-h-[48px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
+              className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
             >
               <Flag className="w-3.5 xs:w-4 h-3.5 xs:h-4 mr-1.5 xs:mr-2" />
               Reportar usuario
@@ -640,7 +640,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                     </div>
                     <Button
                       onClick={handleUnbanUser}
-                      className="w-full bg-green-600 hover:bg-green-700 text-white min-h-[48px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
+                      className="w-full bg-green-600 hover:bg-green-700 text-white min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
                     >
                       <ShieldOff className="w-3.5 xs:w-4 h-3.5 xs:h-4 mr-1.5 xs:mr-2" />
                       Desbanear Usuario
@@ -650,7 +650,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                   <Button
                     onClick={handleBanUser}
                     variant="destructive"
-                    className="w-full min-h-[48px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
+                    className="w-full min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
                   >
                     <ShieldOff className="w-3.5 xs:w-4 h-3.5 xs:h-4 mr-1.5 xs:mr-2" />
                     Banear Usuario
@@ -661,7 +661,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                 <Button
                   onClick={handleToggleRole}
                   variant="outline"
-                  className="w-full border-blue-300 text-blue-700 hover:bg-blue-50 min-h-[48px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
+                  className="w-full border-blue-300 text-blue-700 hover:bg-blue-50 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
                 >
                   <Shield className="w-3.5 xs:w-4 h-3.5 xs:h-4 mr-1.5 xs:mr-2" />
                   {(user as any).rol === "ADMIN" ? "Quitar Admin" : "Hacer Admin"}
@@ -672,7 +672,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                   <Button
                     onClick={handleDeleteUser}
                     variant="outline"
-                    className="w-full border-red-300 text-red-700 hover:bg-red-50 min-h-[48px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
+                    className="w-full border-red-300 text-red-700 hover:bg-red-50 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
                   >
                     <Trash2 className="w-3.5 xs:w-4 h-3.5 xs:h-4 mr-1.5 xs:mr-2" />
                     Eliminar Usuario Permanentemente
@@ -686,9 +686,9 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
 
         {/* Reviews */}
         <div className="max-w-3xl mx-auto">
-        <div className="bg-card border border-border rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-4 xs:mb-5 sm:mb-6">
+        <div className="bg-card border border-border rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-3 xs:mb-4 sm:mb-5 md:mb-6">
           <div className="flex items-center justify-between mb-3 xs:mb-4">
-            <h3 className="text-sm xs:text-base sm:text-lg md:text-base font-bold text-foreground">Reseñas</h3>
+            <h3 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-base font-bold text-foreground">Reseñas</h3>
             <div className="flex items-center space-x-1">
               <Star className="w-3 xs:w-3.5 sm:w-4 h-3 xs:h-3.5 sm:h-4 fill-accent text-accent" />
               <span className="text-xs xs:text-sm font-medium">{averageRating}</span>
@@ -705,7 +705,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                 return (
                   <div
                     key={review.id}
-                    className="border-b border-border last:border-b-0 pb-3 xs:pb-4 last:pb-0 cursor-pointer hover:bg-muted -mx-2 px-2 py-1.5 xs:py-2 rounded-lg xs:rounded-xl transition-colors min-h-[44px] flex flex-col justify-center"
+                    className="border-b border-border last:border-b-0 pb-2 xs:pb-3 sm:pb-4 last:pb-0 cursor-pointer hover:bg-muted -mx-2 px-2 py-1.5 xs:py-2 rounded-lg xs:rounded-xl transition-colors min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] flex flex-col justify-center"
                     onClick={() => handleUserClick(review.usuario_que_califica_id)}
                   >
                     <div className="flex items-center justify-between mb-1.5 xs:mb-2">

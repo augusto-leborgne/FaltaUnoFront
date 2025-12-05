@@ -369,9 +369,9 @@ export function SearchScreen() {
   return (
     <div className="min-h-screen bg-white flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
       {/* Header */}
-      <div className="pt-10 xs:pt-12 sm:pt-16 pb-3 xs:pb-4 px-3 xs:px-4 sm:px-6 border-b border-gray-100 safe-top">
+      <div className="pt-8 xs:pt-10 sm:pt-12 md:pt-14 pb-2 xs:pb-3 sm:pb-4 px-2 xs:px-3 sm:px-4 md:px-6 border-b border-gray-100 safe-top">
         <div className="flex items-center justify-between mb-3 xs:mb-4 gap-2 xs:gap-3">
-          <h1 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">Buscar</h1>
+          <h1 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl md:text-2xl font-bold text-gray-900 truncate">Buscar</h1>
 
           {/* Map View Toggle - Solo mostrar si hay partidos en resultados */}
           {results.some(r => r.tipo === "partido") && (
@@ -379,7 +379,7 @@ export function SearchScreen() {
               onClick={() => setShowMapView(true)}
               size="sm"
               variant="outline"
-              className="flex items-center gap-1.5 xs:gap-2 min-h-[44px] px-2.5 xs:px-3 sm:px-4 touch-manipulation active:scale-95 transition-transform"
+              className="flex items-center gap-1.5 xs:gap-2 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] px-2.5 xs:px-3 sm:px-4 touch-manipulation active:scale-95 transition-transform"
               aria-label="Ver en mapa"
             >
               <Map className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5" />
@@ -395,7 +395,7 @@ export function SearchScreen() {
             placeholder="Buscar usuarios o partidos..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 xs:pl-10 sm:pl-12 pr-10 xs:pr-12 bg-gray-50 border-gray-200 rounded-lg xs:rounded-xl min-h-[48px] text-base"
+            className="pl-9 xs:pl-10 sm:pl-12 pr-10 xs:pr-12 bg-gray-50 border-gray-200 rounded-lg xs:rounded-xl min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] text-sm xs:text-base md:text-base"
           />
           {searchQuery && (
             <button
@@ -403,7 +403,7 @@ export function SearchScreen() {
                 setSearchQuery("")
                 setResults([])
               }}
-              className="absolute right-1.5 xs:right-2 top-1/2 transform -translate-y-1/2 p-2 hover:bg-gray-200 active:bg-gray-300 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation active:scale-95"
+              className="absolute right-1.5 xs:right-2 top-1/2 transform -translate-y-1/2 p-2 hover:bg-gray-200 active:bg-gray-300 rounded-lg transition-colors min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] flex items-center justify-center touch-manipulation active:scale-95"
               aria-label="Limpiar búsqueda"
             >
               <X className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 text-gray-400" />
@@ -417,7 +417,7 @@ export function SearchScreen() {
             <button
               key={f}
               onClick={() => setFilter(f as any)}
-              className={`px-3 xs:px-4 sm:px-5 py-2 xs:py-2.5 rounded-full text-xs xs:text-sm sm:text-base font-medium transition-all whitespace-nowrap min-h-[44px] touch-manipulation active:scale-95 ${filter === f
+              className={`px-3 xs:px-4 sm:px-5 py-2 xs:py-2.5 rounded-full text-xs xs:text-sm sm:text-base font-medium transition-all whitespace-nowrap min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] touch-manipulation active:scale-95 ${filter === f
                 ? "bg-green-600 text-white shadow-md"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300"
                 }`}
@@ -428,7 +428,7 @@ export function SearchScreen() {
 
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-1.5 xs:gap-2 px-3 xs:px-4 sm:px-5 py-2 xs:py-2.5 rounded-full text-xs xs:text-sm sm:text-base font-medium transition-all whitespace-nowrap min-h-[44px] touch-manipulation active:scale-95 ${hasActiveFilters
+            className={`flex items-center gap-1.5 xs:gap-2 px-3 xs:px-4 sm:px-5 py-2 xs:py-2.5 rounded-full text-xs xs:text-sm sm:text-base font-medium transition-all whitespace-nowrap min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] touch-manipulation active:scale-95 ${hasActiveFilters
               ? "bg-orange-100 text-orange-800 border-2 border-orange-300 shadow-sm"
               : "bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300"
               }`}
@@ -442,7 +442,7 @@ export function SearchScreen() {
 
         {/* Advanced Filters Panel */}
         {showFilters && (
-          <div className="bg-gray-50 rounded-lg xs:rounded-xl sm:rounded-2xl p-3 xs:p-4 sm:p-5 mb-2 xs:mb-3 space-y-3 xs:space-y-4 sm:space-y-5">
+          <div className="bg-gray-50 rounded-lg xs:rounded-xl sm:rounded-2xl p-3 xs:p-4 sm:p-5 mb-2 xs:mb-3 space-y-3 xs:space-y-4 sm:space-y-3 xs:space-y-4 sm:space-y-5">
             {/* Género Filter */}
             <div>
               <label className="text-xs xs:text-sm font-semibold text-gray-700 mb-2 xs:mb-2.5 block">Género</label>
@@ -451,7 +451,7 @@ export function SearchScreen() {
                   <button
                     key={g}
                     onClick={() => setFilters(prev => ({ ...prev, genero: g as any }))}
-                    className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all min-h-[44px] touch-manipulation active:scale-95 ${filters.genero === g
+                    className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] touch-manipulation active:scale-95 ${filters.genero === g
                       ? "bg-primary text-white shadow-md"
                       : "bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300 active:bg-gray-50"
                       }`}
@@ -470,7 +470,7 @@ export function SearchScreen() {
                   <button
                     key={n}
                     onClick={() => setFilters(prev => ({ ...prev, nivel: n as any }))}
-                    className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all min-h-[44px] touch-manipulation active:scale-95 ${filters.nivel === n
+                    className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] touch-manipulation active:scale-95 ${filters.nivel === n
                       ? "bg-primary text-white shadow-md"
                       : "bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300 active:bg-gray-50"
                       }`}
@@ -490,7 +490,7 @@ export function SearchScreen() {
                     <button
                       key={t}
                       onClick={() => setFilters(prev => ({ ...prev, tipoPartido: t as any }))}
-                      className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all min-h-[44px] touch-manipulation active:scale-95 ${filters.tipoPartido === t
+                      className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] touch-manipulation active:scale-95 ${filters.tipoPartido === t
                         ? "bg-primary text-white shadow-md"
                         : "bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300 active:bg-gray-50"
                         }`}
@@ -508,7 +508,7 @@ export function SearchScreen() {
                 variant="outline"
                 size="sm"
                 onClick={resetFilters}
-                className="flex-1 min-h-[48px] text-base font-medium border-2 touch-manipulation active:scale-95"
+                className="flex-1 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] text-sm xs:text-base md:text-base font-medium border-2 touch-manipulation active:scale-95"
                 disabled={!hasActiveFilters}
               >
                 Limpiar
@@ -516,7 +516,7 @@ export function SearchScreen() {
               <Button
                 size="sm"
                 onClick={() => setShowFilters(false)}
-                className="flex-1 bg-green-600 hover:bg-green-700 active:bg-green-800 min-h-[48px] text-base font-medium shadow-md touch-manipulation active:scale-95"
+                className="flex-1 bg-green-600 hover:bg-green-700 active:bg-green-800 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] text-sm xs:text-base md:text-base font-medium shadow-md touch-manipulation active:scale-95"
               >
                 Aplicar
               </Button>
@@ -540,7 +540,7 @@ export function SearchScreen() {
                   setSortBy(value)
                   setResults(sortResults(results))
                 }}
-                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap min-h-[44px] touch-manipulation active:scale-95 ${sortBy === value
+                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] touch-manipulation active:scale-95 ${sortBy === value
                   ? "bg-green-600 text-white shadow-md"
                   : "bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300"
                   }`}
@@ -555,7 +555,7 @@ export function SearchScreen() {
       </div>
 
       {/* Results */}
-      <div className="flex-1 px-3 xs:px-4 sm:px-6 py-3 xs:py-4 sm:py-6 pb-18 xs:pb-20 sm:pb-22 md:pb-24 overflow-y-auto">
+      <div className="flex-1 px-2 xs:px-3 sm:px-4 md:px-6 py-3 xs:py-4 sm:py-6 pb-18 xs:pb-20 sm:pb-22 md:pb-24 overflow-y-auto">
         {loading ? (
           <SearchSkeleton />
         ) : filteredResults.length === 0 && searchQuery ? (
@@ -567,7 +567,7 @@ export function SearchScreen() {
             {/* Recent Searches */}
             {recentSearches.length > 0 && (
               <div className="mt-5 xs:mt-6 sm:mt-8">
-                <div className="flex items-center justify-between mb-2 xs:mb-3 sm:mb-4">
+                <div className="flex items-center justify-between mb-1.5 xs:mb-2 sm:mb-3 md:mb-4">
                   <h3 className="text-xs xs:text-sm sm:text-base font-semibold text-gray-900">Búsquedas recientes</h3>
                   <button
                     onClick={clearRecentSearches}
@@ -581,7 +581,7 @@ export function SearchScreen() {
                     <button
                       key={idx}
                       onClick={() => setSearchQuery(search)}
-                      className="w-full flex items-center gap-3 p-3 sm:p-4 bg-gray-50 rounded-xl hover:bg-gray-100 active:bg-gray-200 transition-colors text-left min-h-[52px] touch-manipulation active:scale-[0.98]"
+                      className="w-full flex items-center gap-3 p-3 sm:p-4 bg-gray-50 rounded-xl hover:bg-gray-100 active:bg-gray-200 transition-colors text-left min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] xs:min-h-[52px] touch-manipulation active:scale-[0.98]"
                     >
                       <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 flex-shrink-0" />
                       <span className="text-sm sm:text-base text-gray-700 flex-1 truncate">{search}</span>
@@ -680,14 +680,14 @@ function ResultCard({
                   unoptimized // Backend serves dynamic images
                 />
               ) : (
-                <span className="text-gray-600 font-bold text-base sm:text-lg">
+                <span className="text-gray-600 font-bold text-sm xs:text-base md:text-base sm:text-lg">
                   {result.nombre?.[0]}{result.apellido?.[0]}
                 </span>
               )}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
-                <p className="font-semibold text-gray-900 truncate text-base sm:text-lg">
+                <p className="font-semibold text-gray-900 truncate text-sm xs:text-base md:text-base sm:text-lg">
                   {result.nombre} {result.apellido}
                 </p>
                 {result.esAmigo && (
@@ -752,7 +752,7 @@ function ResultCard({
 
       <div className="flex items-center gap-2 sm:gap-2.5 mb-2.5">
         <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
-        <p className="font-semibold text-gray-900 text-base sm:text-lg">
+        <p className="font-semibold text-gray-900 text-sm xs:text-base md:text-base sm:text-lg">
           {result.fecha} • {result.hora}
         </p>
       </div>

@@ -220,11 +220,11 @@ function PlayerProfile({ playerId }: PlayerProfileProps) {
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
       <div className="pt-16 pb-6 px-6 border-b border-gray-100">
-        <div className="flex items-center space-x-4">
-          <button onClick={handleBack} className="p-2 sm:p-3 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
+        <div className="flex items-center space-x-2 xs:space-x-3 sm:space-x-4">
+          <button onClick={handleBack} className="p-2 sm:p-3 -ml-2 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] flex items-center justify-center">
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </button>
-          <h1 className="text-xl font-bold text-gray-900">Perfil del Jugador</h1>
+          <h1 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900">Perfil del Jugador</h1>
         </div>
       </div>
 
@@ -235,15 +235,15 @@ function PlayerProfile({ playerId }: PlayerProfileProps) {
             {player.fotoPerfil || player.foto_perfil ? (
               <AvatarImage src={`data:image/jpeg;base64,${player.foto_perfil || player.fotoPerfil}`} />
             ) : (
-              <AvatarFallback className="bg-green-100 text-green-700 text-2xl">
+              <AvatarFallback className="bg-green-100 text-green-700 text-lg xs:text-xl sm:text-2xl">
                 {initials}
               </AvatarFallback>
             )}
           </Avatar>
 
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">{fullName}</h2>
+          <h2 className="text-lg xs:text-xl sm:text-2xl font-bold text-gray-900 mb-2">{fullName}</h2>
 
-          <div className="flex items-center justify-center space-x-4 mb-4">
+          <div className="flex items-center justify-center space-x-2 xs:space-x-3 sm:space-x-4 mb-4">
             {player.posicion && (
               <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100">
                 {player.posicion}
@@ -255,7 +255,7 @@ function PlayerProfile({ playerId }: PlayerProfileProps) {
             </div>
           </div>
 
-          <div className="flex items-center justify-center space-x-4 text-sm text-gray-600">
+          <div className="flex items-center justify-center space-x-2 xs:space-x-3 sm:space-x-4 text-sm text-gray-600">
             {edad !== null && (
               <>
                 <span>{edad} años</span>
@@ -323,18 +323,18 @@ function PlayerProfile({ playerId }: PlayerProfileProps) {
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
             {player.altura && (
               <div className="text-center bg-gray-50 rounded-xl p-4">
-                <div className="text-2xl font-bold text-gray-900">{player.altura}</div>
+                <div className="text-lg xs:text-xl sm:text-2xl font-bold text-gray-900">{player.altura}</div>
                 <div className="text-sm text-gray-600">Altura (cm)</div>
               </div>
             )}
             {player.peso && (
               <div className="text-center bg-gray-50 rounded-xl p-4">
-                <div className="text-2xl font-bold text-gray-900">{player.peso}</div>
+                <div className="text-lg xs:text-xl sm:text-2xl font-bold text-gray-900">{player.peso}</div>
                 <div className="text-sm text-gray-600">Peso (kg)</div>
               </div>
             )}
             <div className="text-center bg-gray-50 rounded-xl p-4">
-              <div className="text-2xl font-bold text-gray-900">{reviews.length}</div>
+              <div className="text-lg xs:text-xl sm:text-2xl font-bold text-gray-900">{reviews.length}</div>
               <div className="text-sm text-gray-600">Reseñas</div>
             </div>
           </div>
@@ -440,7 +440,7 @@ function PlayerProfile({ playerId }: PlayerProfileProps) {
           <Button
             onClick={handleBack}
             variant="outline"
-            className="w-full py-4 text-lg font-semibold rounded-2xl border-gray-300 bg-transparent"
+            className="w-full py-4 text-lg font-semibold rounded-xl xs:rounded-2xl border-gray-300 bg-transparent"
           >
             Volver
           </Button>

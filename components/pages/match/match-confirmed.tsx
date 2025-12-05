@@ -66,7 +66,7 @@ export function MatchConfirmed({ matchId }: MatchConfirmedProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center px-3 xs:px-4 sm:px-6">
+      <div className="min-h-screen bg-white flex items-center justify-center px-2 xs:px-3 sm:px-4 md:px-6">
         <LoadingSpinner size="xl" variant="green" />
       </div>
     )
@@ -74,12 +74,12 @@ export function MatchConfirmed({ matchId }: MatchConfirmedProps) {
 
   if (!match) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center px-3 xs:px-4 sm:px-6">
+      <div className="min-h-screen bg-white flex items-center justify-center px-2 xs:px-3 sm:px-4 md:px-6">
         <div className="text-center">
           <p className="text-xs xs:text-sm sm:text-base text-gray-600 mb-4">Partido no encontrado</p>
           <Button 
             onClick={() => router.push("/matches")}
-            className="min-h-[48px] touch-manipulation active:scale-[0.98]"
+            className="min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] touch-manipulation active:scale-[0.98]"
           >
             Ver partidos
           </Button>
@@ -95,21 +95,21 @@ export function MatchConfirmed({ matchId }: MatchConfirmedProps) {
         <div className="w-14 xs:w-16 sm:w-20 h-14 xs:h-16 sm:h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <CheckCircle className="w-7 xs:w-8 sm:w-10 h-7 xs:h-8 sm:h-10 text-green-600" />
         </div>
-        <h1 className="text-lg xs:text-xl sm:text-2xl font-bold text-gray-900 mb-2 px-3 xs:px-4">¡Solicitud enviada!</h1>
-        <p className="text-xs xs:text-sm sm:text-base text-gray-600 px-3 xs:px-4 sm:px-6">
+        <h1 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-2 px-3 xs:px-4">¡Solicitud enviada!</h1>
+        <p className="text-xs xs:text-sm sm:text-base text-gray-600 px-2 xs:px-3 sm:px-4 md:px-6">
           El organizador revisará tu solicitud y te notificará
         </p>
       </div>
 
-      <div className="flex-1 px-3 xs:px-4 sm:px-6 pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
+      <div className="flex-1 px-2 xs:px-3 sm:px-4 md:px-6 pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
         {/* Status Card */}
-        <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-4 xs:mb-5 sm:mb-6">
-          <div className="flex items-center space-x-3 mb-4 xs:mb-5 sm:mb-6">
+        <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-3 xs:mb-4 sm:mb-5 md:mb-6">
+          <div className="flex items-center space-x-3 mb-3 xs:mb-4 sm:mb-5 md:mb-6">
             <div className="w-11 xs:w-12 sm:w-14 h-11 xs:h-12 sm:h-14 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
               <Clock className="w-5 xs:w-6 sm:w-7 h-5 xs:h-6 sm:h-7 text-yellow-600" />
             </div>
             <div>
-              <h2 className="text-sm xs:text-base sm:text-lg font-semibold text-gray-900">Solicitud pendiente</h2>
+              <h2 className="text-xs xs:text-sm sm:text-base md:text-lg font-semibold text-gray-900">Solicitud pendiente</h2>
               <p className="text-xs xs:text-sm text-gray-600">
                 {formatDate(match.fecha, match.hora)}
               </p>
@@ -129,10 +129,10 @@ export function MatchConfirmed({ matchId }: MatchConfirmedProps) {
 
         {/* Organizer Card */}
         {match.organizador && (
-          <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-4 xs:mb-5 sm:mb-6">
-            <h3 className="text-sm xs:text-base sm:text-lg font-semibold text-gray-900 mb-3 xs:mb-4">Organizador</h3>
+          <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-3 xs:mb-4 sm:mb-5 md:mb-6">
+            <h3 className="text-xs xs:text-sm sm:text-base md:text-lg font-semibold text-gray-900 mb-3 xs:mb-4">Organizador</h3>
             <div 
-              className="flex items-center justify-between p-3 xs:p-4 bg-gray-50 rounded-lg xs:rounded-xl cursor-pointer hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation min-h-[60px]"
+              className="flex items-center justify-between p-3 xs:p-4 bg-gray-50 rounded-lg xs:rounded-xl cursor-pointer hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation min-h-[56px] xxs:min-h-[58px] xs:min-h-[60px] sm:min-h-[62px] md:min-h-[64px]"
               onClick={() => router.push(`/users/${match.organizador!.id}`)}
             >
               <div className="flex items-center space-x-3">
@@ -157,7 +157,7 @@ export function MatchConfirmed({ matchId }: MatchConfirmedProps) {
             <div className="mt-3 xs:mt-4">
               <Button
                 onClick={handleOpenChat}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white min-h-[48px] text-sm xs:text-base rounded-lg xs:rounded-xl touch-manipulation active:scale-[0.98]"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] text-sm xs:text-base rounded-lg xs:rounded-xl touch-manipulation active:scale-[0.98]"
               >
                 <MessageCircle className="w-4 h-4 mr-2" />
                 Chat grupal
@@ -171,9 +171,9 @@ export function MatchConfirmed({ matchId }: MatchConfirmedProps) {
 
         {/* Location Card */}
         {match.nombreUbicacion && match.latitud && match.longitud && (
-          <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-4 xs:mb-5 sm:mb-6">
+          <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-3 xs:mb-4 sm:mb-5 md:mb-6">
             <div className="flex items-center justify-between mb-3 xs:mb-4">
-              <h3 className="text-sm xs:text-base sm:text-lg font-semibold text-gray-900">Ubicación</h3>
+              <h3 className="text-xs xs:text-sm sm:text-base md:text-lg font-semibold text-gray-900">Ubicación</h3>
               <Button
                 onClick={handleOpenGoogleMaps}
                 variant="outline"
@@ -194,7 +194,7 @@ export function MatchConfirmed({ matchId }: MatchConfirmedProps) {
         )}
 
         {/* Next Steps */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg xs:rounded-xl p-4 xs:p-5 sm:p-6 mb-4 xs:mb-5 sm:mb-6">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg xs:rounded-xl p-4 xs:p-5 sm:p-6 mb-3 xs:mb-4 sm:mb-5 md:mb-6">
           <h3 className="text-sm xs:text-base font-semibold text-gray-900 mb-2.5 xs:mb-3">Próximos pasos</h3>
           <div className="space-y-2 text-xs xs:text-sm text-gray-700">
             <div className="flex items-start space-x-2">
@@ -221,13 +221,13 @@ export function MatchConfirmed({ matchId }: MatchConfirmedProps) {
           <Button
             onClick={() => router.push(`/matches/${matchId}`)}
             variant="outline"
-            className="w-full min-h-[48px] text-sm xs:text-base sm:text-lg font-semibold rounded-xl xs:rounded-2xl bg-transparent touch-manipulation active:scale-[0.98]"
+            className="w-full min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] text-xs xs:text-sm sm:text-base md:text-lg font-semibold rounded-xl xs:rounded-2xl bg-transparent touch-manipulation active:scale-[0.98]"
           >
             Ver detalles del partido
           </Button>
           <Button
             onClick={() => router.push("/home")}
-            className="w-full bg-green-600 hover:bg-green-700 text-white min-h-[48px] text-sm xs:text-base sm:text-lg font-semibold rounded-xl xs:rounded-2xl touch-manipulation active:scale-[0.98]"
+            className="w-full bg-green-600 hover:bg-green-700 text-white min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] text-xs xs:text-sm sm:text-base md:text-lg font-semibold rounded-xl xs:rounded-2xl touch-manipulation active:scale-[0.98]"
           >
             Volver al inicio
           </Button>

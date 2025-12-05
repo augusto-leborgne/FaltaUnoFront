@@ -64,7 +64,7 @@ export function ForgotPasswordScreen() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100 px-3 xs:px-4 sm:px-6 safe-top safe-bottom">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100 px-2 xs:px-3 sm:px-4 md:px-6 safe-top safe-bottom">
         <div className="w-full max-w-md">
           <div className="bg-white rounded-xl xs:rounded-2xl sm:rounded-3xl shadow-xl p-6 xs:p-8 sm:p-10 text-center">
             <div className="mb-5 xs:mb-6">
@@ -73,7 +73,7 @@ export function ForgotPasswordScreen() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76" />
                 </svg>
               </div>
-              <h2 className="text-lg xs:text-xl sm:text-2xl font-bold text-gray-900 mb-1.5 xs:mb-2">
+              <h2 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-1.5 xs:mb-2">
                 ¡Email Enviado!
               </h2>
               <p className="text-xs xs:text-sm sm:text-base text-gray-600">
@@ -118,7 +118,7 @@ export function ForgotPasswordScreen() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100 px-3 xs:px-4 sm:px-6 safe-top safe-bottom">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100 px-2 xs:px-3 sm:px-4 md:px-6 safe-top safe-bottom">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-xl xs:rounded-2xl sm:rounded-3xl shadow-xl p-6 xs:p-8 sm:p-10">
           {/* Logo */}
@@ -128,7 +128,7 @@ export function ForgotPasswordScreen() {
 
           {/* Header */}
           <div className="text-center mb-6 xs:mb-8">
-            <h1 className="text-lg xs:text-xl sm:text-2xl font-bold text-gray-900 mb-1.5 xs:mb-2">
+            <h1 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-1.5 xs:mb-2">
               Recuperar Contraseña
             </h1>
             <p className="text-xs xs:text-sm sm:text-base text-gray-600">
@@ -144,7 +144,7 @@ export function ForgotPasswordScreen() {
           )}
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4 xs:space-y-5 sm:space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4 xs:space-y-3 xs:space-y-4 sm:space-y-5 sm:space-y-4 xs:space-y-3 xs:space-y-4 sm:space-y-5 sm:space-y-6">
             <div>
               <label htmlFor="email" className="block text-xs xs:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2">
                 Email
@@ -155,7 +155,7 @@ export function ForgotPasswordScreen() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 xs:px-4 py-2.5 xs:py-3 min-h-[48px] text-base border border-gray-300 rounded-lg xs:rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors touch-manipulation"
+                className="w-full px-3 xs:px-4 py-2.5 xs:py-3 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] text-sm xs:text-base md:text-base border border-gray-300 rounded-lg xs:rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors touch-manipulation"
                 placeholder="tu@email.com"
                 disabled={isLoading}
               />
@@ -164,7 +164,7 @@ export function ForgotPasswordScreen() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-semibold py-3 xs:py-3.5 min-h-[48px] px-4 rounded-lg xs:rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation active:scale-[0.98]"
+              className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-semibold py-3 xs:py-3.5 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] px-4 rounded-lg xs:rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation active:scale-[0.98]"
             >
               {isLoading ? "Enviando..." : "Enviar Instrucciones"}
             </button>
@@ -174,7 +174,7 @@ export function ForgotPasswordScreen() {
           <div className="mt-5 xs:mt-6 text-center space-y-1.5 xs:space-y-2">
             <Link
               href="/login"
-              className="block text-xs xs:text-sm text-green-600 hover:text-green-700 active:text-green-800 font-medium min-h-[44px] flex items-center justify-center touch-manipulation"
+              className="block text-xs xs:text-sm text-green-600 hover:text-green-700 active:text-green-800 font-medium min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] flex items-center justify-center touch-manipulation"
             >
               ← Volver al Login
             </Link>

@@ -364,7 +364,7 @@ function ProfileScreenInner() {
             {user?.rol === "ADMIN" && (
               <button
                 onClick={() => router.push("/admin")}
-                className="p-2 sm:p-2.5 hover:bg-red-50 active:bg-red-100 rounded-xl transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation active:scale-95"
+                className="p-2 sm:p-2.5 hover:bg-red-50 active:bg-red-100 rounded-xl transition-colors min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] flex items-center justify-center touch-manipulation active:scale-95"
                 title="Panel de Administración"
               >
                 <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
@@ -372,7 +372,7 @@ function ProfileScreenInner() {
             )}
             <button
               onClick={handleSettingsClick}
-              className="p-2 sm:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation active:scale-95"
+              className="p-2 sm:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] flex items-center justify-center touch-manipulation active:scale-95"
               title="Configuración"
             >
               <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
@@ -384,7 +384,7 @@ function ProfileScreenInner() {
       <div className="flex-1 px-3 sm:px-6 py-4 sm:py-6 overflow-y-auto pb-18 xs:pb-20 sm:pb-22 md:pb-24">
         {/* Profile Card */}
         <div className="bg-white border-2 border-gray-200 rounded-xl sm:rounded-2xl p-5 sm:p-6 mb-5 sm:mb-6 shadow-sm">
-          <div className="flex items-center space-x-3 sm:space-x-4 mb-5 sm:mb-6">
+          <div className="flex items-center space-x-3 sm:space-x-2 xs:space-x-3 sm:space-x-4 mb-5 sm:mb-6">
             {/* ✅ OPTIMIZADO: UserAvatar con userId para carga automática */}
             <UserAvatar
               userId={user.id}
@@ -427,7 +427,7 @@ function ProfileScreenInner() {
         {friendRequests.length > 0 && (
           <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <h3 className="text-base sm:text-lg font-bold text-gray-900">Solicitudes de amistad</h3>
+              <h3 className="text-sm xs:text-base md:text-base sm:text-lg font-bold text-gray-900">Solicitudes de amistad</h3>
               <Badge className="bg-orange-100 text-orange-800 text-xs">{friendRequests.length}</Badge>
             </div>
             <div className="space-y-2 sm:space-y-3">
@@ -474,7 +474,7 @@ function ProfileScreenInner() {
         {/* Reviews Section */}
         <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
           <div className="flex items-center justify-between mb-3 sm:mb-4">
-            <h3 className="text-base sm:text-lg font-bold text-gray-900">Reseñas</h3>
+            <h3 className="text-sm xs:text-base md:text-base sm:text-lg font-bold text-gray-900">Reseñas</h3>
             <div className="flex items-center space-x-1">
               <Star className="w-3 h-3 sm:w-4 sm:h-4 fill-yellow-400 text-yellow-400" />
               <span className="text-xs sm:text-sm font-medium">{averageRating}</span>
@@ -558,7 +558,7 @@ function ProfileScreenInner() {
         {/* Friends Section */}
         <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
           <div className="flex items-center justify-between mb-3 sm:mb-4">
-            <h3 className="text-base sm:text-lg font-bold text-gray-900">Amigos</h3>
+            <h3 className="text-sm xs:text-base md:text-base sm:text-lg font-bold text-gray-900">Amigos</h3>
             <Button variant="outline" size="sm" onClick={handleFriendsClick} className="bg-transparent text-xs sm:text-sm">
               <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
               Ver todos
@@ -605,7 +605,7 @@ function ProfileScreenInner() {
         {/* Contacts Section */}
         <div className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
           <div className="flex items-center justify-between mb-3 sm:mb-4">
-            <h3 className="text-base sm:text-lg font-bold text-gray-900">Contactos</h3>
+            <h3 className="text-sm xs:text-base md:text-base sm:text-lg font-bold text-gray-900">Contactos</h3>
             {contacts.length > 0 && (
               <Button variant="outline" size="sm" onClick={() => router.push('/contacts')} className="bg-transparent text-xs sm:text-sm">
                 <Phone className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
@@ -680,8 +680,8 @@ function ProfileScreenInner() {
         </div>
 
         {/* Logout Section */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-6 mb-20 sm:mb-24">
-          <h3 className="text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">Sesión</h3>
+        <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 sm:p-6 mb-20 sm:mb-24">
+          <h3 className="text-sm xs:text-base md:text-base sm:text-lg font-bold text-gray-900 mb-3 sm:mb-4">Sesión</h3>
           <Button onClick={handleLogout} variant="destructive" className="w-full py-2 sm:py-3 rounded-lg sm:rounded-xl text-sm sm:text-base">
             <LogOut className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
             Cerrar sesión

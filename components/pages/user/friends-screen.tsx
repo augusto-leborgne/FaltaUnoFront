@@ -229,14 +229,14 @@ export function FriendsScreen() {
       {/* Header */}
       <div className="pt-12 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6 border-b border-gray-100">
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3 sm:space-x-4">
+          <div className="flex items-center space-x-3 sm:space-x-2 xs:space-x-3 sm:space-x-4">
             <button
               onClick={handleBack}
               className="p-2 -ml-2 hover:bg-gray-100 rounded-xl transition-colors"
             >
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
-            <h1 className="text-xl font-bold text-gray-900">Usuarios</h1>
+            <h1 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900">Usuarios</h1>
           </div>
         </div>
 

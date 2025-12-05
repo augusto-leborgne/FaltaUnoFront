@@ -598,7 +598,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
 
   if (loading && !messages.length) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center px-3 xs:px-4 sm:px-6">
+      <div className="min-h-screen bg-white flex items-center justify-center px-2 xs:px-3 sm:px-4 md:px-6">
         <LoadingSpinner size="xl" variant="green" text="Cargando chat..." />
       </div>
     )
@@ -612,27 +612,27 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
     return (
       <div className="min-h-screen bg-white flex flex-col">
         {/* Header */}
-        <div className="pt-12 xs:pt-14 sm:pt-16 safe-top pb-3 xs:pb-4 px-3 xs:px-4 sm:px-6 border-b border-gray-100 bg-white">
-          <div className="flex items-center space-x-4">
+        <div className="pt-10 xs:pt-12 sm:pt-14 md:pt-16 safe-top pb-2 xs:pb-3 sm:pb-4 px-2 xs:px-3 sm:px-4 md:px-6 border-b border-gray-100 bg-white">
+          <div className="flex items-center space-x-2 xs:space-x-3 sm:space-x-4">
             <button
               onClick={handleBack}
-              className="min-h-[44px] min-w-[44px] flex items-center justify-center -ml-2 hover:bg-gray-100 rounded-xl transition-colors touch-manipulation active:scale-95"
+              className="min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] flex items-center justify-center -ml-2 hover:bg-gray-100 rounded-xl transition-colors touch-manipulation active:scale-95"
             >
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
             <div className="flex-1">
-              <h1 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900">Chat del partido</h1>
+              <h1 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl font-bold text-gray-900">Chat del partido</h1>
             </div>
           </div>
         </div>
 
         {/* Error Message - Centro de la pantalla */}
-        <div className="flex-1 flex items-center justify-center px-3 xs:px-4 sm:px-6">
+        <div className="flex-1 flex items-center justify-center px-2 xs:px-3 sm:px-4 md:px-6">
           <div className="max-w-md w-full text-center">
             <div className="w-14 h-14 xs:w-16 xs:h-16 sm:w-20 sm:h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3 xs:mb-4">
               <AlertCircle className="w-7 h-7 xs:w-8 xs:h-8 sm:w-10 sm:h-10 text-red-600" />
             </div>
-            <h2 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900 mb-2">
+            <h2 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl font-bold text-gray-900 mb-2">
               Acceso no permitido
             </h2>
             <p className="text-sm xs:text-base text-gray-600 mb-4 xs:mb-6">
@@ -645,7 +645,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
             </div>
             <Button
               onClick={() => router.push(`/matches/${matchId}`)}
-              className="mt-3 xs:mt-4 min-h-[48px] bg-green-600 hover:bg-green-700 text-white text-sm xs:text-base touch-manipulation active:scale-[0.98]"
+              className="mt-3 xs:mt-4 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] bg-green-600 hover:bg-green-700 text-white text-sm xs:text-base touch-manipulation active:scale-[0.98]"
             >
               Volver al partido
             </Button>
@@ -667,7 +667,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         <div className="flex items-center px-2 xs:px-2.5 sm:px-3 py-2 xs:py-2.5 sm:py-3">
           <button
             onClick={handleBack}
-            className="min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-white/20 rounded-lg transition-all flex-shrink-0 active:scale-95 touch-manipulation"
+            className="min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] flex items-center justify-center hover:bg-white/20 rounded-lg transition-all flex-shrink-0 active:scale-95 touch-manipulation"
             aria-label="Volver"
           >
             <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -708,7 +708,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
             </div>
             <button
               onClick={() => setError("")}
-              className="text-red-600 hover:text-red-700 text-base sm:text-lg leading-none touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center -mr-2"
+              className="text-red-600 hover:text-red-700 text-sm xs:text-base md:text-base sm:text-lg leading-none touch-manipulation min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] flex items-center justify-center -mr-2"
             >
               ✕
             </button>
@@ -939,7 +939,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                 onChange={(e) => handleInputChange(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Escribe tu mensaje..."
-                className="rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 py-2.5 xs:py-3 px-3 xs:px-4 pr-9 xs:pr-10 sm:pr-12 bg-gray-50 hover:bg-white transition-colors text-sm xs:text-[15px] shadow-sm"
+                className="rounded-xl xs:rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 py-2.5 xs:py-3 px-3 xs:px-4 pr-9 xs:pr-10 sm:pr-12 bg-gray-50 hover:bg-white transition-colors text-sm xs:text-[15px] shadow-sm"
                 disabled={sending}
                 maxLength={500}
               />
@@ -954,7 +954,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
             <Button
               onClick={handleSendMessage}
               disabled={sending || !message.trim()}
-              className="bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 active:from-blue-800 active:to-blue-900 text-white rounded-full p-0 min-h-[44px] min-w-[44px] xs:min-h-[48px] xs:min-w-[48px] sm:min-h-[50px] sm:min-w-[50px] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl active:shadow-md transition-all hover:scale-105 active:scale-95 flex-shrink-0 touch-manipulation"
+              className="bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 active:from-blue-800 active:to-blue-900 text-white rounded-full p-0 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] xs:min-h-[48px] xs:min-w-[48px] sm:min-h-[50px] sm:min-w-[50px] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl active:shadow-md transition-all hover:scale-105 active:scale-95 flex-shrink-0 touch-manipulation"
             >
               {sending ? (
                 <InlineSpinner variant="white" />

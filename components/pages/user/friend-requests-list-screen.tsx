@@ -148,7 +148,7 @@ export function FriendRequestsListScreen() {
     <div className="min-h-screen bg-white flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
       {/* Header */}
       <div className="pt-16 pb-6 px-6 border-b border-gray-100">
-        <div className="flex items-center gap-4 mb-4">
+        <div className="flex items-center gap-2 xs:gap-3 sm:gap-4 mb-4">
           <button
             onClick={handleBack}
             className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -156,7 +156,7 @@ export function FriendRequestsListScreen() {
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </button>
           <div className="flex items-center gap-3 flex-1">
-            <h1 className="text-xl font-bold text-gray-900">Solicitudes de amistad</h1>
+            <h1 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900">Solicitudes de amistad</h1>
             {friendRequests.length > 0 && (
               <Badge className="bg-orange-100 text-orange-800">
                 {friendRequests.length}
@@ -169,7 +169,7 @@ export function FriendRequestsListScreen() {
       <div className="flex-1 px-6 py-6 overflow-y-auto">
         {/* Error Message */}
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl">
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl xs:rounded-2xl">
             <p className="text-red-600 text-sm mb-3">{error}</p>
             <Button
               onClick={loadFriendRequests}
@@ -207,7 +207,7 @@ export function FriendRequestsListScreen() {
               return (
                 <div
                   key={request.solicitudId}
-                  className="bg-gray-50 rounded-2xl p-4 border border-gray-200"
+                  className="bg-gray-50 rounded-xl xs:rounded-2xl p-4 border border-gray-200"
                 >
                   <div className="flex items-start gap-3 mb-4">
                     <Avatar className="w-12 h-12 flex-shrink-0">

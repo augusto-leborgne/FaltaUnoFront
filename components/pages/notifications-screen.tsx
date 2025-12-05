@@ -103,17 +103,17 @@ export function NotificationsScreen() {
   return (
     <div className="min-h-screen bg-white flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
       {/* Header */}
-      <div className="pt-10 xs:pt-12 sm:pt-16 pb-3 xs:pb-4 sm:pb-6 px-3 xs:px-4 sm:px-6 border-b border-gray-100 safe-top">
-        <div className="flex items-center gap-2 xs:gap-3 sm:gap-4 mb-3 xs:mb-4 sm:mb-5">
+      <div className="pt-8 xs:pt-10 sm:pt-12 md:pt-14 pb-2 xs:pb-3 sm:pb-4 sm:pb-6 px-2 xs:px-3 sm:px-4 md:px-6 border-b border-gray-100 safe-top">
+        <div className="flex items-center gap-2 xs:gap-3 sm:gap-4 mb-1.5 xs:mb-2 sm:mb-3 md:mb-4 md:mb-5">
           <button
             onClick={() => router.back()}
-            className="p-2 xs:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-lg xs:rounded-xl transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-95"
+            className="p-2 xs:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-lg xs:rounded-xl transition-colors touch-manipulation min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] flex items-center justify-center active:scale-95"
             aria-label="Volver"
           >
             <ArrowLeft className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6 sm:h-6 text-gray-700" />
           </button>
           <div className="flex items-center gap-2 xs:gap-2.5 sm:gap-3 flex-1 min-w-0">
-            <h1 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">Notificaciones</h1>
+            <h1 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl md:text-2xl font-bold text-gray-900 truncate">Notificaciones</h1>
             {count > 0 && (
               <span className="px-2 xs:px-2.5 sm:px-3 py-0.5 xs:py-1 bg-red-500 text-white text-[10px] xs:text-xs sm:text-sm font-bold rounded-full flex-shrink-0">
                 {count}
@@ -125,7 +125,7 @@ export function NotificationsScreen() {
         {count > 0 && (
           <button
             onClick={marcarTodasLeidas}
-            className="flex items-center gap-2 px-3 xs:px-4 sm:px-5 py-2.5 xs:py-3 sm:py-3.5 bg-green-50 hover:bg-green-100 active:bg-green-200 text-green-700 rounded-lg xs:rounded-xl transition-all text-xs xs:text-sm sm:text-base font-semibold w-full justify-center touch-manipulation active:scale-95 min-h-[48px]"
+            className="flex items-center gap-2 px-3 xs:px-4 sm:px-5 py-2.5 xs:py-3 sm:py-3.5 bg-green-50 hover:bg-green-100 active:bg-green-200 text-green-700 rounded-lg xs:rounded-xl transition-all text-xs xs:text-sm sm:text-base font-semibold w-full justify-center touch-manipulation active:scale-95 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px]"
           >
             <CheckCheck className="w-4 h-4 xs:w-5 xs:h-5" />
             Marcar todas como leídas
@@ -133,14 +133,14 @@ export function NotificationsScreen() {
         )}
       </div>
 
-      <div className="flex-1 px-3 xs:px-4 sm:px-6 overflow-y-auto pb-18 xs:pb-20 sm:pb-22 md:pb-24">
+      <div className="flex-1 px-2 xs:px-3 sm:px-4 md:px-6 overflow-y-auto pb-18 xs:pb-20 sm:pb-22 md:pb-24">
         {/* Filtros */}
-        <div className="flex gap-2 xs:gap-2.5 mb-4 xs:mb-5 sm:mb-6 mt-3 xs:mt-4 sm:mt-5 overflow-x-auto pb-2 scrollbar-hide -mx-3 px-3 xs:-mx-4 xs:px-4 sm:mx-0 sm:px-0">
+        <div className="flex gap-2 xs:gap-2.5 mb-3 xs:mb-4 sm:mb-5 md:mb-6 mt-3 xs:mt-4 sm:mt-5 overflow-x-auto pb-2 scrollbar-hide -mx-3 px-3 xs:-mx-4 xs:px-4 sm:mx-0 sm:px-0">
           {tiposFiltro.map(({ label, value }) => (
             <button
               key={value}
               onClick={() => setFiltro(value)}
-              className={`px-3 xs:px-4 sm:px-5 py-2 xs:py-2.5 sm:py-3 rounded-lg xs:rounded-xl whitespace-nowrap transition-all font-semibold text-xs xs:text-sm sm:text-base touch-manipulation min-h-[44px] active:scale-95 ${filtro === value
+              className={`px-3 xs:px-4 sm:px-5 py-2 xs:py-2.5 sm:py-3 rounded-lg xs:rounded-xl whitespace-nowrap transition-all font-semibold text-xs xs:text-sm sm:text-base touch-manipulation min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] active:scale-95 ${filtro === value
                 ? "bg-orange-500 text-white shadow-lg"
                 : "bg-orange-50 text-gray-700 hover:bg-orange-100 active:bg-orange-200"
                 }`}
@@ -162,7 +162,7 @@ export function NotificationsScreen() {
         ) : notificacionesFiltradas.length === 0 ? (
           <div className="bg-gray-50 rounded-xl xs:rounded-2xl border border-gray-200 p-8 xs:p-10 sm:p-12 text-center">
             <Bell className="w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-3 xs:mb-4" />
-            <p className="text-gray-500 text-sm xs:text-base sm:text-lg">No hay notificaciones</p>
+            <p className="text-gray-500 text-xs xs:text-sm sm:text-base md:text-lg">No hay notificaciones</p>
           </div>
         ) : (
           notificacionesFiltradas.map((notif) => (
@@ -200,7 +200,7 @@ export function NotificationsScreen() {
                         e.stopPropagation()
                         eliminarNotificacion(notif.id)
                       }}
-                      className="ml-1 xs:ml-2 p-2 hover:bg-gray-100 rounded-lg xs:rounded-xl transition-colors flex-shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center touch-manipulation"
+                      className="ml-1 xs:ml-2 p-2 hover:bg-gray-100 rounded-lg xs:rounded-xl transition-colors flex-shrink-0 min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] min-h-[40px] flex items-center justify-center touch-manipulation"
                       aria-label="Eliminar notificación"
                     >
                       <Trash2 className="w-4 h-4 xs:w-4.5 xs:h-4.5 text-gray-400 hover:text-red-600" />

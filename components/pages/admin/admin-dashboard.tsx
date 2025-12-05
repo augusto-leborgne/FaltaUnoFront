@@ -721,11 +721,11 @@ export default function AdminDashboard() {
           <>
             {/* Estadísticas */}
             {activeTab === "stats" && stats && (
-              <div className="space-y-6">
+              <div className="space-y-4 xs:space-y-3 xs:space-y-4 sm:space-y-5 sm:space-y-6">
                 {/* Estadísticas principales */}
                 <div>
                   <h3 className="text-lg font-bold text-gray-900 mb-4">Usuarios</h3>
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="grid gap-2 xs:gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div className="rounded-lg border bg-white p-6 shadow-sm">
                       <div className="flex items-center justify-between">
                         <div>
@@ -779,7 +779,7 @@ export default function AdminDashboard() {
                 {/* Estadísticas de partidos */}
                 <div>
                   <h3 className="text-lg font-bold text-gray-900 mb-4">Partidos</h3>
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="grid gap-2 xs:gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <div className="rounded-lg border bg-white p-6 shadow-sm">
                       <div className="flex items-center justify-between">
                         <div>
@@ -825,7 +825,7 @@ export default function AdminDashboard() {
                 {/* Estadísticas de reportes */}
                 <div>
                   <h3 className="text-lg font-bold text-gray-900 mb-4">Reportes y Moderación</h3>
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="grid gap-2 xs:gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <div className="rounded-lg border bg-white p-6 shadow-sm">
                       <div className="flex items-center justify-between">
                         <div>
@@ -871,7 +871,7 @@ export default function AdminDashboard() {
                 {/* Filtros de Usuarios */}
                 <div className="bg-white rounded-lg border p-4 mb-4">
                   <h3 className="text-sm font-semibold text-gray-900 mb-3">Filtros</h3>
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="grid gap-2 xs:gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {/* Búsqueda */}
                     <div className="sm:col-span-2">
                       <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -1172,7 +1172,7 @@ export default function AdminDashboard() {
                 {/* Filtros de Partidos */}
                 <div className="bg-white rounded-lg border p-4 mb-4">
                   <h3 className="text-sm font-semibold text-gray-900 mb-3">Filtros</h3>
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="grid gap-2 xs:gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     {/* Búsqueda */}
                     <div className="sm:col-span-2">
                       <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -1862,7 +1862,7 @@ export default function AdminDashboard() {
 
             {/* Body */}
             <div className="p-4 sm:p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 xs:gap-3 sm:gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-sm text-gray-500">
                     <Mail className="h-4 w-4" />
@@ -1991,7 +1991,7 @@ export default function AdminDashboard() {
 
             {/* Body */}
             <div className="p-4 sm:p-6 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 xs:gap-3 sm:gap-4">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-sm text-gray-500">
                     <Calendar className="h-4 w-4" />

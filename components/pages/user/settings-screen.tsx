@@ -567,7 +567,7 @@ export function SettingsScreen() {
 					<div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
 						<button
 							onClick={handleBack}
-							className="p-2 sm:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation active:scale-95"
+							className="p-2 sm:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] flex items-center justify-center touch-manipulation active:scale-95"
 						>
 							<ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
 						</button>
@@ -576,7 +576,7 @@ export function SettingsScreen() {
 					<Button
 						onClick={handleSave}
 						disabled={isSaving || Object.keys(fieldErrors).some(k => fieldErrors[k as keyof typeof fieldErrors])}
-						className="bg-green-600 hover:bg-green-700 active:bg-green-800 min-h-[48px] px-4 sm:px-6 text-sm sm:text-base font-semibold shadow-lg hover:shadow-xl touch-manipulation active:scale-95 flex items-center gap-2 whitespace-nowrap flex-shrink-0"
+						className="bg-green-600 hover:bg-green-700 active:bg-green-800 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] px-4 sm:px-6 text-sm sm:text-base font-semibold shadow-lg hover:shadow-xl touch-manipulation active:scale-95 flex items-center gap-2 whitespace-nowrap flex-shrink-0"
 					>
 						{isSaving ? (
 							<>
@@ -610,14 +610,14 @@ export function SettingsScreen() {
 				)}
 
 				{/* Profile Photo Section - MODERNIZED */}
-				<div className="bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-2xl sm:rounded-3xl p-5 sm:p-8 mb-5 sm:mb-6 shadow-lg hover:shadow-xl transition-shadow">
+				<div className="bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-xl xs:rounded-2xl sm:rounded-3xl p-5 sm:p-8 mb-5 sm:mb-6 shadow-lg hover:shadow-xl transition-shadow">
 					<div className="flex items-center gap-2 sm:gap-3 mb-5 sm:mb-6">
 						<div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-md">
 							<Camera className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
 						</div>
 						<h3 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Foto de perfil</h3>
 					</div>
-					<div className="flex flex-col items-center gap-4">
+					<div className="flex flex-col items-center gap-2 xs:gap-3 sm:gap-4">
 						<div className="relative">
 							<UserAvatar
 								photo={avatar}
@@ -703,7 +703,7 @@ export function SettingsScreen() {
 				</div>
 
 				{/* Personal Information - MODERNIZED */}
-				<div className="bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-2xl sm:rounded-3xl p-5 sm:p-8 mb-5 sm:mb-6 shadow-lg hover:shadow-xl transition-shadow">
+				<div className="bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-xl xs:rounded-2xl sm:rounded-3xl p-5 sm:p-8 mb-5 sm:mb-6 shadow-lg hover:shadow-xl transition-shadow">
 					<div className="flex items-center gap-2 sm:gap-3 mb-5 sm:mb-6">
 						<div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-md">
 							<svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -752,7 +752,7 @@ export function SettingsScreen() {
 				</div>
 
 				{/* Football Profile - MODERNIZED */}
-				<div className="bg-gradient-to-br from-white to-green-50 border-2 border-green-200 rounded-2xl sm:rounded-3xl p-5 sm:p-8 mb-5 sm:mb-6 shadow-lg hover:shadow-xl transition-shadow">
+				<div className="bg-gradient-to-br from-white to-green-50 border-2 border-green-200 rounded-xl xs:rounded-2xl sm:rounded-3xl p-5 sm:p-8 mb-5 sm:mb-6 shadow-lg hover:shadow-xl transition-shadow">
 					<div className="flex items-center gap-2 sm:gap-3 mb-5 sm:mb-6">
 						<div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-md">
 							<svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
@@ -814,7 +814,7 @@ export function SettingsScreen() {
 				</div>
 
 				{/* Notification Preferences - MODERNIZED */}
-				<div className="bg-gradient-to-br from-white to-blue-50 border-2 border-blue-200 rounded-2xl sm:rounded-3xl p-5 sm:p-8 mb-5 sm:mb-6 shadow-lg hover:shadow-xl transition-shadow">
+				<div className="bg-gradient-to-br from-white to-blue-50 border-2 border-blue-200 rounded-xl xs:rounded-2xl sm:rounded-3xl p-5 sm:p-8 mb-5 sm:mb-6 shadow-lg hover:shadow-xl transition-shadow">
 					<div className="flex items-center gap-2 sm:gap-3 mb-5 sm:mb-6">
 						<div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-md">
 							<Bell className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -823,7 +823,7 @@ export function SettingsScreen() {
 					</div>
 					<div className="space-y-4">
 						{Object.entries(notificationPreferences).map(([key, value]) => (
-							<div key={key} className="flex items-center justify-between py-3 sm:py-4 min-h-[56px] px-4 sm:px-5 bg-white rounded-xl hover:bg-gray-50 transition-colors border border-gray-100">
+							<div key={key} className="flex items-center justify-between py-3 sm:py-4 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] xs:min-h-[48px] xs:min-h-[52px] sm:min-h-[56px] px-4 sm:px-5 bg-white rounded-xl hover:bg-gray-50 transition-colors border border-gray-100">
 								<span className="text-sm sm:text-base text-gray-800 font-medium">
 									{key === "matchInvitations" && "Invitaciones a partidos"}
 									{key === "friendRequests" && "Solicitudes de amistad"}
@@ -851,7 +851,7 @@ export function SettingsScreen() {
 				<div className="bg-white border border-red-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
 					<div className="flex items-center gap-2 mb-4">
 						<AlertCircle className="w-5 h-5 text-red-600" />
-						<h3 className="text-base sm:text-lg font-bold text-red-600">Zona de peligro</h3>
+						<h3 className="text-sm xs:text-base md:text-base sm:text-lg font-bold text-red-600">Zona de peligro</h3>
 					</div>
 					<p className="text-sm text-gray-600 mb-4">
 						Una vez que elimines tu cuenta, no hay vuelta atrás. Por favor, está seguro.
@@ -875,7 +875,7 @@ export function SettingsScreen() {
 							<h3 className="text-lg font-bold text-white sm:text-gray-900">Tomar foto</h3>
 							<button
 								onClick={stopCamera}
-								className="p-2 hover:bg-gray-800 sm:hover:bg-gray-100 rounded-xl transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+								className="p-2 hover:bg-gray-800 sm:hover:bg-gray-100 rounded-xl transition-colors min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] flex items-center justify-center"
 							>
 								<X className="w-5 h-5 text-white sm:text-gray-600" />
 							</button>
@@ -904,7 +904,7 @@ export function SettingsScreen() {
 						<div className="p-4 bg-black sm:bg-white flex gap-3">
 							<Button
 								onClick={capturePhoto}
-								className="flex-1 bg-green-600 hover:bg-green-700 min-h-[48px] text-base"
+								className="flex-1 bg-green-600 hover:bg-green-700 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] text-sm xs:text-base md:text-base"
 							>
 								<Camera className="w-5 h-5 mr-2" />
 								Capturar
@@ -912,7 +912,7 @@ export function SettingsScreen() {
 							<Button
 								onClick={stopCamera}
 								variant="outline"
-								className="flex-1 min-h-[48px] text-base border-gray-600 text-gray-300 sm:text-gray-900 sm:border-gray-300"
+								className="flex-1 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] text-sm xs:text-base md:text-base border-gray-600 text-gray-300 sm:text-gray-900 sm:border-gray-300"
 							>
 								Cancelar
 							</Button>
@@ -926,14 +926,14 @@ export function SettingsScreen() {
 				<div className="fixed inset-0 bg-black flex items-center justify-center z-[100]">
 					<div className="w-full h-full sm:w-auto sm:h-auto sm:max-w-[90vw] sm:max-h-[90vh] bg-white sm:rounded-2xl flex flex-col overflow-hidden">
 						<div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-white flex-shrink-0">
-							<h3 className="text-base font-semibold text-gray-900">Ajustar foto de perfil</h3>
+							<h3 className="text-sm xs:text-base md:text-base font-semibold text-gray-900">Ajustar foto de perfil</h3>
 							<button
 								onClick={() => {
 									setShowCropModal(false)
 									setImageToCrop("")
 									setPhotoError('')
 								}}
-								className="p-2 hover:bg-gray-100 rounded-full transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center"
+								className="p-2 hover:bg-gray-100 rounded-full transition-colors min-h-[40px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] flex items-center justify-center"
 							>
 								<X className="w-5 h-5 text-gray-600" />
 							</button>
@@ -989,7 +989,7 @@ export function SettingsScreen() {
 						<div className="p-4 bg-white border-t border-gray-200 flex gap-3 flex-shrink-0">
 							<Button
 								onClick={handleCropComplete}
-								className="flex-1 bg-green-600 hover:bg-green-700 min-h-[48px] text-base"
+								className="flex-1 bg-green-600 hover:bg-green-700 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] text-sm xs:text-base md:text-base"
 								disabled={isSaving}
 							>
 								{isSaving ? (
@@ -1011,7 +1011,7 @@ export function SettingsScreen() {
 									setPhotoError('')
 								}}
 								variant="outline"
-								className="flex-1 min-h-[48px] text-base"
+								className="flex-1 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] text-sm xs:text-base md:text-base"
 								disabled={isSaving}
 							>
 								Cancelar
@@ -1024,7 +1024,7 @@ export function SettingsScreen() {
 			{/* Delete Confirmation Modal */}
 			{showDeleteConfirm && (
 				<div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-					<div className="bg-white rounded-2xl p-6 max-w-md w-full">
+					<div className="bg-white rounded-xl xs:rounded-2xl p-6 max-w-md w-full">
 						<div className="flex items-center gap-2 mb-4">
 							<AlertCircle className="w-6 h-6 text-red-600" />
 							<h3 className="text-lg font-bold text-red-600">Eliminar cuenta</h3>

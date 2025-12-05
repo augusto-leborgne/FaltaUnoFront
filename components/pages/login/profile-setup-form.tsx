@@ -970,20 +970,20 @@ export function ProfileSetupForm() {
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-orange-50 safe-top safe-bottom">
       {/* Header moderno */}
       <div className="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-10 safe-top">
-        <div className="max-w-2xl mx-auto px-3 xs:px-4 sm:px-6 py-3 xs:py-4 sm:py-6">
+        <div className="max-w-2xl mx-auto px-2 xs:px-3 sm:px-4 md:px-6 py-3 xs:py-4 sm:py-6">
           <div className="relative flex items-center justify-center">
             {/* Botón volver */}
             <button
               type="button"
               onClick={handleBackToLogin}
-              className="absolute left-0 p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
+              className="absolute left-0 p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] flex items-center justify-center touch-manipulation"
               aria-label="Volver a login"
             >
               <ArrowLeft className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6 sm:h-6 text-gray-600" />
             </button>
             
             <div className="text-center">
-              <h1 className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
+              <h1 className="text-base xs:text-lg sm:text-xl md:text-2xl md:text-3xl font-bold text-gray-900">
                 Completa tu perfil
               </h1>
               <p className="text-xs xs:text-sm text-gray-600 mt-1 xs:mt-1.5 sm:mt-2">Un paso más para empezar a jugar</p>
@@ -992,11 +992,11 @@ export function ProfileSetupForm() {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-3 xs:px-4 sm:px-6 py-3 xs:py-4 sm:py-8 pb-18 xs:pb-20 sm:pb-22 md:pb-24">
+      <div className="max-w-2xl mx-auto px-2 xs:px-3 sm:px-4 md:px-6 py-3 xs:py-4 sm:py-8 pb-18 xs:pb-20 sm:pb-22 md:pb-24">
         <form
           ref={formRef}
           onSubmit={handleSubmit}
-          className="space-y-4 xs:space-y-5 sm:space-y-6"
+          className="space-y-4 xs:space-y-3 xs:space-y-4 sm:space-y-5 sm:space-y-4 xs:space-y-3 xs:space-y-4 sm:space-y-5 sm:space-y-6"
         >
           {/* Foto de perfil - Diseño destacado */}
           <div className="bg-white rounded-xl xs:rounded-2xl sm:rounded-3xl shadow-lg p-3 xs:p-4 sm:p-8 border border-gray-100">
@@ -1060,7 +1060,7 @@ export function ProfileSetupForm() {
                   </div>
                 )}
               </div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">Foto de perfil</h3>
+              <h3 className="text-sm xs:text-base md:text-base sm:text-lg font-semibold text-gray-900 mb-1">Foto de perfil</h3>
               <p className="text-xs sm:text-sm text-gray-500 mb-2 sm:mb-3 px-2">
                 {formData.photo ? "¡Foto cargada! Puedes cambiarla" : "Agrega una foto para que te reconozcan"}
               </p>
@@ -1093,7 +1093,7 @@ export function ProfileSetupForm() {
           </div>
 
           {/* Información personal */}
-          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-6 border border-gray-100">
+          <div className="bg-white rounded-xl xs:rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-6 border border-gray-100">
             <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4 flex items-center">
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary/10 flex items-center justify-center mr-2 sm:mr-3">
                 <span className="text-primary font-bold text-sm sm:text-base">1</span>
@@ -1212,7 +1212,7 @@ export function ProfileSetupForm() {
           </div>
 
           {/* Información deportiva */}
-          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-6 border border-gray-100">
+          <div className="bg-white rounded-xl xs:rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-6 border border-gray-100">
             <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4 flex items-center">
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-orange-100 flex items-center justify-center mr-2 sm:mr-3">
                 <span className="text-orange-600 font-bold text-sm sm:text-base">2</span>
@@ -1327,7 +1327,7 @@ export function ProfileSetupForm() {
           <button
             type="submit"
             disabled={isUploading}
-            className="w-full bg-primary active:bg-primary/90 text-white py-4 sm:py-6 rounded-xl sm:rounded-2xl text-base sm:text-lg font-semibold shadow-lg active:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-primary active:bg-primary/90 text-white py-4 sm:py-6 rounded-xl sm:rounded-2xl text-sm xs:text-base md:text-base sm:text-lg font-semibold shadow-lg active:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isUploading ? (
               <span className="flex items-center justify-center">
@@ -1346,7 +1346,7 @@ export function ProfileSetupForm() {
         <div className="fixed inset-0 bg-black flex items-center justify-center z-[100]">
           <div className="w-full h-full sm:w-auto sm:h-auto sm:max-w-[90vw] sm:max-h-[90vh] bg-white sm:rounded-2xl flex flex-col overflow-hidden">
             <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-white flex-shrink-0">
-              <h3 className="text-base font-semibold text-gray-900">Ajustar foto de perfil</h3>
+              <h3 className="text-sm xs:text-base md:text-base font-semibold text-gray-900">Ajustar foto de perfil</h3>
               <button
                 type="button"
                 onClick={() => {
@@ -1354,7 +1354,7 @@ export function ProfileSetupForm() {
                   setImageToCrop('')
                   setPhotoError('')
                 }}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center"
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors min-h-[40px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] flex items-center justify-center"
               >
                 <X className="w-5 h-5 text-gray-600" />
               </button>
@@ -1416,14 +1416,14 @@ export function ProfileSetupForm() {
                   setImageToCrop('')
                 }}
                 variant="outline"
-                className="flex-1 text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[48px]"
+                className="flex-1 text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px]"
               >
                 Cancelar
               </Button>
               <Button
                 type="button"
                 onClick={handleCropComplete}
-                className="flex-1 bg-primary active:bg-primary/90 text-white text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[48px]"
+                className="flex-1 bg-primary active:bg-primary/90 text-white text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px]"
                 disabled={!completedCrop || isUploading}
               >
                 {isUploading ? (
@@ -1446,13 +1446,13 @@ export function ProfileSetupForm() {
       {/* Camera Modal */}
       {showCameraModal && (
         <div className="fixed inset-0 bg-black flex items-center justify-center z-50 p-1 sm:p-2 md:p-4">
-          <div className="bg-white rounded-2xl sm:rounded-3xl w-full max-w-[95vw] sm:max-w-[90vw] md:max-w-lg lg:max-w-xl xl:max-w-2xl shadow-2xl flex flex-col overflow-hidden max-h-[95vh]">
+          <div className="bg-white rounded-xl xs:rounded-2xl sm:rounded-3xl w-full max-w-[95vw] sm:max-w-[90vw] md:max-w-lg lg:max-w-xl xl:max-w-2xl shadow-2xl flex flex-col overflow-hidden max-h-[95vh]">
             <div className="p-3 sm:p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-primary/10 to-orange-50 flex-shrink-0">
-              <h3 className="text-base sm:text-lg font-bold text-gray-900">Tomar foto</h3>
+              <h3 className="text-sm xs:text-base md:text-base sm:text-lg font-bold text-gray-900">Tomar foto</h3>
               <button
                 type="button"
                 onClick={stopCamera}
-                className="p-2 active:bg-white rounded-lg sm:rounded-xl transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="p-2 active:bg-white rounded-lg sm:rounded-xl transition-colors touch-manipulation min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] flex items-center justify-center"
               >
                 <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
               </button>
@@ -1487,14 +1487,14 @@ export function ProfileSetupForm() {
                 type="button"
                 onClick={stopCamera}
                 variant="outline"
-                className="flex-1 text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[48px]"
+                className="flex-1 text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px]"
               >
                 Cancelar
               </Button>
               <Button
                 type="button"
                 onClick={capturePhoto}
-                className="flex-1 bg-primary active:bg-primary/90 text-white text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[48px]"
+                className="flex-1 bg-primary active:bg-primary/90 text-white text-sm sm:text-base py-3 sm:py-2.5 touch-manipulation min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px]"
               >
                 <Camera className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                 Capturar

@@ -236,12 +236,12 @@ export function ChatsScreen() {
     <div className="min-h-screen bg-white flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
       {/* Header Compacto como Partidos y Mis Partidos */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm safe-top">
-        <div className="px-3 xs:px-4 sm:px-6 md:px-8 py-3 xs:py-3.5 sm:py-4">
+        <div className="px-2 xs:px-3 sm:px-4 md:px-6 md:px-8 py-3 xs:py-3.5 sm:py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">Chats</h1>
+            <h1 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl md:text-2xl font-bold text-gray-900 truncate">Chats</h1>
             <button
               onClick={() => router.push('/create-match')}
-              className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-full p-2 xs:p-2.5 flex items-center justify-center min-h-[44px] min-w-[44px] xs:min-h-[48px] xs:min-w-[48px] touch-manipulation shadow-md transition-transform active:scale-95"
+              className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-full p-2 xs:p-2.5 flex items-center justify-center min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] xs:min-h-[48px] xs:min-w-[48px] touch-manipulation shadow-md transition-transform active:scale-95"
               aria-label="Crear partido"
             >
               <Plus className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6 sm:h-6" />
@@ -251,7 +251,7 @@ export function ChatsScreen() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 px-3 xs:px-4 sm:px-6 md:px-8 py-3 xs:py-4 overflow-y-auto pb-18 xs:pb-20 sm:pb-22 md:pb-24">
+      <div className="flex-1 px-2 xs:px-3 sm:px-4 md:px-6 md:px-8 py-3 xs:py-4 overflow-y-auto pb-18 xs:pb-20 sm:pb-22 md:pb-24">
         {/* Error Message */}
         {error && (
           <div className="mb-3 xs:mb-4">
@@ -264,15 +264,15 @@ export function ChatsScreen() {
           // Estado vacío
           <div className="bg-gray-50 rounded-xl xs:rounded-2xl border border-gray-200 p-8 xs:p-10 sm:p-12 text-center">
             <MessageCircle className="w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-3 xs:mb-4" />
-            <h3 className="text-base xs:text-lg font-semibold text-gray-900 mb-1.5 xs:mb-2">
+            <h3 className="text-sm xs:text-base md:text-base xs:text-lg font-semibold text-gray-900 mb-1.5 xs:mb-2">
               No tienes chats activos
             </h3>
-            <p className="text-xs xs:text-sm text-gray-500 mb-4 xs:mb-5 sm:mb-6">
+            <p className="text-xs xs:text-sm text-gray-500 mb-3 xs:mb-4 sm:mb-5 md:mb-6">
               Únete a un partido para empezar a conversar con otros jugadores
             </p>
             <button
               onClick={() => router.push('/matches')}
-              className="px-5 xs:px-6 py-2.5 xs:py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg xs:rounded-xl font-medium transition-all text-sm xs:text-base min-h-[48px] touch-manipulation active:scale-95"
+              className="px-5 xs:px-6 py-2.5 xs:py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg xs:rounded-xl font-medium transition-all text-sm xs:text-base min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] touch-manipulation active:scale-95"
             >
               Buscar Partidos
             </button>
@@ -310,7 +310,7 @@ export function ChatsScreen() {
                   </div>
 
                   {/* Título principal: Fecha y hora */}
-                  <h3 className="text-sm xs:text-base sm:text-lg font-bold text-gray-900 mb-1.5 xs:mb-2 truncate">
+                  <h3 className="text-xs xs:text-sm sm:text-base md:text-lg font-bold text-gray-900 mb-1.5 xs:mb-2 truncate">
                     {formatDate(partido.fecha || '', partido.hora || '')}
                   </h3>
 

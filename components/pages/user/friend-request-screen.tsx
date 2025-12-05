@@ -101,7 +101,7 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
 
   if (loadingData) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center px-3 xs:px-4 sm:px-6">
+      <div className="min-h-screen bg-white flex items-center justify-center px-2 xs:px-3 sm:px-4 md:px-6">
         <LoadingSpinner size="xl" variant="green" text="Cargando..." />
       </div>
     )
@@ -110,18 +110,18 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
   if (error && !user) {
     return (
       <div className="min-h-screen bg-white flex flex-col">
-        <div className="pt-14 xs:pt-16 sm:pt-18 pb-4 xs:pb-5 sm:pb-6 px-3 xs:px-4 sm:px-6 border-b border-gray-100">
-          <div className="flex items-center space-x-3 xs:space-x-4">
-            <button onClick={handleBack} className="p-2 xs:p-2.5 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 transition-transform">
+        <div className="pt-12 xs:pt-14 sm:pt-16 md:pt-18 pb-2 xs:pb-3 sm:pb-4 sm:pb-5 md:pb-6 px-2 xs:px-3 sm:px-4 md:px-6 border-b border-gray-100">
+          <div className="flex items-center space-x-3 xs:space-x-2 xs:space-x-3 sm:space-x-4">
+            <button onClick={handleBack} className="p-2 xs:p-2.5 -ml-2 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] flex items-center justify-center active:scale-95 transition-transform">
               <ArrowLeft className="w-4 xs:w-5 h-4 xs:h-5 text-gray-600" />
             </button>
-            <h1 className="text-base xs:text-lg sm:text-xl md:text-xl font-bold text-gray-900">Error</h1>
+            <h1 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl md:text-xl font-bold text-gray-900">Error</h1>
           </div>
         </div>
-        <div className="flex-1 flex items-center justify-center px-3 xs:px-4 sm:px-6">
+        <div className="flex-1 flex items-center justify-center px-2 xs:px-3 sm:px-4 md:px-6">
           <div className="text-center max-w-md mx-auto">
             <p className="text-xs xs:text-sm sm:text-base text-red-600 mb-3 xs:mb-4">{error}</p>
-            <Button onClick={handleBack} variant="outline" className="min-h-[48px] px-6 text-sm xs:text-base">
+            <Button onClick={handleBack} variant="outline" className="min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] px-6 text-sm xs:text-base">
               Volver
             </Button>
           </div>
@@ -136,16 +136,16 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      <div className="pt-14 xs:pt-16 sm:pt-18 pb-4 xs:pb-5 sm:pb-6 px-3 xs:px-4 sm:px-6 border-b border-gray-100">
-        <div className="flex items-center space-x-3 xs:space-x-4">
-          <button onClick={handleBack} className="p-2 xs:p-2.5 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 transition-transform">
+      <div className="pt-12 xs:pt-14 sm:pt-16 md:pt-18 pb-2 xs:pb-3 sm:pb-4 sm:pb-5 md:pb-6 px-2 xs:px-3 sm:px-4 md:px-6 border-b border-gray-100">
+        <div className="flex items-center space-x-3 xs:space-x-2 xs:space-x-3 sm:space-x-4">
+          <button onClick={handleBack} className="p-2 xs:p-2.5 -ml-2 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] flex items-center justify-center active:scale-95 transition-transform">
             <ArrowLeft className="w-4 xs:w-5 h-4 xs:h-5 text-gray-600" />
           </button>
-          <h1 className="text-base xs:text-lg sm:text-xl md:text-xl font-bold text-gray-900">Enviar solicitud</h1>
+          <h1 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl md:text-xl font-bold text-gray-900">Enviar solicitud</h1>
         </div>
       </div>
 
-      <div className="flex-1 px-3 xs:px-4 sm:px-6 py-6 xs:py-8">
+      <div className="flex-1 px-2 xs:px-3 sm:px-4 md:px-6 py-6 xs:py-8">
         <div className="max-w-md mx-auto">
         <div className="text-center mb-6 xs:mb-8">
           <Avatar className="w-20 xs:w-22 sm:w-24 h-20 xs:h-22 sm:h-24 mx-auto mb-3 xs:mb-4">
@@ -155,12 +155,12 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
                 alt={fullName}
               />
             ) : (
-              <AvatarFallback className="bg-orange-100 text-2xl">
+              <AvatarFallback className="bg-orange-100 text-lg xs:text-xl sm:text-2xl">
                 {initials}
               </AvatarFallback>
             )}
           </Avatar>
-          <h2 className="text-base xs:text-lg sm:text-xl md:text-xl font-bold text-gray-900 mb-1.5 xs:mb-2">{fullName}</h2>
+          <h2 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl md:text-xl font-bold text-gray-900 mb-1.5 xs:mb-2">{fullName}</h2>
           {user?.posicion && (
             <p className="text-xs xs:text-sm sm:text-base text-gray-600 mb-1.5 xs:mb-2">{user.posicion}</p>
           )}
@@ -173,7 +173,7 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
         </div>
 
         {error && (
-          <div className="mb-4 xs:mb-5 sm:mb-6 p-3 xs:p-4 bg-red-50 border border-red-200 rounded-lg xs:rounded-xl">
+          <div className="mb-3 xs:mb-4 sm:mb-5 md:mb-6 p-3 xs:p-4 bg-red-50 border border-red-200 rounded-lg xs:rounded-xl">
             <p className="text-red-600 text-xs xs:text-sm">{error}</p>
           </div>
         )}
@@ -197,7 +197,7 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
             <Button
               onClick={handleSendRequest}
               disabled={isLoading}
-              className="w-full bg-green-600 hover:bg-green-700 text-white min-h-[48px] py-3 xs:py-3.5 sm:py-4 text-sm xs:text-base sm:text-lg md:text-base font-semibold rounded-xl xs:rounded-2xl flex items-center justify-center disabled:opacity-50"
+              className="w-full bg-green-600 hover:bg-green-700 text-white min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] py-3 xs:py-3.5 sm:py-4 text-xs xs:text-sm sm:text-base md:text-lg md:text-base font-semibold rounded-xl xs:rounded-2xl flex items-center justify-center disabled:opacity-50"
             >
               <Check className="w-4 xs:w-4.5 sm:w-5 h-4 xs:h-4.5 sm:h-5 mr-1.5 xs:mr-2" />
               {isLoading ? "Enviando..." : "Enviar solicitud"}
@@ -207,7 +207,7 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
           <Button
             onClick={handleBack}
             variant="outline"
-            className="w-full min-h-[48px] py-3 xs:py-3.5 sm:py-4 text-sm xs:text-base sm:text-lg md:text-base font-semibold rounded-xl xs:rounded-2xl bg-transparent"
+            className="w-full min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] py-3 xs:py-3.5 sm:py-4 text-xs xs:text-sm sm:text-base md:text-lg md:text-base font-semibold rounded-xl xs:rounded-2xl bg-transparent"
           >
             {requestSent ? "Cerrar" : "Cancelar"}
           </Button>

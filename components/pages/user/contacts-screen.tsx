@@ -193,11 +193,11 @@ export function ContactsScreen() {
     <div className="min-h-screen bg-white flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
       {/* Header */}
       <div className="pt-16 pb-6 px-6 border-b border-gray-100">
-        <div className="flex items-center space-x-4 mb-4">
-          <button onClick={handleBack} className="p-2 sm:p-3 -ml-2 hover:bg-gray-100 rounded-full transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center">
+        <div className="flex items-center space-x-2 xs:space-x-3 sm:space-x-4 mb-4">
+          <button onClick={handleBack} className="p-2 sm:p-3 -ml-2 hover:bg-gray-100 rounded-full transition-colors min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] flex items-center justify-center">
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </button>
-          <h1 className="text-xl font-bold text-gray-900">Contactos</h1>
+          <h1 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900">Contactos</h1>
         </div>
 
         {/* Search Bar */}
@@ -223,7 +223,7 @@ export function ContactsScreen() {
       <div className="flex-1 px-6 py-6 overflow-y-auto">
         {/* Error Message */}
         {error && (
-          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl">
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl xs:rounded-2xl">
             <p className="text-red-600 text-sm mb-3">{error}</p>
             <Button
               onClick={() => {
@@ -298,13 +298,13 @@ export function ContactsScreen() {
                 {selectedUser.foto_perfil ? (
                   <AvatarImage src={`data:image/jpeg;base64,${selectedUser.foto_perfil}`} />
                 ) : (
-                  <AvatarFallback className="bg-orange-100 text-2xl">
+                  <AvatarFallback className="bg-orange-100 text-lg xs:text-xl sm:text-2xl">
                     {`${selectedUser.nombre?.[0] || ""}${selectedUser.apellido?.[0] || ""}`.toUpperCase()}
                   </AvatarFallback>
                 )}
               </Avatar>
             </div>
-            <h2 className="text-xl font-bold text-gray-900 text-center mb-2">
+            <h2 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900 text-center mb-2">
               {selectedUser.nombre} {selectedUser.apellido}
             </h2>
             {selectedUser.email && (
@@ -319,7 +319,7 @@ export function ContactsScreen() {
             <Button
               onClick={handleSendFriendRequest}
               disabled={isSendingRequest}
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-4 text-lg font-semibold rounded-2xl mb-3"
+              className="w-full bg-green-600 hover:bg-green-700 text-white py-4 text-lg font-semibold rounded-xl xs:rounded-2xl mb-3"
             >
               <UserPlus className="w-5 h-5 mr-2" />
               {isSendingRequest ? "Enviando..." : "Enviar solicitud"}
@@ -328,7 +328,7 @@ export function ContactsScreen() {
             <Button
               onClick={() => setSelectedUser(null)}
               variant="outline"
-              className="w-full py-4 text-lg font-semibold rounded-2xl"
+              className="w-full py-4 text-lg font-semibold rounded-xl xs:rounded-2xl"
             >
               Cancelar
             </Button>

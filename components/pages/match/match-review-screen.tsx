@@ -79,7 +79,7 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
             key={star} 
             type="button"
             onClick={() => updateReview(playerId, category, star)} 
-            className="transition-colors touch-manipulation min-w-[40px] min-h-[40px] xs:min-w-[44px] xs:min-h-[44px] flex items-center justify-center active:scale-95"
+            className="transition-colors touch-manipulation min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] min-h-[40px] xs:min-w-[44px] xs:min-h-[44px] flex items-center justify-center active:scale-95"
           >
             <Star
               className={`w-7 h-7 xs:w-8 xs:h-8 ${
@@ -165,7 +165,7 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center px-3 xs:px-4 sm:px-6">
+      <div className="min-h-screen bg-white flex items-center justify-center px-2 xs:px-3 sm:px-4 md:px-6">
         <LoadingSpinner size="xl" variant="green" text="Cargando reseña..." />
       </div>
     )
@@ -176,18 +176,18 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
-      <div className="pt-12 xs:pt-14 sm:pt-16 pb-4 xs:pb-5 sm:pb-6 px-3 xs:px-4 sm:px-6 border-b border-gray-100 safe-top">
-        <div className="flex items-center space-x-3 xs:space-x-4">
-          <button onClick={handleBack} className="p-2 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation active:scale-95 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors">
+      <div className="pt-10 xs:pt-12 sm:pt-14 md:pt-16 pb-2 xs:pb-3 sm:pb-4 sm:pb-5 md:pb-6 px-2 xs:px-3 sm:px-4 md:px-6 border-b border-gray-100 safe-top">
+        <div className="flex items-center space-x-3 xs:space-x-2 xs:space-x-3 sm:space-x-4">
+          <button onClick={handleBack} className="p-2 -ml-2 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] flex items-center justify-center touch-manipulation active:scale-95 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors">
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </button>
-          <h1 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900">Calificar Jugadores</h1>
+          <h1 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl font-bold text-gray-900">Calificar Jugadores</h1>
         </div>
       </div>
 
-      <div className="flex-1 px-3 xs:px-4 sm:px-6 py-4 xs:py-5 sm:py-6 pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
-        <div className="mb-4 xs:mb-5 sm:mb-6">
-          <div className="bg-blue-50 rounded-lg xs:rounded-xl p-3 xs:p-4 mb-4 xs:mb-5 sm:mb-6">
+      <div className="flex-1 px-2 xs:px-3 sm:px-4 md:px-6 py-3 xs:py-4 sm:py-5 md:py-6 pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
+        <div className="mb-3 xs:mb-4 sm:mb-5 md:mb-6">
+          <div className="bg-blue-50 rounded-lg xs:rounded-xl p-3 xs:p-4 mb-3 xs:mb-4 sm:mb-5 md:mb-6">
             <h2 className="text-sm xs:text-base font-semibold text-blue-900 mb-2">¡Partido finalizado!</h2>
             <p className="text-xs xs:text-sm text-blue-800">
               Tu opinión es importante. Califica a cada jugador en las siguientes categorías:
@@ -203,12 +203,12 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
         {otherPlayers.length === 0 ? (
           <div className="text-center py-10 xs:py-12">
             <p className="text-xs xs:text-sm sm:text-base text-gray-500">No hay jugadores para calificar</p>
-            <Button onClick={() => router.push("/home")} className="mt-3 xs:mt-4 min-h-[48px] touch-manipulation active:scale-[0.98]">
+            <Button onClick={() => router.push("/home")} className="mt-3 xs:mt-4 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] touch-manipulation active:scale-[0.98]">
               Volver al inicio
             </Button>
           </div>
         ) : (
-          <div className="space-y-4 xs:space-y-5 sm:space-y-6">
+          <div className="space-y-4 xs:space-y-3 xs:space-y-4 sm:space-y-5 sm:space-y-4 xs:space-y-3 xs:space-y-4 sm:space-y-5 sm:space-y-6">
             {otherPlayers.map((player) => {
               const playerReview = reviews.find((r) => r.playerId === player.id)
               if (!playerReview) return null
@@ -322,7 +322,7 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
           <Button
             onClick={handleSubmitReviews}
             disabled={!allReviewsComplete || isSubmitting}
-            className={`w-full min-h-[48px] xs:min-h-[52px] text-sm xs:text-base sm:text-lg font-semibold rounded-xl xs:rounded-2xl touch-manipulation active:scale-[0.98] ${
+            className={`w-full min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] xs:min-h-[48px] xs:min-h-[52px] text-xs xs:text-sm sm:text-base md:text-lg font-semibold rounded-xl xs:rounded-2xl touch-manipulation active:scale-[0.98] ${
               allReviewsComplete && !isSubmitting
                 ? "bg-green-600 hover:bg-green-700 text-white"
                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
@@ -335,7 +335,7 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
             onClick={handleBack}
             variant="outline"
             disabled={isSubmitting}
-            className="w-full min-h-[48px] xs:min-h-[52px] text-sm xs:text-base sm:text-lg font-semibold rounded-xl xs:rounded-2xl border-gray-300 bg-transparent touch-manipulation active:scale-[0.98]"
+            className="w-full min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] xs:min-h-[48px] xs:min-h-[52px] text-xs xs:text-sm sm:text-base md:text-lg font-semibold rounded-xl xs:rounded-2xl border-gray-300 bg-transparent touch-manipulation active:scale-[0.98]"
           >
             Cancelar
           </Button>

@@ -289,7 +289,7 @@ export function HomeScreen() {
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-green-50 via-white to-orange-50 flex flex-col overflow-x-hidden pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
       {/* HEADER - Estilo Falta Uno */}
-      <div className="w-full bg-gradient-to-r from-green-500 via-green-600 to-green-500 pt-6 sm:pt-8 md:pt-10 pb-16 sm:pb-20 md:pb-24 px-3 xs:px-4 sm:px-6 relative overflow-hidden safe-top">
+      <div className="w-full bg-gradient-to-r from-green-500 via-green-600 to-green-500 pt-6 sm:pt-8 md:pt-10 pb-16 sm:pb-20 md:pb-24 px-2 xs:px-3 sm:px-4 md:px-6 relative overflow-hidden safe-top">
         {/* Patrón de fondo tipo cancha */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 border-2 border-white rounded-full"></div>
@@ -300,7 +300,7 @@ export function HomeScreen() {
         {/* Top bar */}
         <div className="relative z-10 flex items-center justify-between mb-6 sm:mb-8">
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg">
+            <h1 className="text-lg xs:text-xl sm:text-2xl sm:text-3xl font-bold text-white drop-shadow-lg">
               Falta Uno
             </h1>
             <BetaBadge />
@@ -308,7 +308,7 @@ export function HomeScreen() {
           <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={handleNotifications}
-              className="relative p-2.5 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 shadow-lg hover:bg-white/30 transition-all duration-200 touch-manipulation active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="relative p-2.5 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 shadow-lg hover:bg-white/30 transition-all duration-200 touch-manipulation active:scale-95 min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] flex items-center justify-center"
             >
               <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               {notificationCount > 0 && (
@@ -329,7 +329,7 @@ export function HomeScreen() {
 
         {/* Saludo */}
         <div className="relative z-10">
-          <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">
+          <h2 className="text-base xs:text-lg sm:text-xl sm:text-2xl font-bold text-white mb-1">
             ¡Hola, {currentUser?.nombre || user?.nombre || "Jugador"}! ⚽
           </h2>
           <p className="text-green-50 text-sm sm:text-base font-medium">
@@ -344,24 +344,24 @@ export function HomeScreen() {
           {/* Crear Partido */}
           <button
             onClick={handleCreateMatch}
-            className="group bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-4 sm:p-6 shadow-xl hover:shadow-2xl transition-all duration-300 active:scale-95 touch-manipulation"
+            className="group bg-gradient-to-br from-green-500 to-green-600 rounded-xl xs:rounded-2xl p-4 sm:p-6 shadow-xl hover:shadow-2xl transition-all duration-300 active:scale-95 touch-manipulation"
           >
             <div className="bg-white/20 backdrop-blur-sm rounded-xl w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300">
               <Plus className="w-6 h-6 sm:w-7 sm:h-7 text-white" strokeWidth={2.5} />
             </div>
-            <h3 className="text-white font-bold text-base sm:text-lg mb-1 text-left">Crear Partido</h3>
+            <h3 className="text-white font-bold text-sm xs:text-base md:text-base sm:text-lg mb-1 text-left">Crear Partido</h3>
             <p className="text-green-50 text-xs sm:text-sm text-left">Organiza tu partido</p>
           </button>
 
           {/* Buscar Partidos */}
           <button
             onClick={handleViewAllMatches}
-            className="group bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-4 sm:p-6 shadow-xl hover:shadow-2xl transition-all duration-300 active:scale-95 touch-manipulation"
+            className="group bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl xs:rounded-2xl p-4 sm:p-6 shadow-xl hover:shadow-2xl transition-all duration-300 active:scale-95 touch-manipulation"
           >
             <div className="bg-white/20 backdrop-blur-sm rounded-xl w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300">
               <Users className="w-6 h-6 sm:w-7 sm:h-7 text-white" strokeWidth={2.5} />
             </div>
-            <h3 className="text-white font-bold text-base sm:text-lg mb-1 text-left">Buscar Partidos</h3>
+            <h3 className="text-white font-bold text-sm xs:text-base md:text-base sm:text-lg mb-1 text-left">Buscar Partidos</h3>
             <p className="text-orange-50 text-xs sm:text-sm text-left">Únete a un partido</p>
           </button>
         </div>
@@ -369,28 +369,28 @@ export function HomeScreen() {
 
       {/* COMMUNITY STATS */}
       <div className="w-full px-4 sm:px-6 mb-6">
-        <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-100">
+        <div className="bg-white rounded-xl xs:rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-100">
           <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Comunidad Falta Uno</h3>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-2 xs:gap-3 sm:gap-4">
             <div className="text-center">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-2">
                 <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
               </div>
-              <div className="text-xl sm:text-2xl font-bold text-gray-900">{communityStats.activeUsers}</div>
+              <div className="text-base xs:text-lg sm:text-xl sm:text-2xl font-bold text-gray-900">{communityStats.activeUsers}</div>
               <div className="text-xs text-gray-500 font-medium">Activos</div>
             </div>
             <div className="text-center">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-2">
                 <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
               </div>
-              <div className="text-xl sm:text-2xl font-bold text-gray-900">{communityStats.matchesThisWeek}</div>
+              <div className="text-base xs:text-lg sm:text-xl sm:text-2xl font-bold text-gray-900">{communityStats.matchesThisWeek}</div>
               <div className="text-xs text-gray-500 font-medium">Partidos</div>
             </div>
             <div className="text-center">
               <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-xl flex items-center justify-center mx-auto mb-2">
                 <Users className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
               </div>
-              <div className="text-xl sm:text-2xl font-bold text-gray-900">{communityStats.newMembers}</div>
+              <div className="text-base xs:text-lg sm:text-xl sm:text-2xl font-bold text-gray-900">{communityStats.newMembers}</div>
               <div className="text-xs text-gray-500 font-medium">Jugadores</div>
             </div>
           </div>
@@ -405,7 +405,7 @@ export function HomeScreen() {
               <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
                 <Star className="w-4 h-4 text-orange-600" />
               </div>
-              <h2 className="text-base sm:text-lg md:text-xl font-bold text-foreground truncate">Por calificar</h2>
+              <h2 className="text-sm xs:text-base md:text-base sm:text-lg md:text-xl font-bold text-foreground truncate">Por calificar</h2>
             </div>
             <Badge className="bg-orange-100 text-orange-800 text-xs sm:text-sm font-semibold px-2.5 sm:px-3 py-1 flex-shrink-0">
               {pendingReviews.length}
@@ -454,13 +454,13 @@ export function HomeScreen() {
       )}
 
       {/* PRÓXIMOS PARTIDOS */}
-      <div className="w-full px-3 xs:px-4 sm:px-6 py-3 xs:py-4 sm:py-6 pb-18 xs:pb-20 sm:pb-22 md:pb-24">
+      <div className="w-full px-2 xs:px-3 sm:px-4 md:px-6 py-3 xs:py-4 sm:py-6 pb-18 xs:pb-20 sm:pb-22 md:pb-24">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
               <Calendar className="w-4 h-4 text-primary" />
             </div>
-            <h2 className="text-base sm:text-lg md:text-xl font-bold text-foreground truncate">Próximos partidos</h2>
+            <h2 className="text-sm xs:text-base md:text-base sm:text-lg md:text-xl font-bold text-foreground truncate">Próximos partidos</h2>
           </div>
           <Button
             onClick={handleViewAllMatches}
@@ -544,12 +544,12 @@ export function HomeScreen() {
             <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
               <Calendar className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
             </div>
-            <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2 px-4">No tienes partidos próximos</h3>
+            <h3 className="text-sm xs:text-base md:text-base sm:text-lg font-semibold text-foreground mb-2 px-4">No tienes partidos próximos</h3>
             <p className="text-muted-foreground mb-5 sm:mb-6 text-sm px-4">¡Es hora de unirte a un partido o crear uno nuevo!</p>
             <div className="flex flex-col gap-3 justify-center items-stretch px-6">
               <Button
                 onClick={handleViewAllMatches}
-                className="bg-gradient-to-r from-primary to-primary/90 active:from-primary/80 active:to-primary/70 text-white font-semibold shadow-lg active:shadow-md transition-all duration-200 w-full min-h-[48px] text-sm sm:text-base touch-manipulation"
+                className="bg-gradient-to-r from-primary to-primary/90 active:from-primary/80 active:to-primary/70 text-white font-semibold shadow-lg active:shadow-md transition-all duration-200 w-full min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] text-sm sm:text-base touch-manipulation"
               >
                 <Users className="w-4.5 h-4.5 sm:w-5 sm:h-5 mr-2" />
                 Buscar Partidos
@@ -557,7 +557,7 @@ export function HomeScreen() {
               <Button
                 onClick={handleCreateMatch}
                 variant="outline"
-                className="border-2 border-primary text-primary active:bg-primary active:text-white font-semibold transition-all duration-200 w-full min-h-[48px] text-sm sm:text-base touch-manipulation"
+                className="border-2 border-primary text-primary active:bg-primary active:text-white font-semibold transition-all duration-200 w-full min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] text-sm sm:text-base touch-manipulation"
               >
                 <Plus className="w-4.5 h-4.5 sm:w-5 sm:h-5 mr-2" />
                 Crear Partido

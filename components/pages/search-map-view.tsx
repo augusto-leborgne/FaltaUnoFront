@@ -233,11 +233,11 @@ export function SearchMapView({ partidos, onClose, onPartidoClick }: SearchMapVi
       {/* Header */}
       <div className="pt-16 pb-4 px-6 border-b border-gray-100 bg-white">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <button onClick={onClose} className="p-2 sm:p-3 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
+          <div className="flex items-center space-x-2 xs:space-x-3 sm:space-x-4">
+            <button onClick={onClose} className="p-2 sm:p-3 -ml-2 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] flex items-center justify-center">
               <X className="w-5 h-5 text-gray-600" />
             </button>
-            <h1 className="text-xl font-bold text-gray-900">Mapa de resultados</h1>
+            <h1 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900">Mapa de resultados</h1>
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-xs">
@@ -311,7 +311,7 @@ export function SearchMapView({ partidos, onClose, onPartidoClick }: SearchMapVi
         {/* Selected Partido Card */}
         {selectedPartidoData && (
           <div className="absolute bottom-4 left-4 right-4">
-            <div className="bg-white rounded-2xl p-4 shadow-lg border border-gray-200">
+            <div className="bg-white rounded-xl xs:rounded-2xl p-4 shadow-lg border border-gray-200">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2 flex-wrap flex-1">
                   <Badge className="bg-orange-100 text-orange-800 whitespace-nowrap">

@@ -237,13 +237,13 @@ export function MatchesListing() {
     <div className="min-h-screen bg-gray-50 flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
       {/* Header - Responsive sticky */}
       <div className="pt-safe-top bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm safe-top">
-        <div className="px-3 xs:px-4 sm:px-6 md:px-8 py-2.5 xs:py-3 sm:py-4">
+        <div className="px-2 xs:px-3 sm:px-4 md:px-6 md:px-8 py-2.5 xs:py-3 sm:py-4">
           <div className="flex items-center justify-between gap-2.5 xs:gap-3">
-            <h1 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Partidos</h1>
+            <h1 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl md:text-2xl font-bold text-gray-900">Partidos</h1>
             <Button
               onClick={handleCreateMatch}
               size="sm"
-              className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-full p-2.5 xs:p-2.5 sm:p-3 min-h-[44px] min-w-[44px] touch-manipulation shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center"
+              className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-full p-2.5 xs:p-2.5 sm:p-3 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] touch-manipulation shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center"
             >
               <Plus className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6 sm:h-6" />
             </Button>
@@ -270,7 +270,7 @@ export function MatchesListing() {
         )}
 
         {/* Search and Filters */}
-        <div className="px-3 xs:px-4 sm:px-6 md:px-8 pt-3 xs:pt-4 sm:pt-5 pb-2.5 xs:pb-3 sm:pb-4">
+        <div className="px-2 xs:px-3 sm:px-4 md:px-6 md:px-8 pt-3 xs:pt-4 sm:pt-5 pb-2.5 xs:pb-3 sm:pb-4">
           {/* Interactive Map - Responsive height */}
           <MatchesMapView
             matches={matches}
@@ -299,7 +299,7 @@ export function MatchesListing() {
                 <button
                   key={filter.label}
                   onClick={() => toggleFilter(filter.label)}
-                  className={`px-3 xs:px-4 sm:px-5 py-2.5 xs:py-2.5 sm:py-3 rounded-lg xs:rounded-xl text-xs xs:text-sm sm:text-base font-semibold transition-all duration-200 touch-manipulation min-h-[44px] whitespace-nowrap active:scale-95 ${selectedFilters.includes(filter.label)
+                  className={`px-3 xs:px-4 sm:px-5 py-2.5 xs:py-2.5 sm:py-3 rounded-lg xs:rounded-xl text-xs xs:text-sm sm:text-base font-semibold transition-all duration-200 touch-manipulation min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] whitespace-nowrap active:scale-95 ${selectedFilters.includes(filter.label)
                     ? "bg-orange-500 text-white shadow-lg"
                     : "bg-white text-gray-700 border-2 border-gray-200 hover:bg-orange-50 active:bg-orange-100 hover:border-orange-300"
                     }`}
@@ -312,7 +312,7 @@ export function MatchesListing() {
               variant="outline"
               size="sm"
               onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-              className="rounded-lg xs:rounded-xl flex-shrink-0 border-2 border-gray200 hover:bg-gray-50 active:bg-gray-100 min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation active:scale-95"
+              className="rounded-lg xs:rounded-xl flex-shrink-0 border-2 border-gray200 hover:bg-gray-50 active:bg-gray-100 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] flex items-center justify-center touch-manipulation active:scale-95"
             >
               <Filter className="w-4.5 xs:w-5 h-4.5 xs:h-5" />
             </Button>
@@ -374,7 +374,7 @@ export function MatchesListing() {
         </div>
 
         {/* Matches List - Better mobile spacing */}
-        <div className="px-3 xs:px-4 sm:px-6 md:px-8 pb-18 xs:pb-20 sm:pb-22 md:pb-24">
+        <div className="px-2 xs:px-3 sm:px-4 md:px-6 md:px-8 pb-18 xs:pb-20 sm:pb-22 md:pb-24">
           {loading ? (
             <div className="text-center py-12">
               <LoadingSpinner size="lg" variant="green" text="Cargando partidos..." />
@@ -384,7 +384,7 @@ export function MatchesListing() {
               <div className="w-14 xs:w-16 sm:w-20 h-14 xs:h-16 sm:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 xs:mb-4">
                 <MapPin className="w-7 xs:w-8 sm:w-10 h-7 xs:h-8 sm:h-10 text-gray-400" />
               </div>
-              <p className="text-gray-700 font-medium mb-2 text-sm xs:text-base sm:text-lg">No se encontraron partidos</p>
+              <p className="text-gray-700 font-medium mb-2 text-xs xs:text-sm sm:text-base md:text-lg">No se encontraron partidos</p>
               <p className="text-xs xs:text-sm sm:text-base text-gray-500 mb-5 xs:mb-6 px-3 xs:px-4">
                 {selectedFilters.length > 0
                   ? "Intenta ajustar los filtros"
@@ -392,7 +392,7 @@ export function MatchesListing() {
               </p>
               <Button
                 onClick={selectedFilters.length > 0 ? clearFilters : handleCreateMatch}
-                className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white shadow-md transition-transform active:scale-95 touch-manipulation text-xs xs:text-sm sm:text-base px-5 xs:px-6 min-h-[48px]"
+                className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white shadow-md transition-transform active:scale-95 touch-manipulation text-xs xs:text-sm sm:text-base px-5 xs:px-6 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px]"
               >
                 {selectedFilters.length > 0 ? (
                   "Limpiar filtros"
@@ -432,14 +432,14 @@ export function MatchesListing() {
 
                     {/* Match Info */}
                     <div className="mb-2.5 xs:mb-3 sm:mb-4">
-                      <h3 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-1.5 xs:mb-2 sm:mb-2.5 leading-tight">
+                      <h3 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl md:text-2xl font-bold text-gray-900 mb-1.5 xs:mb-2 sm:mb-2.5 leading-tight">
                         {formatMatchDate(match.fecha, match.hora)}
                       </h3>
 
                       {/* Price and Duration */}
                       <div className="flex flex-wrap items-center text-gray-600 text-[10px] xs:text-xs sm:text-sm gap-x-2.5 xs:gap-x-3 sm:gap-x-4 gap-y-1.5 mb-1.5 xs:mb-2 sm:mb-2.5">
                         <div className="flex items-center space-x-1 font-semibold">
-                          <span className="text-green-600 text-sm xs:text-base sm:text-lg">${match.precioPorJugador}</span>
+                          <span className="text-green-600 text-xs xs:text-sm sm:text-base md:text-lg">${match.precioPorJugador}</span>
                           <span className="text-gray-500 font-normal text-[10px] xs:text-xs sm:text-sm">/ jugador</span>
                         </div>
                         <span className="text-gray-300 hidden sm:inline">•</span>

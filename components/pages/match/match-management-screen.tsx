@@ -684,7 +684,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center px-3 xs:px-4 sm:px-6">
+      <div className="min-h-screen bg-white flex items-center justify-center px-2 xs:px-3 sm:px-4 md:px-6">
         <LoadingSpinner size="xl" variant="green" text="Cargando partido..." />
       </div>
     )
@@ -696,17 +696,17 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
 
   if (error || !match || !canManage) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center px-3 xs:px-4 sm:px-6">
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center px-2 xs:px-3 sm:px-4 md:px-6">
         <div className="text-center mb-4 xs:mb-6">
           <AlertCircle className="w-14 h-14 xs:w-16 xs:h-16 sm:w-20 sm:h-20 text-red-500 mx-auto mb-3 xs:mb-4" />
-          <h2 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900 mb-2">
+          <h2 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl font-bold text-gray-900 mb-2">
             {error || "Acceso denegado"}
           </h2>
           <p className="text-sm xs:text-base text-gray-600">
             {error ? "Por favor intenta nuevamente" : "No tienes permisos para gestionar este partido"}
           </p>
         </div>
-        <Button onClick={() => router.back()} variant="outline" className="min-h-[48px] text-sm xs:text-base touch-manipulation active:scale-[0.98]">
+        <Button onClick={() => router.back()} variant="outline" className="min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] text-sm xs:text-base touch-manipulation active:scale-[0.98]">
           Volver
         </Button>
       </div>
@@ -731,23 +731,23 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
-      <div className="pt-12 xs:pt-14 sm:pt-16 safe-top pb-4 xs:pb-5 sm:pb-6 px-3 xs:px-4 sm:px-6 border-b border-gray-100">
+      <div className="pt-10 xs:pt-12 sm:pt-14 md:pt-16 safe-top pb-2 xs:pb-3 sm:pb-4 sm:pb-5 md:pb-6 px-2 xs:px-3 sm:px-4 md:px-6 border-b border-gray-100">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 xs:space-x-3 sm:space-x-4">
             <button
               onClick={handleBack}
-              className="min-h-[44px] min-w-[44px] flex items-center justify-center -ml-2 hover:bg-gray-100 rounded-xl transition-colors touch-manipulation active:scale-95"
+              className="min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] flex items-center justify-center -ml-2 hover:bg-gray-100 rounded-xl transition-colors touch-manipulation active:scale-95"
             >
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
-            <h1 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900">Gestionar Partido</h1>
+            <h1 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl font-bold text-gray-900">Gestionar Partido</h1>
           </div>
           <div className="flex space-x-1.5 xs:space-x-2">
             <Button
               onClick={handleShareMatch}
               variant="outline"
               size="sm"
-              className="min-h-[44px] min-w-[44px] bg-gray-50 border-gray-200 touch-manipulation"
+              className="min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] bg-gray-50 border-gray-200 touch-manipulation"
             >
               <Share className="w-4 h-4" />
             </Button>
@@ -756,7 +756,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                 onClick={() => setIsEditing(true)}
                 variant="outline"
                 size="sm"
-                className="min-h-[44px] min-w-[44px] bg-orange-50 border-orange-200 touch-manipulation"
+                className="min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] bg-orange-50 border-orange-200 touch-manipulation"
               >
                 <Edit3 className="w-4 h-4" />
               </Button>
@@ -765,10 +765,10 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
         </div>
       </div>
 
-      <div className="flex-1 px-3 xs:px-4 sm:px-6 py-4 xs:py-5 sm:py-6 overflow-y-auto pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
+      <div className="flex-1 px-2 xs:px-3 sm:px-4 md:px-6 py-3 xs:py-4 sm:py-5 md:py-6 overflow-y-auto pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
         {/* Alerta de partido listo para confirmar */}
         {match.estado === PartidoEstado.DISPONIBLE && partidoLleno && (
-          <div className="bg-green-50 border border-green-200 rounded-xl xs:rounded-2xl p-3 xs:p-4 sm:p-5 mb-4 xs:mb-5 sm:mb-6 flex items-center space-x-2.5 xs:space-x-3">
+          <div className="bg-green-50 border border-green-200 rounded-xl xs:rounded-2xl p-3 xs:p-4 sm:p-5 mb-3 xs:mb-4 sm:mb-5 md:mb-6 flex items-center space-x-2.5 xs:space-x-3">
             <Check className="w-5 h-5 xs:w-6 xs:h-6 text-green-600 flex-shrink-0" />
             <div className="flex-1">
               <p className="text-green-800 font-medium text-sm xs:text-base">¡Partido completo!</p>
@@ -778,7 +778,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
             </div>
             <Button
               onClick={handleConfirmarPartido}
-              className="min-h-[48px] bg-green-600 hover:bg-green-700 text-white text-sm xs:text-base touch-manipulation active:scale-[0.98]"
+              className="min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] bg-green-600 hover:bg-green-700 text-white text-sm xs:text-base touch-manipulation active:scale-[0.98]"
             >
               Confirmar
             </Button>
@@ -786,9 +786,9 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
         )}
 
         {/* Match Details */}
-        <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-3 xs:p-4 sm:p-6 mb-4 xs:mb-5 sm:mb-6">
+        <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-3 xs:p-4 sm:p-6 mb-3 xs:mb-4 sm:mb-5 md:mb-6">
           {/* Header con badges */}
-          <div className="flex items-start justify-between mb-3 xs:mb-4 pb-3 xs:pb-4 border-b border-gray-100">
+          <div className="flex items-start justify-between mb-3 xs:mb-4 pb-2 xs:pb-3 sm:pb-4 border-b border-gray-100">
             <div className="flex gap-1.5 xs:gap-2 flex-wrap">
               <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100 text-[10px] xs:text-xs sm:text-sm">
                 {formatMatchType(match.tipoPartido)}
@@ -866,7 +866,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
             <div className="space-y-3 sm:space-y-4">
               {/* Título de sección en modo edición */}
               <div className="flex items-center justify-between pb-2 xs:pb-3 border-b border-gray-100">
-                <h3 className="text-sm xs:text-base sm:text-lg font-semibold text-gray-900">Editar partido</h3>
+                <h3 className="text-xs xs:text-sm sm:text-base md:text-lg font-semibold text-gray-900">Editar partido</h3>
                 <span className="text-[10px] xs:text-xs text-gray-500">* Requeridos</span>
               </div>
 
@@ -992,7 +992,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                   onClick={handleCancelEdit}
                   variant="outline"
                   disabled={isSaving}
-                  className="flex-1 text-xs xs:text-sm sm:text-base py-2 xs:py-2.5 sm:py-3 min-h-[44px] xs:min-h-[48px] touch-manipulation active:scale-[0.98]"
+                  className="flex-1 text-xs xs:text-sm sm:text-base py-2 xs:py-2.5 sm:py-3 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] xs:min-h-[48px] touch-manipulation active:scale-[0.98]"
                 >
                   <X className="w-4 h-4 mr-1 sm:mr-2" />
                   Cancelar
@@ -1000,7 +1000,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                 <Button
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-xs xs:text-sm sm:text-base py-2 xs:py-2.5 sm:py-3 min-h-[44px] xs:min-h-[48px] touch-manipulation active:scale-[0.98]"
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-xs xs:text-sm sm:text-base py-2 xs:py-2.5 sm:py-3 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] xs:min-h-[48px] touch-manipulation active:scale-[0.98]"
                 >
                   {isSaving ? (
                     <span className="flex items-center justify-center gap-2">
@@ -1018,7 +1018,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
             </div>
           ) : (
             <div>
-              <h2 className="text-lg xs:text-xl sm:text-2xl font-bold text-gray-900 mb-2.5 xs:mb-3 sm:mb-4">
+              <h2 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-2.5 xs:mb-3 sm:mb-4">
                 {formatMatchDate(match.fecha, match.hora)}
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 xs:gap-3 sm:gap-4 text-[10px] xs:text-xs sm:text-sm text-gray-600 mb-2.5 xs:mb-3 sm:mb-4">
@@ -1053,7 +1053,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
             <div className="flex gap-2 xs:gap-3 mt-3 xs:mt-4">
               <Button
                 onClick={handleEnterGroupChat}
-                className="flex-1 min-h-[48px] bg-blue-600 hover:bg-blue-700 text-white py-2.5 xs:py-3 rounded-lg xs:rounded-xl text-sm xs:text-base touch-manipulation active:scale-[0.98]"
+                className="flex-1 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] bg-blue-600 hover:bg-blue-700 text-white py-2.5 xs:py-3 rounded-lg xs:rounded-xl text-sm xs:text-base touch-manipulation active:scale-[0.98]"
               >
                 <MessageCircle className="w-4 h-4 mr-1.5 xs:mr-2" />
                 Chat grupal
@@ -1061,7 +1061,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
               <Button
                 onClick={() => setShowCancelModal(true)}
                 variant="outline"
-                className="flex-1 min-h-[48px] border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 py-2.5 xs:py-3 rounded-lg xs:rounded-xl text-sm xs:text-base touch-manipulation active:scale-[0.98]"
+                className="flex-1 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 py-2.5 xs:py-3 rounded-lg xs:rounded-xl text-sm xs:text-base touch-manipulation active:scale-[0.98]"
               >
                 Cancelar partido
               </Button>
@@ -1071,8 +1071,8 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
 
         {/* Map */}
         {!isEditing && match.latitud && match.longitud && match.nombreUbicacion && (
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
-            <h3 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900 mb-3 xs:mb-4">Ubicación</h3>
+          <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-6 mb-6">
+            <h3 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl font-bold text-gray-900 mb-3 xs:mb-4">Ubicación</h3>
             <div onClick={() => setShowMapModal(true)} className="cursor-pointer">
               <CompressedMap
                 location={match.nombreUbicacion}
@@ -1086,11 +1086,11 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
 
         {/* Organizador Section */}
         {!isEditing && match.organizador && (
-          <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-4 xs:mb-5 sm:mb-6">
-            <h3 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900 mb-3 xs:mb-4">Organizador</h3>
+          <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-3 xs:mb-4 sm:mb-5 md:mb-6">
+            <h3 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl font-bold text-gray-900 mb-3 xs:mb-4">Organizador</h3>
             <div
               onClick={() => match.organizador?.id && handlePlayerClick(match.organizador.id)}
-              className="flex items-center space-x-2.5 xs:space-x-3 p-3 xs:p-4 bg-gray-50 rounded-lg xs:rounded-xl cursor-pointer hover:bg-gray-100 transition-colors min-h-[60px] xs:min-h-[68px] touch-manipulation active:bg-gray-200"
+              className="flex items-center space-x-2.5 xs:space-x-3 p-3 xs:p-4 bg-gray-50 rounded-lg xs:rounded-xl cursor-pointer hover:bg-gray-100 transition-colors min-h-[56px] xxs:min-h-[58px] xs:min-h-[60px] sm:min-h-[62px] md:min-h-[64px] xs:min-h-[68px] touch-manipulation active:bg-gray-200"
             >
               <Avatar className="w-11 h-11 xs:w-12 xs:h-12">
                 {match.organizador?.foto_perfil ? (
@@ -1112,8 +1112,8 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
         )}
 
         {/* Registered Players */}
-        <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-4 xs:mb-5 sm:mb-6">
-          <h3 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900 mb-3 xs:mb-4">
+        <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-3 xs:mb-4 sm:mb-5 md:mb-6">
+          <h3 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl font-bold text-gray-900 mb-3 xs:mb-4">
             Jugadores inscriptos ({match.jugadores?.filter(p => p.id !== match.organizadorId).length || 0})
           </h3>
 
@@ -1124,7 +1124,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                 .map((player) => (
                   <div
                     key={player.id}
-                    className="flex items-center justify-between p-3 xs:p-4 bg-gray-50 rounded-lg xs:rounded-xl min-h-[60px] xs:min-h-[68px]"
+                    className="flex items-center justify-between p-3 xs:p-4 bg-gray-50 rounded-lg xs:rounded-xl min-h-[56px] xxs:min-h-[58px] xs:min-h-[60px] sm:min-h-[62px] md:min-h-[64px] xs:min-h-[68px]"
                   >
                     <div
                       className="flex items-center space-x-2.5 xs:space-x-3 cursor-pointer hover:opacity-80 transition-opacity flex-1 touch-manipulation active:opacity-60"
@@ -1172,7 +1172,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
 
         {/* Pending Requests */}
         <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6">
-          <h3 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900 mb-3 xs:mb-4">
+          <h3 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl font-bold text-gray-900 mb-3 xs:mb-4">
             Solicitudes pendientes ({solicitudes.length})
           </h3>
 
@@ -1185,7 +1185,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                 return (
                   <div
                     key={solicitud.id}
-                    className="flex items-center justify-between p-3 xs:p-4 bg-gray-50 rounded-lg xs:rounded-xl min-h-[60px] xs:min-h-[68px]"
+                    className="flex items-center justify-between p-3 xs:p-4 bg-gray-50 rounded-lg xs:rounded-xl min-h-[56px] xxs:min-h-[58px] xs:min-h-[60px] sm:min-h-[62px] md:min-h-[64px] xs:min-h-[68px]"
                   >
                     <div
                       className="flex items-center space-x-2.5 xs:space-x-3 cursor-pointer hover:opacity-80 transition-opacity flex-1 touch-manipulation active:opacity-60"
@@ -1217,7 +1217,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                       <Button
                         onClick={() => handleAcceptRequest(solicitud.id)}
                         size="sm"
-                        className="bg-green-600 hover:bg-green-700 text-white min-h-[44px] min-w-[44px] touch-manipulation"
+                        className="bg-green-600 hover:bg-green-700 text-white min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] touch-manipulation"
                         disabled={spotsLeft === 0}
                         title={spotsLeft === 0 ? "No hay más espacio" : "Aceptar"}
                       >
@@ -1227,7 +1227,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                         onClick={() => handleRejectRequest(solicitud.id)}
                         size="sm"
                         variant="outline"
-                        className="border-red-200 text-red-600 hover:bg-red-50 min-h-[44px] min-w-[44px] touch-manipulation"
+                        className="border-red-200 text-red-600 hover:bg-red-50 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] touch-manipulation"
                       >
                         <X className="w-4 h-4" />
                       </Button>
@@ -1263,7 +1263,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
       {showCancelModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 max-w-md w-full">
-            <h3 className="text-base xs:text-lg font-bold text-gray-900 mb-2">¿Cancelar partido?</h3>
+            <h3 className="text-sm xs:text-base md:text-base xs:text-lg font-bold text-gray-900 mb-2">¿Cancelar partido?</h3>
             <p className="text-sm xs:text-base text-gray-600 mb-5 xs:mb-6">
               Esta acción no se puede deshacer. Todos los jugadores inscriptos serán notificados de la cancelación.
             </p>
@@ -1271,7 +1271,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
               <Button
                 onClick={() => setShowCancelModal(false)}
                 variant="outline"
-                className="flex-1 min-h-[48px] text-sm xs:text-base touch-manipulation active:scale-[0.98]"
+                className="flex-1 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] text-sm xs:text-base touch-manipulation active:scale-[0.98]"
                 disabled={isCancelling}
               >
                 No, mantener
@@ -1283,7 +1283,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                   setIsCancelling(false)
                   setShowCancelModal(false)
                 }}
-                className="flex-1 min-h-[48px] bg-red-600 hover:bg-red-700 text-sm xs:text-base touch-manipulation active:scale-[0.98]"
+                className="flex-1 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] bg-red-600 hover:bg-red-700 text-sm xs:text-base touch-manipulation active:scale-[0.98]"
                 disabled={isCancelling}
               >
                 {isCancelling ? "Cancelando..." : "Sí, cancelar"}

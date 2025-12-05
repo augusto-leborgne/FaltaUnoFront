@@ -156,9 +156,9 @@ export function VerificationScreen() {
 
   if (isVerified) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center px-3 xs:px-4 sm:px-6 safe-top safe-bottom max-w-md mx-auto">
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center px-2 xs:px-3 sm:px-4 md:px-6 safe-top safe-bottom max-w-md mx-auto">
         <CheckCircle className="w-20 h-20 xs:w-24 xs:h-24 sm:w-28 sm:h-28 md:w-20 md:h-20 text-green-500 mx-auto mb-5 xs:mb-6 md:mb-4" />
-        <h1 className="text-lg xs:text-xl sm:text-2xl md:text-xl font-bold text-gray-900 mb-3 xs:mb-4 md:mb-3">¡Verificación exitosa!</h1>
+        <h1 className="text-base xs:text-lg sm:text-xl md:text-2xl md:text-xl font-bold text-gray-900 mb-3 xs:mb-4 md:mb-3">¡Verificación exitosa!</h1>
         <p className="text-xs xs:text-sm sm:text-base md:text-sm text-gray-600 mb-6 xs:mb-8 md:mb-6 text-center">Tu identidad ha sido confirmada. Bienvenido a Falta Uno.</p>
         <div className="animate-pulse text-green-600 text-xs xs:text-sm">Redirigiendo...</div>
       </div>
@@ -169,13 +169,13 @@ export function VerificationScreen() {
     <div className="min-h-screen bg-white flex flex-col safe-top safe-bottom max-w-md mx-auto w-full">
       <div className="pt-16 xs:pt-20 sm:pt-24 md:pt-16 pb-10 xs:pb-12 md:pb-8 text-center safe-top">
         <Shield className="w-14 h-14 xs:w-16 xs:h-16 sm:w-18 sm:h-18 md:w-14 md:h-14 text-green-600 mx-auto mb-5 xs:mb-6 md:mb-4" />
-        <h1 className="text-lg xs:text-xl sm:text-2xl md:text-xl font-bold text-gray-900 mb-1.5 xs:mb-2">Verificación de Identidad</h1>
-        <p className="text-xs xs:text-sm sm:text-base md:text-sm text-gray-600 px-3 xs:px-4 sm:px-6">Ingresá tu cédula para verificar tu identidad</p>
+        <h1 className="text-base xs:text-lg sm:text-xl md:text-2xl md:text-xl font-bold text-gray-900 mb-1.5 xs:mb-2">Verificación de Identidad</h1>
+        <p className="text-xs xs:text-sm sm:text-base md:text-sm text-gray-600 px-2 xs:px-3 sm:px-4 md:px-6">Ingresá tu cédula para verificar tu identidad</p>
       </div>
 
-      <div className="flex-1 px-3 xs:px-4 sm:px-6 pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
+      <div className="flex-1 px-2 xs:px-3 sm:px-4 md:px-6 pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
         {error && <div className="mb-3 xs:mb-4 p-3 xs:p-4 bg-red-50 border border-red-200 rounded-xl xs:rounded-2xl text-xs xs:text-sm">{error}</div>}
-        <form onSubmit={handleSubmit} className="space-y-5 xs:space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-3 xs:space-y-4 sm:space-y-5 xs:space-y-4 xs:space-y-3 xs:space-y-4 sm:space-y-5 sm:space-y-6">
           <div>
             <label className="block text-xs xs:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2">
               Número de cédula
@@ -185,7 +185,7 @@ export function VerificationScreen() {
               placeholder="12345678 (sin puntos ni guiones)"
               value={cedula}
               onChange={handleCedulaChange}
-              className={`min-h-[48px] text-base ${fieldError ? 'border-red-500' : ''}`}
+              className={`min-h-[48px] text-sm xs:text-base md:text-base ${fieldError ? 'border-red-500' : ''}`}
               maxLength={8}
               required
               disabled={isVerifying}
@@ -203,7 +203,7 @@ export function VerificationScreen() {
           <Button 
             type="submit" 
             disabled={isVerifying || !!fieldError || !cedula} 
-            className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white py-3.5 xs:py-4 min-h-[48px] rounded-xl xs:rounded-2xl touch-manipulation active:scale-[0.98]"
+            className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white py-3.5 xs:py-4 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] rounded-xl xs:rounded-2xl touch-manipulation active:scale-[0.98]"
           >
             {isVerifying ? "Verificando..." : "Verificar Identidad"}
           </Button>
@@ -221,7 +221,7 @@ export function VerificationScreen() {
             variant="ghost"
             size="sm"
             disabled={isVerifying}
-            className="min-h-[44px] touch-manipulation text-xs xs:text-sm"
+            className="min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] touch-manipulation text-xs xs:text-sm"
           >
             <ArrowLeft className="mr-1.5 xs:mr-2 h-3.5 w-3.5 xs:h-4 xs:w-4" />
             Volver al perfil

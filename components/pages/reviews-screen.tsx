@@ -65,16 +65,16 @@ export function ReviewsScreen() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
-      <div className="pt-12 xs:pt-14 sm:pt-16 pb-4 xs:pb-5 sm:pb-6 px-3 xs:px-4 sm:px-6 border-b border-gray-100 safe-top">
+      <div className="pt-10 xs:pt-12 sm:pt-14 md:pt-16 pb-2 xs:pb-3 sm:pb-4 sm:pb-5 md:pb-6 px-2 xs:px-3 sm:px-4 md:px-6 border-b border-gray-100 safe-top">
         <div className="flex items-center gap-3 xs:gap-4">
-          <button onClick={handleBack} className="p-2 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation rounded-lg hover:bg-gray-100 active:bg-gray-200" aria-label="Volver">
+          <button onClick={handleBack} className="p-2 -ml-2 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] flex items-center justify-center touch-manipulation rounded-lg hover:bg-gray-100 active:bg-gray-200" aria-label="Volver">
             <ArrowLeft className="w-5 h-5 xs:w-5.5 xs:h-5.5 text-gray-600" />
           </button>
-          <h1 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900 truncate">Mis Reseñas</h1>
+          <h1 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl font-bold text-gray-900 truncate">Mis Reseñas</h1>
         </div>
       </div>
 
-      <div className="flex-1 px-3 xs:px-4 sm:px-6 py-4 xs:py-5 sm:py-6 pb-18 xs:pb-20 sm:pb-22 md:pb-24 overflow-y-auto">
+      <div className="flex-1 px-2 xs:px-3 sm:px-4 md:px-6 py-3 xs:py-4 sm:py-5 md:py-6 pb-18 xs:pb-20 sm:pb-22 md:pb-24 overflow-y-auto">
         {loading ? (
           <div className="text-center py-12">
             <LoadingSpinner size="lg" variant="green" />

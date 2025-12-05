@@ -98,7 +98,7 @@ export default function MatchMemberScreen({ matchId }: MatchMemberScreenProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center px-3 xs:px-4 sm:px-6">
+      <div className="min-h-screen bg-white flex items-center justify-center px-2 xs:px-3 sm:px-4 md:px-6">
         <LoadingSpinner size="lg" variant="green" text="Cargando partido..." />
       </div>
     )
@@ -107,18 +107,18 @@ export default function MatchMemberScreen({ matchId }: MatchMemberScreenProps) {
   if (error || !match) {
     return (
       <div className="min-h-screen bg-white flex flex-col">
-        <div className="pt-12 xs:pt-14 sm:pt-16 pb-4 xs:pb-5 sm:pb-6 px-3 xs:px-4 sm:px-6 border-b border-gray-100 safe-top">
-          <div className="flex items-center space-x-3 xs:space-x-4">
-            <button onClick={handleBack} className="p-2 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation active:scale-95 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors">
+        <div className="pt-10 xs:pt-12 sm:pt-14 md:pt-16 pb-2 xs:pb-3 sm:pb-4 sm:pb-5 md:pb-6 px-2 xs:px-3 sm:px-4 md:px-6 border-b border-gray-100 safe-top">
+          <div className="flex items-center space-x-3 xs:space-x-2 xs:space-x-3 sm:space-x-4">
+            <button onClick={handleBack} className="p-2 -ml-2 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] flex items-center justify-center touch-manipulation active:scale-95 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors">
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
-            <h1 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900">Partido</h1>
+            <h1 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl font-bold text-gray-900">Partido</h1>
           </div>
         </div>
-        <div className="flex-1 flex items-center justify-center px-3 xs:px-4 sm:px-6">
+        <div className="flex-1 flex items-center justify-center px-2 xs:px-3 sm:px-4 md:px-6">
           <div className="text-center">
             <p className="text-xs xs:text-sm sm:text-base text-red-600 mb-4">{error || "Partido no encontrado"}</p>
-            <Button onClick={handleBack} className="min-h-[48px] touch-manipulation active:scale-[0.98]">Volver</Button>
+            <Button onClick={handleBack} className="min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] touch-manipulation active:scale-[0.98]">Volver</Button>
           </div>
         </div>
         <BottomNavigation />
@@ -131,17 +131,17 @@ export default function MatchMemberScreen({ matchId }: MatchMemberScreenProps) {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
-      <div className="pt-12 xs:pt-14 sm:pt-16 pb-4 xs:pb-5 sm:pb-6 px-3 xs:px-4 sm:px-6 border-b border-gray-100 safe-top">
+      <div className="pt-10 xs:pt-12 sm:pt-14 md:pt-16 pb-2 xs:pb-3 sm:pb-4 sm:pb-5 md:pb-6 px-2 xs:px-3 sm:px-4 md:px-6 border-b border-gray-100 safe-top">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3 xs:space-x-4">
-            <button onClick={handleBack} className="p-2 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation active:scale-95 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors">
+          <div className="flex items-center space-x-3 xs:space-x-2 xs:space-x-3 sm:space-x-4">
+            <button onClick={handleBack} className="p-2 -ml-2 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] flex items-center justify-center touch-manipulation active:scale-95 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors">
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
-            <h1 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900">Mi Partido</h1>
+            <h1 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl font-bold text-gray-900">Mi Partido</h1>
           </div>
           <button
             onClick={handleShareMatch}
-            className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95"
+            className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors touch-manipulation min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] flex items-center justify-center active:scale-95"
             title="Compartir partido"
           >
             <Share2 className="w-5 h-5 text-gray-600" />
@@ -149,19 +149,19 @@ export default function MatchMemberScreen({ matchId }: MatchMemberScreenProps) {
         </div>
       </div>
 
-      <div className="flex-1 px-3 xs:px-4 sm:px-6 py-4 xs:py-5 sm:py-6 overflow-y-auto pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
+      <div className="flex-1 px-2 xs:px-3 sm:px-4 md:px-6 py-3 xs:py-4 sm:py-5 md:py-6 overflow-y-auto pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
         {/* Estado cancelado */}
         {isMatchCancelled && (
-          <div className="mb-4 xs:mb-5 sm:mb-6 p-3 xs:p-4 bg-red-50 border border-red-200 rounded-xl xs:rounded-2xl">
+          <div className="mb-3 xs:mb-4 sm:mb-5 md:mb-6 p-3 xs:p-4 bg-red-50 border border-red-200 rounded-xl xs:rounded-2xl">
             <p className="text-xs xs:text-sm sm:text-base text-red-800 font-medium">⚠️ Partido cancelado</p>
             <p className="text-xs xs:text-sm text-red-600 mt-1">Este partido ha sido cancelado por el organizador</p>
           </div>
         )}
 
         {/* Match Info Card */}
-        <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-4 xs:mb-5 sm:mb-6">
+        <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-3 xs:mb-4 sm:mb-5 md:mb-6">
           <div className="flex items-center justify-between mb-3 xs:mb-4">
-            <h2 className="text-lg xs:text-xl sm:text-2xl font-bold text-gray-900">
+            <h2 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold text-gray-900">
               {formatMatchType((match as any).tipoPartido || "FUTBOL_5")}
             </h2>
           </div>
@@ -227,7 +227,7 @@ export default function MatchMemberScreen({ matchId }: MatchMemberScreenProps) {
             <div className="mt-3 xs:mt-4">
               <Button
                 onClick={handleEnterGroupChat}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white min-h-[48px] text-sm xs:text-base rounded-lg xs:rounded-xl touch-manipulation active:scale-[0.98]"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] text-sm xs:text-base rounded-lg xs:rounded-xl touch-manipulation active:scale-[0.98]"
               >
                 <MessageCircle className="w-4 h-4 mr-2" />
                 Chat grupal
@@ -238,8 +238,8 @@ export default function MatchMemberScreen({ matchId }: MatchMemberScreenProps) {
 
         {/* Map */}
         {(match as any).latitud && (match as any).longitud && (match as any).nombreUbicacion && (
-          <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-4 xs:mb-5 sm:mb-6">
-            <h3 className="text-base xs:text-lg font-bold text-gray-900 mb-3 xs:mb-4">Ubicación</h3>
+          <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-3 xs:mb-4 sm:mb-5 md:mb-6">
+            <h3 className="text-sm xs:text-base md:text-base xs:text-lg font-bold text-gray-900 mb-3 xs:mb-4">Ubicación</h3>
             <div onClick={() => setShowMapModal(true)} className="cursor-pointer">
               <CompressedMap
                 location={(match as any).nombreUbicacion}
@@ -252,11 +252,11 @@ export default function MatchMemberScreen({ matchId }: MatchMemberScreenProps) {
 
         {/* Organizador Section */}
         {(match as any).organizador && (
-          <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-4 xs:mb-5 sm:mb-6">
-            <h3 className="text-base xs:text-lg font-bold text-gray-900 mb-3 xs:mb-4">Organizador</h3>
+          <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-3 xs:mb-4 sm:mb-5 md:mb-6">
+            <h3 className="text-sm xs:text-base md:text-base xs:text-lg font-bold text-gray-900 mb-3 xs:mb-4">Organizador</h3>
             <div
               onClick={() => (match as any).organizador?.id && handlePlayerClick((match as any).organizador.id)}
-              className="flex items-center space-x-3 p-3 xs:p-4 bg-gray-50 rounded-lg xs:rounded-xl cursor-pointer hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation min-h-[60px]"
+              className="flex items-center space-x-3 p-3 xs:p-4 bg-gray-50 rounded-lg xs:rounded-xl cursor-pointer hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation min-h-[56px] xxs:min-h-[58px] xs:min-h-[60px] sm:min-h-[62px] md:min-h-[64px]"
             >
               <Avatar className="w-11 xs:w-12 sm:w-14 h-11 xs:h-12 sm:h-14">
                 {(match as any).organizador?.foto_perfil ? (
@@ -278,8 +278,8 @@ export default function MatchMemberScreen({ matchId }: MatchMemberScreenProps) {
         )}
 
         {/* Jugadores Inscriptos */}
-        <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-4 xs:mb-5 sm:mb-6">
-          <h3 className="text-base xs:text-lg font-bold text-gray-900 mb-3 xs:mb-4">
+        <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-3 xs:mb-4 sm:mb-5 md:mb-6">
+          <h3 className="text-sm xs:text-base md:text-base xs:text-lg font-bold text-gray-900 mb-3 xs:mb-4">
             Jugadores inscriptos ({(match as any).jugadores?.filter((p: any) => p.id !== (match as any).organizadorId).length || 0})
           </h3>
 
@@ -290,7 +290,7 @@ export default function MatchMemberScreen({ matchId }: MatchMemberScreenProps) {
                 .map((player: any) => (
                 <div 
                   key={player.id} 
-                  className="flex items-center space-x-3 p-3 xs:p-4 bg-gray-50 rounded-lg xs:rounded-xl cursor-pointer hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation min-h-[60px]"
+                  className="flex items-center space-x-3 p-3 xs:p-4 bg-gray-50 rounded-lg xs:rounded-xl cursor-pointer hover:bg-gray-100 active:bg-gray-200 transition-colors touch-manipulation min-h-[56px] xxs:min-h-[58px] xs:min-h-[60px] sm:min-h-[62px] md:min-h-[64px]"
                   onClick={() => handlePlayerClick(player.id)}
                 >
                   <Avatar className="w-11 xs:w-12 sm:w-14 h-11 xs:h-12 sm:h-14">
@@ -327,10 +327,10 @@ export default function MatchMemberScreen({ matchId }: MatchMemberScreenProps) {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 xs:p-4">
           <div className="bg-white rounded-xl xs:rounded-2xl overflow-hidden max-w-md w-full max-h-[60vh] flex flex-col">
             <div className="p-3 xs:p-4 border-b border-gray-200 flex items-center justify-between">
-              <h3 className="text-base xs:text-lg font-bold text-gray-900">Ubicación del partido</h3>
+              <h3 className="text-sm xs:text-base md:text-base xs:text-lg font-bold text-gray-900">Ubicación del partido</h3>
               <button
                 onClick={() => setShowMapModal(false)}
-                className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95"
+                className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors touch-manipulation min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] flex items-center justify-center active:scale-95"
               >
                 <ArrowLeft className="w-5 h-5 text-gray-600" />
               </button>

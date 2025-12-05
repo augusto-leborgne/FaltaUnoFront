@@ -226,7 +226,7 @@ export function LoginScreen() {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-white px-3 xs:px-4 sm:px-6 py-8 xs:py-10 sm:py-12 safe-top safe-bottom">
+    <div className="min-h-screen w-full flex items-center justify-center bg-white px-2 xs:px-3 sm:px-4 md:px-6 py-8 xs:py-10 sm:py-12 safe-top safe-bottom">
       {/* ✅ Overlay de loading para OAuth */}
       {isOAuthLoading && (
         <div className="fixed inset-0 bg-white/90 backdrop-blur-sm z-50 flex items-center justify-center safe-top safe-bottom">
@@ -234,7 +234,7 @@ export function LoginScreen() {
             <div className="mb-3 xs:mb-4">
               <LoadingSpinner size="xl" variant="green" text="Iniciando sesión..." />
             </div>
-            <p className="text-base xs:text-lg font-medium text-gray-900">Redirigiendo a Google...</p>
+            <p className="text-sm xs:text-base md:text-base xs:text-lg font-medium text-gray-900">Redirigiendo a Google...</p>
             <p className="text-xs xs:text-sm text-gray-500 mt-1">Por favor espera</p>
           </div>
         </div>
@@ -250,7 +250,7 @@ export function LoginScreen() {
               className="w-auto max-h-14 xs:max-h-16 sm:max-h-20 md:max-h-24"
             />
           </div>
-          <h1 className="text-lg xs:text-xl sm:text-2xl font-semibold text-gray-900">Iniciar sesión</h1>
+          <h1 className="text-base xs:text-lg sm:text-xl md:text-2xl font-semibold text-gray-900">Iniciar sesión</h1>
           <p className="text-xs xs:text-sm text-gray-500 mt-1">Accede para organizar y sumarte a partidos</p>
         </div>
 

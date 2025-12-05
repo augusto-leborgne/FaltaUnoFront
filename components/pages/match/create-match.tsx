@@ -468,24 +468,24 @@ export function CreateMatchScreen() {
   return (
     <div className="min-h-screen bg-white flex flex-col safe-bottom">
       {/* Header */}
-      <div className="pt-8 xs:pt-10 sm:pt-12 md:pt-16 pb-3 xs:pb-4 sm:pb-6 px-3 xs:px-4 sm:px-6 border-b border-gray-100 safe-top">
-        <div className="flex items-center space-x-2 xs:space-x-3 sm:space-x-4">
+      <div className="pt-8 xs:pt-10 sm:pt-12 md:pt-16 pb-2 xs:pb-3 sm:pb-4 sm:pb-6 px-2 xs:px-3 sm:px-4 md:px-6 border-b border-gray-100 safe-top">
+        <div className="flex items-center space-x-2 xs:space-x-3 sm:space-x-2 xs:space-x-3 sm:space-x-4">
           <button
             onClick={handleBack}
-            className="p-2 xs:p-2.5 -ml-2 touch-manipulation hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors disabled:opacity-50 min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-95"
+            className="p-2 xs:p-2.5 -ml-2 touch-manipulation hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors disabled:opacity-50 min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] flex items-center justify-center active:scale-95"
             disabled={isLoading}
             aria-label="Volver"
           >
             <ArrowLeft className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6 sm:h-6 text-gray-600" />
           </button>
-          <h1 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">Crear Partido</h1>
+          <h1 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl md:text-2xl font-bold text-gray-900 truncate">Crear Partido</h1>
         </div>
       </div>
 
       <form onSubmit={handleSubmit} className="flex-1 px-2 xs:px-3 sm:px-4 py-2 xs:py-3 sm:py-5 pb-16 xs:pb-18 xs:pb-20 sm:pb-22 md:pb-24 overflow-y-auto max-w-2xl mx-auto w-full">
         {/* Success Message */}
         {success && (
-          <div className="mb-4 xs:mb-5 sm:mb-6 p-3 xs:p-4 sm:p-5 bg-primary/10 border-2 border-primary/30 rounded-xl sm:rounded-2xl flex items-start space-x-2 xs:space-x-3">
+          <div className="mb-3 xs:mb-4 sm:mb-5 md:mb-6 p-3 xs:p-4 sm:p-5 bg-primary/10 border-2 border-primary/30 rounded-xl sm:rounded-2xl flex items-start space-x-2 xs:space-x-3">
             <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
               <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -517,7 +517,7 @@ export function CreateMatchScreen() {
         )}
 
         {/* Tipo de partido */}
-        <div className="mb-3 xs:mb-4 sm:mb-5">
+        <div className="mb-1.5 xs:mb-2 sm:mb-3 md:mb-4 md:mb-5">
           <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1.5 xs:mb-2 sm:mb-3 md:mb-2">
             Tipo de partido <span className="text-red-500">*</span>
           </label>
@@ -533,7 +533,7 @@ export function CreateMatchScreen() {
                   type="button"
                   onClick={() => handleInputChange("type", type)}
                   disabled={isLoading}
-                  className={`font-sans w-11 xs:w-12 sm:w-13 md:w-12 h-11 xs:h-12 sm:h-13 md:h-12 rounded-full text-sm xs:text-base sm:text-lg md:text-base font-bold border-2 transition-all touch-manipulation disabled:opacity-50 active:scale-95 flex items-center justify-center min-w-[44px] min-h-[44px] ${formData.type === type
+                  className={`font-sans w-11 xs:w-12 sm:w-13 md:w-12 h-11 xs:h-12 sm:h-13 md:h-12 rounded-full text-xs xs:text-sm sm:text-base md:text-lg md:text-base font-bold border-2 transition-all touch-manipulation disabled:opacity-50 active:scale-95 flex items-center justify-center min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] ${formData.type === type
                     ? "bg-green-600 text-white border-green-600 shadow-lg"
                     : "bg-white text-gray-700 border-gray-300 hover:border-green-600 hover:text-green-600 active:bg-gray-50"
                     }`}
@@ -547,7 +547,7 @@ export function CreateMatchScreen() {
         </div>
 
         {/* Género */}
-        <div className="mb-3 xs:mb-4 sm:mb-5">
+        <div className="mb-1.5 xs:mb-2 sm:mb-3 md:mb-4 md:mb-5">
           <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1.5 xs:mb-2 sm:mb-3 md:mb-2">
             Género <span className="text-red-500">*</span>
           </label>
@@ -558,13 +558,13 @@ export function CreateMatchScreen() {
                 type="button"
                 onClick={() => handleInputChange("gender", label)}
                 disabled={isLoading}
-                className={`font-sans flex-1 px-1 xs:px-1.5 sm:px-2 md:px-2 py-1.5 xs:py-2 rounded-lg xs:rounded-xl text-[11px] xs:text-xs sm:text-sm md:text-sm font-semibold border-2 transition-all touch-manipulation disabled:opacity-50 min-h-[44px] active:scale-95 flex flex-col items-center justify-center gap-0.5 ${formData.gender === label
+                className={`font-sans flex-1 px-1 xs:px-1.5 sm:px-2 md:px-2 py-1.5 xs:py-2 rounded-lg xs:rounded-xl text-[11px] xs:text-xs sm:text-sm md:text-sm font-semibold border-2 transition-all touch-manipulation disabled:opacity-50 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] active:scale-95 flex flex-col items-center justify-center gap-0.5 ${formData.gender === label
                   ? "bg-orange-500 text-white border-orange-600 shadow-lg"
                   : "bg-white text-gray-700 border-gray-300 hover:border-orange-500 hover:text-orange-600 active:bg-gray-50"
                   }`}
                 aria-label={`Género ${label}`}
               >
-                <span className="text-sm xs:text-base sm:text-lg">{icon}</span>
+                <span className="text-xs xs:text-sm sm:text-base md:text-lg">{icon}</span>
                 <span className="text-[10px] xs:text-[11px] sm:text-xs leading-tight">{label}</span>
               </button>
             ))}
@@ -572,7 +572,7 @@ export function CreateMatchScreen() {
         </div>
 
         {/* Fecha y Hora */}
-        <div className="grid grid-cols-2 gap-1.5 xs:gap-2 sm:gap-3 mb-2 xs:mb-3 sm:mb-4">
+        <div className="grid grid-cols-2 gap-1.5 xs:gap-2 sm:gap-3 mb-1.5 xs:mb-2 sm:mb-3 md:mb-4">
           <div className="w-full min-w-0">
             <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1 xs:mb-1.5 sm:mb-2 md:mb-1.5">
               Fecha <span className="text-red-500">*</span>
@@ -583,7 +583,7 @@ export function CreateMatchScreen() {
               onChange={(e) => handleInputChange("date", e.target.value)}
               min={today}
               max={maxDate}
-              className={`font-sans px-2 xs:px-3 min-h-[44px] text-sm xs:text-base rounded-lg xs:rounded-xl border-2 w-full ${fieldErrors.date ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50`}
+              className={`font-sans px-2 xs:px-3 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] text-sm xs:text-base rounded-lg xs:rounded-xl border-2 w-full ${fieldErrors.date ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50`}
               required
               disabled={isLoading}
               placeholder="dd/mm/yyyy"
@@ -607,7 +607,7 @@ export function CreateMatchScreen() {
               <select
                 value={formData.time}
                 onChange={(e) => handleInputChange("time", e.target.value)}
-                className={`font-sans w-full pl-8 xs:pl-9 sm:pl-10 pr-2 xs:pr-3 min-h-[44px] rounded-lg xs:rounded-xl border-2 ${fieldErrors.time ? 'border-red-500' : 'border-gray-300'} bg-white text-gray-900 text-sm xs:text-base font-medium focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex items-center`}
+                className={`font-sans w-full pl-8 xs:pl-9 sm:pl-10 pr-2 xs:pr-3 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] rounded-lg xs:rounded-xl border-2 ${fieldErrors.time ? 'border-red-500' : 'border-gray-300'} bg-white text-gray-900 text-sm xs:text-base font-medium focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex items-center`}
                 required
                 disabled={isLoading}
               >
@@ -629,7 +629,7 @@ export function CreateMatchScreen() {
         </div>
 
         {/* Ubicación */}
-        <div className="mb-3 xs:mb-4 sm:mb-5">
+        <div className="mb-1.5 xs:mb-2 sm:mb-3 md:mb-4 md:mb-5">
           <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1 xs:mb-1.5 sm:mb-2 md:mb-1.5">
             Ubicación <span className="text-red-500">*</span>
           </label>
@@ -656,7 +656,7 @@ export function CreateMatchScreen() {
         </div>
 
         {/* Costo */}
-        <div className="mb-3 xs:mb-4 sm:mb-5">
+        <div className="mb-1.5 xs:mb-2 sm:mb-3 md:mb-4 md:mb-5">
           <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1 xs:mb-1.5 sm:mb-2 md:mb-1.5">
             Costo del partido ($UYU) <span className="text-red-500">*</span>
           </label>
@@ -670,7 +670,7 @@ export function CreateMatchScreen() {
               value={formData.totalPrice}
               onChange={(e) => handleInputChange("totalPrice", e.target.value === "" ? 0 : parseFloat(e.target.value))}
               placeholder="Ingresa 0 si es gratis"
-              className={`pl-11 sm:pl-12 min-h-[52px] text-base rounded-xl border-2 w-full ${fieldErrors.totalPrice ? 'border-red-500' : 'border-gray-300'}`}
+              className={`pl-11 sm:pl-12 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] xs:min-h-[52px] text-sm xs:text-base md:text-base rounded-xl border-2 w-full ${fieldErrors.totalPrice ? 'border-red-500' : 'border-gray-300'}`}
               required
               disabled={isLoading}
             />
@@ -689,7 +689,7 @@ export function CreateMatchScreen() {
         </div>
 
         {/* Duración */}
-        <div className="mb-3 xs:mb-4 sm:mb-5">
+        <div className="mb-1.5 xs:mb-2 sm:mb-3 md:mb-4 md:mb-5">
           <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1 xs:mb-1.5 sm:mb-2 md:mb-1.5">
             Duración (minutos)
           </label>
@@ -698,7 +698,7 @@ export function CreateMatchScreen() {
             <select
               value={formData.duration || 60}
               onChange={(e) => handleInputChange("duration", parseInt(e.target.value))}
-              className={`w-full pl-11 sm:pl-12 pr-4 min-h-[52px] rounded-xl border-2 ${fieldErrors.duration ? 'border-red-500' : 'border-gray-300'} bg-white text-gray-900 text-base font-medium focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation`}
+              className={`w-full pl-11 sm:pl-12 pr-4 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] xs:min-h-[52px] rounded-xl border-2 ${fieldErrors.duration ? 'border-red-500' : 'border-gray-300'} bg-white text-gray-900 text-sm xs:text-base md:text-base font-medium focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation`}
               disabled={isLoading}
             >
               <option value={60}>60 minutos</option>
@@ -716,7 +716,7 @@ export function CreateMatchScreen() {
         </div>
 
         {/* Descripción */}
-        <div className="mb-4 xs:mb-5 sm:mb-6">
+        <div className="mb-3 xs:mb-4 sm:mb-5 md:mb-6">
           <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1 xs:mb-1.5 sm:mb-2 md:mb-1.5">
             Descripción <span className="text-red-500">*</span>
           </label>
@@ -724,7 +724,7 @@ export function CreateMatchScreen() {
             placeholder="Describe la modalidad del partido (ej: 2 tiempos de 30 min), detalles de la cancha (ubicación exacta, superficie, vestuarios, estacionamiento, etc.)"
             value={formData.description}
             onChange={(e) => handleInputChange("description", e.target.value)}
-            className={`min-h-[120px] py-3 sm:py-4 px-4 rounded-xl sm:rounded-2xl resize-none text-base border-2 w-full ${fieldErrors.description ? 'border-red-500' : 'border-gray-300'}`}
+            className={`min-h-[120px] py-3 sm:py-4 px-4 rounded-xl sm:rounded-2xl resize-none text-sm xs:text-base md:text-base border-2 w-full ${fieldErrors.description ? 'border-red-500' : 'border-gray-300'}`}
             rows={4}
             disabled={isLoading}
             maxLength={500}
@@ -752,7 +752,7 @@ export function CreateMatchScreen() {
         </div>
 
         {/* Submit Button */}
-        <div className="pb-4 xs:pb-5 sm:pb-6">
+        <div className="pb-2 xs:pb-3 sm:pb-4 sm:pb-5 md:pb-6">
           <Button
             type="submit"
             disabled={
@@ -762,7 +762,7 @@ export function CreateMatchScreen() {
               !formData.time ||
               !formData.location
             }
-            className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white min-h-[48px] xs:min-h-[52px] sm:min-h-[56px] text-sm xs:text-base sm:text-lg font-semibold rounded-xl sm:rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl touch-manipulation active:scale-[0.98]"
+            className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] xs:min-h-[48px] xs:min-h-[52px] sm:min-h-[48px] xs:min-h-[48px] xs:min-h-[52px] sm:min-h-[56px] text-xs xs:text-sm sm:text-base md:text-lg font-semibold rounded-xl sm:rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl touch-manipulation active:scale-[0.98]"
           >
             {isLoading ? (
               <span className="flex items-center justify-center">

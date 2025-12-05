@@ -205,7 +205,7 @@ export function MyMatchesScreen() {
             <Button
               onClick={handleCreateMatch}
               size="sm"
-              className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-full p-2.5 sm:p-3 min-h-[44px] min-w-[44px] touch-manipulation shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center"
+              className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-full p-2.5 sm:p-3 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] touch-manipulation shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center"
             >
               <Plus className="w-5 h-5 sm:w-6 sm:h-6" />
             </Button>
@@ -221,7 +221,7 @@ export function MyMatchesScreen() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`flex-1 min-h-[44px] py-3 sm:py-3.5 px-3 sm:px-4 rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold transition-all duration-200 touch-manipulation active:scale-95 ${activeTab === tab
+                className={`flex-1 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] py-3 sm:py-3.5 px-3 sm:px-4 rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold transition-all duration-200 touch-manipulation active:scale-95 ${activeTab === tab
                   ? "bg-white text-gray-900 shadow-md"
                   : "text-gray-600 hover:text-gray-900 active:bg-gray-50"
                   }`}
@@ -251,7 +251,7 @@ export function MyMatchesScreen() {
               </p>
               <Button
                 onClick={() => activeTab === "Creados" ? handleCreateMatch() : router.push("/matches")}
-                className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white shadow-lg hover:shadow-xl transition-all active:scale-95 touch-manipulation text-sm sm:text-base px-6 sm:px-8 min-h-[48px] font-semibold"
+                className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white shadow-lg hover:shadow-xl transition-all active:scale-95 touch-manipulation text-sm sm:text-base px-6 sm:px-8 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] font-semibold"
               >
                 {activeTab === "Creados" ? (
                   <>
@@ -300,7 +300,7 @@ export function MyMatchesScreen() {
                       {/* Price and Duration - Better mobile layout */}
                       <div className="flex flex-wrap items-center text-gray-600 text-xs sm:text-sm gap-x-3 sm:gap-x-4 gap-y-1.5 mb-2 sm:mb-2.5">
                         <div className="flex items-center space-x-1 font-semibold">
-                          <span className="text-green-600 text-base sm:text-lg">${match.precioPorJugador}</span>
+                          <span className="text-green-600 text-sm xs:text-base md:text-base sm:text-lg">${match.precioPorJugador}</span>
                           <span className="text-gray-500 font-normal text-xs sm:text-sm">/ jugador</span>
                         </div>
                         <span className="text-gray-300 hidden sm:inline">•</span>
