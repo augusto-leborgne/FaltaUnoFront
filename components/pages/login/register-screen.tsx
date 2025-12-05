@@ -405,7 +405,7 @@ export function RegisterScreen() {
 
         {/* Botones sociales */}
         <div className="grid grid-cols-1 gap-2 xs:gap-2.5 sm:gap-3">
-          <Button onClick={() => handleSocialAuth("google")} variant="outline" className="w-full py-2.5 xs:py-3 sm:py-4 rounded-lg xs:rounded-xl sm:rounded-2xl text-xs xs:text-sm sm:text-base min-h-[48px]">
+          <Button onClick={() => handleSocialAuth("google")} variant="outline" className="w-full py-2.5 xs:py-3 sm:py-4 rounded-lg xs:rounded-xl sm:rounded-2xl text-xs xs:text-sm sm:text-base min-h-[48px] touch-manipulation active:scale-[0.98]">
             <svg className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 mr-1.5 xs:mr-2" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>

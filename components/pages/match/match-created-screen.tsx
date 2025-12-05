@@ -141,16 +141,16 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
   // Si no hay matchId, mostrar error
   if (!matchId) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6">
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center px-3 xs:px-4 sm:px-6 safe-top safe-bottom">
         <div className="text-center">
-          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <AlertCircle className="w-10 h-10 text-red-600" />
+          <div className="w-16 h-16 xs:w-20 xs:h-20 sm:w-24 sm:h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3 xs:mb-4">
+            <AlertCircle className="w-8 h-8 xs:w-10 xs:h-10 sm:w-12 sm:h-12 text-red-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Error</h1>
-          <p className="text-gray-600 mb-6">No se pudo identificar el partido creado</p>
+          <h1 className="text-lg xs:text-xl sm:text-2xl font-bold text-gray-900 mb-1.5 xs:mb-2">Error</h1>
+          <p className="text-xs xs:text-sm sm:text-base text-gray-600 mb-5 xs:mb-6">No se pudo identificar el partido creado</p>
           <Button
             onClick={() => router.push("/my-matches")}
-            className="bg-green-600 hover:bg-green-700 text-white"
+            className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white min-h-[48px] rounded-lg xs:rounded-xl touch-manipulation active:scale-[0.98]"
           >
             Ir a Mis Partidos
           </Button>
@@ -196,20 +196,20 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6">
-      <div className="text-center mb-8">
-        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Check className="w-10 h-10 text-green-600" />
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center px-3 xs:px-4 sm:px-6 pb-20 xs:pb-24 sm:pb-28 safe-top safe-bottom">
+      <div className="text-center mb-6 xs:mb-8">
+        <div className="w-16 h-16 xs:w-20 xs:h-20 sm:w-24 sm:h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 xs:mb-4">
+          <Check className="w-8 h-8 xs:w-10 xs:h-10 sm:w-12 sm:h-12 text-green-600" />
         </div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">¡Partido creado!</h1>
-        <p className="text-gray-600">Tu partido ya está disponible para otros jugadores</p>
+        <h1 className="text-lg xs:text-xl sm:text-2xl font-bold text-gray-900 mb-1.5 xs:mb-2">¡Partido creado!</h1>
+        <p className="text-xs xs:text-sm sm:text-base text-gray-600">Tu partido ya está disponible para otros jugadores</p>
       </div>
 
       <div className="w-full max-w-sm">
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-gray-900">Invitar amigos</h3>
-            <Users className="w-5 h-5 text-gray-600" />
+        <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 xs:p-6 mb-5 xs:mb-6">
+          <div className="flex items-center justify-between mb-3 xs:mb-4">
+            <h3 className="text-base xs:text-lg font-bold text-gray-900">Invitar amigos</h3>
+            <Users className="w-4 h-4 xs:w-5 xs:h-5 text-gray-600" />
           </div>
 
           {loading ? (
@@ -218,7 +218,7 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
             </div>
           ) : amigos.length > 0 ? (
             <>
-              <div className="space-y-3 mb-4">
+              <div className="space-y-2.5 xs:space-y-3 mb-3 xs:mb-4">
                 {amigos.map((amigo) => {
                   const fullName = `${amigo.nombre} ${amigo.apellido}`
                   const initials = `${amigo.nombre?.[0] ?? ""}${amigo.apellido?.[0] ?? ""}`
@@ -226,24 +226,24 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
                   const isInvited = invitados[amigo.id] // ✅ Verificar si ya fue invitado
 
                   return (
-                    <div key={amigo.id} className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <Avatar className="w-10 h-10">
+                    <div key={amigo.id} className="flex items-center justify-between min-h-[56px]">
+                      <div className="flex items-center space-x-2.5 xs:space-x-3">
+                        <Avatar className="w-9 h-9 xs:w-10 xs:h-10">
                           {amigo.foto_perfil ? (
                             <AvatarImage src={`data:image/jpeg;base64,${amigo.foto_perfil}`} />
                           ) : (
-                            <AvatarFallback className="bg-gray-200 text-sm">
+                            <AvatarFallback className="bg-gray-200 text-xs xs:text-sm">
                               {initials}
                             </AvatarFallback>
                           )}
                         </Avatar>
-                        <span className="font-medium text-gray-900">{fullName}</span>
+                        <span className="font-medium text-xs xs:text-sm text-gray-900">{fullName}</span>
                       </div>
 
                       {/* ✅ MEJORADO: Mostrar estado de invitación */}
                       {isInvited ? (
-                        <div className="flex items-center space-x-2 text-green-600 text-sm font-medium">
-                          <CheckCircle2 className="w-4 h-4" />
+                        <div className="flex items-center space-x-1.5 xs:space-x-2 text-green-600 text-xs xs:text-sm font-medium">
+                          <CheckCircle2 className="w-3.5 h-3.5 xs:w-4 xs:h-4" />
                           <span>Invitado</span>
                         </div>
                       ) : (
@@ -252,7 +252,7 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
                           size="sm"
                           variant="outline"
                           disabled={isInviting}
-                          className="bg-orange-50 border-orange-200 text-gray-700 hover:bg-orange-100 disabled:opacity-50"
+                          className="bg-orange-50 border-orange-200 text-gray-700 hover:bg-orange-100 active:bg-orange-200 disabled:opacity-50 min-h-[44px] px-3 xs:px-4 text-xs xs:text-sm rounded-lg xs:rounded-xl touch-manipulation active:scale-95"
                         >
                           {isInviting ? (
                             <LoadingSpinner size="sm" variant="gray" />
@@ -269,21 +269,21 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
               <Button
                 onClick={handleShareMatch}
                 variant="outline"
-                className="w-full bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                className="w-full bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100 active:bg-gray-200 min-h-[48px] rounded-lg xs:rounded-xl touch-manipulation active:scale-[0.98] text-xs xs:text-sm"
               >
-                <Share2 className="w-4 h-4 mr-2" />
+                <Share2 className="w-3.5 h-3.5 xs:w-4 xs:h-4 mr-1.5 xs:mr-2" />
                 Compartir partido
               </Button>
             </>
           ) : (
-            <div className="text-center py-8">
-              <p className="text-gray-500 mb-4">No hay amigos para invitar</p>
+            <div className="text-center py-6 xs:py-8">
+              <p className="text-xs xs:text-sm text-gray-500 mb-3 xs:mb-4">No hay amigos para invitar</p>
               <Button
                 onClick={handleShareMatch}
                 variant="outline"
-                className="w-full bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100"
+                className="w-full bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100 active:bg-gray-200 min-h-[48px] rounded-lg xs:rounded-xl touch-manipulation active:scale-[0.98] text-xs xs:text-sm"
               >
-                <Share2 className="w-4 h-4 mr-2" />
+                <Share2 className="w-3.5 h-3.5 xs:w-4 xs:h-4 mr-1.5 xs:mr-2" />
                 Compartir partido
               </Button>
             </div>
@@ -292,7 +292,7 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
 
         <Button
           onClick={handleFinish}
-          className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-2xl"
+          className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white py-3 xs:py-3.5 min-h-[48px] rounded-xl xs:rounded-2xl touch-manipulation active:scale-[0.98] text-sm xs:text-base"
         >
           Finalizar
         </Button>
