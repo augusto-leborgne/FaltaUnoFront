@@ -684,7 +684,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center px-3 xs:px-4 sm:px-6">
         <LoadingSpinner size="xl" variant="green" text="Cargando partido..." />
       </div>
     )
@@ -696,17 +696,17 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
 
   if (error || !match || !canManage) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6">
-        <div className="text-center mb-6">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-gray-900 mb-2">
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center px-3 xs:px-4 sm:px-6">
+        <div className="text-center mb-4 xs:mb-6">
+          <AlertCircle className="w-14 h-14 xs:w-16 xs:h-16 sm:w-20 sm:h-20 text-red-500 mx-auto mb-3 xs:mb-4" />
+          <h2 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900 mb-2">
             {error || "Acceso denegado"}
           </h2>
-          <p className="text-gray-600">
+          <p className="text-sm xs:text-base text-gray-600">
             {error ? "Por favor intenta nuevamente" : "No tienes permisos para gestionar este partido"}
           </p>
         </div>
-        <Button onClick={() => router.back()} variant="outline">
+        <Button onClick={() => router.back()} variant="outline" className="min-h-[48px] text-sm xs:text-base touch-manipulation active:scale-[0.98]">
           Volver
         </Button>
       </div>
@@ -731,23 +731,23 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
-      <div className="pt-16 pb-6 px-6 border-b border-gray-100">
+      <div className="pt-12 xs:pt-14 sm:pt-16 safe-top pb-4 xs:pb-5 sm:pb-6 px-3 xs:px-4 sm:px-6 border-b border-gray-100">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <button
               onClick={handleBack}
-              className="p-2 -ml-2 hover:bg-gray-100 rounded-xl transition-colors"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center -ml-2 hover:bg-gray-100 rounded-xl transition-colors touch-manipulation active:scale-95"
             >
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
-            <h1 className="text-xl font-bold text-gray-900">Gestionar Partido</h1>
+            <h1 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900">Gestionar Partido</h1>
           </div>
-          <div className="flex space-x-2">
+          <div className="flex space-x-1.5 xs:space-x-2">
             <Button
               onClick={handleShareMatch}
               variant="outline"
               size="sm"
-              className="bg-gray-50 border-gray-200"
+              className="min-h-[44px] min-w-[44px] bg-gray-50 border-gray-200 touch-manipulation"
             >
               <Share className="w-4 h-4" />
             </Button>
@@ -756,7 +756,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                 onClick={() => setIsEditing(true)}
                 variant="outline"
                 size="sm"
-                className="bg-orange-50 border-orange-200"
+                className="min-h-[44px] min-w-[44px] bg-orange-50 border-orange-200 touch-manipulation"
               >
                 <Edit3 className="w-4 h-4" />
               </Button>
@@ -765,20 +765,20 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
         </div>
       </div>
 
-      <div className="flex-1 px-6 py-6 overflow-y-auto pb-24">
+      <div className="flex-1 px-3 xs:px-4 sm:px-6 py-4 xs:py-5 sm:py-6 overflow-y-auto pb-20 xs:pb-24 sm:pb-28 safe-bottom">
         {/* Alerta de partido listo para confirmar */}
         {match.estado === PartidoEstado.DISPONIBLE && partidoLleno && (
-          <div className="bg-green-50 border border-green-200 rounded-2xl p-4 mb-6 flex items-center space-x-3">
-            <Check className="w-6 h-6 text-green-600 flex-shrink-0" />
+          <div className="bg-green-50 border border-green-200 rounded-xl xs:rounded-2xl p-3 xs:p-4 sm:p-5 mb-4 xs:mb-5 sm:mb-6 flex items-center space-x-2.5 xs:space-x-3">
+            <Check className="w-5 h-5 xs:w-6 xs:h-6 text-green-600 flex-shrink-0" />
             <div className="flex-1">
-              <p className="text-green-800 font-medium">¡Partido completo!</p>
-              <p className="text-green-600 text-sm">
+              <p className="text-green-800 font-medium text-sm xs:text-base">¡Partido completo!</p>
+              <p className="text-green-600 text-xs xs:text-sm">
                 Todos los cupos están llenos. Confirma el partido para que se concrete.
               </p>
             </div>
             <Button
               onClick={handleConfirmarPartido}
-              className="bg-green-600 hover:bg-green-700 text-white"
+              className="min-h-[48px] bg-green-600 hover:bg-green-700 text-white text-sm xs:text-base touch-manipulation active:scale-[0.98]"
             >
               Confirmar
             </Button>
@@ -786,14 +786,14 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
         )}
 
         {/* Match Details */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-4 sm:p-6 mb-6">
+        <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-3 xs:p-4 sm:p-6 mb-4 xs:mb-5 sm:mb-6">
           {/* Header con badges */}
-          <div className="flex items-start justify-between mb-4 pb-4 border-b border-gray-100">
-            <div className="flex gap-2 flex-wrap">
-              <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100 text-xs sm:text-sm">
+          <div className="flex items-start justify-between mb-3 xs:mb-4 pb-3 xs:pb-4 border-b border-gray-100">
+            <div className="flex gap-1.5 xs:gap-2 flex-wrap">
+              <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100 text-[10px] xs:text-xs sm:text-sm">
                 {formatMatchType(match.tipoPartido)}
               </Badge>
-              <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100 text-xs sm:text-sm">
+              <Badge className="bg-orange-100 text-gray-800 hover:bg-orange-100 text-[10px] xs:text-xs sm:text-sm">
                 {match.genero}
               </Badge>
               {getStatusBadge()}
@@ -802,11 +802,11 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
 
           {/* Alertas de estado */}
           {match.estado === PartidoEstado.CONFIRMADO && (
-            <div className="bg-green-50 border border-green-200 rounded-xl p-3 sm:p-4 mb-4 flex items-start sm:items-center space-x-2 sm:space-x-3">
-              <Check className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 flex-shrink-0 mt-0.5 sm:mt-0" />
+            <div className="bg-green-50 border border-green-200 rounded-lg xs:rounded-xl p-2.5 xs:p-3 sm:p-4 mb-3 xs:mb-4 flex items-start sm:items-center space-x-2 xs:space-x-3">
+              <Check className="w-4 h-4 xs:w-5 xs:h-5 text-green-600 flex-shrink-0 mt-0.5 sm:mt-0" />
               <div>
-                <p className="text-green-800 font-medium text-sm sm:text-base">Partido confirmado</p>
-                <p className="text-green-600 text-xs sm:text-sm">
+                <p className="text-green-800 font-medium text-xs xs:text-sm sm:text-base">Partido confirmado</p>
+                <p className="text-green-600 text-[10px] xs:text-xs sm:text-sm">
                   El partido está confirmado y se concretará en la fecha/hora programada
                 </p>
               </div>
@@ -814,11 +814,11 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
           )}
 
           {match.estado === PartidoEstado.COMPLETADO && (
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 sm:p-4 mb-4 flex items-start sm:items-center space-x-2 sm:space-x-3">
-              <Check className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0 mt-0.5 sm:mt-0" />
+            <div className="bg-blue-50 border border-blue-200 rounded-lg xs:rounded-xl p-2.5 xs:p-3 sm:p-4 mb-3 xs:mb-4 flex items-start sm:items-center space-x-2 xs:space-x-3">
+              <Check className="w-4 h-4 xs:w-5 xs:h-5 text-blue-600 flex-shrink-0 mt-0.5 sm:mt-0" />
               <div>
-                <p className="text-blue-800 font-medium text-sm sm:text-base">Partido completado</p>
-                <p className="text-blue-600 text-xs sm:text-sm">
+                <p className="text-blue-800 font-medium text-xs xs:text-sm sm:text-base">Partido completado</p>
+                <p className="text-blue-600 text-[10px] xs:text-xs sm:text-sm">
                   Este partido ya finalizó. ¡Gracias por participar!
                 </p>
               </div>
@@ -826,11 +826,11 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
           )}
 
           {match.estado === PartidoEstado.CANCELADO && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-3 sm:p-4 mb-4 flex items-start sm:items-center space-x-2 sm:space-x-3">
-              <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 flex-shrink-0 mt-0.5 sm:mt-0" />
+            <div className="bg-red-50 border border-red-200 rounded-lg xs:rounded-xl p-2.5 xs:p-3 sm:p-4 mb-3 xs:mb-4 flex items-start sm:items-center space-x-2 xs:space-x-3">
+              <AlertTriangle className="w-4 h-4 xs:w-5 xs:h-5 text-red-600 flex-shrink-0 mt-0.5 sm:mt-0" />
               <div>
-                <p className="text-red-800 font-medium">Partido cancelado</p>
-                <p className="text-red-600 text-sm">
+                <p className="text-red-800 font-medium text-xs xs:text-sm sm:text-base">Partido cancelado</p>
+                <p className="text-red-600 text-[10px] xs:text-xs sm:text-sm">
                   El partido fue cancelado (no se llenaron los cupos o no fue confirmado a tiempo)
                 </p>
               </div>
@@ -838,11 +838,11 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
           )}
 
           {match.estado === PartidoEstado.DISPONIBLE && spotsLeft > 0 && !partidoLleno && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4 flex items-center space-x-3">
-              <Clock className="w-5 h-5 text-yellow-600 flex-shrink-0" />
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg xs:rounded-xl p-3 xs:p-4 mb-3 xs:mb-4 flex items-center space-x-2.5 xs:space-x-3">
+              <Clock className="w-4 h-4 xs:w-5 xs:h-5 text-yellow-600 flex-shrink-0" />
               <div>
-                <p className="text-yellow-800 font-medium">Esperando confirmación</p>
-                <p className="text-yellow-600 text-sm">
+                <p className="text-yellow-800 font-medium text-xs xs:text-sm sm:text-base">Esperando confirmación</p>
+                <p className="text-yellow-600 text-[10px] xs:text-xs sm:text-sm">
                   El partido se cancelará automáticamente si no se llena y confirma antes de la fecha/hora
                 </p>
               </div>
@@ -850,11 +850,11 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
           )}
 
           {match.estado === PartidoEstado.DISPONIBLE && partidoLleno && (
-            <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 sm:p-4 mb-4 flex items-start sm:items-center space-x-2 sm:space-x-3">
-              <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600 flex-shrink-0 mt-0.5 sm:mt-0" />
+            <div className="bg-orange-50 border border-orange-200 rounded-lg xs:rounded-xl p-2.5 xs:p-3 sm:p-4 mb-3 xs:mb-4 flex items-start sm:items-center space-x-2 xs:space-x-3">
+              <AlertCircle className="w-4 h-4 xs:w-5 xs:h-5 text-orange-600 flex-shrink-0 mt-0.5 sm:mt-0" />
               <div>
-                <p className="text-orange-800 font-medium text-sm sm:text-base">⚠️ Acción requerida</p>
-                <p className="text-orange-600 text-xs sm:text-sm">
+                <p className="text-orange-800 font-medium text-xs xs:text-sm sm:text-base">⚠️ Acción requerida</p>
+                <p className="text-orange-600 text-[10px] xs:text-xs sm:text-sm">
                   Los cupos están llenos. Debes confirmar el partido o se cancelará automáticamente al llegar la fecha/hora.
                 </p>
               </div>
@@ -865,14 +865,14 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
           {isEditing ? (
             <div className="space-y-3 sm:space-y-4">
               {/* Título de sección en modo edición */}
-              <div className="flex items-center justify-between pb-2 sm:pb-3 border-b border-gray-100">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900">Editar partido</h3>
-                <span className="text-xs text-gray-500">* Requeridos</span>
+              <div className="flex items-center justify-between pb-2 xs:pb-3 border-b border-gray-100">
+                <h3 className="text-sm xs:text-base sm:text-lg font-semibold text-gray-900">Editar partido</h3>
+                <span className="text-[10px] xs:text-xs text-gray-500">* Requeridos</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-900 mb-1.5 sm:mb-2">
+                  <label className="block text-[10px] xs:text-xs sm:text-sm font-medium text-gray-900 mb-1 xs:mb-1.5 sm:mb-2">
                     Fecha <span className="text-red-500">*</span>
                   </label>
                   <Input
@@ -881,12 +881,12 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                     onChange={(e) => {
                       setEditData({ ...editData, fecha: e.target.value })
                     }}
-                    className="rounded-lg sm:rounded-xl text-sm sm:text-base h-10 sm:h-auto"
+                    className="rounded-lg xs:rounded-xl text-sm xs:text-base h-10 xs:h-auto"
                     min={new Date().toISOString().split('T')[0]}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-900 mb-1.5 sm:mb-2">
+                  <label className="block text-[10px] xs:text-xs sm:text-sm font-medium text-gray-900 mb-1 xs:mb-1.5 sm:mb-2">
                     Hora <span className="text-red-500">*</span>
                   </label>
                   <Input
@@ -921,26 +921,26 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
 
                       setEditData({ ...editData, hora: newTime })
                     }}
-                    className="rounded-lg sm:rounded-xl text-sm sm:text-base h-10 sm:h-auto"
+                    className="rounded-lg xs:rounded-xl text-sm xs:text-base h-10 xs:h-auto"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-900 mb-1.5 sm:mb-2">
+                <label className="block text-[10px] xs:text-xs sm:text-sm font-medium text-gray-900 mb-1 xs:mb-1.5 sm:mb-2">
                   Ubicación <span className="text-red-500">*</span>
                 </label>
                 <Input
                   value={editData.nombreUbicacion}
                   onChange={(e) => setEditData({ ...editData, nombreUbicacion: e.target.value })}
-                  className="rounded-lg sm:rounded-xl text-sm sm:text-base h-10 sm:h-auto"
+                  className="rounded-lg xs:rounded-xl text-sm xs:text-base h-10 xs:h-auto"
                   placeholder="Nombre de la cancha o complejo"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-900 mb-1.5 sm:mb-2">
+                  <label className="block text-[10px] xs:text-xs sm:text-sm font-medium text-gray-900 mb-1 xs:mb-1.5 sm:mb-2">
                     Jugadores <span className="text-red-500">*</span>
                   </label>
                   <Input
@@ -951,19 +951,19 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                     min={match.jugadoresActuales}
                     max={22}
                   />
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-[10px] xs:text-xs text-gray-500 mt-1">
                     Mínimo: {match.jugadoresActuales} (actuales inscriptos)
                   </p>
                 </div>
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-900 mb-1.5 sm:mb-2">
+                  <label className="block text-[10px] xs:text-xs sm:text-sm font-medium text-gray-900 mb-1 xs:mb-1.5 sm:mb-2">
                     Costo total <span className="text-red-500">*</span>
                   </label>
                   <Input
                     type="number"
                     value={editData.precioTotal}
                     onChange={(e) => setEditData({ ...editData, precioTotal: parseFloat(e.target.value) || 0 })}
-                    className="rounded-lg sm:rounded-xl text-sm sm:text-base h-10 sm:h-auto"
+                    className="rounded-lg xs:rounded-xl text-sm xs:text-base h-10 xs:h-auto"
                     min={0}
                     step={10}
                   />
@@ -971,13 +971,13 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
               </div>
 
               <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-900 mb-1.5 sm:mb-2">
+                <label className="block text-[10px] xs:text-xs sm:text-sm font-medium text-gray-900 mb-1 xs:mb-1.5 sm:mb-2">
                   Descripción
                 </label>
                 <Textarea
                   value={editData.descripcion}
                   onChange={(e) => setEditData({ ...editData, descripcion: e.target.value })}
-                  className="rounded-lg sm:rounded-xl resize-none text-sm sm:text-base"
+                  className="rounded-lg xs:rounded-xl resize-none text-sm xs:text-base"
                   rows={3}
                   maxLength={500}
                 />
@@ -987,12 +987,12 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
               </div>
 
               {/* Botones de guardar/cancelar al final del formulario */}
-              <div className="flex gap-2 sm:gap-3 pt-3 border-t border-gray-100">
+              <div className="flex gap-2 xs:gap-3 pt-2.5 xs:pt-3 border-t border-gray-100">
                 <Button
                   onClick={handleCancelEdit}
                   variant="outline"
                   disabled={isSaving}
-                  className="flex-1 text-sm sm:text-base py-2.5 sm:py-3"
+                  className="flex-1 text-xs xs:text-sm sm:text-base py-2 xs:py-2.5 sm:py-3 min-h-[44px] xs:min-h-[48px] touch-manipulation active:scale-[0.98]"
                 >
                   <X className="w-4 h-4 mr-1 sm:mr-2" />
                   Cancelar
@@ -1000,7 +1000,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                 <Button
                   onClick={handleSave}
                   disabled={isSaving}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-sm sm:text-base py-2.5 sm:py-3"
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-xs xs:text-sm sm:text-base py-2 xs:py-2.5 sm:py-3 min-h-[44px] xs:min-h-[48px] touch-manipulation active:scale-[0.98]"
                 >
                   {isSaving ? (
                     <span className="flex items-center justify-center gap-2">
@@ -1018,31 +1018,31 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
             </div>
           ) : (
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">
+              <h2 className="text-lg xs:text-xl sm:text-2xl font-bold text-gray-900 mb-2.5 xs:mb-3 sm:mb-4">
                 {formatMatchDate(match.fecha, match.hora)}
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 xs:gap-3 sm:gap-4 text-[10px] xs:text-xs sm:text-sm text-gray-600 mb-2.5 xs:mb-3 sm:mb-4">
                 <div className="flex items-center space-x-2">
-                  <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                  <MapPin className="w-3.5 h-3.5 xs:w-4 xs:h-4 flex-shrink-0" />
                   <span className="truncate">{match.nombreUbicacion}</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <DollarSign className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                  <DollarSign className="w-3.5 h-3.5 xs:w-4 xs:h-4 flex-shrink-0" />
                   <span>${match.precioPorJugador} / jugador</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                  <Users className="w-3.5 h-3.5 xs:w-4 xs:h-4 flex-shrink-0" />
                   <span>
                     {match.jugadoresActuales}/{match.cantidadJugadores} jugadores
                   </span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
+                  <Clock className="w-3.5 h-3.5 xs:w-4 xs:h-4 flex-shrink-0" />
                   <span>{match.duracionMinutos} min</span>
                 </div>
               </div>
               {match.descripcion && (
-                <p className="text-gray-700 text-xs sm:text-sm bg-gray-50 rounded-lg sm:rounded-xl p-2.5 sm:p-3 whitespace-pre-wrap">
+                <p className="text-gray-700 text-[10px] xs:text-xs sm:text-sm bg-gray-50 rounded-lg xs:rounded-xl p-2 xs:p-2.5 sm:p-3 whitespace-pre-wrap">
                   {match.descripcion}
                 </p>
               )}
@@ -1050,18 +1050,18 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
           )}
 
           {!isEditing && (
-            <div className="flex gap-3 mt-4">
+            <div className="flex gap-2 xs:gap-3 mt-3 xs:mt-4">
               <Button
                 onClick={handleEnterGroupChat}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl"
+                className="flex-1 min-h-[48px] bg-blue-600 hover:bg-blue-700 text-white py-2.5 xs:py-3 rounded-lg xs:rounded-xl text-sm xs:text-base touch-manipulation active:scale-[0.98]"
               >
-                <MessageCircle className="w-4 h-4 mr-2" />
+                <MessageCircle className="w-4 h-4 mr-1.5 xs:mr-2" />
                 Chat grupal
               </Button>
               <Button
                 onClick={() => setShowCancelModal(true)}
                 variant="outline"
-                className="flex-1 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 py-3 rounded-xl"
+                className="flex-1 min-h-[48px] border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 py-2.5 xs:py-3 rounded-lg xs:rounded-xl text-sm xs:text-base touch-manipulation active:scale-[0.98]"
               >
                 Cancelar partido
               </Button>
@@ -1072,7 +1072,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
         {/* Map */}
         {!isEditing && match.latitud && match.longitud && match.nombreUbicacion && (
           <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Ubicación</h3>
+            <h3 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900 mb-3 xs:mb-4">Ubicación</h3>
             <div onClick={() => setShowMapModal(true)} className="cursor-pointer">
               <CompressedMap
                 location={match.nombreUbicacion}
@@ -1086,13 +1086,13 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
 
         {/* Organizador Section */}
         {!isEditing && match.organizador && (
-          <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Organizador</h3>
+          <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-4 xs:mb-5 sm:mb-6">
+            <h3 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900 mb-3 xs:mb-4">Organizador</h3>
             <div
               onClick={() => match.organizador?.id && handlePlayerClick(match.organizador.id)}
-              className="flex items-center space-x-3 p-4 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors"
+              className="flex items-center space-x-2.5 xs:space-x-3 p-3 xs:p-4 bg-gray-50 rounded-lg xs:rounded-xl cursor-pointer hover:bg-gray-100 transition-colors min-h-[60px] xs:min-h-[68px] touch-manipulation active:bg-gray-200"
             >
-              <Avatar className="w-12 h-12">
+              <Avatar className="w-11 h-11 xs:w-12 xs:h-12">
                 {match.organizador?.foto_perfil ? (
                   <AvatarImage src={`data:image/jpeg;base64,${match.organizador.foto_perfil}`} />
                 ) : (
@@ -1103,7 +1103,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                 )}
               </Avatar>
               <div>
-                <span className="font-semibold text-gray-900 block">
+                <span className="font-semibold text-gray-900 block text-sm xs:text-base">
                   {match.organizador?.nombre} {match.organizador?.apellido}
                 </span>
               </div>
@@ -1112,8 +1112,8 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
         )}
 
         {/* Registered Players */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">
+        <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-4 xs:mb-5 sm:mb-6">
+          <h3 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900 mb-3 xs:mb-4">
             Jugadores inscriptos ({match.jugadores?.filter(p => p.id !== match.organizadorId).length || 0})
           </h3>
 
@@ -1124,13 +1124,13 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                 .map((player) => (
                   <div
                     key={player.id}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-xl"
+                    className="flex items-center justify-between p-3 xs:p-4 bg-gray-50 rounded-lg xs:rounded-xl min-h-[60px] xs:min-h-[68px]"
                   >
                     <div
-                      className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity flex-1"
+                      className="flex items-center space-x-2.5 xs:space-x-3 cursor-pointer hover:opacity-80 transition-opacity flex-1 touch-manipulation active:opacity-60"
                       onClick={() => handlePlayerClick(player.id)}
                     >
-                      <Avatar className="w-12 h-12">
+                      <Avatar className="w-11 h-11 xs:w-12 xs:h-12">
                         {player.foto_perfil ? (
                           <AvatarImage src={`data:image/jpeg;base64,${player.foto_perfil}`} />
                         ) : (
@@ -1140,10 +1140,10 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                         )}
                       </Avatar>
                       <div>
-                        <div className="font-semibold text-gray-900">
+                        <div className="font-semibold text-gray-900 text-sm xs:text-base">
                           {player.nombre} {player.apellido}
                         </div>
-                        <div className="text-sm text-gray-600">
+                        <div className="text-xs xs:text-sm text-gray-600">
                           {player.posicion && `${player.posicion} • `}
                           {player.rating && `⭐ ${player.rating}`}
                         </div>
@@ -1163,16 +1163,16 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                 ))}
             </div>
           ) : (
-            <div className="text-center py-8">
-              <Users className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-500">No hay jugadores inscriptos aún</p>
+            <div className="text-center py-6 xs:py-8">
+              <Users className="w-10 h-10 xs:w-12 xs:h-12 text-gray-400 mx-auto mb-2.5 xs:mb-3" />
+              <p className="text-gray-500 text-sm xs:text-base">No hay jugadores inscriptos aún</p>
             </div>
           )}
         </div>
 
         {/* Pending Requests */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">
+        <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6">
+          <h3 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900 mb-3 xs:mb-4">
             Solicitudes pendientes ({solicitudes.length})
           </h3>
 
@@ -1185,13 +1185,13 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                 return (
                   <div
                     key={solicitud.id}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-xl"
+                    className="flex items-center justify-between p-3 xs:p-4 bg-gray-50 rounded-lg xs:rounded-xl min-h-[60px] xs:min-h-[68px]"
                   >
                     <div
-                      className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity flex-1"
+                      className="flex items-center space-x-2.5 xs:space-x-3 cursor-pointer hover:opacity-80 transition-opacity flex-1 touch-manipulation active:opacity-60"
                       onClick={() => handlePlayerClick(usuario.id)}
                     >
-                      <Avatar className="w-12 h-12">
+                      <Avatar className="w-11 h-11 xs:w-12 xs:h-12">
                         {usuario.foto_perfil ? (
                           <AvatarImage src={`data:image/jpeg;base64,${usuario.foto_perfil}`} />
                         ) : (
@@ -1201,23 +1201,23 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                         )}
                       </Avatar>
                       <div>
-                        <div className="font-semibold text-gray-900">
+                        <div className="font-semibold text-gray-900 text-sm xs:text-base">
                           {usuario.nombre} {usuario.apellido}
                         </div>
-                        <div className="text-sm text-gray-600">
+                        <div className="text-xs xs:text-sm text-gray-600">
                           {usuario.posicion && `${usuario.posicion} • `}
                           {usuario.rating && `⭐ ${usuario.rating}`}
                         </div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-[10px] xs:text-xs text-gray-500">
                           {new Date(solicitud.createdAt).toLocaleDateString("es-ES")}
                         </div>
                       </div>
                     </div>
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-1.5 xs:space-x-2">
                       <Button
                         onClick={() => handleAcceptRequest(solicitud.id)}
                         size="sm"
-                        className="bg-green-600 hover:bg-green-700 text-white p-2"
+                        className="bg-green-600 hover:bg-green-700 text-white min-h-[44px] min-w-[44px] touch-manipulation"
                         disabled={spotsLeft === 0}
                         title={spotsLeft === 0 ? "No hay más espacio" : "Aceptar"}
                       >
@@ -1227,7 +1227,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                         onClick={() => handleRejectRequest(solicitud.id)}
                         size="sm"
                         variant="outline"
-                        className="border-red-200 text-red-600 hover:bg-red-50 p-2"
+                        className="border-red-200 text-red-600 hover:bg-red-50 min-h-[44px] min-w-[44px] touch-manipulation"
                       >
                         <X className="w-4 h-4" />
                       </Button>
@@ -1237,10 +1237,10 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
               })}
             </div>
           ) : (
-            <div className="text-center py-8">
-              <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-500 mb-2">No hay solicitudes pendientes</p>
-              <p className="text-sm text-gray-400">
+            <div className="text-center py-6 xs:py-8">
+              <Calendar className="w-10 h-10 xs:w-12 xs:h-12 text-gray-400 mx-auto mb-2.5 xs:mb-3" />
+              <p className="text-gray-500 mb-2 text-sm xs:text-base">No hay solicitudes pendientes</p>
+              <p className="text-xs xs:text-sm text-gray-400">
                 Comparte el partido para que más jugadores se unan
               </p>
             </div>
@@ -1262,16 +1262,16 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
       {/* Modal cancelar partido */}
       {showCancelModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">¿Cancelar partido?</h3>
-            <p className="text-gray-600 mb-6">
+          <div className="bg-white rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 max-w-md w-full">
+            <h3 className="text-base xs:text-lg font-bold text-gray-900 mb-2">¿Cancelar partido?</h3>
+            <p className="text-sm xs:text-base text-gray-600 mb-5 xs:mb-6">
               Esta acción no se puede deshacer. Todos los jugadores inscriptos serán notificados de la cancelación.
             </p>
-            <div className="flex gap-3">
+            <div className="flex gap-2 xs:gap-3">
               <Button
                 onClick={() => setShowCancelModal(false)}
                 variant="outline"
-                className="flex-1"
+                className="flex-1 min-h-[48px] text-sm xs:text-base touch-manipulation active:scale-[0.98]"
                 disabled={isCancelling}
               >
                 No, mantener
@@ -1283,7 +1283,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
                   setIsCancelling(false)
                   setShowCancelModal(false)
                 }}
-                className="flex-1 bg-red-600 hover:bg-red-700"
+                className="flex-1 min-h-[48px] bg-red-600 hover:bg-red-700 text-sm xs:text-base touch-manipulation active:scale-[0.98]"
                 disabled={isCancelling}
               >
                 {isCancelling ? "Cancelando..." : "Sí, cancelar"}
