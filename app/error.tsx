@@ -15,25 +15,25 @@ export default function Error({
   }, [error])
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-6">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-4">
+    <div className="min-h-screen bg-white flex items-center justify-center px-3 xs:px-4 sm:px-6 safe-top safe-bottom">
+      <div className="text-center max-w-md w-full">
+        <h2 className="text-lg xs:text-xl sm:text-2xl font-bold text-gray-900 mb-3 xs:mb-4">
           ¡Algo salió mal!
         </h2>
-        <p className="text-gray-600 mb-6">
+        <p className="text-xs xs:text-sm sm:text-base text-gray-600 mb-5 xs:mb-6">
           Ocurrió un error inesperado. Por favor, intenta nuevamente.
         </p>
-        <div className="space-y-3">
+        <div className="space-y-2.5 xs:space-y-3">
           <Button
             onClick={reset}
-            className="w-full bg-green-600 hover:bg-green-700 text-white"
+            className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white min-h-[48px] rounded-lg xs:rounded-xl touch-manipulation active:scale-[0.98]"
           >
             Intentar nuevamente
           </Button>
           <Button
             onClick={() => window.location.href = "/home"}
             variant="outline"
-            className="w-full bg-transparent"
+            className="w-full bg-transparent min-h-[48px] rounded-lg xs:rounded-xl touch-manipulation active:scale-[0.98]"
           >
             Volver al inicio
           </Button>
