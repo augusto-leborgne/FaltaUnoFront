@@ -22,18 +22,19 @@ const nextConfig = {
   // Compress pages (gzip/brotli)
   compress: true,
   
-  // Optimize production builds
-  productionBrowserSourceMaps: false,
+  // 💰 OPTIMIZACIONES DE PRODUCCION
+  productionBrowserSourceMaps: false, // Sin source maps = menos tamaño
+  poweredByHeader: false, // Sin header X-Powered-By
+  generateEtags: true, // ETags para caché
   
-  // ⚡ NUEVO: Enable advanced optimizations
-  poweredByHeader: false,
-  generateEtags: true,
+  // 💰 STANDALONE OUTPUT (50% más pequeño en Docker)
+  output: 'standalone',
   
   // ❌ NO SE NECESITA PROXY - Cloud Run backend tiene HTTPS
   // El frontend se comunica directamente con https://faltauno-backend-169771742214.us-central1.run.app
   // Sin Mixed Content errors porque ambos usan HTTPS
   
-  // Configure Next.js Image optimization
+  // 💰 OPTIMIZACION DE IMAGENES ULTRA-ECONOMICA
   images: {
     unoptimized: false,
     loader: 'default',
@@ -50,10 +51,10 @@ const nextConfig = {
         pathname: '/api/usuarios/**',
       },
     ],
-    formats: ['image/avif', 'image/webp'], // AVIF first (better compression)
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256],
-    minimumCacheTTL: 60, // Cache images for 60 seconds minimum
+    formats: ['image/avif', 'image/webp'], // AVIF first (mejor compresión 50%+)
+    deviceSizes: [640, 750, 828, 1080, 1200], // 💰 Menos tamaños = menos procesamiento
+    imageSizes: [16, 32, 48, 64, 96], // 💰 Reducido de [16..256]
+    minimumCacheTTL: 86400, // 💰 24 horas (reducir procesamiento)
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
