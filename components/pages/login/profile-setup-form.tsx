@@ -710,7 +710,7 @@ export function ProfileSetupForm() {
       fieldsToValidate.forEach(key => {
         // ⚡ FIXED: Special handling for photo - check both File and photoPreviewUrl
         if (key === 'photo') {
-          if (!formData.photo && !photoPreviewUrl) {
+          if (!formData.photo && !formData.photoPreviewUrl) {
             errors[key] = "Foto obligatoria"
           } else if (formData.photo) {
             // Validate File object if present
@@ -741,7 +741,7 @@ export function ProfileSetupForm() {
 
   async function handleUploadAndSaveProfile() {
     // ⚡ FIXED: Check both formData.photo and photoPreviewUrl for photo existence
-    if (!formData.photo && !photoPreviewUrl) {
+    if (!formData.photo && !formData.photoPreviewUrl) {
       setGeneralError("Foto requerida")
       return
     }
