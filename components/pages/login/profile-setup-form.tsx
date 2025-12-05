@@ -182,8 +182,8 @@ export function ProfileSetupForm() {
         return null
 
       case 'photo':
-        // ⚡ FIXED: Check both formData.photo (File) and photoPreviewUrl (pre-loaded)
-        if (!value && !photoPreviewUrl) return "Foto obligatoria"
+        // Note: Photo validation is handled specially in handleSubmit to check both File and photoPreviewUrl
+        if (!value) return "Foto obligatoria"
         // ⚡ LÍMITES COMO INSTAGRAM: 30MB (antes era 5MB)
         if (value instanceof File && value.size > 30 * 1024 * 1024) {
           return "Máx 30MB"
@@ -708,8 +708,20 @@ export function ProfileSetupForm() {
       const fieldsToValidate = ['name', 'surname', 'fechaNacimiento', 'genero', 'position', 'height', 'weight', 'photo', 'address']
 
       fieldsToValidate.forEach(key => {
-        const error = validateField(key, formData[key as keyof typeof formData])
-        if (error) errors[key] = error
+        // ⚡ FIXED: Special handling for photo - check both File and photoPreviewUrl
+        if (key === 'photo') {
+          if (!formData.photo && !photoPreviewUrl) {
+            errors[key] = "Foto obligatoria"
+          } else if (formData.photo) {
+            // Validate File object if present
+            const error = validateField(key, formData[key as keyof typeof formData])
+            if (error) errors[key] = error
+          }
+          // If photoPreviewUrl exists but no formData.photo, photo is valid (pre-loaded)
+        } else {
+          const error = validateField(key, formData[key as keyof typeof formData])
+          if (error) errors[key] = error
+        }
       })
 
       if (Object.keys(errors).length > 0) {
