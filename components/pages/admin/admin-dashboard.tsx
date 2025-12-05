@@ -6,13 +6,14 @@ import { useAuth } from "@/hooks/use-auth"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ArrowLeft, Users, Calendar, TrendingUp, UserCheck, Trash2, Shield, ShieldOff, AlertCircle, CheckCircle, X, Eye, Mail, Phone, MapPin, Clock, Flag, ChevronDown, ChevronUp, LayoutList, Grid3x3 } from "lucide-react"
+import { ArrowLeft, Users, Calendar, TrendingUp, UserCheck, Trash2, Shield, ShieldOff, AlertCircle, CheckCircle, X, Eye, Mail, Phone, MapPin, Clock, Flag, ChevronDown, ChevronUp, LayoutList, Grid3x3, Activity } from "lucide-react"
 import { API_URL } from "@/lib/api"
 import { AuthService } from "@/lib/auth"
 import { logger } from "@/lib/logger"
 import { UserAvatar } from "@/components/ui/user-avatar"
 import type { Usuario } from "@/lib/api"
 import { formatMatchType } from "@/lib/utils"
+import { ObservabilityDashboard } from "./observability-dashboard"
 
 interface AdminStats {
   totalUsuarios: number
@@ -88,7 +89,7 @@ export default function AdminDashboard() {
   const [partidos, setPartidos] = useState<Partido[]>([])
   const [reports, setReports] = useState<Report[]>([])
   const [loadingData, setLoadingData] = useState(true)
-  const [activeTab, setActiveTab] = useState<"stats" | "users" | "matches" | "reports">("stats")
+  const [activeTab, setActiveTab] = useState<"stats" | "users" | "matches" | "reports" | "observability">("stats")
   const [error, setError] = useState<string | null>(null)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
@@ -707,6 +708,16 @@ export default function AdminDashboard() {
           >
             <Flag className="mb-1 inline h-3 w-3 sm:h-4 sm:w-4" />
             <span className="ml-1">Reportes ({reports.filter(r => r.status === 'PENDING').length})</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("observability")}
+            className={`px-3 sm:px-4 py-2 font-medium transition-colors whitespace-nowrap text-sm sm:text-base ${activeTab === "observability"
+              ? "border-b-2 border-blue-500 text-blue-600"
+              : "text-gray-600 hover:text-gray-900"
+              }`}
+          >
+            <Activity className="mb-1 inline h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="ml-1">Observabilidad</span>
           </button>
         </div>
       </div>
@@ -2425,6 +2436,11 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+      )}
+      
+      {/* Observability Tab */}
+      {activeTab === "observability" && (
+        <ObservabilityDashboard />
       )}
     </div>
   )
