@@ -66,7 +66,6 @@ export function ReviewsScreen() {
     <PageContainer>
       <PageHeader 
         title="Mis Reseñas"
-        icon={Star}
       />
 
       <PageContent>

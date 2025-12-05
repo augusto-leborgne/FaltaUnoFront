@@ -610,21 +610,20 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 pb-18 xs:pb-20 sm:pb-22 md:pb-24">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white shadow-sm">
-        <div className="mx-auto max-w-6xl px-4 py-3 sm:py-4">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-              <Button
-                variant="ghost"
-                size="icon"
+      <div className="sticky top-0 z-10 bg-white border-b border-gray-100 safe-top">
+        <div className="mx-auto max-w-6xl mt-3 xs:mt-4 sm:mt-5 pt-6 xs:pt-8 sm:pt-10 md:pt-12 pb-3 sm:pb-4 md:pb-5 px-3 sm:px-4 md:px-6">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 xs:gap-3 flex-1 min-w-0">
+              <button
                 onClick={() => router.push("/home")}
-                className="shrink-0"
+                className="p-2 xs:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-lg xs:rounded-xl transition-colors touch-manipulation min-w-[40px] xs:min-w-[44px] sm:min-w-[48px] min-h-[40px] xs:min-h-[44px] sm:min-h-[48px] flex items-center justify-center active:scale-95 flex-shrink-0"
+                aria-label="Volver"
               >
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-              <div className="min-w-0">
-                <h1 className="text-lg sm:text-xl font-bold truncate">Panel de Administración</h1>
-                <p className="text-xs sm:text-sm text-gray-600 truncate hidden sm:block">Gestión de usuarios y partidos</p>
+                <ArrowLeft className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6 sm:h-6 text-gray-700" />
+              </button>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">Panel de Administración</h1>
+                <p className="text-xs xs:text-sm text-gray-600 truncate hidden sm:block">Gestión de usuarios y partidos</p>
               </div>
             </div>
             <div className="flex items-center gap-1.5 sm:gap-2 rounded-full bg-red-100 px-2 sm:px-3 py-1 shrink-0">

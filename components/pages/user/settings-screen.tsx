@@ -566,7 +566,6 @@ export function SettingsScreen() {
     <PageContainer withBottomNav={false}>
       <PageHeader
         title="Configuración"
-        icon={SettingsIcon}
         rightElement={
           <Button
             onClick={handleSave}

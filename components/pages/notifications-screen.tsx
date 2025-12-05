@@ -106,7 +106,6 @@ export function NotificationsScreen() {
     <PageContainer>
       <PageHeader 
         title="Notificaciones"
-        icon={Bell}
         badge={count > 0 && (
           <Badge variant="destructive" className="ml-2">
             {count}

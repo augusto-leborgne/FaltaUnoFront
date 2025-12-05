@@ -468,17 +468,21 @@ export function CreateMatchScreen() {
   return (
     <div className="min-h-screen bg-white flex flex-col safe-bottom">
       {/* Header */}
-      <div className="pt-8 xs:pt-10 sm:pt-12 md:pt-16 pb-2 xs:pb-3 sm:pb-4 sm:pb-6 px-2 xs:px-3 sm:px-4 md:px-6 border-b border-gray-100 safe-top">
-        <div className="flex items-center space-x-2 xs:space-x-3 sm:space-x-2 xs:space-x-3 sm:space-x-4">
-          <button
-            onClick={handleBack}
-            className="p-2 xs:p-2.5 -ml-2 touch-manipulation hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors disabled:opacity-50 min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] flex items-center justify-center active:scale-95"
-            disabled={isLoading}
-            aria-label="Volver"
-          >
-            <ArrowLeft className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6 sm:h-6 text-gray-600" />
-          </button>
-          <h1 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl md:text-2xl font-bold text-gray-900 truncate">Crear Partido</h1>
+      <div className="w-full mt-3 xs:mt-4 sm:mt-5 pt-6 xs:pt-8 sm:pt-10 md:pt-12 pb-3 sm:pb-4 md:pb-5 px-3 sm:px-4 md:px-6 border-b border-gray-100 bg-white safe-top">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 xs:gap-3 flex-1 min-w-0">
+            <button
+              onClick={handleBack}
+              className="p-2 xs:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-lg xs:rounded-xl transition-colors touch-manipulation min-w-[40px] xs:min-w-[44px] sm:min-w-[48px] min-h-[40px] xs:min-h-[44px] sm:min-h-[48px] flex items-center justify-center active:scale-95 flex-shrink-0"
+              disabled={isLoading}
+              aria-label="Volver"
+            >
+              <ArrowLeft className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6 sm:h-6 text-gray-700" />
+            </button>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">Crear Partido</h1>
+            </div>
+          </div>
         </div>
       </div>
 

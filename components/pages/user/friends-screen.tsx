@@ -227,16 +227,19 @@ export function FriendsScreen() {
   return (
     <div className="min-h-screen bg-white flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
       {/* Header */}
-      <div className="pt-12 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6 border-b border-gray-100">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center space-x-3 sm:space-x-2 xs:space-x-3 sm:space-x-4">
+      <div className="w-full mt-3 xs:mt-4 sm:mt-5 pt-6 xs:pt-8 sm:pt-10 md:pt-12 pb-3 sm:pb-4 md:pb-5 px-3 sm:px-4 md:px-6 border-b border-gray-100 bg-white safe-top">
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <div className="flex items-center gap-2 xs:gap-3 flex-1 min-w-0">
             <button
               onClick={handleBack}
-              className="p-2 -ml-2 hover:bg-gray-100 rounded-xl transition-colors"
+              className="p-2 xs:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-lg xs:rounded-xl transition-colors touch-manipulation min-w-[40px] xs:min-w-[44px] sm:min-w-[48px] min-h-[40px] xs:min-h-[44px] sm:min-h-[48px] flex items-center justify-center active:scale-95 flex-shrink-0"
+              aria-label="Volver"
             >
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
+              <ArrowLeft className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6 sm:h-6 text-gray-700" />
             </button>
-            <h1 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900">Usuarios</h1>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">Usuarios</h1>
+            </div>
           </div>
         </div>
 
