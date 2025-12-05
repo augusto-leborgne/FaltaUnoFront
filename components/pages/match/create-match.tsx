@@ -482,7 +482,7 @@ export function CreateMatchScreen() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex-1 px-3 xs:px-4 sm:px-6 py-3 xs:py-4 sm:py-6 pb-24 xs:pb-28 sm:pb-32 overflow-y-auto">
+      <form onSubmit={handleSubmit} className="flex-1 px-3 xs:px-4 sm:px-6 py-3 xs:py-4 sm:py-6 pb-24 xs:pb-28 sm:pb-32 overflow-y-auto max-w-2xl mx-auto w-full">
         {/* Success Message */}
         {success && (
           <div className="mb-4 xs:mb-5 sm:mb-6 p-3 xs:p-4 sm:p-5 bg-primary/10 border-2 border-primary/30 rounded-xl sm:rounded-2xl flex items-start space-x-2 xs:space-x-3">
@@ -518,7 +518,7 @@ export function CreateMatchScreen() {
 
         {/* Tipo de partido */}
         <div className="mb-4 xs:mb-5 sm:mb-6">
-          <label className="block text-xs xs:text-sm sm:text-base font-semibold text-gray-900 mb-2 xs:mb-3 sm:mb-4">
+          <label className="block text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-2 xs:mb-3 sm:mb-4 md:mb-3">
             Tipo de partido <span className="text-red-500">*</span>
           </label>
           <div className="flex justify-center gap-2 xs:gap-3 sm:gap-4">
@@ -533,7 +533,7 @@ export function CreateMatchScreen() {
                   type="button"
                   onClick={() => handleInputChange("type", type)}
                   disabled={isLoading}
-                  className={`w-14 h-14 xs:w-16 xs:h-16 sm:w-20 sm:h-20 rounded-full text-sm xs:text-base sm:text-lg font-bold border-2 transition-all touch-manipulation disabled:opacity-50 active:scale-95 flex items-center justify-center min-w-[56px] min-h-[56px] ${formData.type === type
+                  className={`w-14 h-14 xs:w-16 xs:h-16 sm:w-18 sm:h-18 md:w-16 md:h-16 rounded-full text-sm xs:text-base sm:text-lg md:text-base font-bold border-2 transition-all touch-manipulation disabled:opacity-50 active:scale-95 flex items-center justify-center min-w-[56px] min-h-[56px] ${formData.type === type
                     ? "bg-green-600 text-white border-green-600 shadow-lg"
                     : "bg-white text-gray-700 border-gray-300 hover:border-green-600 hover:text-green-600 active:bg-gray-50"
                     }`}
@@ -548,7 +548,7 @@ export function CreateMatchScreen() {
 
         {/* Género */}
         <div className="mb-4 xs:mb-5 sm:mb-6">
-          <label className="block text-xs xs:text-sm sm:text-base font-semibold text-gray-900 mb-2 xs:mb-3 sm:mb-4">
+          <label className="block text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-2 xs:mb-3 sm:mb-4 md:mb-3">
             Género <span className="text-red-500">*</span>
           </label>
           <div className="flex gap-2 xs:gap-2.5 sm:gap-3">
@@ -558,7 +558,7 @@ export function CreateMatchScreen() {
                 type="button"
                 onClick={() => handleInputChange("gender", label)}
                 disabled={isLoading}
-                className={`flex-1 px-1.5 xs:px-2 sm:px-3 py-2 rounded-lg xs:rounded-xl text-xs xs:text-sm sm:text-base font-semibold border-2 transition-all touch-manipulation disabled:opacity-50 min-h-[48px] active:scale-95 flex flex-col items-center justify-center gap-0.5 ${formData.gender === label
+                className={`flex-1 px-1.5 xs:px-2 sm:px-3 md:px-2 py-2 rounded-lg xs:rounded-xl text-xs xs:text-sm sm:text-base md:text-sm font-semibold border-2 transition-all touch-manipulation disabled:opacity-50 min-h-[48px] active:scale-95 flex flex-col items-center justify-center gap-0.5 ${formData.gender === label
                   ? "bg-orange-500 text-white border-orange-600 shadow-lg"
                   : "bg-white text-gray-700 border-gray-300 hover:border-orange-500 hover:text-orange-600 active:bg-gray-50"
                   }`}
@@ -574,7 +574,7 @@ export function CreateMatchScreen() {
         {/* Fecha y Hora */}
         <div className="grid grid-cols-2 gap-2 xs:gap-3 sm:gap-4 mb-4 xs:mb-5 sm:mb-6">
           <div className="w-full min-w-0">
-            <label className="block text-xs xs:text-sm sm:text-base font-semibold text-gray-900 mb-1.5 xs:mb-2 sm:mb-3">
+            <label className="block text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1.5 xs:mb-2 sm:mb-3 md:mb-2">
               Fecha <span className="text-red-500">*</span>
             </label>
             <div className="relative flex items-center">
@@ -602,7 +602,7 @@ export function CreateMatchScreen() {
             )}
           </div>
           <div className="w-full min-w-0">
-            <label className="block text-xs xs:text-sm sm:text-base font-semibold text-gray-900 mb-1.5 xs:mb-2 sm:mb-3">
+            <label className="block text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1.5 xs:mb-2 sm:mb-3 md:mb-2">
               Hora <span className="text-red-500">*</span>
             </label>
             <div className="relative flex items-center">

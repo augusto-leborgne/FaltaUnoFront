@@ -156,21 +156,21 @@ export function VerificationScreen() {
 
   if (isVerified) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center px-3 xs:px-4 sm:px-6 safe-top safe-bottom">
-        <CheckCircle className="w-20 h-20 xs:w-24 xs:h-24 sm:w-28 sm:h-28 text-green-500 mx-auto mb-5 xs:mb-6" />
-        <h1 className="text-lg xs:text-xl sm:text-2xl font-bold text-gray-900 mb-3 xs:mb-4">¡Verificación exitosa!</h1>
-        <p className="text-xs xs:text-sm sm:text-base text-gray-600 mb-6 xs:mb-8 text-center">Tu identidad ha sido confirmada. Bienvenido a Falta Uno.</p>
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center px-3 xs:px-4 sm:px-6 safe-top safe-bottom max-w-md mx-auto">
+        <CheckCircle className="w-20 h-20 xs:w-24 xs:h-24 sm:w-28 sm:h-28 md:w-20 md:h-20 text-green-500 mx-auto mb-5 xs:mb-6 md:mb-4" />
+        <h1 className="text-lg xs:text-xl sm:text-2xl md:text-xl font-bold text-gray-900 mb-3 xs:mb-4 md:mb-3">¡Verificación exitosa!</h1>
+        <p className="text-xs xs:text-sm sm:text-base md:text-sm text-gray-600 mb-6 xs:mb-8 md:mb-6 text-center">Tu identidad ha sido confirmada. Bienvenido a Falta Uno.</p>
         <div className="animate-pulse text-green-600 text-xs xs:text-sm">Redirigiendo...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col safe-top safe-bottom">
-      <div className="pt-16 xs:pt-20 sm:pt-24 pb-10 xs:pb-12 text-center safe-top">
-        <Shield className="w-14 h-14 xs:w-16 xs:h-16 sm:w-18 sm:h-18 text-green-600 mx-auto mb-5 xs:mb-6" />
-        <h1 className="text-lg xs:text-xl sm:text-2xl font-bold text-gray-900 mb-1.5 xs:mb-2">Verificación de Identidad</h1>
-        <p className="text-xs xs:text-sm sm:text-base text-gray-600 px-3 xs:px-4 sm:px-6">Ingresá tu cédula para verificar tu identidad</p>
+    <div className="min-h-screen bg-white flex flex-col safe-top safe-bottom max-w-md mx-auto w-full">
+      <div className="pt-16 xs:pt-20 sm:pt-24 md:pt-16 pb-10 xs:pb-12 md:pb-8 text-center safe-top">
+        <Shield className="w-14 h-14 xs:w-16 xs:h-16 sm:w-18 sm:h-18 md:w-14 md:h-14 text-green-600 mx-auto mb-5 xs:mb-6 md:mb-4" />
+        <h1 className="text-lg xs:text-xl sm:text-2xl md:text-xl font-bold text-gray-900 mb-1.5 xs:mb-2">Verificación de Identidad</h1>
+        <p className="text-xs xs:text-sm sm:text-base md:text-sm text-gray-600 px-3 xs:px-4 sm:px-6">Ingresá tu cédula para verificar tu identidad</p>
       </div>
 
       <div className="flex-1 px-3 xs:px-4 sm:px-6 pb-20 xs:pb-24 sm:pb-28 safe-bottom">
