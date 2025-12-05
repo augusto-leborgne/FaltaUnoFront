@@ -878,4 +878,56 @@ input, select, textarea {
   .xs\:-mt-12 { margin-top: -3rem; }
   
   .xs\:ring-3 { box-shadow: 0 0 0 3px var(--tw-ring-color); }
+  
+  /* Width utilities */
+  .xs\:w-4 { width: 1rem; }
+  .xs\:w-4\.5 { width: 1.125rem; }
+  .xs\:w-5 { width: 1.25rem; }
+  .xs\:w-5\.5 { width: 1.375rem; }
+  .xs\:w-6 { width: 1.5rem; }
+  .xs\:w-7 { width: 1.75rem; }
+  .xs\:w-8 { width: 2rem; }
+  
+  /* Height utilities */
+  .xs\:h-4 { height: 1rem; }
+  .xs\:h-4\.5 { height: 1.125rem; }
+  .xs\:h-5 { height: 1.25rem; }
+  .xs\:h-5\.5 { height: 1.375rem; }
+  .xs\:h-6 { height: 1.5rem; }
+  .xs\:h-7 { height: 1.75rem; }
+  .xs\:h-8 { height: 2rem; }
+  
+  /* Size (width and height) */
+  .xs\:size-11 { width: 2.75rem; height: 2.75rem; }
+  .xs\:size-12 { width: 3rem; height: 3rem; }
+  
+  /* Margin utilities */
+  .xs\:mr-1 { margin-right: 0.25rem; }
+  .xs\:mr-2 { margin-right: 0.5rem; }
+  .xs\:mr-3 { margin-right: 0.75rem; }
+  .xs\:-mt-16 { margin-top: -4rem; }
+  
+  /* Padding utilities */
+  .xs\:pb-28 { padding-bottom: 7rem; }
+  .xs\:pt-10 { padding-top: 2.5rem; }
+  .xs\:pt-12 { padding-top: 3rem; }
+  
+  /* Min-height utilities */
+  .xs\:min-h-\[56px\] { min-height: 56px; }
+  .xs\:min-h-\[60px\] { min-height: 60px; }
+  .xs\:min-h-\[64px\] { min-height: 64px; }
+  .xs\:min-h-24 { min-height: 6rem; }
+  
+  /* Stroke width */
+  .xs\:has-\[\>svg\]\:px-5 { }
+  .xs\:has-\[\>svg\]\:px-6 { }
+}
+
+/* Additional custom stroke width utilities */
+[class*="w-5.5"], [class*="h-5.5"] {
+  --icon-size: 1.375rem;
+}
+
+[class*="w-4.5"], [class*="h-4.5"] {
+  --icon-size: 1.125rem;
 }
