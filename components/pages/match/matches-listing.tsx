@@ -11,6 +11,8 @@ import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { AuthService } from "@/lib/auth"
 import { MatchesMapView } from "@/components/google-maps/matches-map-view"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { PageContainer, PageContent } from "@/components/ui/page-container"
+import { PageHeader } from "@/components/ui/page-header"
 import {
   PartidoAPI,
   PartidoDTO,
@@ -234,24 +236,22 @@ export function MatchesListing() {
   // ============================================
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
-      {/* Header - Responsive sticky */}
-      <div className="pt-safe-top bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm safe-top">
-        <div className="px-2 xs:px-3 sm:px-4 md:px-6 md:px-8 py-2.5 xs:py-3 sm:py-4">
-          <div className="flex items-center justify-between gap-2.5 xs:gap-3">
-            <h1 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl md:text-2xl font-bold text-gray-900">Partidos</h1>
-            <Button
-              onClick={handleCreateMatch}
-              size="sm"
-              className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-full p-2.5 xs:p-2.5 sm:p-3 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] touch-manipulation shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center"
-            >
-              <Plus className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6 sm:h-6" />
-            </Button>
-          </div>
-        </div>
-      </div>
+    <PageContainer withBottomNav={true}>
+      <PageHeader
+        title="Partidos"
+        showBack={false}
+        icon={MapPin}
+        rightElement={
+          <button
+            onClick={handleCreateMatch}
+            className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-full p-2.5 min-h-[44px] min-w-[44px] touch-manipulation shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center"
+          >
+            <Plus className="w-5 h-5" />
+          </button>
+        }
+      />
 
-      <div className="flex-1 overflow-y-auto">
+      <PageContent noPadding>
         {/* Error Message */}
         {error && (
           <div className="mx-3 xs:mx-4 sm:mx-6 md:mx-8 mt-3 xs:mt-4 p-2.5 xs:p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg xs:rounded-xl sm:rounded-2xl flex items-start space-x-2.5 xs:space-x-3">
@@ -413,7 +413,7 @@ export function MatchesListing() {
                   <div
                     key={match.id}
                     onClick={() => handleMatchClick(match.id!)}
-                    className="bg-white border-2 border-gray-200 rounded-lg xs:rounded-xl sm:rounded-2xl p-4 xs:p-5 sm:p-6 cursor-pointer hover:shadow-xl hover:border-green-300 transition-all duration-200 touch-manipulation active:scale-[0.98] active:shadow-lg min-h-[150px] xs:min-h-[160px]"
+                    className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 xs:p-5 shadow-sm cursor-pointer hover:shadow-lg hover:border-green-400 transition-all duration-200 touch-manipulation active:scale-[0.98]"
                   >
                     {/* Header row - Badges */}
                     <div className="flex items-start justify-between mb-2.5 xs:mb-3 sm:mb-4 gap-1.5 xs:gap-2">
@@ -469,9 +469,9 @@ export function MatchesListing() {
             </div>
           )}
         </div>
-      </div>
+      </PageContent>
 
       <BottomNavigation />
-    </div>
+    </PageContainer>
   )
 }

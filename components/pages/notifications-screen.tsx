@@ -1,10 +1,9 @@
 "use client"
 
-
 import { logger } from '@/lib/logger'
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { Bell, CheckCheck, Trash2, Calendar, Users, UserPlus, MessageSquare, Star, TrendingUp, AlertCircle, ArrowLeft } from "lucide-react"
+import { Bell, CheckCheck, Trash2, Calendar, Users, UserPlus, MessageSquare, Star, AlertCircle } from "lucide-react"
 import { useNotifications } from "@/hooks/use-notifications"
 import { TipoNotificacion, NotificacionDTO, InscripcionAPI, InscripcionEstado } from "@/lib/api"
 import { format } from "date-fns"
@@ -12,6 +11,9 @@ import { es } from "date-fns/locale"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { AuthService } from "@/lib/auth"
+import { PageContainer, PageContent } from "@/components/ui/page-container"
+import { PageHeader } from "@/components/ui/page-header"
+import { Badge } from "@/components/ui/badge"
 
 const tiposFiltro = [
   { label: "Todas", value: "todas" as const },
@@ -101,46 +103,34 @@ export function NotificationsScreen() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-white flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom overflow-x-hidden">
-      {/* Header */}
-      <div className="w-full pt-6 xs:pt-8 sm:pt-10 md:pt-12 pb-2 xs:pb-3 sm:pb-4 px-2 xs:px-3 sm:px-4 md:px-6 border-b border-gray-100 safe-top">
-        <div className="flex items-center gap-2 xs:gap-3 sm:gap-4 mb-1.5 xs:mb-2 sm:mb-3 md:mb-4 md:mb-5">
-          <button
-            onClick={() => router.back()}
-            className="p-2 xs:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-lg xs:rounded-xl transition-colors touch-manipulation min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] flex items-center justify-center active:scale-95"
-            aria-label="Volver"
-          >
-            <ArrowLeft className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6 sm:h-6 text-gray-700" />
-          </button>
-          <div className="flex items-center gap-2 xs:gap-2.5 sm:gap-3 flex-1 min-w-0">
-            <h1 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl md:text-2xl font-bold text-gray-900 truncate">Notificaciones</h1>
-            {count > 0 && (
-              <span className="px-2 xs:px-2.5 sm:px-3 py-0.5 xs:py-1 bg-red-500 text-white text-[10px] xs:text-xs sm:text-sm font-bold rounded-full flex-shrink-0">
-                {count}
-              </span>
-            )}
-          </div>
-        </div>
+    <PageContainer>
+      <PageHeader 
+        title="Notificaciones"
+        icon={Bell}
+        badge={count > 0 && (
+          <Badge variant="destructive" className="ml-2">
+            {count}
+          </Badge>
+        )}
+      />
 
+      <PageContent>
         {count > 0 && (
           <button
             onClick={marcarTodasLeidas}
-            className="flex items-center gap-2 px-3 xs:px-4 sm:px-5 py-2.5 xs:py-3 sm:py-3.5 bg-green-50 hover:bg-green-100 active:bg-green-200 text-green-700 rounded-lg xs:rounded-xl transition-all text-xs xs:text-sm sm:text-base font-semibold w-full justify-center touch-manipulation active:scale-95 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px]"
+            className="flex items-center justify-center gap-2 w-full px-4 xs:px-5 py-3 xs:py-3.5 bg-green-50 hover:bg-green-100 active:bg-green-200 text-green-700 rounded-xl transition-all text-sm xs:text-base font-semibold touch-manipulation active:scale-[0.98] min-h-[48px] xs:min-h-[52px] mb-4"
           >
             <CheckCheck className="w-4 h-4 xs:w-5 xs:h-5" />
             Marcar todas como leídas
           </button>
         )}
-      </div>
-
-      <div className="flex-1 w-full px-2 xs:px-3 sm:px-4 md:px-6 overflow-y-auto pb-20 xs:pb-22 sm:pb-24 md:pb-26">
         {/* Filtros */}
-        <div className="flex gap-2 xs:gap-2.5 mb-3 xs:mb-4 sm:mb-5 md:mb-6 mt-3 xs:mt-4 sm:mt-5 overflow-x-auto pb-2 scrollbar-hide -mx-3 px-3 xs:-mx-4 xs:px-4 sm:mx-0 sm:px-0">
+        <div className="flex gap-2 xs:gap-2.5 mb-4 xs:mb-5 overflow-x-auto pb-2 scrollbar-hide -mx-3 px-3 sm:mx-0 sm:px-0">
           {tiposFiltro.map(({ label, value }) => (
             <button
               key={value}
               onClick={() => setFiltro(value)}
-              className={`px-3 xs:px-4 sm:px-5 py-2 xs:py-2.5 sm:py-3 rounded-lg xs:rounded-xl whitespace-nowrap transition-all font-semibold text-xs xs:text-sm sm:text-base touch-manipulation min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] active:scale-95 ${filtro === value
+              className={`px-4 xs:px-5 py-2.5 xs:py-3 rounded-xl whitespace-nowrap transition-all font-semibold text-sm xs:text-base touch-manipulation min-h-[44px] xs:min-h-[48px] active:scale-[0.98] ${filtro === value
                 ? "bg-orange-500 text-white shadow-lg"
                 : "bg-orange-50 text-gray-700 hover:bg-orange-100 active:bg-orange-200"
                 }`}
@@ -160,20 +150,20 @@ export function NotificationsScreen() {
             <LoadingSpinner size="lg" variant="green" />
           </div>
         ) : notificacionesFiltradas.length === 0 ? (
-          <div className="bg-gray-50 rounded-xl xs:rounded-2xl border border-gray-200 p-8 xs:p-10 sm:p-12 text-center">
-            <Bell className="w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-3 xs:mb-4" />
-            <p className="text-gray-500 text-xs xs:text-sm sm:text-base md:text-lg">No hay notificaciones</p>
+          <div className="bg-gray-50 rounded-2xl border border-gray-200 p-12 xs:p-16 text-center">
+            <Bell className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500 text-sm xs:text-base">No hay notificaciones</p>
           </div>
         ) : (
           notificacionesFiltradas.map((notif) => (
             <div
               key={notif.id}
               onClick={() => handleClick(notif)}
-              className={`mb-2 xs:mb-3 p-3 xs:p-4 rounded-lg xs:rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-pointer touch-manipulation active:scale-[0.98] ${!notif.leida ? "bg-blue-50 border-blue-200" : "bg-white"
+              className={`mb-3 p-4 rounded-xl border shadow-sm hover:shadow-md transition-all cursor-pointer touch-manipulation active:scale-[0.98] ${!notif.leida ? "bg-blue-50 border-blue-200" : "bg-white border-gray-200"
                 }`}
             >
-              <div className="flex items-start gap-2 xs:gap-3">
-                <div className={`p-1.5 xs:p-2 rounded-full flex-shrink-0 ${notif.prioridad === "URGENTE" ? "bg-red-100" :
+              <div className="flex items-start gap-3">
+                <div className={`p-2 rounded-xl flex-shrink-0 ${notif.prioridad === "URGENTE" ? "bg-red-100" :
                   notif.prioridad === "ALTA" ? "bg-yellow-100" : "bg-blue-100"
                   }`}>
                   {getIcono(notif.tipo)}
@@ -182,15 +172,15 @@ export function NotificationsScreen() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 mb-1 text-xs xs:text-sm sm:text-base">
+                      <h3 className="font-semibold text-gray-900 mb-1 text-sm xs:text-base">
                         {notif.titulo}
                       </h3>
                       {notif.mensaje && (
-                        <p className="text-gray-700 text-xs xs:text-sm mb-1.5 xs:mb-2 line-clamp-2">
+                        <p className="text-gray-700 text-xs xs:text-sm mb-2 line-clamp-2">
                           {notif.mensaje}
                         </p>
                       )}
-                      <p className="text-[10px] xs:text-xs text-gray-500">
+                      <p className="text-xs text-gray-500">
                         {format(new Date(notif.created_at), "PPp", { locale: es })}
                       </p>
                     </div>
@@ -200,10 +190,10 @@ export function NotificationsScreen() {
                         e.stopPropagation()
                         eliminarNotificacion(notif.id)
                       }}
-                      className="ml-1 xs:ml-2 p-2 hover:bg-gray-100 rounded-lg xs:rounded-xl transition-colors flex-shrink-0 min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] min-h-[40px] flex items-center justify-center touch-manipulation"
+                      className="p-2 hover:bg-gray-100 rounded-xl transition-colors flex-shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center touch-manipulation"
                       aria-label="Eliminar notificación"
                     >
-                      <Trash2 className="w-4 h-4 xs:w-4.5 xs:h-4.5 text-gray-400 hover:text-red-600" />
+                      <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-600" />
                     </button>
                   </div>
                 </div>
@@ -211,9 +201,9 @@ export function NotificationsScreen() {
             </div>
           ))
         )}
-      </div>
+      </PageContent>
 
       <BottomNavigation />
-    </div>
+    </PageContainer>
   )
 }

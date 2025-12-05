@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { UserAvatar } from "@/components/ui/user-avatar"
-import { ArrowLeft, Camera, Save, Bell, AlertCircle, Trash2, Upload, X } from "lucide-react"
+import { ArrowLeft, Camera, Save, Bell, AlertCircle, Trash2, Upload, X, Settings as SettingsIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { useAuth } from "@/hooks/use-auth"
@@ -17,6 +17,9 @@ import 'react-image-crop/dist/ReactCrop.css'
 import { PhotoCache } from "@/lib/photo-cache"
 import { ProfileSetupStorage, type ProfileSetupData } from "@/lib/profile-setup-storage"
 import { useDisableBodyScroll } from "@/hooks/use-disable-body-scroll"
+import { PageContainer, PageContent } from "@/components/ui/page-container"
+import { PageHeader } from "@/components/ui/page-header"
+import { FormSection, FormSectionTitle } from "@/components/ui/form-components"
 
 const positions = ["Arquero", "Defensa", "Mediocampista", "Delantero"]
 
@@ -560,23 +563,15 @@ export function SettingsScreen() {
 	}
 
 	return (
-		<div className="min-h-screen bg-white flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
-			{/* Header */}
-			<div className="pt-12 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6 border-b border-gray-100">
-				<div className="flex items-center justify-between gap-2 sm:gap-3">
-					<div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
-						<button
-							onClick={handleBack}
-							className="p-2 sm:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] flex items-center justify-center touch-manipulation active:scale-95"
-						>
-							<ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
-						</button>
-						<h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">Configuración</h1>
-					</div>
+		<PageContainer withBottomNav={false}>
+			<PageHeader
+				title="Configuración"
+				icon={SettingsIcon}
+				rightElement={
 					<Button
 						onClick={handleSave}
 						disabled={isSaving || Object.keys(fieldErrors).some(k => fieldErrors[k as keyof typeof fieldErrors])}
-						className="bg-green-600 hover:bg-green-700 active:bg-green-800 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] px-4 sm:px-6 text-sm sm:text-base font-semibold shadow-lg hover:shadow-xl touch-manipulation active:scale-95 flex items-center gap-2 whitespace-nowrap flex-shrink-0"
+						className="bg-green-600 hover:bg-green-700 active:bg-green-800 min-h-[44px] px-4 sm:px-5 text-sm font-semibold shadow-lg hover:shadow-xl touch-manipulation active:scale-95 flex items-center gap-2 whitespace-nowrap"
 					>
 						{isSaving ? (
 							<>
@@ -585,15 +580,15 @@ export function SettingsScreen() {
 							</>
 						) : (
 							<>
-								<Save className="w-5 h-5" />
-								<span className="hidden sm:inline">Guardar</span>
+								<Save className="w-4 h-4" />
+								<span>Guardar</span>
 							</>
 						)}
 					</Button>
-				</div>
-			</div>
+				}
+			/>
 
-			<div className="flex-1 px-4 sm:px-6 py-4 sm:py-6 overflow-y-auto pb-18 xs:pb-20 sm:pb-22 md:pb-24">
+			<PageContent>
 				{/* Success Message */}
 				{success && (
 					<div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl text-green-800">
@@ -609,14 +604,12 @@ export function SettingsScreen() {
 					</div>
 				)}
 
-				{/* Profile Photo Section - MODERNIZED */}
-				<div className="bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-xl xs:rounded-2xl sm:rounded-3xl p-5 sm:p-8 mb-5 sm:mb-6 shadow-lg hover:shadow-xl transition-shadow">
-					<div className="flex items-center gap-2 sm:gap-3 mb-5 sm:mb-6">
-						<div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-md">
-							<Camera className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-						</div>
-						<h3 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Foto de perfil</h3>
-					</div>
+				{/* Profile Photo Section */}
+				<FormSection>
+					<FormSectionTitle>
+						<Camera className="w-5 h-5 inline mr-2 text-blue-600" />
+						Foto de perfil
+					</FormSectionTitle>
 					<div className="flex flex-col items-center gap-2 xs:gap-3 sm:gap-4">
 						<div className="relative">
 							<UserAvatar
@@ -702,16 +695,14 @@ export function SettingsScreen() {
 					</div>
 				</div>
 
-				{/* Personal Information - MODERNIZED */}
-				<div className="bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 rounded-xl xs:rounded-2xl sm:rounded-3xl p-5 sm:p-8 mb-5 sm:mb-6 shadow-lg hover:shadow-xl transition-shadow">
-					<div className="flex items-center gap-2 sm:gap-3 mb-5 sm:mb-6">
-						<div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-md">
-							<svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-							</svg>
-						</div>
-						<h3 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Información personal</h3>
-					</div>
+				{/* Personal Information */}
+				<FormSection>
+					<FormSectionTitle>
+						<svg className="w-5 h-5 inline mr-2 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+						</svg>
+						Información personal
+					</FormSectionTitle>
 					<div className="space-y-4">
 						<div>
 							<Label htmlFor="name">Nombre</Label>
@@ -749,18 +740,16 @@ export function SettingsScreen() {
 							</p>
 						</div>
 					</div>
-				</div>
+				</FormSection>
 
-				{/* Football Profile - MODERNIZED */}
-				<div className="bg-gradient-to-br from-white to-green-50 border-2 border-green-200 rounded-xl xs:rounded-2xl sm:rounded-3xl p-5 sm:p-8 mb-5 sm:mb-6 shadow-lg hover:shadow-xl transition-shadow">
-					<div className="flex items-center gap-2 sm:gap-3 mb-5 sm:mb-6">
-						<div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-md">
-							<svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-								<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
-							</svg>
-						</div>
-						<h3 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Perfil futbolístico</h3>
-					</div>
+				{/* Football Profile */}
+				<FormSection>
+					<FormSectionTitle>
+						<svg className="w-5 h-5 inline mr-2 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+							<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
+						</svg>
+						Perfil futbolístico
+					</FormSectionTitle>
 					<div className="space-y-4">
 						<div>
 							<Label htmlFor="position">Posición preferida</Label>
@@ -811,16 +800,14 @@ export function SettingsScreen() {
 							)}
 						</div>
 					</div>
-				</div>
+				</FormSection>
 
-				{/* Notification Preferences - MODERNIZED */}
-				<div className="bg-gradient-to-br from-white to-blue-50 border-2 border-blue-200 rounded-xl xs:rounded-2xl sm:rounded-3xl p-5 sm:p-8 mb-5 sm:mb-6 shadow-lg hover:shadow-xl transition-shadow">
-					<div className="flex items-center gap-2 sm:gap-3 mb-5 sm:mb-6">
-						<div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-md">
-							<Bell className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-						</div>
-						<h3 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Notificaciones</h3>
-					</div>
+				{/* Notification Preferences */}
+				<FormSection>
+					<FormSectionTitle>
+						<Bell className="w-5 h-5 inline mr-2 text-blue-600" />
+						Notificaciones
+					</FormSectionTitle>
 					<div className="space-y-4">
 						{Object.entries(notificationPreferences).map(([key, value]) => (
 							<div key={key} className="flex items-center justify-between py-3 sm:py-4 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] xs:min-h-[48px] xs:min-h-[52px] sm:min-h-[56px] px-4 sm:px-5 bg-white rounded-xl hover:bg-gray-50 transition-colors border border-gray-100">
@@ -845,10 +832,10 @@ export function SettingsScreen() {
 							</div>
 						))}
 					</div>
-				</div>
+				</FormSection>
 
 				{/* Danger Zone */}
-				<div className="bg-white border border-red-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6">
+				<FormSection>
 					<div className="flex items-center gap-2 mb-4">
 						<AlertCircle className="w-5 h-5 text-red-600" />
 						<h3 className="text-sm xs:text-base md:text-base sm:text-lg font-bold text-red-600">Zona de peligro</h3>
@@ -864,8 +851,8 @@ export function SettingsScreen() {
 						<Trash2 className="w-4 h-4 mr-2" />
 						Eliminar cuenta
 					</Button>
-				</div>
-			</div>
+				</FormSection>
+			</PageContent>
 
 			{/* Camera Modal */}
 			{showCameraModal && (
@@ -1071,6 +1058,6 @@ export function SettingsScreen() {
 					</div>
 				</div>
 			)}
-		</div>
+		</PageContainer>
 	)
 }

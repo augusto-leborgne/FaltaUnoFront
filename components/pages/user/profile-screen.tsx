@@ -1,7 +1,6 @@
 // components/pages/user/profile-screen.tsx
 "use client"
 
-
 import { logger } from '@/lib/logger'
 import React, { useEffect, useState, useCallback } from "react"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
@@ -9,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { BetaBadge } from "@/components/ui/beta-badge"
 import { UserAvatar } from "@/components/ui/user-avatar"
-import { Settings, Star, Phone, Users, LogOut, UserPlus, Share2, Shield } from "lucide-react"
+import { Settings, Star, Phone, Users, LogOut, UserPlus, Share2, Shield, User as UserIcon } from "lucide-react"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useRouter } from "next/navigation"
 import { calcularEdad } from "@/lib/utils"
@@ -17,6 +16,8 @@ import { AuthService } from "@/lib/auth"
 import { useAuth } from "@/hooks/use-auth"
 import { API_BASE, normalizeUrl } from "@/lib/api"
 import { apiCache } from "@/lib/api-cache-manager"
+import { PageContainer, PageContent } from "@/components/ui/page-container"
+import { PageHeader } from "@/components/ui/page-header"
 
 interface Review {
   id: string
@@ -346,42 +347,45 @@ function ProfileScreenInner() {
   const fullName = `${user.nombre || ""} ${user.apellido || ""}`.trim() || "Usuario"
 
   return (
-    <div className="min-h-screen w-full bg-white flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom overflow-x-hidden">
-      {/* Header */}
-      <div className="w-full pt-6 sm:pt-8 md:pt-10 pb-3 sm:pb-4 md:pb-5 px-3 sm:px-4 md:px-6 border-b border-gray-100 safe-top">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Mi Perfil</h1>
+    <PageContainer>
+      <PageHeader 
+        title="Mi Perfil"
+        showBack={false}
+        icon={UserIcon}
+        badge={
+          <>
             <BetaBadge />
             {user?.rol === "ADMIN" && (
-              <div className="flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 border border-red-200">
+              <div className="flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 border border-red-200 ml-2">
                 <Shield className="h-3 w-3 text-red-600" />
                 <span className="text-xs font-semibold text-red-600">ADMIN</span>
               </div>
             )}
-          </div>
+          </>
+        }
+        rightElement={
           <div className="flex items-center gap-2">
             {user?.rol === "ADMIN" && (
               <button
                 onClick={() => router.push("/admin")}
-                className="p-2 sm:p-2.5 hover:bg-red-50 active:bg-red-100 rounded-xl transition-colors min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] flex items-center justify-center touch-manipulation active:scale-95"
+                className="p-2.5 hover:bg-red-50 active:bg-red-100 rounded-xl transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation active:scale-95"
                 title="Panel de Administración"
               >
-                <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
+                <Shield className="w-5 h-5 text-red-600" />
               </button>
             )}
             <button
               onClick={handleSettingsClick}
-              className="p-2 sm:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] flex items-center justify-center touch-manipulation active:scale-95"
+              className="p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation active:scale-95"
               title="Configuración"
             >
-              <Settings className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
+              <Settings className="w-5 h-5 text-gray-600" />
             </button>
           </div>
-        </div>
-      </div>
+        }
+      />
 
-      <div className="flex-1 w-full px-3 sm:px-4 md:px-6 py-3 sm:py-4 md:py-5 overflow-y-auto pb-20 xs:pb-22 sm:pb-24 md:pb-26">
+      <PageContent>
         {/* Profile Card */}
         <div className="bg-white border-2 border-gray-200 rounded-xl sm:rounded-2xl p-5 sm:p-6 mb-5 sm:mb-6 shadow-sm">
           <div className="flex items-center space-x-3 sm:space-x-2 xs:space-x-3 sm:space-x-4 mb-5 sm:mb-6">
@@ -687,11 +691,11 @@ function ProfileScreenInner() {
             Cerrar sesión
           </Button>
         </div>
-      </div>
+      </PageContent>
 
       <BottomNavigation />
-    </div>
-  )
+    </PageContainer>
+  );
 }
 
 export default function ProfileScreen() {

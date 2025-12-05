@@ -1,14 +1,15 @@
 "use client"
 
-
 import { logger } from '@/lib/logger'
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft, Star } from "lucide-react"
+import { Star } from "lucide-react"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { AuthService } from "@/lib/auth"
 import { API_BASE } from "@/lib/api"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { PageContainer, PageContent } from "@/components/ui/page-container"
+import { PageHeader } from "@/components/ui/page-header"
 
 interface Review {
   id: string
@@ -61,45 +62,39 @@ export function ReviewsScreen() {
     }
   }
 
-  const handleBack = () => router.back()
-
   return (
-    <div className="min-h-screen w-full bg-white flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom overflow-x-hidden">
-      <div className="w-full pt-6 xs:pt-8 sm:pt-10 md:pt-12 pb-2 xs:pb-3 sm:pb-4 px-2 xs:px-3 sm:px-4 md:px-6 border-b border-gray-100 safe-top">
-        <div className="flex items-center gap-3 xs:gap-4">
-          <button onClick={handleBack} className="p-2 -ml-2 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] flex items-center justify-center touch-manipulation rounded-lg hover:bg-gray-100 active:bg-gray-200" aria-label="Volver">
-            <ArrowLeft className="w-5 h-5 xs:w-5.5 xs:h-5.5 text-gray-600" />
-          </button>
-          <h1 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl font-bold text-gray-900 truncate">Mis Reseñas</h1>
-        </div>
-      </div>
+    <PageContainer>
+      <PageHeader 
+        title="Mis Reseñas"
+        icon={Star}
+      />
 
-      <div className="flex-1 w-full px-2 xs:px-3 sm:px-4 md:px-6 py-3 xs:py-4 sm:py-5 md:py-6 pb-20 xs:pb-22 sm:pb-24 md:pb-26 overflow-y-auto">
+      <PageContent>
         {loading ? (
-          <div className="text-center py-12">
+          <div className="text-center py-16">
             <LoadingSpinner size="lg" variant="green" />
           </div>
         ) : reviews.length === 0 ? (
-          <div className="text-center py-12">
-            <Star className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">Aún no tienes reseñas</p>
+          <div className="bg-gray-50 rounded-2xl border border-gray-200 p-16 text-center">
+            <Star className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500 text-sm xs:text-base">Aún no tienes reseñas</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {reviews.map((review) => {
               const avgRating = Math.round((review.nivel + review.deportividad + review.companerismo) / 3)
 
               return (
-                <div key={review.id} className="bg-gray-50 rounded-xl p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="font-medium text-gray-900">
+                <div key={review.id} className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 xs:p-5 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="font-semibold text-gray-900 text-sm xs:text-base">
                       Usuario {review.usuario_que_califica_id.substring(0, 8)}
                     </span>
-                    <div className="flex items-center space-x-1">
+                    <div className="flex items-center gap-1">
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
-                          className={`w-3 h-3 ${i < avgRating
+                          className={`w-4 h-4 ${i < avgRating
                               ? "fill-yellow-400 text-yellow-400"
                               : "text-gray-300"
                             }`}
@@ -108,14 +103,14 @@ export function ReviewsScreen() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-1.5 sm:gap-2 mb-2">
-                    <div className="text-center">
-                      <div className="text-xs text-gray-600 mb-1">Nivel</div>
-                      <div className="flex justify-center">
+                  <div className="grid grid-cols-3 gap-3 mb-3">
+                    <div className="text-center bg-gray-50 rounded-xl p-3">
+                      <div className="text-xs text-gray-600 mb-2 font-medium">Nivel</div>
+                      <div className="flex justify-center gap-0.5">
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
-                            className={`w-3 h-3 ${i < review.nivel
+                            className={`w-4 h-4 ${i < review.nivel
                                 ? "fill-yellow-400 text-yellow-400"
                                 : "text-gray-300"
                               }`}
@@ -123,13 +118,13 @@ export function ReviewsScreen() {
                         ))}
                       </div>
                     </div>
-                    <div className="text-center">
-                      <div className="text-xs text-gray-600 mb-1">Deportividad</div>
-                      <div className="flex justify-center">
+                    <div className="text-center bg-gray-50 rounded-xl p-3">
+                      <div className="text-xs text-gray-600 mb-2 font-medium">Deportividad</div>
+                      <div className="flex justify-center gap-0.5">
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
-                            className={`w-3 h-3 ${i < review.deportividad
+                            className={`w-4 h-4 ${i < review.deportividad
                                 ? "fill-yellow-400 text-yellow-400"
                                 : "text-gray-300"
                               }`}
@@ -137,13 +132,13 @@ export function ReviewsScreen() {
                         ))}
                       </div>
                     </div>
-                    <div className="text-center">
-                      <div className="text-xs text-gray-600 mb-1">Compañerismo</div>
-                      <div className="flex justify-center">
+                    <div className="text-center bg-gray-50 rounded-xl p-3">
+                      <div className="text-xs text-gray-600 mb-2 font-medium">Compañerismo</div>
+                      <div className="flex justify-center gap-0.5">
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
-                            className={`w-3 h-3 ${i < review.companerismo
+                            className={`w-4 h-4 ${i < review.companerismo
                                 ? "fill-yellow-400 text-yellow-400"
                                 : "text-gray-300"
                               }`}
@@ -154,19 +149,19 @@ export function ReviewsScreen() {
                   </div>
 
                   {review.comentario && (
-                    <p className="text-sm text-gray-600 mb-1">{review.comentario}</p>
+                    <p className="text-sm text-gray-700 mb-3 p-3 bg-gray-50 rounded-xl">{review.comentario}</p>
                   )}
-                  <p className="text-xs text-gray-400">
-                    {new Date(review.createdAt).toLocaleDateString('es-ES')}
+                  <p className="text-xs text-gray-500">
+                    {new Date(review.createdAt).toLocaleDateString('es-ES', { dateStyle: 'medium' })}
                   </p>
                 </div>
               )
             })}
           </div>
         )}
-      </div>
+      </PageContent>
 
       <BottomNavigation />
-    </div>
+    </PageContainer>
   )
 }
