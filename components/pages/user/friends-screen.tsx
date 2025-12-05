@@ -225,7 +225,7 @@ export function FriendsScreen() {
   const friendIds = new Set(friends.map(f => f.id))
 
   return (
-    <div className="min-h-screen bg-white flex flex-col pb-24 sm:pb-24">
+    <div className="min-h-screen bg-white flex flex-col pb-20 xs:pb-24 sm:pb-28 safe-bottom">
       {/* Header */}
       <div className="pt-12 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6 border-b border-gray-100">
         <div className="flex items-center justify-between mb-4">

@@ -190,7 +190,7 @@ export function ContactsScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col pb-24 sm:pb-24">
+    <div className="min-h-screen bg-white flex flex-col pb-20 xs:pb-24 sm:pb-28 safe-bottom">
       {/* Header */}
       <div className="pt-16 pb-6 px-6 border-b border-gray-100">
         <div className="flex items-center space-x-4 mb-4">

@@ -64,17 +64,17 @@ export function ReviewsScreen() {
   const handleBack = () => router.back()
 
   return (
-    <div className="min-h-screen bg-white flex flex-col pb-24 sm:pb-24">
-      <div className="pt-16 pb-6 px-6 border-b border-gray-100">
-        <div className="flex items-center space-x-4">
-          <button onClick={handleBack} className="p-2 sm:p-3 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
+    <div className="min-h-screen bg-white flex flex-col pb-20 xs:pb-24 sm:pb-28 safe-bottom">
+      <div className="pt-12 xs:pt-14 sm:pt-16 pb-4 xs:pb-5 sm:pb-6 px-3 xs:px-4 sm:px-6 border-b border-gray-100 safe-top">
+        <div className="flex items-center gap-3 xs:gap-4">
+          <button onClick={handleBack} className="p-2 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation rounded-lg hover:bg-gray-100 active:bg-gray-200" aria-label="Volver">
+            <ArrowLeft className="w-5 h-5 xs:w-5.5 xs:h-5.5 text-gray-600" />
           </button>
-          <h1 className="text-xl font-bold text-gray-900">Mis Reseñas</h1>
+          <h1 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900 truncate">Mis Reseñas</h1>
         </div>
       </div>
 
-      <div className="flex-1 px-6 py-6 pb-24">
+      <div className="flex-1 px-3 xs:px-4 sm:px-6 py-4 xs:py-5 sm:py-6 pb-24 xs:pb-28 sm:pb-32 overflow-y-auto">
         {loading ? (
           <div className="text-center py-12">
             <LoadingSpinner size="lg" variant="green" />
