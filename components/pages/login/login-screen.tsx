@@ -226,38 +226,38 @@ export function LoginScreen() {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-white">
+    <div className="min-h-screen w-full flex items-center justify-center bg-white px-3 xs:px-4 sm:px-6 py-8 xs:py-10 sm:py-12 safe-top safe-bottom">
       {/* ✅ Overlay de loading para OAuth */}
       {isOAuthLoading && (
-        <div className="fixed inset-0 bg-white/90 backdrop-blur-sm z-50 flex items-center justify-center">
-          <div className="text-center">
-            <div className="mb-4">
+        <div className="fixed inset-0 bg-white/90 backdrop-blur-sm z-50 flex items-center justify-center safe-top safe-bottom">
+          <div className="text-center px-4">
+            <div className="mb-3 xs:mb-4">
               <LoadingSpinner size="xl" variant="green" text="Iniciando sesión..." />
             </div>
-            <p className="text-lg font-medium text-gray-900">Redirigiendo a Google...</p>
-            <p className="text-sm text-gray-500 mt-1">Por favor espera</p>
+            <p className="text-base xs:text-lg font-medium text-gray-900">Redirigiendo a Google...</p>
+            <p className="text-xs xs:text-sm text-gray-500 mt-1">Por favor espera</p>
           </div>
         </div>
       )}
       
-      <div className="w-full max-w-md px-4 sm:px-6">
+      <div className="w-full max-w-md">
         {/* Logo + Encabezado */}
-        <div className="text-center mb-6 sm:mb-8">
-          <div className="flex justify-center mb-4 sm:mb-6">
+        <div className="text-center mb-5 xs:mb-6 sm:mb-8">
+          <div className="flex justify-center mb-3 xs:mb-4 sm:mb-6">
             <img 
               src="/logo.png" 
               alt="Falta Uno" 
-              className="w-auto max-h-16 sm:max-h-20 md:max-h-24"
+              className="w-auto max-h-14 xs:max-h-16 sm:max-h-20 md:max-h-24"
             />
           </div>
-          <h1 className="text-xl sm:text-2xl font-semibold text-gray-900">Iniciar sesión</h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">Accede para organizar y sumarte a partidos</p>
+          <h1 className="text-lg xs:text-xl sm:text-2xl font-semibold text-gray-900">Iniciar sesión</h1>
+          <p className="text-xs xs:text-sm text-gray-500 mt-1">Accede para organizar y sumarte a partidos</p>
         </div>
 
         {/* Formulario */}
-        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 xs:space-y-3.5 sm:space-y-4">
           <div>
-            <label htmlFor="login-email" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Email</label>
+            <label htmlFor="login-email" className="block text-xs xs:text-sm font-medium text-gray-700 mb-1 xs:mb-1.5">Email</label>
             <Input
               id="login-email"
               name="email"
