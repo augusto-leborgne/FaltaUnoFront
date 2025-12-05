@@ -155,6 +155,26 @@ export function formatDateRegional(dateString: string | Date | null | undefined)
 }
 
 /**
+ * Convierte fecha de dd/mm/yyyy a yyyy-MM-dd (formato para inputs HTML)
+ * @param regionalDate Fecha en formato dd/mm/yyyy
+ * @returns Fecha en formato yyyy-MM-dd
+ */
+export function parseDateRegional(regionalDate: string): string {
+  if (!regionalDate) return '';
+  
+  try {
+    // Verificar formato dd/mm/yyyy
+    if (regionalDate.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+      const [day, month, year] = regionalDate.split('/');
+      return `${year}-${month}-${day}`;
+    }
+    return regionalDate;
+  } catch {
+    return regionalDate;
+  }
+}
+
+/**
  * Formatea una fecha en formato dd/mm (sin año) para tarjetas y vistas compactas
  * @param dateString Fecha en formato ISO, yyyy-MM-dd, o Date object
  * @returns String formateado (ej: "15/05")

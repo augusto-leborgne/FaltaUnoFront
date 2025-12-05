@@ -556,13 +556,13 @@ export function CreateMatchScreen() {
                 type="button"
                 onClick={() => handleInputChange("gender", label)}
                 disabled={isLoading}
-                className={`flex-1 px-2 sm:px-3 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-semibold border-2 transition-all touch-manipulation disabled:opacity-50 min-h-[52px] active:scale-95 flex flex-col items-center justify-center gap-0.5 ${formData.gender === label
+                className={`flex-1 px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl text-sm sm:text-base font-semibold border-2 transition-all touch-manipulation disabled:opacity-50 h-[48px] active:scale-95 flex flex-col items-center justify-center gap-0.5 ${formData.gender === label
                   ? "bg-orange-500 text-white border-orange-600 shadow-lg"
                   : "bg-white text-gray-700 border-gray-300 hover:border-orange-500 hover:text-orange-600 active:bg-gray-50"
                   }`}
               >
-                <span className="text-lg sm:text-xl">{icon}</span>
-                <span className="text-xs">{label}</span>
+                <span className="text-base sm:text-lg">{icon}</span>
+                <span className="text-[10px] sm:text-xs">{label}</span>
               </button>
             ))}
           </div>
@@ -574,19 +574,23 @@ export function CreateMatchScreen() {
             <label className="block text-sm sm:text-base font-semibold text-gray-900 mb-2 sm:mb-3">
               Fecha <span className="text-red-500">*</span>
             </label>
-            <div className="relative">
-              <Calendar className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none z-10" />
+            <div className="relative flex items-center">
+              <Calendar className="absolute left-3 sm:left-4 w-5 h-5 text-gray-400 pointer-events-none z-10" />
               <Input
                 type="date"
                 value={formData.date}
                 onChange={(e) => handleInputChange("date", e.target.value)}
                 min={today}
                 max={maxDate}
-                className={`pl-11 sm:pl-12 h-[52px] text-base rounded-xl border-2 w-full ${fieldErrors.date ? 'border-red-500' : 'border-gray-300'}`}
+                className={`pl-11 sm:pl-12 h-[48px] text-sm sm:text-base rounded-xl border-2 w-full flex items-center ${fieldErrors.date ? 'border-red-500' : 'border-gray-300'}`}
                 required
                 disabled={isLoading}
+                placeholder="dd/mm/yyyy"
               />
             </div>
+            {!fieldErrors.date && !formData.date && (
+              <p className="text-xs text-gray-500 mt-1.5">Formato: dd/mm/yyyy</p>
+            )}
             {fieldErrors.date && (
               <p className="text-xs sm:text-sm text-red-600 mt-1.5 flex items-center">
                 <AlertCircle className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
@@ -598,12 +602,12 @@ export function CreateMatchScreen() {
             <label className="block text-sm sm:text-base font-semibold text-gray-900 mb-2 sm:mb-3">
               Hora <span className="text-red-500">*</span>
             </label>
-            <div className="relative">
-              <Clock className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none z-10" />
+            <div className="relative flex items-center">
+              <Clock className="absolute left-3 sm:left-4 w-5 h-5 text-gray-400 pointer-events-none z-10" />
               <select
                 value={formData.time}
                 onChange={(e) => handleInputChange("time", e.target.value)}
-                className={`w-full pl-11 sm:pl-12 pr-4 h-[52px] rounded-xl border-2 ${fieldErrors.time ? 'border-red-500' : 'border-gray-300'} bg-white text-gray-900 text-base font-medium focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation`}
+                className={`w-full pl-11 sm:pl-12 pr-4 h-[48px] rounded-xl border-2 ${fieldErrors.time ? 'border-red-500' : 'border-gray-300'} bg-white text-gray-900 text-sm sm:text-base font-medium focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex items-center`}
                 required
                 disabled={isLoading}
               >
