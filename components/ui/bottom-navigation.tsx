@@ -73,14 +73,14 @@ function BottomNavigationComponent() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 pb-safe-area-inset-bottom z-40 shadow-lg safe-bottom" role="navigation" aria-label="Navegación principal">
-      <div className="flex justify-center items-center py-1.5 xs:py-2 px-1 xs:px-2 max-w-screen-xl mx-auto">
+      <div className="flex justify-center items-center py-1 xs:py-1.5 px-1 xs:px-2 max-w-screen-xl mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon
           return (
             <button
               key={item.id}
               onClick={() => router.push(item.path)}
-              className="flex flex-col items-center min-h-[56px] xs:min-h-[60px] sm:min-h-[64px] flex-1 max-w-[120px] justify-center touch-manipulation active:scale-95 transition-transform px-1 xs:px-2"
+              className="font-sans flex flex-col items-center min-h-[52px] xs:min-h-[54px] sm:min-h-[56px] flex-1 max-w-[120px] justify-center touch-manipulation active:scale-95 transition-transform px-1 xs:px-2"
               aria-label={item.label}
               aria-current={item.isActive ? "page" : undefined}
             >
@@ -91,7 +91,7 @@ function BottomNavigationComponent() {
               >
                 <Icon className={`w-4.5 h-4.5 xs:w-5 xs:h-5 sm:w-5.5 sm:h-5.5 ${item.isActive ? "text-gray-900" : "text-gray-500"}`} strokeWidth={item.isActive ? 2.5 : 2} />
               </div>
-              <span className={`text-[10px] xs:text-xs sm:text-sm leading-tight text-center ${item.isActive ? "font-semibold text-gray-900" : "font-medium text-gray-500"}`}>
+              <span className={`font-sans text-[10px] xs:text-xs sm:text-sm leading-tight text-center ${item.isActive ? "font-semibold text-gray-900" : "font-medium text-gray-500"}`}>
                 {item.label}
               </span>
             </button>

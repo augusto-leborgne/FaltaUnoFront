@@ -518,7 +518,7 @@ export function CreateMatchScreen() {
 
         {/* Tipo de partido */}
         <div className="mb-4 xs:mb-5 sm:mb-6">
-          <label className="block text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-2 xs:mb-3 sm:mb-4 md:mb-3">
+          <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-2 xs:mb-3 sm:mb-4 md:mb-3">
             Tipo de partido <span className="text-red-500">*</span>
           </label>
           <div className="flex justify-center gap-2 xs:gap-3 sm:gap-4">
@@ -533,7 +533,7 @@ export function CreateMatchScreen() {
                   type="button"
                   onClick={() => handleInputChange("type", type)}
                   disabled={isLoading}
-                  className={`w-14 h-14 xs:w-16 xs:h-16 sm:w-18 sm:h-18 md:w-16 md:h-16 rounded-full text-sm xs:text-base sm:text-lg md:text-base font-bold border-2 transition-all touch-manipulation disabled:opacity-50 active:scale-95 flex items-center justify-center min-w-[56px] min-h-[56px] ${formData.type === type
+                  className={`font-sans w-12 h-12 xs:w-13 xs:h-13 sm:w-14 sm:h-14 md:w-13 md:h-13 rounded-full text-sm xs:text-base sm:text-lg md:text-base font-bold border-2 transition-all touch-manipulation disabled:opacity-50 active:scale-95 flex items-center justify-center min-w-[48px] min-h-[48px] ${formData.type === type
                     ? "bg-green-600 text-white border-green-600 shadow-lg"
                     : "bg-white text-gray-700 border-gray-300 hover:border-green-600 hover:text-green-600 active:bg-gray-50"
                     }`}
@@ -548,7 +548,7 @@ export function CreateMatchScreen() {
 
         {/* Género */}
         <div className="mb-4 xs:mb-5 sm:mb-6">
-          <label className="block text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-2 xs:mb-3 sm:mb-4 md:mb-3">
+          <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-2 xs:mb-3 sm:mb-4 md:mb-3">
             Género <span className="text-red-500">*</span>
           </label>
           <div className="flex gap-2 xs:gap-2.5 sm:gap-3">
@@ -558,7 +558,7 @@ export function CreateMatchScreen() {
                 type="button"
                 onClick={() => handleInputChange("gender", label)}
                 disabled={isLoading}
-                className={`flex-1 px-1.5 xs:px-2 sm:px-3 md:px-2 py-2 rounded-lg xs:rounded-xl text-xs xs:text-sm sm:text-base md:text-sm font-semibold border-2 transition-all touch-manipulation disabled:opacity-50 min-h-[48px] active:scale-95 flex flex-col items-center justify-center gap-0.5 ${formData.gender === label
+                className={`font-sans flex-1 px-1.5 xs:px-2 sm:px-3 md:px-2 py-2 rounded-lg xs:rounded-xl text-xs xs:text-sm sm:text-base md:text-sm font-semibold border-2 transition-all touch-manipulation disabled:opacity-50 min-h-[48px] active:scale-95 flex flex-col items-center justify-center gap-0.5 ${formData.gender === label
                   ? "bg-orange-500 text-white border-orange-600 shadow-lg"
                   : "bg-white text-gray-700 border-gray-300 hover:border-orange-500 hover:text-orange-600 active:bg-gray-50"
                   }`}
@@ -574,35 +574,32 @@ export function CreateMatchScreen() {
         {/* Fecha y Hora */}
         <div className="grid grid-cols-2 gap-2 xs:gap-3 sm:gap-4 mb-4 xs:mb-5 sm:mb-6">
           <div className="w-full min-w-0">
-            <label className="block text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1.5 xs:mb-2 sm:mb-3 md:mb-2">
+            <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1.5 xs:mb-2 sm:mb-3 md:mb-2">
               Fecha <span className="text-red-500">*</span>
             </label>
-            <div className="relative flex items-center">
-              <Calendar className="absolute left-2 xs:left-3 sm:left-4 w-4 h-4 xs:w-5 xs:h-5 text-gray-400 pointer-events-none z-10" />
-              <Input
-                type="date"
-                value={formData.date}
-                onChange={(e) => handleInputChange("date", e.target.value)}
-                min={today}
-                max={maxDate}
-                className={`pl-9 xs:pl-10 sm:pl-12 min-h-[48px] text-sm xs:text-base rounded-lg xs:rounded-xl border-2 w-full flex items-center ${fieldErrors.date ? 'border-red-500' : 'border-gray-300'}`}
-                required
-                disabled={isLoading}
-                placeholder="dd/mm/yyyy"
-              />
-            </div>
+            <Input
+              type="date"
+              value={formData.date}
+              onChange={(e) => handleInputChange("date", e.target.value)}
+              min={today}
+              max={maxDate}
+              className={`font-sans px-3 xs:px-4 min-h-[48px] text-sm xs:text-base rounded-lg xs:rounded-xl border-2 w-full ${fieldErrors.date ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50`}
+              required
+              disabled={isLoading}
+              placeholder="dd/mm/yyyy"
+            />
             {!fieldErrors.date && !formData.date && (
-              <p className="text-[10px] xs:text-xs text-gray-500 mt-1">Formato: dd/mm/yyyy</p>
+              <p className="font-sans text-[10px] xs:text-xs text-gray-500 mt-1">Formato: dd/mm/yyyy</p>
             )}
             {fieldErrors.date && (
-              <p className="text-[10px] xs:text-xs sm:text-sm text-red-600 mt-1 flex items-center">
+              <p className="font-sans text-[10px] xs:text-xs sm:text-sm text-red-600 mt-1 flex items-center">
                 <AlertCircle className="w-3 h-3 xs:w-3.5 xs:h-3.5 mr-1 flex-shrink-0" />
                 <span className="truncate">{fieldErrors.date}</span>
               </p>
             )}
           </div>
           <div className="w-full min-w-0">
-            <label className="block text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1.5 xs:mb-2 sm:mb-3 md:mb-2">
+            <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1.5 xs:mb-2 sm:mb-3 md:mb-2">
               Hora <span className="text-red-500">*</span>
             </label>
             <div className="relative flex items-center">
@@ -610,7 +607,7 @@ export function CreateMatchScreen() {
               <select
                 value={formData.time}
                 onChange={(e) => handleInputChange("time", e.target.value)}
-                className={`w-full pl-9 xs:pl-10 sm:pl-12 pr-3 xs:pr-4 min-h-[48px] rounded-lg xs:rounded-xl border-2 ${fieldErrors.time ? 'border-red-500' : 'border-gray-300'} bg-white text-gray-900 text-sm xs:text-base font-medium focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex items-center`}
+                className={`font-sans w-full pl-9 xs:pl-10 sm:pl-12 pr-3 xs:pr-4 min-h-[48px] rounded-lg xs:rounded-xl border-2 ${fieldErrors.time ? 'border-red-500' : 'border-gray-300'} bg-white text-gray-900 text-sm xs:text-base font-medium focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex items-center`}
                 required
                 disabled={isLoading}
               >
@@ -623,7 +620,7 @@ export function CreateMatchScreen() {
               </select>
             </div>
             {fieldErrors.time && (
-              <p className="text-[10px] xs:text-xs sm:text-sm text-red-600 mt-1 flex items-center">
+              <p className="font-sans text-[10px] xs:text-xs sm:text-sm text-red-600 mt-1 flex items-center">
                 <AlertCircle className="w-3 h-3 xs:w-3.5 xs:h-3.5 mr-1 flex-shrink-0" />
                 <span className="truncate">{fieldErrors.time}</span>
               </p>
