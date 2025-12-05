@@ -289,25 +289,25 @@ export function HomeScreen() {
   return (
     <div className="min-h-screen w-full bg-gradient-to-b from-primary/5 via-background to-background flex flex-col overflow-x-hidden pb-24 sm:pb-24">
       {/* HERO HEADER */}
-      <div className="w-full pt-12 sm:pt-16 pb-6 sm:pb-8 px-4 sm:px-6 max-w-full">
-        <div className="flex items-center justify-between mb-4 sm:mb-6 w-full">
-          <div className="flex-1 min-w-0 pr-2">
-            <div className="flex items-center gap-2 mb-1">
-              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent truncate">
-                ¡Bienvenido!
+      <div className="w-full pt-12 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6 max-w-full">
+        <div className="flex items-start justify-between mb-6 sm:mb-8 w-full">
+          <div className="flex-1 min-w-0 pr-3">
+            <div className="flex items-center gap-2 mb-2">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 truncate">
+                Hola, {currentUser?.nombre || user?.nombre || "Jugador"} 👋
               </h1>
               <BetaBadge />
             </div>
-            <p className="text-sm sm:text-base text-muted-foreground truncate">
-              {currentUser?.nombre || user?.nombre || "Jugador"}
+            <p className="text-sm sm:text-base text-gray-600 font-medium">
+              ¿Listo para jugar hoy?
             </p>
           </div>
-          <div className="flex items-center space-x-2 flex-shrink-0">
+          <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
             <button
               onClick={handleNotifications}
-              className="relative p-2.5 sm:p-2.5 rounded-full bg-white shadow-md hover:shadow-lg transition-all duration-200 touch-manipulation active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="relative p-2.5 rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 touch-manipulation active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
-              <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+              <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
               {notificationCount > 0 && (
                 <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1.5 shadow-md">
                   {notificationCount > 99 ? '99+' : notificationCount}
@@ -318,69 +318,67 @@ export function HomeScreen() {
               userId={currentUser?.id}
               name={currentUser?.nombre}
               surname={currentUser?.apellido}
-              className="w-10 h-10 sm:w-12 sm:h-12 cursor-pointer ring-2 ring-white shadow-md hover:ring-primary transition-all duration-200"
+              className="w-11 h-11 sm:w-12 sm:h-12 cursor-pointer ring-2 ring-white shadow-md hover:scale-105 transition-all duration-200"
               onClick={() => router.push("/profile")}
             />
           </div>
         </div>
 
-        {/* QUICK ACTIONS */}
-        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-6">
+        {/* QUICK ACTIONS - Modern floating action buttons */}
+        <div className="w-full flex justify-center gap-4 sm:gap-6 mb-6">
           <button
             onClick={handleCreateMatch}
-            className="w-full bg-gradient-to-r from-primary to-primary/90 active:from-primary/80 active:to-primary/70 text-white rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-lg active:shadow-md transition-all duration-200 touch-manipulation active:scale-[0.97] group min-h-[90px] sm:min-h-[100px]"
+            className="group relative"
+            aria-label="Crear partido"
           >
-            <div className="flex items-center justify-between mb-2">
-              <Plus className="w-6 h-6 sm:w-7 sm:h-7 group-active:rotate-90 transition-transform duration-300" />
+            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl shadow-lg flex items-center justify-center transition-all duration-300 active:scale-95 group-hover:shadow-xl group-hover:shadow-green-500/50">
+              <Plus className="w-7 h-7 sm:w-8 sm:h-8 text-white group-active:rotate-90 transition-transform duration-300" />
             </div>
-            <div className="text-left">
-              <div className="font-bold text-base sm:text-lg mb-1">Crear Partido</div>
-              <div className="text-sm text-white/80 leading-tight">Organiza un nuevo partido</div>
+            <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap">
+              <span className="text-xs sm:text-sm font-semibold text-gray-700">Crear</span>
             </div>
           </button>
 
           <button
             onClick={handleViewAllMatches}
-            className="w-full bg-gradient-to-r from-secondary to-secondary/90 active:from-secondary/80 active:to-secondary/70 text-white rounded-xl sm:rounded-2xl p-4 sm:p-5 shadow-lg active:shadow-md transition-all duration-200 touch-manipulation active:scale-[0.97] group min-h-[90px] sm:min-h-[100px]"
+            className="group relative"
+            aria-label="Buscar partidos"
           >
-            <div className="flex items-center justify-between mb-2">
-              <Users className="w-6 h-6 sm:w-7 sm:h-7 group-active:scale-110 transition-transform duration-300" />
+            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl shadow-lg flex items-center justify-center transition-all duration-300 active:scale-95 group-hover:shadow-xl group-hover:shadow-orange-500/50">
+              <Users className="w-7 h-7 sm:w-8 sm:h-8 text-white group-active:scale-110 transition-transform duration-300" />
             </div>
-            <div className="text-left">
-              <div className="font-bold text-base sm:text-lg mb-1">Buscar Partidos</div>
-              <div className="text-sm text-white/80 leading-tight">Únete a un partido</div>
+            <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap">
+              <span className="text-xs sm:text-sm font-semibold text-gray-700">Buscar</span>
             </div>
           </button>
         </div>
 
-        {/* COMMUNITY STATS */}
-        <div className="w-full grid grid-cols-3 gap-2 sm:gap-4">
-          <div className="bg-white rounded-lg sm:rounded-2xl p-2.5 sm:p-4 text-center shadow-md border border-primary/10 min-h-[75px] sm:min-h-[90px] flex flex-col justify-center">
-            <div className="flex items-center justify-center mb-1 sm:mb-1.5">
-              <div className="w-7 h-7 sm:w-10 sm:h-10 bg-green-100 rounded-full flex items-center justify-center">
-                <TrendingUp className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-green-600" />
+        {/* COMMUNITY STATS - Modern glassmorphism cards */}
+        <div className="w-full mb-10">
+          <div className="bg-white/60 backdrop-blur-md rounded-3xl p-4 sm:p-6 shadow-xl border border-white/50">
+            <div className="grid grid-cols-3 gap-3 sm:gap-4">
+              <div className="text-center">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-2 sm:mb-3 shadow-lg">
+                  <TrendingUp className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                </div>
+                <div className="text-2xl sm:text-3xl font-bold text-gray-900 leading-none mb-1">{communityStats.activeUsers}</div>
+                <div className="text-xs sm:text-sm text-gray-600 font-semibold">Activos</div>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-2 sm:mb-3 shadow-lg">
+                  <Calendar className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                </div>
+                <div className="text-2xl sm:text-3xl font-bold text-gray-900 leading-none mb-1">{communityStats.matchesThisWeek}</div>
+                <div className="text-xs sm:text-sm text-gray-600 font-semibold">Partidos</div>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-2 sm:mb-3 shadow-lg">
+                  <Users className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                </div>
+                <div className="text-2xl sm:text-3xl font-bold text-gray-900 leading-none mb-1">{communityStats.newMembers}</div>
+                <div className="text-xs sm:text-sm text-gray-600 font-semibold">Jugadores</div>
               </div>
             </div>
-            <div className="text-lg sm:text-2xl font-bold text-green-600 leading-none mb-0.5 sm:mb-1">{communityStats.activeUsers}</div>
-            <div className="text-[10px] sm:text-xs text-muted-foreground font-medium leading-tight">Activos</div>
-          </div>
-          <div className="bg-white rounded-lg sm:rounded-2xl p-2.5 sm:p-4 text-center shadow-md border border-primary/10 min-h-[75px] sm:min-h-[90px] flex flex-col justify-center">
-            <div className="flex items-center justify-center mb-1 sm:mb-1.5">
-              <div className="w-7 h-7 sm:w-10 sm:h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                <Calendar className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-primary" />
-              </div>
-            </div>
-            <div className="text-lg sm:text-2xl font-bold text-foreground leading-none mb-0.5 sm:mb-1">{communityStats.matchesThisWeek}</div>
-            <div className="text-[10px] sm:text-xs text-muted-foreground font-medium leading-tight">Partidos</div>
-          </div>
-          <div className="bg-white rounded-lg sm:rounded-2xl p-2.5 sm:p-4 text-center shadow-md border border-primary/10 min-h-[75px] sm:min-h-[90px] flex flex-col justify-center">
-            <div className="flex items-center justify-center mb-1 sm:mb-1.5">
-              <div className="w-7 h-7 sm:w-10 sm:h-10 bg-secondary/10 rounded-full flex items-center justify-center">
-                <Users className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-secondary" />
-              </div>
-            </div>
-            <div className="text-lg sm:text-2xl font-bold text-foreground leading-none mb-0.5 sm:mb-1">{communityStats.newMembers}</div>
-            <div className="text-[10px] sm:text-xs text-muted-foreground font-medium leading-tight">Nuevos</div>
           </div>
         </div>
       </div>
