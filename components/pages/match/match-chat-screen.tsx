@@ -598,7 +598,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
 
   if (loading && !messages.length) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center px-3 xs:px-4 sm:px-6">
         <LoadingSpinner size="xl" variant="green" text="Cargando chat..." />
       </div>
     )
@@ -612,40 +612,40 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
     return (
       <div className="min-h-screen bg-white flex flex-col">
         {/* Header */}
-        <div className="pt-16 pb-4 px-6 border-b border-gray-100 bg-white">
+        <div className="pt-12 xs:pt-14 sm:pt-16 safe-top pb-3 xs:pb-4 px-3 xs:px-4 sm:px-6 border-b border-gray-100 bg-white">
           <div className="flex items-center space-x-4">
             <button
               onClick={handleBack}
-              className="p-2 -ml-2 hover:bg-gray-100 rounded-xl transition-colors"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center -ml-2 hover:bg-gray-100 rounded-xl transition-colors touch-manipulation active:scale-95"
             >
               <ArrowLeft className="w-5 h-5 text-gray-600" />
             </button>
             <div className="flex-1">
-              <h1 className="text-lg font-bold text-gray-900">Chat del partido</h1>
+              <h1 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900">Chat del partido</h1>
             </div>
           </div>
         </div>
 
         {/* Error Message - Centro de la pantalla */}
-        <div className="flex-1 flex items-center justify-center px-6">
+        <div className="flex-1 flex items-center justify-center px-3 xs:px-4 sm:px-6">
           <div className="max-w-md w-full text-center">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-8 h-8 text-red-600" />
+            <div className="w-14 h-14 xs:w-16 xs:h-16 sm:w-20 sm:h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3 xs:mb-4">
+              <AlertCircle className="w-7 h-7 xs:w-8 xs:h-8 sm:w-10 sm:h-10 text-red-600" />
             </div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">
+            <h2 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900 mb-2">
               Acceso no permitido
             </h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-sm xs:text-base text-gray-600 mb-4 xs:mb-6">
               {error}
             </p>
-            <div className="p-4 bg-gray-50 rounded-xl">
-              <p className="text-sm text-gray-500">
+            <div className="p-3 xs:p-4 bg-gray-50 rounded-lg xs:rounded-xl">
+              <p className="text-xs xs:text-sm text-gray-500">
                 Serás redirigido al partido en unos segundos...
               </p>
             </div>
             <Button
               onClick={() => router.push(`/matches/${matchId}`)}
-              className="mt-4 bg-green-600 hover:bg-green-700 text-white"
+              className="mt-3 xs:mt-4 min-h-[48px] bg-green-600 hover:bg-green-700 text-white text-sm xs:text-base touch-manipulation active:scale-[0.98]"
             >
               Volver al partido
             </Button>
@@ -664,10 +664,10 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
       {/* Header Móvil - Ultra compacto y fijo */}
       <div className="sticky top-0 z-20 bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 shadow-lg">
         <div className="safe-top" /> {/* Espacio para notch en iOS */}
-        <div className="flex items-center px-2 sm:px-3 py-2">
+        <div className="flex items-center px-2 xs:px-2.5 sm:px-3 py-2 xs:py-2.5 sm:py-3">
           <button
             onClick={handleBack}
-            className="p-2 hover:bg-white/20 rounded-lg transition-all flex-shrink-0 active:scale-95 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+            className="min-h-[44px] min-w-[44px] flex items-center justify-center hover:bg-white/20 rounded-lg transition-all flex-shrink-0 active:scale-95 touch-manipulation"
             aria-label="Volver"
           >
             <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -676,20 +676,20 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
           {/* Match info ultra-compacto */}
           <button
             onClick={() => router.push(`/matches/${matchId}`)}
-            className="flex-1 min-w-0 text-left hover:bg-white/10 rounded-lg px-2 py-1 transition-all active:scale-[0.98] touch-manipulation"
+            className="flex-1 min-w-0 text-left hover:bg-white/10 rounded-lg px-1.5 xs:px-2 py-1 xs:py-1.5 transition-all active:scale-[0.98] touch-manipulation"
           >
-            <h1 className="text-xs sm:text-sm font-bold text-white truncate leading-tight">
+            <h1 className="text-xs xs:text-sm sm:text-base font-bold text-white truncate leading-tight">
               Chat del Partido
             </h1>
             {matchInfo && (
-              <div className="flex items-center space-x-1.5 sm:space-x-2 text-[9px] sm:text-[10px] text-blue-100 mt-0.5">
+              <div className="flex items-center space-x-1 xs:space-x-1.5 sm:space-x-2 text-[9px] xs:text-[10px] sm:text-xs text-blue-100 mt-0.5">
                 <div className="flex items-center space-x-0.5">
-                  <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                  <Clock className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-3.5 sm:h-3.5" />
                   <span className="truncate max-w-[100px] sm:max-w-[150px]">{formatDate(matchInfo.fecha, matchInfo.hora)}</span>
                 </div>
                 <span className="text-blue-300">•</span>
                 <div className="flex items-center space-x-0.5">
-                  <Users className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                  <Users className="w-2.5 h-2.5 xs:w-3 xs:h-3 sm:w-3.5 sm:h-3.5" />
                   <span>{matchInfo.jugadores_actuales}/{matchInfo.jugadores_necesarios}</span>
                 </div>
               </div>
@@ -700,11 +700,11 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
 
       {/* Error Message - Responsive */}
       {error && messages.length > 0 && (
-        <div className="px-3 sm:px-4 pt-2 sm:pt-3">
-          <div className="p-2.5 sm:p-3 bg-red-50 border border-red-200 rounded-lg flex items-start space-x-2 animate-in slide-in-from-top duration-300 shadow-sm">
+        <div className="px-2 xs:px-3 sm:px-4 pt-1.5 xs:pt-2 sm:pt-3">
+          <div className="p-2 xs:p-2.5 sm:p-3 bg-red-50 border border-red-200 rounded-lg flex items-start space-x-1.5 xs:space-x-2 animate-in slide-in-from-top duration-300 shadow-sm">
             <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
-              <p className="text-red-600 text-xs sm:text-sm">{error}</p>
+              <p className="text-red-600 text-[10px] xs:text-xs sm:text-sm">{error}</p>
             </div>
             <button
               onClick={() => setError("")}
@@ -720,20 +720,20 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
-        className="flex-1 px-2 sm:px-4 py-3 sm:py-4 space-y-0.5 overflow-y-auto bg-gradient-to-b from-gray-50 to-white overscroll-behavior-contain"
+        className="flex-1 px-2 xs:px-3 sm:px-4 py-2.5 xs:py-3 sm:py-4 space-y-0.5 overflow-y-auto bg-gradient-to-b from-gray-50 to-white overscroll-behavior-contain"
       >
         {messagesWithSeparators.length === 0 ? (
-          <div className="flex items-center justify-center h-full px-4">
-            <div className="text-center bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-10 shadow-xl max-w-sm mx-auto border-2 border-blue-100">
-              <div className="w-16 h-16 sm:w-24 sm:h-24 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 shadow-lg">
-                <Send className="w-8 h-8 sm:w-12 sm:h-12 text-white" />
+          <div className="flex items-center justify-center h-full px-3 xs:px-4">
+            <div className="text-center bg-white rounded-xl xs:rounded-2xl sm:rounded-3xl p-5 xs:p-6 sm:p-10 shadow-xl max-w-sm mx-auto border-2 border-blue-100">
+              <div className="w-14 h-14 xs:w-16 xs:h-16 sm:w-24 sm:h-24 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 xs:mb-4 sm:mb-6 shadow-lg">
+                <Send className="w-7 h-7 xs:w-8 xs:h-8 sm:w-12 sm:h-12 text-white" />
               </div>
-              <p className="text-gray-900 font-bold mb-2 sm:mb-3 text-base sm:text-xl">¡Empieza la conversación!</p>
-              <p className="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6 leading-relaxed">
+              <p className="text-gray-900 font-bold mb-2 xs:mb-3 text-sm xs:text-base sm:text-xl">¡Empieza la conversación!</p>
+              <p className="text-[10px] xs:text-xs sm:text-sm text-gray-600 mb-3 xs:mb-4 sm:mb-6 leading-relaxed">
                 Este es el chat del grupo del partido. Coordina con tus compañeros, pregunta dudas y organízate mejor.
               </p>
-              <div className="inline-flex items-center space-x-2 text-[10px] sm:text-xs font-semibold text-blue-600 bg-blue-50 px-3 sm:px-4 py-2 sm:py-2.5 rounded-full">
-                <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+              <div className="inline-flex items-center space-x-1.5 xs:space-x-2 text-[9px] xs:text-[10px] sm:text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 xs:px-3 sm:px-4 py-1.5 xs:py-2 sm:py-2.5 rounded-full">
+                <Users className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4" />
                 <span>{matchInfo?.jugadores_actuales || 0} jugadores en el chat</span>
               </div>
             </div>
@@ -743,8 +743,8 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
             // Separador de fecha
             if (isDateSeparator(item)) {
               return (
-                <div key={`separator-${index}`} className="flex items-center justify-center my-4 sm:my-6">
-                  <div className="bg-blue-100 text-blue-700 text-[10px] sm:text-xs font-bold px-3 sm:px-4 py-1.5 sm:py-2 rounded-full shadow-sm">
+                <div key={`separator-${index}`} className="flex items-center justify-center my-3 xs:my-4 sm:my-6">
+                  <div className="bg-blue-100 text-blue-700 text-[9px] xs:text-[10px] sm:text-xs font-bold px-2.5 xs:px-3 sm:px-4 py-1 xs:py-1.5 sm:py-2 rounded-full shadow-sm">
                     {formatDateSeparator(item.date)}
                   </div>
                 </div>
@@ -769,7 +769,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
             return (
               <div
                 key={msg.id}
-                className={`flex ${isOwn ? "justify-end" : "justify-start"} ${isFirstInGroup ? 'mt-3' : 'mt-1'}`}
+                className={`flex ${isOwn ? "justify-end" : "justify-start"} ${isFirstInGroup ? 'mt-2.5 xs:mt-3' : 'mt-1'}`}
               >
                 <div
                   className={`group flex items-end space-x-1.5 sm:space-x-2 max-w-[75%] sm:max-w-[75%] relative ${isOwn ? "flex-row-reverse space-x-reverse" : ""
@@ -778,7 +778,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                   {/* Avatar con foto - SIEMPRE visible */}
                   {!isOwn ? (
                     <div
-                      className="w-7 h-7 sm:w-8 sm:h-8 cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all flex-shrink-0 shadow-md touch-manipulation rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 relative"
+                      className="w-7 h-7 xs:w-8 xs:h-8 sm:w-9 sm:h-9 cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all flex-shrink-0 shadow-md touch-manipulation rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 relative"
                       onClick={() => handleUserClick(msg.usuarioId)}
                     >
                       <img
@@ -790,7 +790,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                         }}
                       />
                       {/* Fallback con iniciales */}
-                      <div className="w-full h-full flex items-center justify-center text-white text-[10px] sm:text-xs font-bold">
+                      <div className="w-full h-full flex items-center justify-center text-white text-[10px] xs:text-xs sm:text-sm font-bold">
                         {initials}
                       </div>
                     </div>
@@ -802,17 +802,17 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                     <div className={`absolute top-1 ${isOwn ? 'left-0 -translate-x-full pl-1.5' : 'right-0 translate-x-full pr-1.5'} opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center space-x-1`}>
                       <button
                         onClick={() => setReplyingTo(msg)}
-                        className="p-1.5 sm:p-1.5 bg-white hover:bg-blue-50 rounded-lg shadow-md border border-gray-200 transition-all hover:scale-105 touch-manipulation min-h-[36px] min-w-[36px] sm:min-h-[auto] sm:min-w-[auto]"
+                        className="p-1 xs:p-1.5 bg-white hover:bg-blue-50 rounded-lg shadow-md border border-gray-200 transition-all hover:scale-105 touch-manipulation min-h-[32px] min-w-[32px] xs:min-h-[36px] xs:min-w-[36px] flex items-center justify-center"
                         title="Responder"
                       >
-                        <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                         </svg>
                       </button>
                     </div>
 
                     <div
-                      className={`inline-block px-2.5 sm:px-3 py-1.5 sm:py-2 transition-all group-hover:scale-[1.01] ${isOwn
+                      className={`inline-block px-2 xs:px-2.5 sm:px-3 py-1.5 xs:py-2 transition-all group-hover:scale-[1.01] ${isOwn
                         ? `bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 text-white shadow-md hover:shadow-lg ${isFirstInGroup && isLastInGroup ? 'rounded-2xl' :
                           isFirstInGroup ? 'rounded-t-2xl rounded-bl-2xl rounded-br-md' :
                             isLastInGroup ? 'rounded-b-2xl rounded-tl-2xl rounded-tr-md' :
@@ -828,7 +828,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                       {/* Nombre - COMPACTO */}
                       {!isOwn && isFirstInGroup && (
                         <button
-                          className="text-[10px] sm:text-[10px] font-bold block text-blue-600 hover:text-blue-700 transition-colors mb-0.5 touch-manipulation"
+                          className="text-[9px] xs:text-[10px] sm:text-xs font-bold block text-blue-600 hover:text-blue-700 transition-colors mb-0.5 touch-manipulation"
                           onClick={() => handleUserClick(msg.usuarioId)}
                         >
                           {userName}
@@ -836,7 +836,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                       )}
 
                       {/* Contenido del mensaje */}
-                      <p className="text-xs sm:text-sm whitespace-pre-wrap break-words leading-normal font-normal">
+                      <p className="text-xs xs:text-sm whitespace-pre-wrap break-words leading-normal font-normal">
                         {msg.contenido}
                       </p>
 
@@ -868,16 +868,16 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
 
       {/* Botón flotante mejorado - Mobile friendly */}
       {showScrollButton && (
-        <div className="absolute bottom-20 sm:bottom-28 right-3 sm:right-5 z-10 animate-in slide-in-from-bottom duration-200">
+        <div className="absolute bottom-[72px] xs:bottom-20 sm:bottom-28 right-2.5 xs:right-3 sm:right-5 z-10 animate-in slide-in-from-bottom duration-200">
           <button
             onClick={scrollToBottomQuick}
-            className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-full p-3 sm:p-3.5 shadow-2xl hover:shadow-blue-500/50 transition-all hover:scale-110 active:scale-95 relative border-2 border-blue-400 touch-manipulation"
+            className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-full p-2.5 xs:p-3 sm:p-3.5 shadow-2xl hover:shadow-blue-500/50 transition-all hover:scale-110 active:scale-95 relative border-2 border-blue-400 touch-manipulation"
           >
-            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+            <svg className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
             </svg>
             {unreadCount > 0 && (
-              <div className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 bg-red-500 text-white text-[9px] sm:text-[10px] font-bold rounded-full min-w-[20px] sm:min-w-[22px] h-[20px] sm:h-[22px] flex items-center justify-center px-1 sm:px-1.5 shadow-lg ring-2 ring-white">
+              <div className="absolute -top-1 xs:-top-1.5 sm:-top-2 -right-1 xs:-right-1.5 sm:-right-2 bg-red-500 text-white text-[9px] xs:text-[10px] sm:text-xs font-bold rounded-full min-w-[18px] xs:min-w-[20px] sm:min-w-[22px] h-[18px] xs:h-[20px] sm:h-[22px] flex items-center justify-center px-0.5 xs:px-1 sm:px-1.5 shadow-lg ring-2 ring-white">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </div>
             )}
@@ -889,21 +889,21 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
       <div className="border-t-2 border-blue-100 bg-white shadow-lg">
         {/* Reply preview mejorado - Mobile */}
         {replyingTo && (
-          <div className="px-3 pt-2 pb-1.5 bg-blue-50">
-            <div className="flex items-start justify-between bg-white rounded-xl p-3 border-l-4 border-blue-600 shadow-sm">
+          <div className="px-2.5 xs:px-3 pt-1.5 xs:pt-2 pb-1 xs:pb-1.5 bg-blue-50">
+            <div className="flex items-start justify-between bg-white rounded-lg xs:rounded-xl p-2.5 xs:p-3 border-l-4 border-blue-600 shadow-sm">
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] sm:text-xs font-extrabold text-blue-700 mb-0.5 sm:mb-1">
+                <p className="text-[9px] xs:text-[10px] sm:text-xs font-extrabold text-blue-700 mb-0.5">
                   {getUserName(replyingTo.usuario?.nombre, replyingTo.usuario?.apellido)}
                 </p>
-                <p className="text-xs sm:text-sm text-gray-700 truncate">
+                <p className="text-xs xs:text-sm text-gray-700 truncate">
                   {replyingTo.contenido}
                 </p>
               </div>
               <button
                 onClick={() => setReplyingTo(null)}
-                className="ml-2 sm:ml-3 text-gray-400 hover:text-gray-600 active:text-gray-800 transition-colors hover:bg-gray-100 active:bg-gray-200 rounded-full p-1.5 sm:p-1 touch-manipulation min-h-[36px] min-w-[36px] sm:min-h-[auto] sm:min-w-[auto]"
+                className="ml-1.5 xs:ml-2 sm:ml-3 text-gray-400 hover:text-gray-600 active:text-gray-800 transition-colors hover:bg-gray-100 active:bg-gray-200 rounded-full p-1 xs:p-1.5 touch-manipulation min-h-[32px] min-w-[32px] xs:min-h-[36px] xs:min-w-[36px] flex items-center justify-center"
               >
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <svg className="w-4 h-4 xs:w-5 xs:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -914,8 +914,8 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         <div className="p-2.5 sm:p-3 relative">
           {/* Typing indicator */}
           {typingUsers.size > 0 && (
-            <div className="absolute -top-6 left-4 z-10">
-              <div className="flex items-center space-x-1.5 text-xs text-gray-500 italic bg-white/95 backdrop-blur-sm rounded-full px-3 py-1.5 shadow-sm border border-gray-200">
+            <div className="absolute -top-5 xs:-top-6 left-3 xs:left-4 z-10">
+              <div className="flex items-center space-x-1 xs:space-x-1.5 text-[10px] xs:text-xs text-gray-500 italic bg-white/95 backdrop-blur-sm rounded-full px-2.5 xs:px-3 py-1 xs:py-1.5 shadow-sm border border-gray-200">
                 <span>
                   {Array.from(typingUsers.values()).join(', ')}
                   {' '}
@@ -930,7 +930,7 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
             </div>
           )}
 
-          <div className="flex items-center space-x-2 sm:space-x-2.5">
+          <div className="flex items-center space-x-1.5 xs:space-x-2 sm:space-x-2.5">
             {/* Input container mejorado - Mobile */}
             <div className="flex-1 relative">
               <Input
@@ -939,12 +939,12 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                 onChange={(e) => handleInputChange(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Escribe tu mensaje..."
-                className="rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 py-2.5 sm:py-3 px-3 sm:px-4 pr-10 sm:pr-12 bg-gray-50 hover:bg-white transition-colors text-sm sm:text-[15px] shadow-sm"
+                className="rounded-2xl border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 py-2.5 xs:py-3 px-3 xs:px-4 pr-9 xs:pr-10 sm:pr-12 bg-gray-50 hover:bg-white transition-colors text-sm xs:text-[15px] shadow-sm"
                 disabled={sending}
                 maxLength={500}
               />
               {message.length > 400 && (
-                <div className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-[9px] sm:text-[10px] font-bold text-white bg-blue-600 rounded-full px-1.5 sm:px-2 py-0.5 sm:py-1">
+                <div className="absolute right-2 xs:right-3 top-1/2 -translate-y-1/2 text-[9px] xs:text-[10px] font-bold text-white bg-blue-600 rounded-full px-1.5 xs:px-2 py-0.5 xs:py-1">
                   {500 - message.length}
                 </div>
               )}
@@ -954,12 +954,12 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
             <Button
               onClick={handleSendMessage}
               disabled={sending || !message.trim()}
-              className="bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 active:from-blue-800 active:to-blue-900 text-white rounded-full p-0 min-h-[48px] min-w-[48px] sm:min-h-[50px] sm:min-w-[50px] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl active:shadow-md transition-all hover:scale-105 active:scale-95 flex-shrink-0 touch-manipulation"
+              className="bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 active:from-blue-800 active:to-blue-900 text-white rounded-full p-0 min-h-[44px] min-w-[44px] xs:min-h-[48px] xs:min-w-[48px] sm:min-h-[50px] sm:min-w-[50px] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl active:shadow-md transition-all hover:scale-105 active:scale-95 flex-shrink-0 touch-manipulation"
             >
               {sending ? (
                 <InlineSpinner variant="white" />
               ) : (
-                <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Send className="w-4 h-4 xs:w-5 xs:h-5 sm:w-6 sm:h-6" />
               )}
             </Button>
           </div>
