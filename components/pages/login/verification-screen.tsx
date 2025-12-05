@@ -173,7 +173,7 @@ export function VerificationScreen() {
         <p className="text-xs xs:text-sm sm:text-base md:text-sm text-gray-600 px-3 xs:px-4 sm:px-6">Ingresá tu cédula para verificar tu identidad</p>
       </div>
 
-      <div className="flex-1 px-3 xs:px-4 sm:px-6 pb-20 xs:pb-24 sm:pb-28 safe-bottom">
+      <div className="flex-1 px-3 xs:px-4 sm:px-6 pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
         {error && <div className="mb-3 xs:mb-4 p-3 xs:p-4 bg-red-50 border border-red-200 rounded-xl xs:rounded-2xl text-xs xs:text-sm">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-5 xs:space-y-6">
           <div>

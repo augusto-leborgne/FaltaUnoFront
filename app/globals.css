@@ -45,16 +45,28 @@ html {
   overscroll-behavior-y: contain;
 }
 
-/* Escalar fuente para dispositivos más grandes */
+/* Escalar fuente progresivamente para todos los dispositivos */
 @media screen and (min-width: 375px) {
   html {
-    font-size: 15px;
+    font-size: 15px; /* iPhone 6/7/8, smartphones medianos */
   }
 }
 
 @media screen and (min-width: 414px) {
   html {
-    font-size: 16px;
+    font-size: 16px; /* iPhone Plus, smartphones grandes */
+  }
+}
+
+@media screen and (min-width: 768px) {
+  html {
+    font-size: 16px; /* Tablets portrait - mantener legibilidad */
+  }
+}
+
+@media screen and (min-width: 1024px) {
+  html {
+    font-size: 16px; /* Tablets landscape y desktop */
   }
 }
 
@@ -104,7 +116,15 @@ body {
 }
 
 @theme inline {
-  /* Custom breakpoints for better mobile responsiveness */
+  /* Custom breakpoints optimizados para todos los dispositivos:
+     - xxs: 320px (iPhone SE, Galaxy Fold)
+     - xs: 360px (Smartphones pequeños)
+     - sm: 640px (Smartphones grandes landscape, tablets pequeñas portrait)
+     - md: 768px (Tablets portrait, iPad Mini)
+     - lg: 1024px (Tablets landscape, iPad Pro, laptops pequeñas)
+     - xl: 1280px (Laptops, monitores pequeños)
+     - 2xl: 1536px (Monitores grandes, desktop)
+  */
   --breakpoint-xxs: 320px;
   --breakpoint-xs: 360px;
   --breakpoint-sm: 640px;

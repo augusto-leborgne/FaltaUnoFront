@@ -485,7 +485,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
         </div>
       </div>
 
-      <div className="flex-1 px-3 xs:px-4 sm:px-6 py-4 xs:py-5 sm:py-6 pb-20 xs:pb-24 sm:pb-28">
+      <div className="flex-1 px-3 xs:px-4 sm:px-6 py-4 xs:py-5 sm:py-6 pb-18 xs:pb-20 sm:pb-22 md:pb-24">
         {/* User Info */}
         <div className="max-w-3xl mx-auto">
         <div className="bg-card border border-border rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-4 xs:mb-5 sm:mb-6">

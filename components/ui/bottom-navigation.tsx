@@ -72,26 +72,26 @@ function BottomNavigationComponent() {
   }, [pathname])
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 pb-safe-area-inset-bottom z-40 shadow-lg safe-bottom" role="navigation" aria-label="Navegación principal">
-      <div className="flex justify-center items-center py-0.5 xs:py-1 px-0.5 xs:px-1 max-w-screen-xl mx-auto">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 shadow-lg" role="navigation" aria-label="Navegación principal">
+      <div className="flex justify-center items-center py-1 xs:py-1.5 sm:py-2 md:py-2.5 px-0.5 xs:px-1 sm:px-2 max-w-screen-xl mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon
           return (
             <button
               key={item.id}
               onClick={() => router.push(item.path)}
-              className="font-sans flex flex-col items-center min-h-[48px] xs:min-h-[52px] sm:min-h-[54px] flex-1 max-w-[120px] justify-center touch-manipulation active:scale-95 transition-transform px-0.5 xs:px-1"
+              className="font-sans flex flex-col items-center justify-center min-h-[54px] xs:min-h-[58px] sm:min-h-[62px] md:min-h-[64px] flex-1 max-w-[120px] sm:max-w-[140px] touch-manipulation active:scale-95 transition-transform px-1 xs:px-1.5 sm:px-2"
               aria-label={item.label}
               aria-current={item.isActive ? "page" : undefined}
             >
               <div
-                className={`w-6 xs:w-7 sm:w-8 h-6 xs:h-7 sm:h-8 flex items-center justify-center mb-0.5 rounded-lg transition-colors ${
+                className={`w-6 xs:w-7 sm:w-8 md:w-9 h-6 xs:h-7 sm:h-8 md:h-9 flex items-center justify-center mb-0.5 sm:mb-1 rounded-lg transition-colors ${
                   item.isActive ? "bg-secondary/20" : "hover:bg-gray-100 active:bg-gray-200"
                 }`}
               >
-                <Icon className={`w-4 xs:w-4.5 sm:w-5 h-4 xs:h-4.5 sm:h-5 ${item.isActive ? "text-gray-900" : "text-gray-500"}`} strokeWidth={item.isActive ? 2.5 : 2} />
+                <Icon className={`w-4 xs:w-4.5 sm:w-5 md:w-5.5 h-4 xs:h-4.5 sm:h-5 md:h-5.5 ${item.isActive ? "text-gray-900" : "text-gray-500"}`} strokeWidth={item.isActive ? 2.5 : 2} />
               </div>
-              <span className={`font-sans text-[9px] xs:text-[10px] sm:text-xs leading-tight text-center ${item.isActive ? "font-semibold text-gray-900" : "font-medium text-gray-500"}`}>
+              <span className={`font-sans text-[10px] xs:text-[11px] sm:text-xs md:text-sm leading-tight text-center whitespace-nowrap ${item.isActive ? "font-semibold text-gray-900" : "font-medium text-gray-500"}`}>
                 {item.label}
               </span>
             </button>

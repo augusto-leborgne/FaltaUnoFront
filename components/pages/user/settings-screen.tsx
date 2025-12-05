@@ -560,7 +560,7 @@ export function SettingsScreen() {
 	}
 
 	return (
-		<div className="min-h-screen bg-white flex flex-col pb-20 xs:pb-24 sm:pb-28 safe-bottom">
+		<div className="min-h-screen bg-white flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
 			{/* Header */}
 			<div className="pt-12 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6 border-b border-gray-100">
 				<div className="flex items-center justify-between gap-2 sm:gap-3">
@@ -593,7 +593,7 @@ export function SettingsScreen() {
 				</div>
 			</div>
 
-			<div className="flex-1 px-4 sm:px-6 py-4 sm:py-6 overflow-y-auto pb-24">
+			<div className="flex-1 px-4 sm:px-6 py-4 sm:py-6 overflow-y-auto pb-18 xs:pb-20 sm:pb-22 md:pb-24">
 				{/* Success Message */}
 				{success && (
 					<div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl text-green-800">

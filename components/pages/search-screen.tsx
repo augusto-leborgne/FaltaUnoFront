@@ -367,7 +367,7 @@ export function SearchScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col pb-20 xs:pb-24 sm:pb-28 safe-bottom">
+    <div className="min-h-screen bg-white flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
       {/* Header */}
       <div className="pt-10 xs:pt-12 sm:pt-16 pb-3 xs:pb-4 px-3 xs:px-4 sm:px-6 border-b border-gray-100 safe-top">
         <div className="flex items-center justify-between mb-3 xs:mb-4 gap-2 xs:gap-3">
@@ -555,7 +555,7 @@ export function SearchScreen() {
       </div>
 
       {/* Results */}
-      <div className="flex-1 px-3 xs:px-4 sm:px-6 py-3 xs:py-4 sm:py-6 pb-24 xs:pb-28 sm:pb-32 overflow-y-auto">
+      <div className="flex-1 px-3 xs:px-4 sm:px-6 py-3 xs:py-4 sm:py-6 pb-18 xs:pb-20 sm:pb-22 md:pb-24 overflow-y-auto">
         {loading ? (
           <SearchSkeleton />
         ) : filteredResults.length === 0 && searchQuery ? (

@@ -992,7 +992,7 @@ export function ProfileSetupForm() {
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-3 xs:px-4 sm:px-6 py-3 xs:py-4 sm:py-8 pb-24 xs:pb-28 sm:pb-32">
+      <div className="max-w-2xl mx-auto px-3 xs:px-4 sm:px-6 py-3 xs:py-4 sm:py-8 pb-18 xs:pb-20 sm:pb-22 md:pb-24">
         <form
           ref={formRef}
           onSubmit={handleSubmit}

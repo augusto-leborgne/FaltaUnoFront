@@ -436,7 +436,7 @@ function PlayerProfile({ playerId }: PlayerProfileProps) {
           )}
         </div>
 
-        <div className="pb-24">
+        <div className="pb-18 xs:pb-20 sm:pb-22 md:pb-24">
           <Button
             onClick={handleBack}
             variant="outline"

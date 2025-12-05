@@ -185,7 +185,7 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
         </div>
       </div>
 
-      <div className="flex-1 px-3 xs:px-4 sm:px-6 py-4 xs:py-5 sm:py-6 pb-20 xs:pb-24 sm:pb-28 safe-bottom">
+      <div className="flex-1 px-3 xs:px-4 sm:px-6 py-4 xs:py-5 sm:py-6 pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
         <div className="mb-4 xs:mb-5 sm:mb-6">
           <div className="bg-blue-50 rounded-lg xs:rounded-xl p-3 xs:p-4 mb-4 xs:mb-5 sm:mb-6">
             <h2 className="text-sm xs:text-base font-semibold text-blue-900 mb-2">¡Partido finalizado!</h2>

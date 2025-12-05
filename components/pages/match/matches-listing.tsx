@@ -234,7 +234,7 @@ export function MatchesListing() {
   // ============================================
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col pb-20 xs:pb-24 sm:pb-28 safe-bottom">
+    <div className="min-h-screen bg-gray-50 flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
       {/* Header - Responsive sticky */}
       <div className="pt-safe-top bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm safe-top">
         <div className="px-3 xs:px-4 sm:px-6 md:px-8 py-2.5 xs:py-3 sm:py-4">
@@ -374,7 +374,7 @@ export function MatchesListing() {
         </div>
 
         {/* Matches List - Better mobile spacing */}
-        <div className="px-3 xs:px-4 sm:px-6 md:px-8 pb-20 xs:pb-24 sm:pb-28">
+        <div className="px-3 xs:px-4 sm:px-6 md:px-8 pb-18 xs:pb-20 sm:pb-22 md:pb-24">
           {loading ? (
             <div className="text-center py-12">
               <LoadingSpinner size="lg" variant="green" text="Cargando partidos..." />

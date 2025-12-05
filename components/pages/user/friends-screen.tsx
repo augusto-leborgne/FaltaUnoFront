@@ -225,7 +225,7 @@ export function FriendsScreen() {
   const friendIds = new Set(friends.map(f => f.id))
 
   return (
-    <div className="min-h-screen bg-white flex flex-col pb-20 xs:pb-24 sm:pb-28 safe-bottom">
+    <div className="min-h-screen bg-white flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
       {/* Header */}
       <div className="pt-12 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6 border-b border-gray-100">
         <div className="flex items-center justify-between mb-4">
@@ -278,7 +278,7 @@ export function FriendsScreen() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 px-4 sm:px-6 py-4 sm:py-6 pb-24 overflow-y-auto">
+      <div className="flex-1 px-4 sm:px-6 py-4 sm:py-6 pb-18 xs:pb-20 sm:pb-22 md:pb-24 overflow-y-auto">
         {isLoading ? (
           <div className="text-center py-12">
             <LoadingSpinner size="lg" variant="green" text={`Cargando ${activeTab === 'amigos' ? 'amigos' : 'contactos'}...`} />

@@ -444,7 +444,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
         </div>
       </div>
 
-      <div className="flex-1 px-3 xs:px-4 sm:px-6 py-3 xs:py-4 sm:py-6 overflow-y-auto pb-20 xs:pb-24 sm:pb-28 safe-bottom">
+      <div className="flex-1 px-3 xs:px-4 sm:px-6 py-3 xs:py-4 sm:py-6 overflow-y-auto pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
         {/* Estado cancelado/completado */}
         {isMatchCancelled && (
           <div className="mb-3 xs:mb-4 sm:mb-6 p-3 xs:p-4 sm:p-5 bg-red-50 border-2 border-red-200 rounded-lg xs:rounded-xl sm:rounded-2xl">

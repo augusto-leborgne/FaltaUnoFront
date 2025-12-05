@@ -101,7 +101,7 @@ export function NotificationsScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col pb-20 xs:pb-24 sm:pb-28 safe-bottom">
+    <div className="min-h-screen bg-white flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
       {/* Header */}
       <div className="pt-10 xs:pt-12 sm:pt-16 pb-3 xs:pb-4 sm:pb-6 px-3 xs:px-4 sm:px-6 border-b border-gray-100 safe-top">
         <div className="flex items-center gap-2 xs:gap-3 sm:gap-4 mb-3 xs:mb-4 sm:mb-5">
@@ -133,7 +133,7 @@ export function NotificationsScreen() {
         )}
       </div>
 
-      <div className="flex-1 px-3 xs:px-4 sm:px-6 overflow-y-auto pb-24 xs:pb-28 sm:pb-32">
+      <div className="flex-1 px-3 xs:px-4 sm:px-6 overflow-y-auto pb-18 xs:pb-20 sm:pb-22 md:pb-24">
         {/* Filtros */}
         <div className="flex gap-2 xs:gap-2.5 mb-4 xs:mb-5 sm:mb-6 mt-3 xs:mt-4 sm:mt-5 overflow-x-auto pb-2 scrollbar-hide -mx-3 px-3 xs:-mx-4 xs:px-4 sm:mx-0 sm:px-0">
           {tiposFiltro.map(({ label, value }) => (

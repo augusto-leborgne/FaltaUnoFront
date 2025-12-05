@@ -482,7 +482,7 @@ export function CreateMatchScreen() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex-1 px-2 xs:px-3 sm:px-4 py-2 xs:py-3 sm:py-5 pb-16 xs:pb-20 sm:pb-24 overflow-y-auto max-w-2xl mx-auto w-full">
+      <form onSubmit={handleSubmit} className="flex-1 px-2 xs:px-3 sm:px-4 py-2 xs:py-3 sm:py-5 pb-16 xs:pb-18 xs:pb-20 sm:pb-22 md:pb-24 overflow-y-auto max-w-2xl mx-auto w-full">
         {/* Success Message */}
         {success && (
           <div className="mb-4 xs:mb-5 sm:mb-6 p-3 xs:p-4 sm:p-5 bg-primary/10 border-2 border-primary/30 rounded-xl sm:rounded-2xl flex items-start space-x-2 xs:space-x-3">

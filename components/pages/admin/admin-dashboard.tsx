@@ -607,7 +607,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gray-50 pb-18 xs:pb-20 sm:pb-22 md:pb-24">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white shadow-sm">
         <div className="mx-auto max-w-6xl px-4 py-3 sm:py-4">

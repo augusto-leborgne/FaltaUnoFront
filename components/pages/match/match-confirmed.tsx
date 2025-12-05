@@ -101,7 +101,7 @@ export function MatchConfirmed({ matchId }: MatchConfirmedProps) {
         </p>
       </div>
 
-      <div className="flex-1 px-3 xs:px-4 sm:px-6 pb-20 xs:pb-24 sm:pb-28 safe-bottom">
+      <div className="flex-1 px-3 xs:px-4 sm:px-6 pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
         {/* Status Card */}
         <div className="bg-white border border-gray-200 rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-4 xs:mb-5 sm:mb-6">
           <div className="flex items-center space-x-3 mb-4 xs:mb-5 sm:mb-6">

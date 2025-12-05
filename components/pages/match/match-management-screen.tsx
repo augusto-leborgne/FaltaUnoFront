@@ -765,7 +765,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
         </div>
       </div>
 
-      <div className="flex-1 px-3 xs:px-4 sm:px-6 py-4 xs:py-5 sm:py-6 overflow-y-auto pb-20 xs:pb-24 sm:pb-28 safe-bottom">
+      <div className="flex-1 px-3 xs:px-4 sm:px-6 py-4 xs:py-5 sm:py-6 overflow-y-auto pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
         {/* Alerta de partido listo para confirmar */}
         {match.estado === PartidoEstado.DISPONIBLE && partidoLleno && (
           <div className="bg-green-50 border border-green-200 rounded-xl xs:rounded-2xl p-3 xs:p-4 sm:p-5 mb-4 xs:mb-5 sm:mb-6 flex items-center space-x-2.5 xs:space-x-3">

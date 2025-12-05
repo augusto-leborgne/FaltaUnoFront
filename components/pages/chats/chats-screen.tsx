@@ -223,7 +223,7 @@ export function ChatsScreen() {
   // ============================================
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center pb-20 xs:pb-24">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center pb-18 xs:pb-20 sm:pb-22 md:pb-24">
         <LoadingSpinner size="lg" variant="green" text="Cargando chats..." />
       </div>
     )
@@ -233,7 +233,7 @@ export function ChatsScreen() {
   // RENDER - MAIN
   // ============================================
   return (
-    <div className="min-h-screen bg-white flex flex-col pb-20 xs:pb-24 sm:pb-28 safe-bottom">
+    <div className="min-h-screen bg-white flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
       {/* Header Compacto como Partidos y Mis Partidos */}
       <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm safe-top">
         <div className="px-3 xs:px-4 sm:px-6 md:px-8 py-3 xs:py-3.5 sm:py-4">
@@ -251,7 +251,7 @@ export function ChatsScreen() {
       </div>
 
       {/* Content */}
-      <div className="flex-1 px-3 xs:px-4 sm:px-6 md:px-8 py-3 xs:py-4 overflow-y-auto pb-20 xs:pb-24 sm:pb-28">
+      <div className="flex-1 px-3 xs:px-4 sm:px-6 md:px-8 py-3 xs:py-4 overflow-y-auto pb-18 xs:pb-20 sm:pb-22 md:pb-24">
         {/* Error Message */}
         {error && (
           <div className="mb-3 xs:mb-4">

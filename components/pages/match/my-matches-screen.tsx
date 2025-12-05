@@ -196,7 +196,7 @@ export function MyMatchesScreen() {
   const displayMatches = activeTab === "Creados" ? createdMatches : joinedMatches
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col pb-20 xs:pb-24 sm:pb-28 safe-bottom">
+    <div className="min-h-screen bg-gray-50 flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
       {/* Header - Responsive padding */}
       <div className="pt-safe-top bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="px-4 sm:px-6 md:px-8 py-3 sm:py-4">
@@ -233,7 +233,7 @@ export function MyMatchesScreen() {
         </div>
 
         {/* Matches List - Optimized spacing */}
-        <div className="px-4 sm:px-6 md:px-8 pb-24 sm:pb-28">
+        <div className="px-4 sm:px-6 md:px-8 pb-18 xs:pb-20 sm:pb-22 md:pb-24">
           {displayMatches.length === 0 ? (
             <div className="text-center py-12 sm:py-16">
               <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-5">

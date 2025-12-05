@@ -196,7 +196,7 @@ export function MatchCreatedScreen({ matchId: propMatchId }: MatchCreatedScreenP
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center px-3 xs:px-4 sm:px-6 pb-20 xs:pb-24 sm:pb-28 safe-top safe-bottom">
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center px-3 xs:px-4 sm:px-6 pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-top safe-bottom">
       <div className="text-center mb-6 xs:mb-8">
         <div className="w-16 h-16 xs:w-20 xs:h-20 sm:w-24 sm:h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 xs:mb-4">
           <Check className="w-8 h-8 xs:w-10 xs:h-10 sm:w-12 sm:h-12 text-green-600" />
