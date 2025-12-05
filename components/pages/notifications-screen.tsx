@@ -101,21 +101,21 @@ export function NotificationsScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col pb-24 sm:pb-24">
+    <div className="min-h-screen bg-white flex flex-col pb-20 xs:pb-24 sm:pb-28 safe-bottom">
       {/* Header */}
-      <div className="pt-12 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6 border-b border-gray-100">
-        <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-5">
+      <div className="pt-10 xs:pt-12 sm:pt-16 pb-3 xs:pb-4 sm:pb-6 px-3 xs:px-4 sm:px-6 border-b border-gray-100 safe-top">
+        <div className="flex items-center gap-2 xs:gap-3 sm:gap-4 mb-3 xs:mb-4 sm:mb-5">
           <button
             onClick={() => router.back()}
-            className="p-2 sm:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-95"
+            className="p-2 xs:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-lg xs:rounded-xl transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-95"
             aria-label="Volver"
           >
-            <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
+            <ArrowLeft className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6 sm:h-6 text-gray-700" />
           </button>
-          <div className="flex items-center gap-2 sm:gap-3 flex-1">
-            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Notificaciones</h1>
+          <div className="flex items-center gap-2 xs:gap-2.5 sm:gap-3 flex-1 min-w-0">
+            <h1 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">Notificaciones</h1>
             {count > 0 && (
-              <span className="px-2.5 sm:px-3 py-1 bg-red-500 text-white text-xs sm:text-sm font-bold rounded-full">
+              <span className="px-2 xs:px-2.5 sm:px-3 py-0.5 xs:py-1 bg-red-500 text-white text-[10px] xs:text-xs sm:text-sm font-bold rounded-full flex-shrink-0">
                 {count}
               </span>
             )}
@@ -125,29 +125,29 @@ export function NotificationsScreen() {
         {count > 0 && (
           <button
             onClick={marcarTodasLeidas}
-            className="flex items-center gap-2 px-4 sm:px-5 py-3 sm:py-3.5 bg-green-50 hover:bg-green-100 active:bg-green-200 text-green-700 rounded-xl transition-all text-sm sm:text-base font-semibold w-full justify-center touch-manipulation active:scale-95 min-h-[48px]"
+            className="flex items-center gap-2 px-3 xs:px-4 sm:px-5 py-2.5 xs:py-3 sm:py-3.5 bg-green-50 hover:bg-green-100 active:bg-green-200 text-green-700 rounded-lg xs:rounded-xl transition-all text-xs xs:text-sm sm:text-base font-semibold w-full justify-center touch-manipulation active:scale-95 min-h-[48px]"
           >
-            <CheckCheck className="w-5 h-5" />
+            <CheckCheck className="w-4 h-4 xs:w-5 xs:h-5" />
             Marcar todas como leídas
           </button>
         )}
       </div>
 
-      <div className="flex-1 px-4 sm:px-6 overflow-y-auto pb-24 sm:pb-28">
+      <div className="flex-1 px-3 xs:px-4 sm:px-6 overflow-y-auto pb-24 xs:pb-28 sm:pb-32">
         {/* Filtros */}
-        <div className="flex gap-2 mb-5 sm:mb-6 mt-4 sm:mt-5 overflow-x-auto pb-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex gap-2 xs:gap-2.5 mb-4 xs:mb-5 sm:mb-6 mt-3 xs:mt-4 sm:mt-5 overflow-x-auto pb-2 scrollbar-hide -mx-3 px-3 xs:-mx-4 xs:px-4 sm:mx-0 sm:px-0">
           {tiposFiltro.map(({ label, value }) => (
             <button
               key={value}
               onClick={() => setFiltro(value)}
-              className={`px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl whitespace-nowrap transition-all font-semibold text-sm sm:text-base touch-manipulation min-h-[44px] active:scale-95 ${filtro === value
+              className={`px-3 xs:px-4 sm:px-5 py-2 xs:py-2.5 sm:py-3 rounded-lg xs:rounded-xl whitespace-nowrap transition-all font-semibold text-xs xs:text-sm sm:text-base touch-manipulation min-h-[44px] active:scale-95 ${filtro === value
                 ? "bg-orange-500 text-white shadow-lg"
                 : "bg-orange-50 text-gray-700 hover:bg-orange-100 active:bg-orange-200"
                 }`}
             >
               {label}
               {value === "sin_leer" && count > 0 && (
-                <span className="ml-2 px-2 py-0.5 bg-red-500 text-white text-xs rounded-full font-bold">
+                <span className="ml-1.5 xs:ml-2 px-1.5 xs:px-2 py-0.5 bg-red-500 text-white text-[10px] xs:text-xs rounded-full font-bold">
                   {count}
                 </span>
               )}
@@ -156,24 +156,24 @@ export function NotificationsScreen() {
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center items-center py-20">
+          <div className="flex justify-center items-center py-16 xs:py-20">
             <LoadingSpinner size="lg" variant="green" />
           </div>
         ) : notificacionesFiltradas.length === 0 ? (
-          <div className="bg-gray-50 rounded-2xl border border-gray-200 p-12 text-center">
-            <Bell className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg">No hay notificaciones</p>
+          <div className="bg-gray-50 rounded-xl xs:rounded-2xl border border-gray-200 p-8 xs:p-10 sm:p-12 text-center">
+            <Bell className="w-12 h-12 xs:w-14 xs:h-14 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-3 xs:mb-4" />
+            <p className="text-gray-500 text-sm xs:text-base sm:text-lg">No hay notificaciones</p>
           </div>
         ) : (
           notificacionesFiltradas.map((notif) => (
             <div
               key={notif.id}
               onClick={() => handleClick(notif)}
-              className={`mb-3 p-4 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-pointer ${!notif.leida ? "bg-blue-50 border-blue-200" : "bg-white"
+              className={`mb-2 xs:mb-3 p-3 xs:p-4 rounded-lg xs:rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-pointer touch-manipulation active:scale-[0.98] ${!notif.leida ? "bg-blue-50 border-blue-200" : "bg-white"
                 }`}
             >
-              <div className="flex items-start gap-3">
-                <div className={`p-2 rounded-full flex-shrink-0 ${notif.prioridad === "URGENTE" ? "bg-red-100" :
+              <div className="flex items-start gap-2 xs:gap-3">
+                <div className={`p-1.5 xs:p-2 rounded-full flex-shrink-0 ${notif.prioridad === "URGENTE" ? "bg-red-100" :
                   notif.prioridad === "ALTA" ? "bg-yellow-100" : "bg-blue-100"
                   }`}>
                   {getIcono(notif.tipo)}
@@ -181,16 +181,16 @@ export function NotificationsScreen() {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900 mb-1">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-gray-900 mb-1 text-xs xs:text-sm sm:text-base">
                         {notif.titulo}
                       </h3>
                       {notif.mensaje && (
-                        <p className="text-gray-700 text-sm mb-2">
+                        <p className="text-gray-700 text-xs xs:text-sm mb-1.5 xs:mb-2 line-clamp-2">
                           {notif.mensaje}
                         </p>
                       )}
-                      <p className="text-xs text-gray-500">
+                      <p className="text-[10px] xs:text-xs text-gray-500">
                         {format(new Date(notif.created_at), "PPp", { locale: es })}
                       </p>
                     </div>
@@ -200,9 +200,10 @@ export function NotificationsScreen() {
                         e.stopPropagation()
                         eliminarNotificacion(notif.id)
                       }}
-                      className="ml-2 p-2 hover:bg-gray-100 rounded-xl transition-colors flex-shrink-0"
+                      className="ml-1 xs:ml-2 p-2 hover:bg-gray-100 rounded-lg xs:rounded-xl transition-colors flex-shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center touch-manipulation"
+                      aria-label="Eliminar notificación"
                     >
-                      <Trash2 className="w-4 h-4 text-gray-400 hover:text-red-600" />
+                      <Trash2 className="w-4 h-4 xs:w-4.5 xs:h-4.5 text-gray-400 hover:text-red-600" />
                     </button>
                   </div>
                 </div>
