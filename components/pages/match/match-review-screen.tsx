@@ -73,16 +73,16 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
     currentRating: number,
   ) => {
     return (
-      <div className="flex space-x-1">
+      <div className="flex space-x-1.5 xs:space-x-2">
         {[1, 2, 3, 4, 5].map((star) => (
           <button 
             key={star} 
             type="button"
             onClick={() => updateReview(playerId, category, star)} 
-            className="transition-colors"
+            className="transition-colors touch-manipulation min-w-[40px] min-h-[40px] xs:min-w-[44px] xs:min-h-[44px] flex items-center justify-center active:scale-95"
           >
             <Star
-              className={`w-6 h-6 ${
+              className={`w-7 h-7 xs:w-8 xs:h-8 ${
                 star <= currentRating 
                   ? "fill-yellow-400 text-yellow-400" 
                   : "text-gray-300 hover:text-yellow-300"
@@ -165,7 +165,7 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center px-3 xs:px-4 sm:px-6">
         <LoadingSpinner size="xl" variant="green" text="Cargando reseña..." />
       </div>
     )
@@ -176,23 +176,23 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
-      <div className="pt-16 pb-6 px-6 border-b border-gray-100">
-        <div className="flex items-center space-x-4">
-          <button onClick={handleBack} className="p-2 -ml-2">
+      <div className="pt-12 xs:pt-14 sm:pt-16 pb-4 xs:pb-5 sm:pb-6 px-3 xs:px-4 sm:px-6 border-b border-gray-100 safe-top">
+        <div className="flex items-center space-x-3 xs:space-x-4">
+          <button onClick={handleBack} className="p-2 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation active:scale-95 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors">
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </button>
-          <h1 className="text-xl font-bold text-gray-900">Calificar Jugadores</h1>
+          <h1 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900">Calificar Jugadores</h1>
         </div>
       </div>
 
-      <div className="flex-1 px-6 py-6">
-        <div className="mb-6">
-          <div className="bg-blue-50 rounded-xl p-4 mb-6">
-            <h2 className="font-semibold text-blue-900 mb-2">¡Partido finalizado!</h2>
-            <p className="text-sm text-blue-800">
+      <div className="flex-1 px-3 xs:px-4 sm:px-6 py-4 xs:py-5 sm:py-6 pb-20 xs:pb-24 sm:pb-28 safe-bottom">
+        <div className="mb-4 xs:mb-5 sm:mb-6">
+          <div className="bg-blue-50 rounded-lg xs:rounded-xl p-3 xs:p-4 mb-4 xs:mb-5 sm:mb-6">
+            <h2 className="text-sm xs:text-base font-semibold text-blue-900 mb-2">¡Partido finalizado!</h2>
+            <p className="text-xs xs:text-sm text-blue-800">
               Tu opinión es importante. Califica a cada jugador en las siguientes categorías:
             </p>
-            <div className="mt-3 space-y-1 text-sm text-blue-700">
+            <div className="mt-2.5 xs:mt-3 space-y-1 text-xs xs:text-sm text-blue-700">
               <p><strong>Nivel:</strong> Habilidad técnica y táctica</p>
               <p><strong>Deportividad:</strong> Fair play y respeto por las reglas</p>
               <p><strong>Compañerismo:</strong> Actitud y trabajo en equipo</p>
@@ -201,14 +201,14 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
         </div>
 
         {otherPlayers.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500">No hay jugadores para calificar</p>
-            <Button onClick={() => router.push("/home")} className="mt-4">
+          <div className="text-center py-10 xs:py-12">
+            <p className="text-xs xs:text-sm sm:text-base text-gray-500">No hay jugadores para calificar</p>
+            <Button onClick={() => router.push("/home")} className="mt-3 xs:mt-4 min-h-[48px] touch-manipulation active:scale-[0.98]">
               Volver al inicio
             </Button>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4 xs:space-y-5 sm:space-y-6">
             {otherPlayers.map((player) => {
               const playerReview = reviews.find((r) => r.playerId === player.id)
               if (!playerReview) return null
@@ -220,16 +220,16 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
               return (
                 <div
                   key={player.id}
-                  className={`bg-white border rounded-2xl p-6 ${
+                  className={`bg-white border rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 ${
                     isComplete ? "border-green-200 bg-green-50/30" : "border-gray-200"
                   }`}
                 >
-                  <div className="flex items-center space-x-3 mb-4">
+                  <div className="flex items-center space-x-2.5 xs:space-x-3 mb-3 xs:mb-4">
                     <button
                       onClick={() => handlePlayerClick(player.id)}
-                      className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
+                      className="flex items-center space-x-2.5 xs:space-x-3 hover:opacity-80 transition-opacity touch-manipulation active:scale-[0.98]"
                     >
-                      <Avatar className="w-12 h-12">
+                      <Avatar className="w-11 xs:w-12 sm:w-14 h-11 xs:h-12 sm:h-14">
                         {player.foto_perfil ? (
                           <AvatarImage src={`data:image/jpeg;base64,${player.foto_perfil}`} />
                         ) : (
@@ -237,13 +237,13 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
                         )}
                       </Avatar>
                       <div>
-                        <h3 className="font-semibold text-gray-900">{fullName}</h3>
-                        <p className="text-sm text-gray-600">{player.posicion || "Jugador"}</p>
+                        <h3 className="text-sm xs:text-base font-semibold text-gray-900">{fullName}</h3>
+                        <p className="text-xs xs:text-sm text-gray-600">{player.posicion || "Jugador"}</p>
                       </div>
                     </button>
                     {isComplete && (
                       <div className="ml-auto">
-                        <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center">
+                        <div className="w-6 xs:w-7 h-6 xs:h-7 bg-primary rounded-full flex items-center justify-center">
                           <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                             <path
                               fillRule="evenodd"
@@ -256,12 +256,12 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
                     )}
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="space-y-3 xs:space-y-4">
                     {/* Nivel */}
                     <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="text-sm font-medium text-gray-700">Nivel</label>
-                        <span className="text-xs text-gray-500">
+                      <div className="flex items-center justify-between mb-1.5 xs:mb-2">
+                        <label className="text-xs xs:text-sm font-medium text-gray-700">Nivel</label>
+                        <span className="text-[10px] xs:text-xs text-gray-500">
                           {playerReview.nivel > 0 ? `${playerReview.nivel}/5` : "Obligatorio"}
                         </span>
                       </div>
@@ -299,7 +299,7 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
                         placeholder="Comparte tu experiencia jugando con este jugador..."
                         value={playerReview.comentario}
                         onChange={(e) => updateReview(player.id, "comentario", e.target.value)}
-                        className="rounded-xl resize-none"
+                        className="rounded-lg xs:rounded-xl resize-none text-xs xs:text-sm"
                         rows={3}
                       />
                     </div>
@@ -310,9 +310,9 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
           </div>
         )}
 
-        <div className="mt-8 space-y-4 pb-24">
-          <div className="bg-gray-50 rounded-xl p-4 text-center">
-            <p className="text-sm text-gray-600">
+        <div className="mt-6 xs:mt-8 space-y-3 xs:space-y-4">
+          <div className="bg-gray-50 rounded-lg xs:rounded-xl p-3 xs:p-4 text-center">
+            <p className="text-xs xs:text-sm text-gray-600">
               {allReviewsComplete
                 ? "¡Todas las reseñas están completas! Puedes enviarlas ahora."
                 : `Faltan ${reviews.filter((r) => !isReviewComplete(r)).length} reseñas por completar`}
@@ -322,7 +322,7 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
           <Button
             onClick={handleSubmitReviews}
             disabled={!allReviewsComplete || isSubmitting}
-            className={`w-full py-4 text-lg font-semibold rounded-2xl ${
+            className={`w-full min-h-[48px] xs:min-h-[52px] text-sm xs:text-base sm:text-lg font-semibold rounded-xl xs:rounded-2xl touch-manipulation active:scale-[0.98] ${
               allReviewsComplete && !isSubmitting
                 ? "bg-green-600 hover:bg-green-700 text-white"
                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
@@ -335,7 +335,7 @@ export function MatchReviewScreen({ matchId }: MatchReviewScreenProps) {
             onClick={handleBack}
             variant="outline"
             disabled={isSubmitting}
-            className="w-full py-4 text-lg font-semibold rounded-2xl border-gray-300 bg-transparent"
+            className="w-full min-h-[48px] xs:min-h-[52px] text-sm xs:text-base sm:text-lg font-semibold rounded-xl xs:rounded-2xl border-gray-300 bg-transparent touch-manipulation active:scale-[0.98]"
           >
             Cancelar
           </Button>
