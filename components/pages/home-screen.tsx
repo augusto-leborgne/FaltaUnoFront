@@ -287,18 +287,11 @@ export function HomeScreen() {
   const user = AuthService.getUser()
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-green-50 via-white to-orange-50 flex flex-col overflow-x-hidden pb-20 xs:pb-22 sm:pb-24 md:pb-28 safe-bottom">
-      {/* HEADER - Estilo Falta Uno */}
-      <div className="w-full bg-gradient-to-r from-green-500 via-green-600 to-green-500 pt-6 sm:pt-8 md:pt-10 pb-16 sm:pb-20 md:pb-24 px-2 xs:px-3 sm:px-4 md:px-6 relative overflow-hidden safe-top">
-        {/* Patrón de fondo tipo cancha */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 border-2 border-white rounded-full"></div>
-          <div className="absolute top-0 left-0 right-0 h-px bg-white"></div>
-          <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white"></div>
-        </div>
-
+    <div className="min-h-screen w-full bg-gradient-to-br from-green-50 via-white to-orange-50 flex flex-col overflow-x-hidden scroll-safe-bottom">
+      {/* HEADER - Estilo Falta Uno - Banner verde limpio sin decoraciones */}
+      <div className="w-full bg-gradient-to-r from-green-500 via-green-600 to-green-500 safe-top pt-3 sm:pt-5 md:pt-7 pb-14 sm:pb-18 md:pb-22 px-2 xs:px-3 sm:px-4 md:px-6 relative overflow-hidden">
         {/* Top bar */}
-        <div className="relative z-10 flex items-center justify-between mb-6 sm:mb-8">
+        <div className="relative z-10 flex items-center justify-between mb-4 sm:mb-6">
           <div className="flex items-center gap-2">
             <h1 className="text-lg xs:text-xl sm:text-2xl sm:text-3xl font-bold text-white drop-shadow-lg">
               Falta Uno
@@ -454,7 +447,7 @@ export function HomeScreen() {
       )}
 
       {/* PRÓXIMOS PARTIDOS */}
-      <div className="w-full px-2 xs:px-3 sm:px-4 md:px-6 py-3 xs:py-4 sm:py-6 pb-20 xs:pb-22 sm:pb-24 md:pb-28">
+      <div className="w-full px-2 xs:px-3 sm:px-4 md:px-6 py-3 xs:py-4 sm:py-6 pb-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">

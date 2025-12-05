@@ -101,9 +101,9 @@ export function NotificationsScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
+    <div className="min-h-screen w-full bg-white flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom overflow-x-hidden">
       {/* Header */}
-      <div className="pt-8 xs:pt-10 sm:pt-12 md:pt-14 pb-2 xs:pb-3 sm:pb-4 sm:pb-6 px-2 xs:px-3 sm:px-4 md:px-6 border-b border-gray-100 safe-top">
+      <div className="w-full pt-6 xs:pt-8 sm:pt-10 md:pt-12 pb-2 xs:pb-3 sm:pb-4 px-2 xs:px-3 sm:px-4 md:px-6 border-b border-gray-100 safe-top">
         <div className="flex items-center gap-2 xs:gap-3 sm:gap-4 mb-1.5 xs:mb-2 sm:mb-3 md:mb-4 md:mb-5">
           <button
             onClick={() => router.back()}
@@ -133,7 +133,7 @@ export function NotificationsScreen() {
         )}
       </div>
 
-      <div className="flex-1 px-2 xs:px-3 sm:px-4 md:px-6 overflow-y-auto pb-18 xs:pb-20 sm:pb-22 md:pb-24">
+      <div className="flex-1 w-full px-2 xs:px-3 sm:px-4 md:px-6 overflow-y-auto pb-20 xs:pb-22 sm:pb-24 md:pb-26">
         {/* Filtros */}
         <div className="flex gap-2 xs:gap-2.5 mb-3 xs:mb-4 sm:mb-5 md:mb-6 mt-3 xs:mt-4 sm:mt-5 overflow-x-auto pb-2 scrollbar-hide -mx-3 px-3 xs:-mx-4 xs:px-4 sm:mx-0 sm:px-0">
           {tiposFiltro.map(({ label, value }) => (

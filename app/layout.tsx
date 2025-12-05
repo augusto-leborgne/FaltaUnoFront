@@ -93,10 +93,12 @@ export default function RootLayout({
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href={BRANDING.urls.frontend} />
       </head>
-      <body className="font-sans" suppressHydrationWarning>
+      <body className="font-sans m-0 p-0" suppressHydrationWarning>
         <ErrorBoundary>
           <AuthProvider>
-            {children}
+            <div className="w-full m-0 p-0">
+              {children}
+            </div>
           </AuthProvider>
         </ErrorBoundary>
       </body>

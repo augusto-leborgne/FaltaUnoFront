@@ -72,20 +72,20 @@ function BottomNavigationComponent() {
   }, [pathname])
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 shadow-lg pb-[env(safe-area-inset-bottom,0px)]" role="navigation" aria-label="Navegación principal">
-      <div className="flex justify-center items-center py-2 xs:py-2.5 sm:py-3 md:py-3.5 px-1 xs:px-1.5 sm:px-2 md:px-3 max-w-screen-xl mx-auto mb-1 xs:mb-1.5 sm:mb-2">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-40 shadow-lg safe-bottom" role="navigation" aria-label="Navegación principal">
+      <div className="flex justify-center items-center py-1 xs:py-1 sm:py-1.5 md:py-2 px-0 max-w-screen-xl mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon
           return (
             <button
               key={item.id}
               onClick={() => router.push(item.path)}
-              className="font-sans flex flex-col items-center justify-center min-h-[56px] xs:min-h-[60px] sm:min-h-[64px] md:min-h-[68px] flex-1 max-w-[120px] sm:max-w-[140px] touch-manipulation active:scale-95 transition-transform px-1.5 xs:px-2 sm:px-2.5"
+              className="font-sans flex flex-col items-center justify-center min-h-[52px] xs:min-h-[56px] sm:min-h-[60px] md:min-h-[64px] flex-1 max-w-[120px] sm:max-w-[140px] touch-manipulation active:scale-95 transition-transform px-1.5 xs:px-2 sm:px-2.5"
               aria-label={item.label}
               aria-current={item.isActive ? "page" : undefined}
             >
               <div
-                className={`w-7 xs:w-8 sm:w-9 md:w-10 h-7 xs:h-8 sm:h-9 md:h-10 flex items-center justify-center mb-1 rounded-lg transition-colors ${
+                className={`w-7 xs:w-8 sm:w-9 md:w-10 h-7 xs:h-8 sm:h-9 md:h-10 flex items-center justify-center mb-0.5 rounded-lg transition-colors ${
                   item.isActive ? "bg-secondary/20" : "hover:bg-gray-100 active:bg-gray-200"
                 }`}
               >

@@ -346,9 +346,9 @@ function ProfileScreenInner() {
   const fullName = `${user.nombre || ""} ${user.apellido || ""}`.trim() || "Usuario"
 
   return (
-    <div className="min-h-screen bg-white flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
+    <div className="min-h-screen w-full bg-white flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom overflow-x-hidden">
       {/* Header */}
-      <div className="pt-12 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6 border-b border-gray-100">
+      <div className="w-full pt-6 sm:pt-8 md:pt-10 pb-3 sm:pb-4 md:pb-5 px-3 sm:px-4 md:px-6 border-b border-gray-100 safe-top">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Mi Perfil</h1>
@@ -381,7 +381,7 @@ function ProfileScreenInner() {
         </div>
       </div>
 
-      <div className="flex-1 px-3 sm:px-6 py-4 sm:py-6 overflow-y-auto pb-18 xs:pb-20 sm:pb-22 md:pb-24">
+      <div className="flex-1 w-full px-3 sm:px-4 md:px-6 py-3 sm:py-4 md:py-5 overflow-y-auto pb-20 xs:pb-22 sm:pb-24 md:pb-26">
         {/* Profile Card */}
         <div className="bg-white border-2 border-gray-200 rounded-xl sm:rounded-2xl p-5 sm:p-6 mb-5 sm:mb-6 shadow-sm">
           <div className="flex items-center space-x-3 sm:space-x-2 xs:space-x-3 sm:space-x-4 mb-5 sm:mb-6">
