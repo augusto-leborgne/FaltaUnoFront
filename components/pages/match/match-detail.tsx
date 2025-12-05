@@ -375,7 +375,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
   // ====== ESTADOS DE CARGA/ERROR ======
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center px-3 xs:px-4 sm:px-6">
         <LoadingSpinner size="lg" variant="green" text="Cargando partido..." />
       </div>
     )
@@ -383,24 +383,24 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
 
   if (error || !match) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6">
-        <div className="text-center mb-6">
-          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-gray-900 mb-2">
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center px-3 xs:px-4 sm:px-6">
+        <div className="text-center mb-4 xs:mb-5 sm:mb-6">
+          <AlertCircle className="w-14 xs:w-16 sm:w-20 h-14 xs:h-16 sm:h-20 text-red-500 mx-auto mb-3 xs:mb-4" />
+          <h2 className="text-base xs:text-lg sm:text-xl font-bold text-gray-900 mb-2">
             {error || "Partido no encontrado"}
           </h2>
-          <p className="text-gray-600">
+          <p className="text-xs xs:text-sm sm:text-base text-gray-600">
             {error ? "Por favor intenta nuevamente" : "El partido que buscas no existe"}
           </p>
           {retryCount >= 2 && (
-            <p className="text-gray-500 mt-2">Si el problema persiste, vuelve al inicio.</p>
+            <p className="text-xs xs:text-sm text-gray-500 mt-2">Si el problema persiste, vuelve al inicio.</p>
           )}
         </div>
-        <div className="flex gap-3">
-          <Button onClick={handleBack} variant="outline">
+        <div className="flex gap-2.5 xs:gap-3">
+          <Button onClick={handleBack} variant="outline" className="min-h-[48px] touch-manipulation active:scale-[0.98]">
             Volver
           </Button>
-          <Button onClick={handleRetry} className="bg-green-600 hover:bg-green-700">
+          <Button onClick={handleRetry} className="bg-green-600 hover:bg-green-700 min-h-[48px] touch-manipulation active:scale-[0.98]">
             Reintentar
           </Button>
         </div>
@@ -423,83 +423,83 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Header */}
-      <div className="pt-12 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6 border-b border-gray-100">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center space-x-2 sm:space-x-4 flex-1 min-w-0">
+      <div className="pt-12 xs:pt-14 sm:pt-16 pb-3 xs:pb-4 sm:pb-6 px-3 xs:px-4 sm:px-6 border-b border-gray-100 safe-top">
+        <div className="flex items-center justify-between gap-2.5 xs:gap-3">
+          <div className="flex items-center space-x-2 xs:space-x-3 sm:space-x-4 flex-1 min-w-0">
             <button
               onClick={handleBack}
               className="p-2 sm:p-2.5 -ml-2 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-95"
             >
-              <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
+              <ArrowLeft className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6 sm:h-6 text-gray-600" />
             </button>
-            <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">Detalle del partido</h1>
+            <h1 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">Detalle del partido</h1>
           </div>
           <button
             onClick={handleShareMatch}
             className="p-2 sm:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-95 flex-shrink-0"
             title="Compartir partido"
           >
-            <Upload className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
+            <Upload className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6 sm:h-6 text-gray-600" />
           </button>
         </div>
       </div>
 
-      <div className="flex-1 px-4 sm:px-6 py-4 sm:py-6 overflow-y-auto pb-24">
+      <div className="flex-1 px-3 xs:px-4 sm:px-6 py-3 xs:py-4 sm:py-6 overflow-y-auto pb-20 xs:pb-24 sm:pb-28 safe-bottom">
         {/* Estado cancelado/completado */}
         {isMatchCancelled && (
-          <div className="mb-4 sm:mb-6 p-4 sm:p-5 bg-red-50 border-2 border-red-200 rounded-xl sm:rounded-2xl">
-            <p className="text-red-800 font-semibold text-base sm:text-lg">⚠️ Partido cancelado</p>
-            <p className="text-red-600 text-sm sm:text-base mt-1.5">Este partido ha sido cancelado por el organizador</p>
+          <div className="mb-3 xs:mb-4 sm:mb-6 p-3 xs:p-4 sm:p-5 bg-red-50 border-2 border-red-200 rounded-lg xs:rounded-xl sm:rounded-2xl">
+            <p className="text-red-800 font-semibold text-sm xs:text-base sm:text-lg">⚠️ Partido cancelado</p>
+            <p className="text-red-600 text-xs xs:text-sm sm:text-base mt-1.5">Este partido ha sido cancelado por el organizador</p>
           </div>
         )}
 
         {isMatchCompleted && (
-          <div className="mb-4 sm:mb-6 p-4 sm:p-5 bg-blue-50 border-2 border-blue-200 rounded-xl sm:rounded-2xl">
-            <p className="text-blue-800 font-semibold text-base sm:text-lg">✓ Partido completado</p>
-            <p className="text-blue-600 text-sm sm:text-base mt-1.5">Este partido ya se ha jugado</p>
+          <div className="mb-3 xs:mb-4 sm:mb-6 p-3 xs:p-4 sm:p-5 bg-blue-50 border-2 border-blue-200 rounded-lg xs:rounded-xl sm:rounded-2xl">
+            <p className="text-blue-800 font-semibold text-sm xs:text-base sm:text-lg">✓ Partido completado</p>
+            <p className="text-blue-600 text-xs xs:text-sm sm:text-base mt-1.5">Este partido ya se ha jugado</p>
           </div>
         )}
 
         {/* Match Info Card */}
-        <div className="bg-white border-2 border-gray-200 rounded-xl sm:rounded-2xl p-5 sm:p-6 mb-5 sm:mb-6 shadow-sm">
+        <div className="bg-white border-2 border-gray-200 rounded-lg xs:rounded-xl sm:rounded-2xl p-4 xs:p-5 sm:p-6 mb-4 xs:mb-5 sm:mb-6 shadow-sm">
           {/* Match Header */}
-          <div className="flex items-start justify-between mb-4 sm:mb-5 gap-3">
-            <div className="flex gap-2 flex-wrap">
-              <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100 text-sm sm:text-base px-3 py-1 font-semibold">
+          <div className="flex items-start justify-between mb-3 xs:mb-4 sm:mb-5 gap-2.5 xs:gap-3">
+            <div className="flex gap-1.5 xs:gap-2 flex-wrap">
+              <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-100 text-xs xs:text-sm sm:text-base px-2.5 xs:px-3 py-1 font-semibold">
                 {formatMatchType(getTipoPartido(match))}
               </Badge>
               {Boolean((match as any).genero) && (
-                <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 text-sm sm:text-base px-3 py-1 font-semibold">
+                <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100 text-xs xs:text-sm sm:text-base px-2.5 xs:px-3 py-1 font-semibold">
                   {(match as any).genero}
                 </Badge>
               )}
             </div>
-            <Badge className={`${getSpotsLeftColor(spotsLeft)} hover:bg-current text-sm sm:text-base px-3 py-1 font-semibold whitespace-nowrap flex-shrink-0`}>
+            <Badge className={`${getSpotsLeftColor(spotsLeft)} hover:bg-current text-xs xs:text-sm sm:text-base px-2.5 xs:px-3 py-1 font-semibold whitespace-nowrap flex-shrink-0`}>
               {spotsLeft === 0 ? "Completo" : `Quedan ${spotsLeft}`}
             </Badge>
           </div>
 
           {/* Match Time */}
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-4 sm:mb-5 leading-tight">
+          <h2 className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-3 xs:mb-4 sm:mb-5 leading-tight">
             {formatMatchDate(match.fecha, match.hora)}
           </h2>
 
           {/* Match Details */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm sm:text-base mb-5 sm:mb-6">
-            <div className="flex items-center space-x-2.5 text-gray-600 min-h-[36px]">
-              <MapPin className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 xs:gap-3 sm:gap-4 text-xs xs:text-sm sm:text-base mb-4 xs:mb-5 sm:mb-6">
+            <div className="flex items-center space-x-2 xs:space-x-2.5 text-gray-600 min-h-[32px] xs:min-h-[36px]">
+              <MapPin className="w-4 xs:w-5 sm:w-6 h-4 xs:h-5 sm:h-6 flex-shrink-0" />
               <span className="line-clamp-2">{nombreUbicacion}</span>
             </div>
-            <div className="flex items-center space-x-2.5 text-gray-600 min-h-[36px]">
-              <DollarSign className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
+            <div className="flex items-center space-x-2 xs:space-x-2.5 text-gray-600 min-h-[32px] xs:min-h-[36px]">
+              <DollarSign className="w-4 xs:w-5 sm:w-6 h-4 xs:h-5 sm:h-6 flex-shrink-0" />
               <span className="font-medium">${getPrecioPorJugador(match)} / jugador</span>
             </div>
-            <div className="flex items-center space-x-2.5 text-gray-600 min-h-[36px]">
-              <Clock className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
+            <div className="flex items-center space-x-2 xs:space-x-2.5 text-gray-600 min-h-[32px] xs:min-h-[36px]">
+              <Clock className="w-4 xs:w-5 sm:w-6 h-4 xs:h-5 sm:h-6 flex-shrink-0" />
               <span className="font-medium">{getDuracionMinutos(match)} min</span>
             </div>
-            <div className="flex items-center space-x-2.5 text-gray-600 min-h-[36px]">
-              <Users className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
+            <div className="flex items-center space-x-2 xs:space-x-2.5 text-gray-600 min-h-[32px] xs:min-h-[36px]">
+              <Users className="w-4 xs:w-5 sm:w-6 h-4 xs:h-5 sm:h-6 flex-shrink-0" />
               <span className="font-medium">
                 {getJugadoresActuales(match)}/{getCantidadJugadores(match)}
               </span>
@@ -524,13 +524,13 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
 
         {/* Organizer Section */}
         {Boolean((match as any).organizador) && (
-          <div className="bg-white border-2 border-gray-200 rounded-xl sm:rounded-2xl p-5 sm:p-6 mb-5 sm:mb-6 shadow-sm">
-            <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-4">Organizador</h3>
+          <div className="bg-white border-2 border-gray-200 rounded-lg xs:rounded-xl sm:rounded-2xl p-4 xs:p-5 sm:p-6 mb-4 xs:mb-5 sm:mb-6 shadow-sm">
+            <h3 className="text-sm xs:text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-3 xs:mb-4">Organizador</h3>
             <div
               onClick={() => handlePlayerClick((match as any).organizador?.id)}
-              className="flex items-center space-x-3 sm:space-x-4 p-4 sm:p-5 bg-gray-50 rounded-xl hover:bg-gray-100 active:bg-gray-200 cursor-pointer transition-all touch-manipulation active:scale-[0.98] min-h-[80px]"
+              className="flex items-center space-x-2.5 xs:space-x-3 sm:space-x-4 p-3 xs:p-4 sm:p-5 bg-gray-50 rounded-lg xs:rounded-xl hover:bg-gray-100 active:bg-gray-200 cursor-pointer transition-all touch-manipulation active:scale-[0.98] min-h-[68px] xs:min-h-[76px] sm:min-h-[80px]"
             >
-              <Avatar className="w-14 h-14 sm:w-16 sm:h-16 ring-2 ring-white shadow-sm flex-shrink-0">
+              <Avatar className="w-12 xs:w-14 sm:w-16 h-12 xs:h-14 sm:h-16 ring-2 ring-white shadow-sm flex-shrink-0">
                 {(match as any).organizador?.foto_perfil ? (
                   <AvatarImage src={`data:image/jpeg;base64,${(match as any).organizador.foto_perfil}`} />
                 ) : (
@@ -541,10 +541,10 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
                 )}
               </Avatar>
               <div className="flex-1 min-w-0">
-                <span className="font-semibold text-gray-900 block text-base sm:text-lg truncate">
+                <span className="font-semibold text-gray-900 block text-sm xs:text-base sm:text-lg truncate">
                   {(match as any).organizador?.nombre} {(match as any).organizador?.apellido}
                 </span>
-                <span className="text-sm sm:text-base text-gray-500">Creador del partido</span>
+                <span className="text-xs xs:text-sm sm:text-base text-gray-500">Creador del partido</span>
               </div>
             </div>
           </div>
@@ -552,8 +552,8 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
 
         {/* Players Section - Jugadores Inscriptos */}
         {jugadores.length > 0 && (
-          <div className="mb-6">
-            <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-4">
+          <div className="mb-4 xs:mb-5 sm:mb-6">
+            <h3 className="text-sm xs:text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-3 xs:mb-4">
               Jugadores Inscriptos ({jugadores.filter((p: any) => p.id !== (match as any)?.organizadorId).length}/{getCantidadJugadores(match) - 1})
             </h3>
 
@@ -567,10 +567,10 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
                     <div
                       key={player.id}
                       onClick={() => handlePlayerClick(player.id)}
-                      className="flex items-center justify-between p-4 sm:p-5 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 active:bg-gray-200 transition-all touch-manipulation active:scale-[0.98] min-h-[84px]"
+                      className="flex items-center justify-between p-3 xs:p-4 sm:p-5 bg-gray-50 rounded-lg xs:rounded-xl cursor-pointer hover:bg-gray-100 active:bg-gray-200 transition-all touch-manipulation active:scale-[0.98] min-h-[68px] xs:min-h-[76px] sm:min-h-[84px]"
                     >
-                      <div className="flex items-center space-x-3 sm:space-x-4 flex-1 min-w-0">
-                        <Avatar className="w-14 h-14 sm:w-16 sm:h-16 ring-2 ring-white shadow-sm flex-shrink-0">
+                      <div className="flex items-center space-x-2.5 xs:space-x-3 sm:space-x-4 flex-1 min-w-0">
+                        <Avatar className="w-12 xs:w-14 sm:w-16 h-12 xs:h-14 sm:h-16 ring-2 ring-white shadow-sm flex-shrink-0">
                           {player.foto_perfil ? (
                             <AvatarImage src={`data:image/jpeg;base64,${player.foto_perfil}`} />
                           ) : (
@@ -581,10 +581,10 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
                           )}
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-gray-900 text-base sm:text-lg truncate">
+                          <div className="font-semibold text-gray-900 text-sm xs:text-base sm:text-lg truncate">
                             {(player?.nombre ?? "")} {(player?.apellido ?? "")}
                           </div>
-                          <div className="flex items-center space-x-2 text-sm sm:text-base text-gray-600 flex-wrap">
+                          <div className="flex items-center space-x-1.5 xs:space-x-2 text-xs xs:text-sm sm:text-base text-gray-600 flex-wrap">
                             {player.posicion && <span className="truncate">{player.posicion}</span>}
                             {player.rating && (
                               <>
@@ -607,29 +607,29 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
 
         {/* Description */}
         {Boolean((match as any).descripcion) && (
-          <div className="mb-6">
-            <h3 className="text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-3 sm:mb-4">Descripción</h3>
-            <div className="bg-gray-50 rounded-xl sm:rounded-2xl p-4 sm:p-5 border border-gray-200">
-              <p className="text-gray-700 whitespace-pre-wrap leading-relaxed text-sm sm:text-base">{(match as any).descripcion}</p>
+          <div className="mb-4 xs:mb-5 sm:mb-6">
+            <h3 className="text-sm xs:text-base sm:text-lg md:text-xl font-bold text-gray-900 mb-2.5 xs:mb-3 sm:mb-4">Descripción</h3>
+            <div className="bg-gray-50 rounded-lg xs:rounded-xl sm:rounded-2xl p-3 xs:p-4 sm:p-5 border border-gray-200">
+              <p className="text-gray-700 whitespace-pre-wrap leading-relaxed text-xs xs:text-sm sm:text-base">{(match as any).descripcion}</p>
             </div>
           </div>
         )}
 
         {/* Join Button */}
-        <div className="pb-6">
+        <div>
           {canManage ? (
             <Button
               onClick={() => router.push(`/my-matches/${matchId}${fromAdmin ? '?fromAdmin=true' : ''}`)}
-              className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white min-h-[56px] text-base sm:text-lg font-semibold rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl transition-all touch-manipulation active:scale-[0.98]"
+              className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white min-h-[52px] xs:min-h-[54px] sm:min-h-[56px] text-sm xs:text-base sm:text-lg font-semibold rounded-lg xs:rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl transition-all touch-manipulation active:scale-[0.98]"
             >
               Gestionar partido
             </Button>
           ) : userInscriptionStatus === InscripcionEstado.ACEPTADO ? (
             // ✅ Usuario ya está aceptado
-            <div className="space-y-3">
+            <div className="space-y-2.5 xs:space-y-3">
               <Button
                 onClick={() => router.push(`/matches/${matchId}/chat`)}
-                className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white min-h-[56px] text-base sm:text-lg font-semibold rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl transition-all touch-manipulation active:scale-[0.98]"
+                className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white min-h-[52px] xs:min-h-[54px] sm:min-h-[56px] text-sm xs:text-base sm:text-lg font-semibold rounded-lg xs:rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl transition-all touch-manipulation active:scale-[0.98]"
               >
                 Ver chat del partido
               </Button>
@@ -639,7 +639,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
                   onClick={handleLeaveMatch}
                   disabled={isLeaving}
                   variant="outline"
-                  className="w-full border-2 border-red-300 text-red-600 hover:bg-red-50 active:bg-red-100 min-h-[52px] text-base font-semibold rounded-xl sm:rounded-2xl transition-all touch-manipulation active:scale-[0.98]"
+                  className="w-full border-2 border-red-300 text-red-600 hover:bg-red-50 active:bg-red-100 min-h-[48px] xs:min-h-[50px] sm:min-h-[52px] text-sm xs:text-base font-semibold rounded-lg xs:rounded-xl sm:rounded-2xl transition-all touch-manipulation active:scale-[0.98]"
                 >
                   {isLeaving ? (
                     <span className="flex items-center justify-center">
@@ -656,7 +656,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
             // ✅ Usuario tiene solicitud pendiente
             <Button
               disabled
-              className="w-full bg-gray-400 text-white min-h-[56px] text-base sm:text-lg font-semibold rounded-xl sm:rounded-2xl cursor-not-allowed opacity-75"
+              className="w-full bg-gray-400 text-white min-h-[52px] xs:min-h-[54px] sm:min-h-[56px] text-sm xs:text-base sm:text-lg font-semibold rounded-lg xs:rounded-xl sm:rounded-2xl cursor-not-allowed opacity-75"
             >
               Solicitud pendiente
             </Button>
@@ -665,7 +665,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
               <Button
                 onClick={handleJoinMatch}
                 disabled={isJoining || !canJoin}
-                className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white min-h-[56px] text-base sm:text-lg font-semibold rounded-xl sm:rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all touch-manipulation active:scale-[0.98]"
+                className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white min-h-[52px] xs:min-h-[54px] sm:min-h-[56px] text-sm xs:text-base sm:text-lg font-semibold rounded-lg xs:rounded-xl sm:rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all touch-manipulation active:scale-[0.98]"
               >
                 {isJoining ? (
                   <span className="flex items-center justify-center">
@@ -685,7 +685,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
                 )}
               </Button>
               {canJoin && (
-                <p className="text-center text-sm sm:text-base text-gray-500 mt-3 px-4">
+                <p className="text-center text-xs xs:text-sm sm:text-base text-gray-500 mt-2.5 xs:mt-3 px-3 xs:px-4">
                   Tu solicitud quedará pendiente de aprobación del organizador
                 </p>
               )}
