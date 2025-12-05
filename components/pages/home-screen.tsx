@@ -287,29 +287,32 @@ export function HomeScreen() {
   const user = AuthService.getUser()
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-b from-primary/5 via-background to-background flex flex-col overflow-x-hidden pb-24 sm:pb-24">
-      {/* HERO HEADER */}
-      <div className="w-full pt-12 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6 max-w-full">
-        <div className="flex items-start justify-between mb-6 sm:mb-8 w-full">
-          <div className="flex-1 min-w-0 pr-3">
-            <div className="flex items-center gap-2 mb-2">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 truncate">
-                Hola, {currentUser?.nombre || user?.nombre || "Jugador"} 👋
-              </h1>
-              <BetaBadge />
-            </div>
-            <p className="text-sm sm:text-base text-gray-600 font-medium">
-              ¿Listo para jugar hoy?
-            </p>
+    <div className="min-h-screen w-full bg-gradient-to-br from-green-50 via-white to-orange-50 flex flex-col overflow-x-hidden pb-24 sm:pb-24">
+      {/* HEADER - Estilo Falta Uno */}
+      <div className="w-full bg-gradient-to-r from-green-500 via-green-600 to-green-500 pt-8 sm:pt-10 pb-20 sm:pb-24 px-4 sm:px-6 relative overflow-hidden">
+        {/* Patrón de fondo tipo cancha */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 border-2 border-white rounded-full"></div>
+          <div className="absolute top-0 left-0 right-0 h-px bg-white"></div>
+          <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-white"></div>
+        </div>
+
+        {/* Top bar */}
+        <div className="relative z-10 flex items-center justify-between mb-6 sm:mb-8">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg">
+              Falta Uno
+            </h1>
+            <BetaBadge />
           </div>
-          <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               onClick={handleNotifications}
-              className="relative p-2.5 rounded-2xl bg-white/80 backdrop-blur-sm border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 touch-manipulation active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="relative p-2.5 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 shadow-lg hover:bg-white/30 transition-all duration-200 touch-manipulation active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
-              <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700" />
+              <Bell className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               {notificationCount > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1.5 shadow-md">
+                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-orange-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1.5 shadow-md border-2 border-white">
                   {notificationCount > 99 ? '99+' : notificationCount}
                 </span>
               )}
@@ -318,66 +321,77 @@ export function HomeScreen() {
               userId={currentUser?.id}
               name={currentUser?.nombre}
               surname={currentUser?.apellido}
-              className="w-11 h-11 sm:w-12 sm:h-12 cursor-pointer ring-2 ring-white shadow-md hover:scale-105 transition-all duration-200"
+              className="w-11 h-11 sm:w-12 sm:h-12 cursor-pointer ring-3 ring-white shadow-lg hover:scale-105 transition-all duration-200"
               onClick={() => router.push("/profile")}
             />
           </div>
         </div>
 
-        {/* QUICK ACTIONS - Modern floating action buttons */}
-        <div className="w-full flex justify-center gap-4 sm:gap-6 mb-6">
+        {/* Saludo */}
+        <div className="relative z-10">
+          <h2 className="text-xl sm:text-2xl font-bold text-white mb-1">
+            ¡Hola, {currentUser?.nombre || user?.nombre || "Jugador"}! ⚽
+          </h2>
+          <p className="text-green-50 text-sm sm:text-base font-medium">
+            ¿Listo para tu próximo partido?
+          </p>
+        </div>
+      </div>
+
+      {/* QUICK ACTIONS - Tarjetas destacadas */}
+      <div className="w-full px-4 sm:px-6 -mt-12 sm:-mt-16 relative z-20 mb-6">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
+          {/* Crear Partido */}
           <button
             onClick={handleCreateMatch}
-            className="group relative"
-            aria-label="Crear partido"
+            className="group bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-4 sm:p-6 shadow-xl hover:shadow-2xl transition-all duration-300 active:scale-95 touch-manipulation"
           >
-            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl shadow-lg flex items-center justify-center transition-all duration-300 active:scale-95 group-hover:shadow-xl group-hover:shadow-green-500/50">
-              <Plus className="w-7 h-7 sm:w-8 sm:h-8 text-white group-active:rotate-90 transition-transform duration-300" />
+            <div className="bg-white/20 backdrop-blur-sm rounded-xl w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300">
+              <Plus className="w-6 h-6 sm:w-7 sm:h-7 text-white" strokeWidth={2.5} />
             </div>
-            <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap">
-              <span className="text-xs sm:text-sm font-semibold text-gray-700">Crear</span>
-            </div>
+            <h3 className="text-white font-bold text-base sm:text-lg mb-1 text-left">Crear Partido</h3>
+            <p className="text-green-50 text-xs sm:text-sm text-left">Organiza tu partido</p>
           </button>
 
+          {/* Buscar Partidos */}
           <button
             onClick={handleViewAllMatches}
-            className="group relative"
-            aria-label="Buscar partidos"
+            className="group bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-4 sm:p-6 shadow-xl hover:shadow-2xl transition-all duration-300 active:scale-95 touch-manipulation"
           >
-            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl shadow-lg flex items-center justify-center transition-all duration-300 active:scale-95 group-hover:shadow-xl group-hover:shadow-orange-500/50">
-              <Users className="w-7 h-7 sm:w-8 sm:h-8 text-white group-active:scale-110 transition-transform duration-300" />
+            <div className="bg-white/20 backdrop-blur-sm rounded-xl w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300">
+              <Users className="w-6 h-6 sm:w-7 sm:h-7 text-white" strokeWidth={2.5} />
             </div>
-            <div className="absolute -bottom-7 left-1/2 -translate-x-1/2 whitespace-nowrap">
-              <span className="text-xs sm:text-sm font-semibold text-gray-700">Buscar</span>
-            </div>
+            <h3 className="text-white font-bold text-base sm:text-lg mb-1 text-left">Buscar Partidos</h3>
+            <p className="text-orange-50 text-xs sm:text-sm text-left">Únete a un partido</p>
           </button>
         </div>
+      </div>
 
-        {/* COMMUNITY STATS - Modern glassmorphism cards */}
-        <div className="w-full mb-10">
-          <div className="bg-white/60 backdrop-blur-md rounded-3xl p-4 sm:p-6 shadow-xl border border-white/50">
-            <div className="grid grid-cols-3 gap-3 sm:gap-4">
-              <div className="text-center">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-2 sm:mb-3 shadow-lg">
-                  <TrendingUp className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-                </div>
-                <div className="text-2xl sm:text-3xl font-bold text-gray-900 leading-none mb-1">{communityStats.activeUsers}</div>
-                <div className="text-xs sm:text-sm text-gray-600 font-semibold">Activos</div>
+      {/* COMMUNITY STATS */}
+      <div className="w-full px-4 sm:px-6 mb-6">
+        <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-lg border border-gray-100">
+          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Comunidad Falta Uno</h3>
+          <div className="grid grid-cols-3 gap-4">
+            <div className="text-center">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-2">
+                <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
               </div>
-              <div className="text-center">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-2 sm:mb-3 shadow-lg">
-                  <Calendar className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-                </div>
-                <div className="text-2xl sm:text-3xl font-bold text-gray-900 leading-none mb-1">{communityStats.matchesThisWeek}</div>
-                <div className="text-xs sm:text-sm text-gray-600 font-semibold">Partidos</div>
+              <div className="text-xl sm:text-2xl font-bold text-gray-900">{communityStats.activeUsers}</div>
+              <div className="text-xs text-gray-500 font-medium">Activos</div>
+            </div>
+            <div className="text-center">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-2">
+                <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
               </div>
-              <div className="text-center">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-2 sm:mb-3 shadow-lg">
-                  <Users className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
-                </div>
-                <div className="text-2xl sm:text-3xl font-bold text-gray-900 leading-none mb-1">{communityStats.newMembers}</div>
-                <div className="text-xs sm:text-sm text-gray-600 font-semibold">Jugadores</div>
+              <div className="text-xl sm:text-2xl font-bold text-gray-900">{communityStats.matchesThisWeek}</div>
+              <div className="text-xs text-gray-500 font-medium">Partidos</div>
+            </div>
+            <div className="text-center">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-orange-100 rounded-xl flex items-center justify-center mx-auto mb-2">
+                <Users className="w-5 h-5 sm:w-6 sm:h-6 text-orange-600" />
               </div>
+              <div className="text-xl sm:text-2xl font-bold text-gray-900">{communityStats.newMembers}</div>
+              <div className="text-xs text-gray-500 font-medium">Jugadores</div>
             </div>
           </div>
         </div>
