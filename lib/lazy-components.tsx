@@ -52,14 +52,6 @@ export const SettingsScreen = dynamic(
   }
 )
 
-export const SearchScreen = dynamic(
-  () => import('@/components/pages/search-screen').then(mod => mod.SearchScreen),
-  {
-    loading: () => <LoadingSpinner size="xl" variant="green" />,
-    ssr: false,
-  }
-)
-
 // ============================================
 // MODALES Y COMPONENTES PESADOS
 // ============================================
