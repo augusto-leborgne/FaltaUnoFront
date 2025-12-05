@@ -92,8 +92,11 @@ jobs:
             --allow-unauthenticated \
             --memory 512Mi \
             --cpu 1 \
+            --timeout 60 \
             --min-instances 0 \
-            --max-instances 10 \
+            --max-instances 3 \
+            --concurrency 100 \
+            --cpu-throttling \
             --port 8080 \
             --tag "sha-$SHORT_SHA" \
             --project ${{ env.GCP_PROJECT_ID }} \
