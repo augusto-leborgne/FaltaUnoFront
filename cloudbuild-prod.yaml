@@ -5,10 +5,9 @@ steps:
       - '-c'
       - |
         set -euo pipefail
-        TAG="${SHORT_SHA:-latest}-prod"
         docker build \
           -f Dockerfile.prod \
-          -t us-central1-docker.pkg.dev/master-might-274420/cloud-run-source-deploy/faltauno-frontend:$TAG \
+          -t us-central1-docker.pkg.dev/master-might-274420/cloud-run-source-deploy/faltauno-frontend:${SHORT_SHA:-latest}-prod \
           --build-arg NEXT_PUBLIC_API_URL=${_NEXT_PUBLIC_API_URL} \
           --build-arg NEXT_PUBLIC_GOOGLE_MAPS_API_KEY="$$NEXT_PUBLIC_GOOGLE_MAPS_API_KEY" \
           --build-arg NEXT_PUBLIC_GRAFANA_ENABLED=${_NEXT_PUBLIC_GRAFANA_ENABLED} \
