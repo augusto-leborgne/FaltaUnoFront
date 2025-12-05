@@ -101,7 +101,7 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
 
   if (loadingData) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center px-3 xs:px-4 sm:px-6">
         <LoadingSpinner size="xl" variant="green" text="Cargando..." />
       </div>
     )
@@ -110,18 +110,18 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
   if (error && !user) {
     return (
       <div className="min-h-screen bg-white flex flex-col">
-        <div className="pt-16 pb-6 px-6 border-b border-gray-100">
-          <div className="flex items-center space-x-4">
-            <button onClick={handleBack} className="p-2 sm:p-3 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
-              <ArrowLeft className="w-5 h-5 text-gray-600" />
+        <div className="pt-14 xs:pt-16 sm:pt-18 pb-4 xs:pb-5 sm:pb-6 px-3 xs:px-4 sm:px-6 border-b border-gray-100">
+          <div className="flex items-center space-x-3 xs:space-x-4">
+            <button onClick={handleBack} className="p-2 xs:p-2.5 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 transition-transform">
+              <ArrowLeft className="w-4 xs:w-5 h-4 xs:h-5 text-gray-600" />
             </button>
-            <h1 className="text-xl font-bold text-gray-900">Error</h1>
+            <h1 className="text-base xs:text-lg sm:text-xl md:text-xl font-bold text-gray-900">Error</h1>
           </div>
         </div>
-        <div className="flex-1 flex items-center justify-center px-6">
-          <div className="text-center">
-            <p className="text-red-600 mb-4">{error}</p>
-            <Button onClick={handleBack} variant="outline">
+        <div className="flex-1 flex items-center justify-center px-3 xs:px-4 sm:px-6">
+          <div className="text-center max-w-md mx-auto">
+            <p className="text-xs xs:text-sm sm:text-base text-red-600 mb-3 xs:mb-4">{error}</p>
+            <Button onClick={handleBack} variant="outline" className="min-h-[48px] px-6 text-sm xs:text-base">
               Volver
             </Button>
           </div>
@@ -136,18 +136,19 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      <div className="pt-16 pb-6 px-6 border-b border-gray-100">
-        <div className="flex items-center space-x-4">
-          <button onClick={handleBack} className="p-2 -ml-2">
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
+      <div className="pt-14 xs:pt-16 sm:pt-18 pb-4 xs:pb-5 sm:pb-6 px-3 xs:px-4 sm:px-6 border-b border-gray-100">
+        <div className="flex items-center space-x-3 xs:space-x-4">
+          <button onClick={handleBack} className="p-2 xs:p-2.5 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 transition-transform">
+            <ArrowLeft className="w-4 xs:w-5 h-4 xs:h-5 text-gray-600" />
           </button>
-          <h1 className="text-xl font-bold text-gray-900">Enviar solicitud</h1>
+          <h1 className="text-base xs:text-lg sm:text-xl md:text-xl font-bold text-gray-900">Enviar solicitud</h1>
         </div>
       </div>
 
-      <div className="flex-1 px-6 py-8">
-        <div className="text-center mb-8">
-          <Avatar className="w-24 h-24 mx-auto mb-4">
+      <div className="flex-1 px-3 xs:px-4 sm:px-6 py-6 xs:py-8">
+        <div className="max-w-md mx-auto">
+        <div className="text-center mb-6 xs:mb-8">
+          <Avatar className="w-20 xs:w-22 sm:w-24 h-20 xs:h-22 sm:h-24 mx-auto mb-3 xs:mb-4">
             {fotoBase64 ? (
               <AvatarImage 
                 src={`data:image/jpeg;base64,${fotoBase64}`}
@@ -159,11 +160,11 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
               </AvatarFallback>
             )}
           </Avatar>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">{fullName}</h2>
+          <h2 className="text-base xs:text-lg sm:text-xl md:text-xl font-bold text-gray-900 mb-1.5 xs:mb-2">{fullName}</h2>
           {user?.posicion && (
-            <p className="text-gray-600 mb-2">{user.posicion}</p>
+            <p className="text-xs xs:text-sm sm:text-base text-gray-600 mb-1.5 xs:mb-2">{user.posicion}</p>
           )}
-          <p className="text-gray-600">
+          <p className="text-xs xs:text-sm sm:text-base text-gray-600">
             {requestSent 
               ? `¡Solicitud enviada a ${fullName}!`
               : `¿Quieres enviar una solicitud de amistad a ${fullName}?`
@@ -172,33 +173,33 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
-            <p className="text-red-600 text-sm">{error}</p>
+          <div className="mb-4 xs:mb-5 sm:mb-6 p-3 xs:p-4 bg-red-50 border border-red-200 rounded-lg xs:rounded-xl">
+            <p className="text-red-600 text-xs xs:text-sm">{error}</p>
           </div>
         )}
 
         {requestSent ? (
-          <div className="bg-green-50 rounded-xl p-4 mb-8">
-            <p className="text-sm text-green-800 text-center">
+          <div className="bg-green-50 rounded-lg xs:rounded-xl p-3 xs:p-4 mb-6 xs:mb-8">
+            <p className="text-xs xs:text-sm text-green-800 text-center">
               ✓ Tu solicitud ha sido enviada exitosamente. {fullName.split(" ")[0]} será notificado.
             </p>
           </div>
         ) : (
-          <div className="bg-gray-50 rounded-xl p-4 mb-8">
-            <p className="text-sm text-gray-600 text-center">
+          <div className="bg-gray-50 rounded-lg xs:rounded-xl p-3 xs:p-4 mb-6 xs:mb-8">
+            <p className="text-xs xs:text-sm text-gray-600 text-center">
               Una vez que {fullName.split(" ")[0]} acepte tu solicitud, podrán verse mutuamente en sus listas de amigos e invitarse a partidos.
             </p>
           </div>
         )}
 
-        <div className="space-y-4">
+        <div className="space-y-3 xs:space-y-4">
           {!requestSent && (
             <Button
               onClick={handleSendRequest}
               disabled={isLoading}
-              className="w-full bg-green-600 hover:bg-green-700 text-white py-4 text-lg font-semibold rounded-2xl flex items-center justify-center disabled:opacity-50"
+              className="w-full bg-green-600 hover:bg-green-700 text-white min-h-[48px] py-3 xs:py-3.5 sm:py-4 text-sm xs:text-base sm:text-lg md:text-base font-semibold rounded-xl xs:rounded-2xl flex items-center justify-center disabled:opacity-50"
             >
-              <Check className="w-5 h-5 mr-2" />
+              <Check className="w-4 xs:w-4.5 sm:w-5 h-4 xs:h-4.5 sm:h-5 mr-1.5 xs:mr-2" />
               {isLoading ? "Enviando..." : "Enviar solicitud"}
             </Button>
           )}
@@ -206,16 +207,16 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
           <Button
             onClick={handleBack}
             variant="outline"
-            className="w-full py-4 text-lg font-semibold rounded-2xl bg-transparent"
+            className="w-full min-h-[48px] py-3 xs:py-3.5 sm:py-4 text-sm xs:text-base sm:text-lg md:text-base font-semibold rounded-xl xs:rounded-2xl bg-transparent"
           >
             {requestSent ? "Cerrar" : "Cancelar"}
           </Button>
         </div>
 
         {user && (
-          <div className="mt-8 bg-gray-50 rounded-xl p-4">
-            <h3 className="font-semibold text-gray-900 mb-3">Información</h3>
-            <div className="space-y-2 text-sm">
+          <div className="mt-6 xs:mt-8 bg-gray-50 rounded-lg xs:rounded-xl p-3 xs:p-4">
+            <h3 className="text-xs xs:text-sm sm:text-base font-semibold text-gray-900 mb-2 xs:mb-3">Información</h3>
+            <div className="space-y-1.5 xs:space-y-2 text-xs xs:text-sm">
               {user.posicion && (
                 <div className="flex justify-between">
                   <span className="text-gray-600">Posición preferida:</span>
@@ -237,6 +238,7 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   )
