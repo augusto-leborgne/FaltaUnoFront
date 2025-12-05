@@ -182,7 +182,8 @@ export function ProfileSetupForm() {
         return null
 
       case 'photo':
-        if (!value) return "Foto obligatoria"
+        // ⚡ FIXED: Check both formData.photo (File) and photoPreviewUrl (pre-loaded)
+        if (!value && !photoPreviewUrl) return "Foto obligatoria"
         // ⚡ LÍMITES COMO INSTAGRAM: 30MB (antes era 5MB)
         if (value instanceof File && value.size > 30 * 1024 * 1024) {
           return "Máx 30MB"
@@ -727,7 +728,8 @@ export function ProfileSetupForm() {
   }
 
   async function handleUploadAndSaveProfile() {
-    if (!formData.photo) {
+    // ⚡ FIXED: Check both formData.photo and photoPreviewUrl for photo existence
+    if (!formData.photo && !photoPreviewUrl) {
       setGeneralError("Foto requerida")
       return
     }
@@ -848,11 +850,18 @@ export function ProfileSetupForm() {
           return
         }
 
-        const fotoRes = await UsuarioAPI.subirFoto(formData.photo)
-        if (!fotoRes?.success) {
-          const errorMsg = fotoRes?.message || "No se pudo subir la foto"
-          logger.error("[ProfileSetup] Photo upload error:", errorMsg)
-          throw new Error(errorMsg)
+        // ⚡ FIXED: Only upload photo if there's a new File (not pre-loaded)
+        if (formData.photo instanceof File) {
+          logger.log("[ProfileSetup] Uploading new photo...")
+          const fotoRes = await UsuarioAPI.subirFoto(formData.photo)
+          if (!fotoRes?.success) {
+            const errorMsg = fotoRes?.message || "No se pudo subir la foto"
+            logger.error("[ProfileSetup] Photo upload error:", errorMsg)
+            throw new Error(errorMsg)
+          }
+          logger.log("[ProfileSetup] Photo uploaded successfully")
+        } else {
+          logger.log("[ProfileSetup] Skipping photo upload (using existing photo)")
         }
 
         // ⚡ CRITICAL: Preserve celular if it exists to avoid backend overwriting with null
