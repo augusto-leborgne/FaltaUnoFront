@@ -143,12 +143,12 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       // Verificar si ya son amigos
       if (amigosResponse.success && amigosResponse.data) {
         const esAmigo = amigosResponse.data.some((amistad: any) => {
-          // Check both directions: current user could be usuario1 or usuario2
-          const friendId1 = amistad.usuario1Id || amistad.usuario1_id
-          const friendId2 = amistad.usuario2Id || amistad.usuario2_id
+          // El amigo puede estar en cualquier dirección de la relación
           const amigoId = amistad.amigo?.id || amistad.amigoId
-
-          return amigoId === userId || friendId1 === userId || friendId2 === userId
+          const usuarioId1 = amistad.usuario?.id || amistad.usuarioId
+          
+          // Verificar ambas direcciones de la amistad
+          return amigoId === userId || usuarioId1 === userId
         })
         if (esAmigo) {
           setFriendStatus('friends')
@@ -328,7 +328,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
 
     try {
       const token = AuthService.getToken()
-      const response = await fetch(`${API_BASE}/admin/usuarios/${userId}/ban`, {
+      const response = await fetch(`${API_BASE}/api/admin/usuarios/${userId}/ban`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -354,7 +354,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
 
     try {
       const token = AuthService.getToken()
-      const response = await fetch(`${API_BASE}/admin/usuarios/${userId}/unban`, {
+      const response = await fetch(`${API_BASE}/api/admin/usuarios/${userId}/unban`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -380,7 +380,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
 
     try {
       const token = AuthService.getToken()
-      const response = await fetch(`${API_BASE}/admin/usuarios/${userId}/rol`, {
+      const response = await fetch(`${API_BASE}/api/admin/usuarios/${userId}/rol`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -407,7 +407,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
 
     try {
       const token = AuthService.getToken()
-      const response = await fetch(`${API_BASE}/admin/usuarios/${userId}`, {
+      const response = await fetch(`${API_BASE}/api/admin/usuarios/${userId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
