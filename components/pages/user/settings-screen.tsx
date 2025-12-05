@@ -392,7 +392,7 @@ export function SettingsScreen() {
         logger.error("[Settings] Failed to create blob from canvas")
         setError("Error al capturar la foto")
       }
-    }, 'image/jpeg', 0.95)
+    }, 'image/jpeg', 0.95);
   }
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -529,7 +529,7 @@ export function SettingsScreen() {
       } finally {
         setIsSaving(false)
       }
-    }, 'image/jpeg', 0.92)
+    }, 'image/jpeg', 0.92);
   }
 
   const handleDeleteAccount = async () => {
@@ -693,7 +693,7 @@ export function SettingsScreen() {
               className="hidden"
             />
           </div>
-        </div>
+        </FormSection>
 
         {/* Personal Information */}
         <FormSection>
