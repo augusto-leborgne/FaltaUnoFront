@@ -72,31 +72,33 @@ function BottomNavigationComponent() {
   }, [pathname])
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 pb-safe-area-inset-bottom z-40 shadow-lg">
-      <div className="flex justify-center items-center py-2 px-2">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 pb-safe-area-inset-bottom z-40 shadow-lg safe-bottom" role="navigation" aria-label="Navegación principal">
+      <div className="flex justify-center items-center py-1.5 xs:py-2 px-1 xs:px-2 max-w-screen-xl mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon
           return (
             <button
               key={item.id}
               onClick={() => router.push(item.path)}
-              className="flex flex-col items-center min-h-[60px] flex-1 justify-center touch-manipulation active:scale-95 transition-transform"
+              className="flex flex-col items-center min-h-[56px] xs:min-h-[60px] sm:min-h-[64px] flex-1 max-w-[120px] justify-center touch-manipulation active:scale-95 transition-transform px-1 xs:px-2"
+              aria-label={item.label}
+              aria-current={item.isActive ? "page" : undefined}
             >
               <div
-                className={`w-8 h-8 flex items-center justify-center mb-1 rounded-xl transition-colors ${
-                  item.isActive ? "bg-secondary/20" : "hover:bg-gray-100"
+                className={`w-7 h-7 xs:w-8 xs:h-8 sm:w-9 sm:h-9 flex items-center justify-center mb-0.5 xs:mb-1 rounded-lg xs:rounded-xl transition-colors ${
+                  item.isActive ? "bg-secondary/20" : "hover:bg-gray-100 active:bg-gray-200"
                 }`}
               >
-                <Icon className={`w-5 h-5 ${item.isActive ? "text-gray-800" : "text-gray-400"}`} />
+                <Icon className={`w-4.5 h-4.5 xs:w-5 xs:h-5 sm:w-5.5 sm:h-5.5 ${item.isActive ? "text-gray-900" : "text-gray-500"}`} strokeWidth={item.isActive ? 2.5 : 2} />
               </div>
-              <span className={`text-xs ${item.isActive ? "font-medium text-gray-900" : "text-gray-400"}`}>
+              <span className={`text-[10px] xs:text-xs sm:text-sm leading-tight text-center ${item.isActive ? "font-semibold text-gray-900" : "font-medium text-gray-500"}`}>
                 {item.label}
               </span>
             </button>
           )
         })}
       </div>
-    </div>
+    </nav>
   )
 }
 

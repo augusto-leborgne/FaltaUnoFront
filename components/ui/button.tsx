@@ -5,27 +5,27 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold transition-all duration-200 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98]",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-semibold transition-all duration-200 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] touch-manipulation min-h-[44px] min-w-[44px]",
   {
     variants: {
       variant: {
         default:
-          'bg-primary text-primary-foreground shadow-md hover:shadow-lg hover:bg-primary/90',
+          'bg-primary text-primary-foreground shadow-md hover:shadow-lg hover:bg-primary/90 active:bg-primary/80',
         destructive:
-          'bg-destructive text-white shadow-md hover:shadow-lg hover:bg-destructive/90',
+          'bg-destructive text-white shadow-md hover:shadow-lg hover:bg-destructive/90 active:bg-destructive/80',
         outline:
-          'border-2 border-border bg-background hover:bg-muted hover:border-primary/50',
+          'border-2 border-border bg-background hover:bg-muted hover:border-primary/50 active:bg-muted/80',
         secondary:
-          'bg-secondary text-secondary-foreground shadow-md hover:shadow-lg hover:bg-secondary/90',
+          'bg-secondary text-secondary-foreground shadow-md hover:shadow-lg hover:bg-secondary/90 active:bg-secondary/80',
         ghost:
-          'hover:bg-muted',
-        link: 'text-primary underline-offset-4 hover:underline',
+          'hover:bg-muted active:bg-muted/80',
+        link: 'text-primary underline-offset-4 hover:underline min-h-0 min-w-0',
       },
       size: {
-        default: 'h-11 px-6 py-2.5 has-[>svg]:px-4',
-        sm: 'h-9 rounded-lg gap-1.5 px-4 has-[>svg]:px-3 text-xs',
-        lg: 'h-12 rounded-xl px-8 has-[>svg]:px-6 text-base',
-        icon: 'size-11',
+        default: 'min-h-[48px] px-5 xs:px-6 py-2.5 has-[>svg]:px-4 text-sm xs:text-base',
+        sm: 'min-h-[44px] rounded-lg gap-1.5 px-3 xs:px-4 has-[>svg]:px-3 text-xs xs:text-sm',
+        lg: 'min-h-[52px] xs:min-h-[56px] rounded-xl px-6 xs:px-8 has-[>svg]:px-5 xs:has-[>svg]:px-6 text-base xs:text-lg',
+        icon: 'size-11 xs:size-12 min-h-[44px] min-w-[44px]',
       },
     },
     defaultVariants: {
