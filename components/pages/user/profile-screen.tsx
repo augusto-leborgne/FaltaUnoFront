@@ -351,7 +351,6 @@ function ProfileScreenInner() {
       <PageHeader 
         title="Mi Perfil"
         showBack={false}
-        icon={UserIcon}
         badge={
           <>
             <BetaBadge />

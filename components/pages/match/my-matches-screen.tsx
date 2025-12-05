@@ -202,7 +202,6 @@ export function MyMatchesScreen() {
       <PageHeader
         title="Mis Partidos"
         showBack={false}
-        icon={Users}
         rightElement={
           <button
             onClick={handleCreateMatch}

@@ -240,7 +240,6 @@ export function MatchesListing() {
       <PageHeader
         title="Partidos"
         showBack={false}
-        icon={MapPin}
         rightElement={
           <button
             onClick={handleCreateMatch}

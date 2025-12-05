@@ -235,16 +235,16 @@ export function ChatsScreen() {
   return (
     <div className="min-h-screen bg-white flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
       {/* Header Compacto como Partidos y Mis Partidos */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm safe-top">
-        <div className="px-2 xs:px-3 sm:px-4 md:px-6 md:px-8 py-3 xs:py-3.5 sm:py-4">
+      <div className="bg-white border-b border-gray-100 sticky top-0 z-10 safe-top">
+        <div className="mt-3 xs:mt-4 sm:mt-5 pt-6 xs:pt-8 sm:pt-10 md:pt-12 pb-3 sm:pb-4 md:pb-5 px-3 sm:px-4 md:px-6">
           <div className="flex items-center justify-between">
-            <h1 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl md:text-2xl font-bold text-gray-900 truncate">Chats</h1>
+            <h1 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">Chats</h1>
             <button
               onClick={() => router.push('/create-match')}
-              className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-full p-2 xs:p-2.5 flex items-center justify-center min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] xs:min-h-[48px] xs:min-w-[48px] touch-manipulation shadow-md transition-transform active:scale-95"
+              className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-full p-2.5 min-h-[44px] min-w-[44px] touch-manipulation shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center"
               aria-label="Crear partido"
             >
-              <Plus className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6 sm:h-6" />
+              <Plus className="w-5 h-5" />
             </button>
           </div>
         </div>
