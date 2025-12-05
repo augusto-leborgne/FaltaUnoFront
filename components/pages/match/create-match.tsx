@@ -466,25 +466,26 @@ export function CreateMatchScreen() {
   // ============================================
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col safe-bottom">
       {/* Header */}
-      <div className="pt-12 sm:pt-16 pb-4 sm:pb-6 px-4 sm:px-6 border-b border-gray-100">
-        <div className="flex items-center space-x-2 sm:space-x-4">
+      <div className="pt-8 xs:pt-10 sm:pt-12 md:pt-16 pb-3 xs:pb-4 sm:pb-6 px-3 xs:px-4 sm:px-6 border-b border-gray-100 safe-top">
+        <div className="flex items-center space-x-2 xs:space-x-3 sm:space-x-4">
           <button
             onClick={handleBack}
-            className="p-2 sm:p-2.5 -ml-2 touch-manipulation hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors disabled:opacity-50 min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-95"
+            className="p-2 xs:p-2.5 -ml-2 touch-manipulation hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors disabled:opacity-50 min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-95"
             disabled={isLoading}
+            aria-label="Volver"
           >
-            <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
+            <ArrowLeft className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6 sm:h-6 text-gray-600" />
           </button>
-          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">Crear Partido</h1>
+          <h1 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">Crear Partido</h1>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex-1 px-4 sm:px-6 py-4 sm:py-6 pb-32 overflow-y-auto">
+      <form onSubmit={handleSubmit} className="flex-1 px-3 xs:px-4 sm:px-6 py-3 xs:py-4 sm:py-6 pb-24 xs:pb-28 sm:pb-32 overflow-y-auto">
         {/* Success Message */}
         {success && (
-          <div className="mb-5 sm:mb-6 p-4 sm:p-5 bg-primary/10 border-2 border-primary/30 rounded-xl sm:rounded-2xl flex items-start space-x-3">
+          <div className="mb-4 xs:mb-5 sm:mb-6 p-3 xs:p-4 sm:p-5 bg-primary/10 border-2 border-primary/30 rounded-xl sm:rounded-2xl flex items-start space-x-2 xs:space-x-3">
             <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
               <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -516,11 +517,11 @@ export function CreateMatchScreen() {
         )}
 
         {/* Tipo de partido */}
-        <div className="mb-5 sm:mb-6">
-          <label className="block text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4">
+        <div className="mb-4 xs:mb-5 sm:mb-6">
+          <label className="block text-xs xs:text-sm sm:text-base font-semibold text-gray-900 mb-2 xs:mb-3 sm:mb-4">
             Tipo de partido <span className="text-red-500">*</span>
           </label>
-          <div className="flex justify-center gap-3 sm:gap-4">
+          <div className="flex justify-center gap-2 xs:gap-3 sm:gap-4">
             {Object.values(TipoPartido).map((type) => {
               const shortLabel = type === TipoPartido.FUTBOL_5 ? 'F5' 
                 : type === TipoPartido.FUTBOL_7 ? 'F7'
@@ -532,10 +533,11 @@ export function CreateMatchScreen() {
                   type="button"
                   onClick={() => handleInputChange("type", type)}
                   disabled={isLoading}
-                  className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full text-base sm:text-lg font-bold border-2 transition-all touch-manipulation disabled:opacity-50 active:scale-95 flex items-center justify-center ${formData.type === type
+                  className={`w-14 h-14 xs:w-16 xs:h-16 sm:w-20 sm:h-20 rounded-full text-sm xs:text-base sm:text-lg font-bold border-2 transition-all touch-manipulation disabled:opacity-50 active:scale-95 flex items-center justify-center min-w-[56px] min-h-[56px] ${formData.type === type
                     ? "bg-green-600 text-white border-green-600 shadow-lg"
                     : "bg-white text-gray-700 border-gray-300 hover:border-green-600 hover:text-green-600 active:bg-gray-50"
                     }`}
+                  aria-label={`Tipo ${shortLabel}`}
                 >
                   {shortLabel}
                 </button>
@@ -545,73 +547,74 @@ export function CreateMatchScreen() {
         </div>
 
         {/* Género */}
-        <div className="mb-5 sm:mb-6">
-          <label className="block text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4">
+        <div className="mb-4 xs:mb-5 sm:mb-6">
+          <label className="block text-xs xs:text-sm sm:text-base font-semibold text-gray-900 mb-2 xs:mb-3 sm:mb-4">
             Género <span className="text-red-500">*</span>
           </label>
-          <div className="flex gap-2 sm:gap-3">
+          <div className="flex gap-2 xs:gap-2.5 sm:gap-3">
             {[{label: "Mixto", icon: "👥"}, {label: "Hombres", icon: "👨"}, {label: "Mujeres", icon: "👩"}].map(({label, icon}) => (
               <button
                 key={label}
                 type="button"
                 onClick={() => handleInputChange("gender", label)}
                 disabled={isLoading}
-                className={`flex-1 px-2 sm:px-3 py-2 sm:py-2.5 rounded-xl text-sm sm:text-base font-semibold border-2 transition-all touch-manipulation disabled:opacity-50 h-[48px] active:scale-95 flex flex-col items-center justify-center gap-0.5 ${formData.gender === label
+                className={`flex-1 px-1.5 xs:px-2 sm:px-3 py-2 rounded-lg xs:rounded-xl text-xs xs:text-sm sm:text-base font-semibold border-2 transition-all touch-manipulation disabled:opacity-50 min-h-[48px] active:scale-95 flex flex-col items-center justify-center gap-0.5 ${formData.gender === label
                   ? "bg-orange-500 text-white border-orange-600 shadow-lg"
                   : "bg-white text-gray-700 border-gray-300 hover:border-orange-500 hover:text-orange-600 active:bg-gray-50"
                   }`}
+                aria-label={`Género ${label}`}
               >
-                <span className="text-base sm:text-lg">{icon}</span>
-                <span className="text-[10px] sm:text-xs">{label}</span>
+                <span className="text-sm xs:text-base sm:text-lg">{icon}</span>
+                <span className="text-[10px] xs:text-[11px] sm:text-xs leading-tight">{label}</span>
               </button>
             ))}
           </div>
         </div>
 
         {/* Fecha y Hora */}
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-5 sm:mb-6">
-          <div className="w-full">
-            <label className="block text-sm sm:text-base font-semibold text-gray-900 mb-2 sm:mb-3">
+        <div className="grid grid-cols-2 gap-2 xs:gap-3 sm:gap-4 mb-4 xs:mb-5 sm:mb-6">
+          <div className="w-full min-w-0">
+            <label className="block text-xs xs:text-sm sm:text-base font-semibold text-gray-900 mb-1.5 xs:mb-2 sm:mb-3">
               Fecha <span className="text-red-500">*</span>
             </label>
             <div className="relative flex items-center">
-              <Calendar className="absolute left-3 sm:left-4 w-5 h-5 text-gray-400 pointer-events-none z-10" />
+              <Calendar className="absolute left-2 xs:left-3 sm:left-4 w-4 h-4 xs:w-5 xs:h-5 text-gray-400 pointer-events-none z-10" />
               <Input
                 type="date"
                 value={formData.date}
                 onChange={(e) => handleInputChange("date", e.target.value)}
                 min={today}
                 max={maxDate}
-                className={`pl-11 sm:pl-12 h-[48px] text-sm sm:text-base rounded-xl border-2 w-full flex items-center ${fieldErrors.date ? 'border-red-500' : 'border-gray-300'}`}
+                className={`pl-9 xs:pl-10 sm:pl-12 min-h-[48px] text-sm xs:text-base rounded-lg xs:rounded-xl border-2 w-full flex items-center ${fieldErrors.date ? 'border-red-500' : 'border-gray-300'}`}
                 required
                 disabled={isLoading}
                 placeholder="dd/mm/yyyy"
               />
             </div>
             {!fieldErrors.date && !formData.date && (
-              <p className="text-xs text-gray-500 mt-1.5">Formato: dd/mm/yyyy</p>
+              <p className="text-[10px] xs:text-xs text-gray-500 mt-1">Formato: dd/mm/yyyy</p>
             )}
             {fieldErrors.date && (
-              <p className="text-xs sm:text-sm text-red-600 mt-1.5 flex items-center">
-                <AlertCircle className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
-                {fieldErrors.date}
+              <p className="text-[10px] xs:text-xs sm:text-sm text-red-600 mt-1 flex items-center">
+                <AlertCircle className="w-3 h-3 xs:w-3.5 xs:h-3.5 mr-1 flex-shrink-0" />
+                <span className="truncate">{fieldErrors.date}</span>
               </p>
             )}
           </div>
-          <div className="w-full">
-            <label className="block text-sm sm:text-base font-semibold text-gray-900 mb-2 sm:mb-3">
+          <div className="w-full min-w-0">
+            <label className="block text-xs xs:text-sm sm:text-base font-semibold text-gray-900 mb-1.5 xs:mb-2 sm:mb-3">
               Hora <span className="text-red-500">*</span>
             </label>
             <div className="relative flex items-center">
-              <Clock className="absolute left-3 sm:left-4 w-5 h-5 text-gray-400 pointer-events-none z-10" />
+              <Clock className="absolute left-2 xs:left-3 sm:left-4 w-4 h-4 xs:w-5 xs:h-5 text-gray-400 pointer-events-none z-10" />
               <select
                 value={formData.time}
                 onChange={(e) => handleInputChange("time", e.target.value)}
-                className={`w-full pl-11 sm:pl-12 pr-4 h-[48px] rounded-xl border-2 ${fieldErrors.time ? 'border-red-500' : 'border-gray-300'} bg-white text-gray-900 text-sm sm:text-base font-medium focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex items-center`}
+                className={`w-full pl-9 xs:pl-10 sm:pl-12 pr-3 xs:pr-4 min-h-[48px] rounded-lg xs:rounded-xl border-2 ${fieldErrors.time ? 'border-red-500' : 'border-gray-300'} bg-white text-gray-900 text-sm xs:text-base font-medium focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex items-center`}
                 required
                 disabled={isLoading}
               >
-                <option value="">Seleccionar hora</option>
+                <option value="">Seleccionar</option>
                 {timeOptions.map((time) => (
                   <option key={time} value={time}>
                     {time}
@@ -620,9 +623,9 @@ export function CreateMatchScreen() {
               </select>
             </div>
             {fieldErrors.time && (
-              <p className="text-xs sm:text-sm text-red-600 mt-1.5 flex items-center">
-                <AlertCircle className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
-                {fieldErrors.time}
+              <p className="text-[10px] xs:text-xs sm:text-sm text-red-600 mt-1 flex items-center">
+                <AlertCircle className="w-3 h-3 xs:w-3.5 xs:h-3.5 mr-1 flex-shrink-0" />
+                <span className="truncate">{fieldErrors.time}</span>
               </p>
             )}
           </div>
