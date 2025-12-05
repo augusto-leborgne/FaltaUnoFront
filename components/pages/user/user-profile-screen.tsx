@@ -429,7 +429,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="min-h-screen flex items-center justify-center bg-white px-3 xs:px-4 sm:px-6">
         <LoadingSpinner size="lg" variant="green" text="Cargando perfil..." />
       </div>
     )
@@ -438,22 +438,22 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
   if (error || !user) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <div className="pt-16 pb-6 px-6 border-b border-border">
-          <div className="flex items-center space-x-4">
-            <button onClick={handleBack} className="p-2 sm:p-3 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
-              <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+        <div className="pt-14 xs:pt-16 sm:pt-18 pb-4 xs:pb-5 sm:pb-6 px-3 xs:px-4 sm:px-6 border-b border-border">
+          <div className="flex items-center space-x-3 xs:space-x-4">
+            <button onClick={handleBack} className="p-2 xs:p-2.5 sm:p-3 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 transition-transform">
+              <ArrowLeft className="w-4 xs:w-5 h-4 xs:h-5 text-muted-foreground" />
             </button>
-            <h1 className="text-xl font-bold text-foreground">Perfil de usuario</h1>
+            <h1 className="text-base xs:text-lg sm:text-xl md:text-xl font-bold text-foreground">Perfil de usuario</h1>
           </div>
         </div>
 
-        <div className="flex-1 flex items-center justify-center px-6">
-          <div className="text-center">
-            <p className="text-red-600 mb-2 font-medium">{error || "Usuario no encontrado"}</p>
-            <p className="text-sm text-muted-foreground mb-4">ID: {userId}</p>
-            <div className="flex gap-3 justify-center">
-              <Button onClick={handleBack} variant="outline">Volver</Button>
-              <Button onClick={loadUserProfile} className="bg-primary hover:bg-primary/90">Reintentar</Button>
+        <div className="flex-1 flex items-center justify-center px-3 xs:px-4 sm:px-6">
+          <div className="text-center max-w-md mx-auto">
+            <p className="text-xs xs:text-sm sm:text-base text-red-600 mb-2 font-medium">{error || "Usuario no encontrado"}</p>
+            <p className="text-xs xs:text-sm text-muted-foreground mb-3 xs:mb-4">ID: {userId}</p>
+            <div className="flex gap-2 xs:gap-3 justify-center">
+              <Button onClick={handleBack} variant="outline" className="min-h-[44px] px-4 xs:px-5 text-sm xs:text-base">Volver</Button>
+              <Button onClick={loadUserProfile} className="bg-primary hover:bg-primary/90 min-h-[44px] px-4 xs:px-5 text-sm xs:text-base">Reintentar</Button>
             </div>
           </div>
         </div>
@@ -476,20 +476,21 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <div className="pt-16 pb-6 px-6 border-b border-border">
-        <div className="flex items-center space-x-4">
-          <button onClick={handleBack} className="p-2 sm:p-3 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
-            <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+      <div className="pt-14 xs:pt-16 sm:pt-18 pb-4 xs:pb-5 sm:pb-6 px-3 xs:px-4 sm:px-6 border-b border-border">
+        <div className="flex items-center space-x-3 xs:space-x-4">
+          <button onClick={handleBack} className="p-2 xs:p-2.5 sm:p-3 -ml-2 min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 transition-transform">
+            <ArrowLeft className="w-4 xs:w-5 h-4 xs:h-5 text-muted-foreground" />
           </button>
-          <h1 className="text-xl font-bold text-foreground">Perfil de usuario</h1>
+          <h1 className="text-base xs:text-lg sm:text-xl md:text-xl font-bold text-foreground">Perfil de usuario</h1>
         </div>
       </div>
 
-      <div className="flex-1 px-6 py-6 pb-24">
+      <div className="flex-1 px-3 xs:px-4 sm:px-6 py-4 xs:py-5 sm:py-6 pb-20 xs:pb-24 sm:pb-28">
         {/* User Info */}
-        <div className="bg-card border border-border rounded-2xl p-6 mb-6">
-          <div className="flex items-center space-x-4 mb-6">
-            <Avatar className="w-20 h-20">
+        <div className="max-w-3xl mx-auto">
+        <div className="bg-card border border-border rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-4 xs:mb-5 sm:mb-6">
+          <div className="flex items-center space-x-3 xs:space-x-4 mb-4 xs:mb-5 sm:mb-6">
+            <Avatar className="w-16 xs:w-18 sm:w-20 h-16 xs:h-18 sm:h-20">
               {fotoBase64 ? (
                 <AvatarImage src={`data:image/jpeg;base64,${fotoBase64}`} alt={fullName} />
               ) : (
@@ -502,46 +503,46 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                 </AvatarFallback>
               )}
             </Avatar>
-            <div className="flex-1">
-              <h2 className="text-xl font-bold text-foreground">{fullName}</h2>
-              <p className="text-muted-foreground">{(user as any).posicion || "Sin posición preferida"}</p>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-base xs:text-lg sm:text-xl md:text-xl font-bold text-foreground truncate">{fullName}</h2>
+              <p className="text-xs xs:text-sm text-muted-foreground truncate">{(user as any).posicion || "Sin posición preferida"}</p>
               {(user as any).ubicacion && (
-                <p className="text-sm text-muted-foreground">{(user as any).ubicacion}</p>
+                <p className="text-xs xs:text-sm text-muted-foreground truncate">{(user as any).ubicacion}</p>
               )}
-              {user.celular && <p className="text-sm text-muted-foreground">{user.celular}</p>}
+              {user.celular && <p className="text-xs xs:text-sm text-muted-foreground">{user.celular}</p>}
             </div>
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
+          <div className="grid grid-cols-3 gap-2 xs:gap-3 sm:gap-4 mb-4 xs:mb-5 sm:mb-6">
             <div className="text-center">
-              <div className="text-lg font-bold text-foreground">{edad !== null ? `${edad}` : "-"}</div>
-              <div className="text-sm text-muted-foreground">Edad</div>
+              <div className="text-sm xs:text-base sm:text-lg md:text-base font-bold text-foreground">{edad !== null ? `${edad}` : "-"}</div>
+              <div className="text-xs xs:text-sm text-muted-foreground">Edad</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold text-foreground">{user.altura ?? "-"}</div>
-              <div className="text-sm text-muted-foreground">Altura</div>
+              <div className="text-sm xs:text-base sm:text-lg md:text-base font-bold text-foreground">{user.altura ?? "-"}</div>
+              <div className="text-xs xs:text-sm text-muted-foreground">Altura</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold text-foreground">{user.peso ?? "-"}</div>
-              <div className="text-sm text-muted-foreground">Peso</div>
+              <div className="text-sm xs:text-base sm:text-lg md:text-base font-bold text-foreground">{user.peso ?? "-"}</div>
+              <div className="text-xs xs:text-sm text-muted-foreground">Peso</div>
             </div>
           </div>
 
           {/* Amigos en común */}
           {mutualFriends.length > 0 && (
-            <div className="mb-6 p-4 bg-gray-50 rounded-xl">
-              <div className="text-sm font-semibold text-gray-900 mb-3">
+            <div className="mb-4 xs:mb-5 sm:mb-6 p-3 xs:p-4 bg-gray-50 rounded-lg xs:rounded-xl">
+              <div className="text-xs xs:text-sm font-semibold text-gray-900 mb-2 xs:mb-3">
                 Amigos en común ({mutualFriends.length})
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5 xs:gap-2">
                 {mutualFriends.slice(0, 5).map((friend) => (
                   <div
                     key={friend.id}
                     onClick={() => router.push(`/users/${friend.id}`)}
-                    className="flex items-center space-x-2 bg-white px-3 py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors"
+                    className="flex items-center space-x-1.5 xs:space-x-2 bg-white px-2 xs:px-3 py-1.5 xs:py-2 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100 active:scale-95 transition-all min-h-[44px]"
                   >
-                    <Avatar className="w-6 h-6">
+                    <Avatar className="w-5 xs:w-6 h-5 xs:h-6">
                       {friend.foto_perfil || friend.fotoPerfil ? (
                         <AvatarImage src={`data:image/jpeg;base64,${friend.foto_perfil || friend.fotoPerfil}`} />
                       ) : (
@@ -550,11 +551,11 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                         </AvatarFallback>
                       )}
                     </Avatar>
-                    <span className="text-sm text-gray-700">{friend.nombre}</span>
+                    <span className="text-xs xs:text-sm text-gray-700">{friend.nombre}</span>
                   </div>
                 ))}
                 {mutualFriends.length > 5 && (
-                  <div className="flex items-center px-3 py-2 text-sm text-gray-600">
+                  <div className="flex items-center px-2 xs:px-3 py-1.5 xs:py-2 text-xs xs:text-sm text-gray-600">
                     +{mutualFriends.length - 5} más
                   </div>
                 )}
@@ -563,36 +564,36 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
           )}
 
           {/* Friend Request Button */}
-          <div className="space-y-3">
+          <div className="space-y-2 xs:space-y-3">
             {friendStatus === 'friends' ? (
               <Button
                 onClick={handleRemoveFriend}
                 variant="outline"
-                className="w-full border-red-200 text-red-600 hover:bg-red-50 py-3 rounded-xl"
+                className="w-full border-red-200 text-red-600 hover:bg-red-50 min-h-[48px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
               >
                 Eliminar amigo
               </Button>
             ) : friendStatus === 'pending-sent' ? (
               <Button
                 disabled
-                className="w-full bg-orange-100 text-orange-700 py-3 rounded-xl cursor-not-allowed"
+                className="w-full bg-orange-100 text-orange-700 min-h-[48px] py-2.5 xs:py-3 rounded-xl cursor-not-allowed text-sm xs:text-base"
               >
-                <UserPlus className="w-4 h-4 mr-2" />
+                <UserPlus className="w-3.5 xs:w-4 h-3.5 xs:h-4 mr-1.5 xs:mr-2" />
                 Solicitud enviada
               </Button>
             ) : friendStatus === 'pending-received' ? (
               <div className="space-y-2">
                 <Button
                   onClick={handleAcceptFriendRequest}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white min-h-[48px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
                 >
-                  <UserPlus className="w-4 h-4 mr-2" />
+                  <UserPlus className="w-3.5 xs:w-4 h-3.5 xs:h-4 mr-1.5 xs:mr-2" />
                   Aceptar solicitud
                 </Button>
                 <Button
                   onClick={handleRejectFriendRequest}
                   variant="outline"
-                  className="w-full border-red-200 text-red-600 hover:bg-red-50 py-3 rounded-xl"
+                  className="w-full border-red-200 text-red-600 hover:bg-red-50 min-h-[48px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
                 >
                   Rechazar solicitud
                 </Button>
@@ -600,48 +601,48 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
             ) : (
               <Button
                 onClick={handleSendFriendRequest}
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-3 rounded-xl"
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground min-h-[48px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
               >
-                <UserPlus className="w-4 h-4 mr-2" />
+                <UserPlus className="w-3.5 xs:w-4 h-3.5 xs:h-4 mr-1.5 xs:mr-2" />
                 Enviar solicitud de amistad
               </Button>
             )}
             {friendStatus === 'pending-sent' && (
-              <p className="text-sm text-orange-600 font-medium text-center">✓ Solicitud enviada correctamente</p>
+              <p className="text-xs xs:text-sm text-orange-600 font-medium text-center">✓ Solicitud enviada correctamente</p>
             )}
 
             {/* Report Button */}
             <Button
               onClick={() => setReportModalOpen(true)}
               variant="outline"
-              className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 py-3 rounded-xl"
+              className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 min-h-[48px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
             >
-              <Flag className="w-4 h-4 mr-2" />
+              <Flag className="w-3.5 xs:w-4 h-3.5 xs:h-4 mr-1.5 xs:mr-2" />
               Reportar usuario
             </Button>
 
             {/* Admin Actions */}
             {isAdmin && (
-              <div className="border-t pt-4 mt-4 space-y-3">
+              <div className="border-t pt-3 xs:pt-4 mt-3 xs:mt-4 space-y-2 xs:space-y-3">
                 <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-sm font-bold text-gray-700 uppercase">Acciones de Admin</h4>
-                  <Shield className="w-4 h-4 text-orange-600" />
+                  <h4 className="text-xs xs:text-sm font-bold text-gray-700 uppercase">Acciones de Admin</h4>
+                  <Shield className="w-3.5 xs:w-4 h-3.5 xs:h-4 text-orange-600" />
                 </div>
 
                 {/* Ban/Unban */}
                 {(user as any).bannedAt ? (
                   <div className="space-y-2">
-                    <div className="bg-red-50 border border-red-200 rounded-xl p-3">
-                      <p className="text-xs font-medium text-red-700">Usuario Baneado</p>
-                      <p className="text-xs text-red-600 mt-1">
+                    <div className="bg-red-50 border border-red-200 rounded-lg xs:rounded-xl p-2.5 xs:p-3">
+                      <p className="text-[10px] xs:text-xs font-medium text-red-700">Usuario Baneado</p>
+                      <p className="text-[10px] xs:text-xs text-red-600 mt-1">
                         Razón: {(user as any).banReason || "Sin razón especificada"}
                       </p>
                     </div>
                     <Button
                       onClick={handleUnbanUser}
-                      className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl"
+                      className="w-full bg-green-600 hover:bg-green-700 text-white min-h-[48px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
                     >
-                      <ShieldOff className="w-4 h-4 mr-2" />
+                      <ShieldOff className="w-3.5 xs:w-4 h-3.5 xs:h-4 mr-1.5 xs:mr-2" />
                       Desbanear Usuario
                     </Button>
                   </div>
@@ -649,9 +650,9 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                   <Button
                     onClick={handleBanUser}
                     variant="destructive"
-                    className="w-full py-3 rounded-xl"
+                    className="w-full min-h-[48px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
                   >
-                    <ShieldOff className="w-4 h-4 mr-2" />
+                    <ShieldOff className="w-3.5 xs:w-4 h-3.5 xs:h-4 mr-1.5 xs:mr-2" />
                     Banear Usuario
                   </Button>
                 )}
@@ -660,9 +661,9 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                 <Button
                   onClick={handleToggleRole}
                   variant="outline"
-                  className="w-full border-blue-300 text-blue-700 hover:bg-blue-50 py-3 rounded-xl"
+                  className="w-full border-blue-300 text-blue-700 hover:bg-blue-50 min-h-[48px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
                 >
-                  <Shield className="w-4 h-4 mr-2" />
+                  <Shield className="w-3.5 xs:w-4 h-3.5 xs:h-4 mr-1.5 xs:mr-2" />
                   {(user as any).rol === "ADMIN" ? "Quitar Admin" : "Hacer Admin"}
                 </Button>
 
@@ -671,9 +672,9 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                   <Button
                     onClick={handleDeleteUser}
                     variant="outline"
-                    className="w-full border-red-300 text-red-700 hover:bg-red-50 py-3 rounded-xl"
+                    className="w-full border-red-300 text-red-700 hover:bg-red-50 min-h-[48px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
                   >
-                    <Trash2 className="w-4 h-4 mr-2" />
+                    <Trash2 className="w-3.5 xs:w-4 h-3.5 xs:h-4 mr-1.5 xs:mr-2" />
                     Eliminar Usuario Permanentemente
                   </Button>
                 )}
@@ -681,33 +682,35 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
             )}
           </div>
         </div>
+        </div>
 
         {/* Reviews */}
-        <div className="bg-card border border-border rounded-2xl p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-foreground">Reseñas</h3>
+        <div className="max-w-3xl mx-auto">
+        <div className="bg-card border border-border rounded-xl xs:rounded-2xl p-4 xs:p-5 sm:p-6 mb-4 xs:mb-5 sm:mb-6">
+          <div className="flex items-center justify-between mb-3 xs:mb-4">
+            <h3 className="text-sm xs:text-base sm:text-lg md:text-base font-bold text-foreground">Reseñas</h3>
             <div className="flex items-center space-x-1">
-              <Star className="w-4 h-4 fill-accent text-accent" />
-              <span className="text-sm font-medium">{averageRating}</span>
-              <span className="text-sm text-muted-foreground">({reviews.length})</span>
+              <Star className="w-3 xs:w-3.5 sm:w-4 h-3 xs:h-3.5 sm:h-4 fill-accent text-accent" />
+              <span className="text-xs xs:text-sm font-medium">{averageRating}</span>
+              <span className="text-xs xs:text-sm text-muted-foreground">({reviews.length})</span>
             </div>
           </div>
 
           {reviews.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">Este usuario aún no tiene reseñas</div>
+            <div className="text-center py-6 xs:py-8 text-xs xs:text-sm text-muted-foreground">Este usuario aún no tiene reseñas</div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3 xs:space-y-4">
               {reviews.map((review) => {
                 const avgRating = Math.round((review.nivel + review.deportividad + review.companerismo) / 3)
                 return (
                   <div
                     key={review.id}
-                    className="border-b border-border last:border-b-0 pb-4 last:pb-0 cursor-pointer hover:bg-muted -mx-2 px-2 py-2 rounded-xl transition-colors"
+                    className="border-b border-border last:border-b-0 pb-3 xs:pb-4 last:pb-0 cursor-pointer hover:bg-muted -mx-2 px-2 py-1.5 xs:py-2 rounded-lg xs:rounded-xl transition-colors min-h-[44px] flex flex-col justify-center"
                     onClick={() => handleUserClick(review.usuario_que_califica_id)}
                   >
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-1.5 xs:mb-2">
                       <button
-                        className="font-medium text-foreground hover:text-primary transition-colors"
+                        className="text-xs xs:text-sm font-medium text-foreground hover:text-primary transition-colors min-h-[32px] flex items-center"
                         onClick={(e) => {
                           e.stopPropagation()
                           handleUserClick(review.usuario_que_califica_id)
@@ -715,47 +718,47 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                       >
                         Usuario {review.usuario_que_califica_id.substring(0, 8)}
                       </button>
-                      <div className="flex items-center space-x-1">
+                      <div className="flex items-center space-x-0.5 xs:space-x-1">
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
-                            className={`w-3 h-3 ${i < avgRating ? "fill-accent text-accent" : "text-muted-foreground"}`}
+                            className={`w-2.5 xs:w-3 h-2.5 xs:h-3 ${i < avgRating ? "fill-accent text-accent" : "text-muted-foreground"}`}
                           />
                         ))}
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-1.5 sm:gap-2 mb-2">
+                    <div className="grid grid-cols-3 gap-1 xs:gap-1.5 sm:gap-2 mb-1.5 xs:mb-2">
                       <div className="text-center">
-                        <div className="text-xs text-muted-foreground mb-1">Nivel</div>
+                        <div className="text-[10px] xs:text-xs text-muted-foreground mb-0.5 xs:mb-1">Nivel</div>
                         <div className="flex justify-center">
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`w-3 h-3 ${i < review.nivel ? "fill-accent text-accent" : "text-muted-foreground"}`}
+                              className={`w-2 xs:w-2.5 sm:w-3 h-2 xs:h-2.5 sm:h-3 ${i < review.nivel ? "fill-accent text-accent" : "text-muted-foreground"}`}
                             />
                           ))}
                         </div>
                       </div>
                       <div className="text-center">
-                        <div className="text-xs text-muted-foreground mb-1">Deportividad</div>
+                        <div className="text-[10px] xs:text-xs text-muted-foreground mb-0.5 xs:mb-1">Deportividad</div>
                         <div className="flex justify-center">
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`w-3 h-3 ${i < review.deportividad ? "fill-accent text-accent" : "text-muted-foreground"
+                              className={`w-2 xs:w-2.5 sm:w-3 h-2 xs:h-2.5 sm:h-3 ${i < review.deportividad ? "fill-accent text-accent" : "text-muted-foreground"
                                 }`}
                             />
                           ))}
                         </div>
                       </div>
                       <div className="text-center">
-                        <div className="text-xs text-muted-foreground mb-1">Compañerismo</div>
+                        <div className="text-[10px] xs:text-xs text-muted-foreground mb-0.5 xs:mb-1">Compañerismo</div>
                         <div className="flex justify-center">
                           {[...Array(5)].map((_, i) => (
                             <Star
                               key={i}
-                              className={`w-3 h-3 ${i < review.companerismo ? "fill-accent text-accent" : "text-muted-foreground"
+                              className={`w-2 xs:w-2.5 sm:w-3 h-2 xs:h-2.5 sm:h-3 ${i < review.companerismo ? "fill-accent text-accent" : "text-muted-foreground"
                                 }`}
                             />
                           ))}
@@ -763,8 +766,8 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                       </div>
                     </div>
 
-                    {review.comentario && <p className="text-sm text-muted-foreground mb-1">{review.comentario}</p>}
-                    <p className="text-xs text-muted-foreground">
+                    {review.comentario && <p className="text-xs xs:text-sm text-muted-foreground mb-1">{review.comentario}</p>}
+                    <p className="text-[10px] xs:text-xs text-muted-foreground">
                       {new Date(review.createdAt).toLocaleDateString("es-ES")}
                     </p>
                   </div>
@@ -772,6 +775,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
               })}
             </div>
           )}
+        </div>
         </div>
       </div>
 
