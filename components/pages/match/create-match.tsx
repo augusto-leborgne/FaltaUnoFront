@@ -482,7 +482,7 @@ export function CreateMatchScreen() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex-1 px-3 xs:px-4 sm:px-6 py-3 xs:py-4 sm:py-6 pb-24 xs:pb-28 sm:pb-32 overflow-y-auto max-w-2xl mx-auto w-full">
+      <form onSubmit={handleSubmit} className="flex-1 px-2 xs:px-3 sm:px-4 py-2 xs:py-3 sm:py-5 pb-16 xs:pb-20 sm:pb-24 overflow-y-auto max-w-2xl mx-auto w-full">
         {/* Success Message */}
         {success && (
           <div className="mb-4 xs:mb-5 sm:mb-6 p-3 xs:p-4 sm:p-5 bg-primary/10 border-2 border-primary/30 rounded-xl sm:rounded-2xl flex items-start space-x-2 xs:space-x-3">
@@ -517,11 +517,11 @@ export function CreateMatchScreen() {
         )}
 
         {/* Tipo de partido */}
-        <div className="mb-4 xs:mb-5 sm:mb-6">
-          <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-2 xs:mb-3 sm:mb-4 md:mb-3">
+        <div className="mb-3 xs:mb-4 sm:mb-5">
+          <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1.5 xs:mb-2 sm:mb-3 md:mb-2">
             Tipo de partido <span className="text-red-500">*</span>
           </label>
-          <div className="flex justify-center gap-2 xs:gap-3 sm:gap-4">
+          <div className="flex justify-center gap-1.5 xs:gap-2 sm:gap-3">
             {Object.values(TipoPartido).map((type) => {
               const shortLabel = type === TipoPartido.FUTBOL_5 ? 'F5' 
                 : type === TipoPartido.FUTBOL_7 ? 'F7'
@@ -533,7 +533,7 @@ export function CreateMatchScreen() {
                   type="button"
                   onClick={() => handleInputChange("type", type)}
                   disabled={isLoading}
-                  className={`font-sans w-12 h-12 xs:w-13 xs:h-13 sm:w-14 sm:h-14 md:w-13 md:h-13 rounded-full text-sm xs:text-base sm:text-lg md:text-base font-bold border-2 transition-all touch-manipulation disabled:opacity-50 active:scale-95 flex items-center justify-center min-w-[48px] min-h-[48px] ${formData.type === type
+                  className={`font-sans w-11 xs:w-12 sm:w-13 md:w-12 h-11 xs:h-12 sm:h-13 md:h-12 rounded-full text-sm xs:text-base sm:text-lg md:text-base font-bold border-2 transition-all touch-manipulation disabled:opacity-50 active:scale-95 flex items-center justify-center min-w-[44px] min-h-[44px] ${formData.type === type
                     ? "bg-green-600 text-white border-green-600 shadow-lg"
                     : "bg-white text-gray-700 border-gray-300 hover:border-green-600 hover:text-green-600 active:bg-gray-50"
                     }`}
@@ -547,18 +547,18 @@ export function CreateMatchScreen() {
         </div>
 
         {/* Género */}
-        <div className="mb-4 xs:mb-5 sm:mb-6">
-          <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-2 xs:mb-3 sm:mb-4 md:mb-3">
+        <div className="mb-3 xs:mb-4 sm:mb-5">
+          <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1.5 xs:mb-2 sm:mb-3 md:mb-2">
             Género <span className="text-red-500">*</span>
           </label>
-          <div className="flex gap-2 xs:gap-2.5 sm:gap-3">
+          <div className="flex gap-1.5 xs:gap-2 sm:gap-2.5">
             {[{label: "Mixto", icon: "👥"}, {label: "Hombres", icon: "👨"}, {label: "Mujeres", icon: "👩"}].map(({label, icon}) => (
               <button
                 key={label}
                 type="button"
                 onClick={() => handleInputChange("gender", label)}
                 disabled={isLoading}
-                className={`font-sans flex-1 px-1.5 xs:px-2 sm:px-3 md:px-2 py-2 rounded-lg xs:rounded-xl text-xs xs:text-sm sm:text-base md:text-sm font-semibold border-2 transition-all touch-manipulation disabled:opacity-50 min-h-[48px] active:scale-95 flex flex-col items-center justify-center gap-0.5 ${formData.gender === label
+                className={`font-sans flex-1 px-1 xs:px-1.5 sm:px-2 md:px-2 py-1.5 xs:py-2 rounded-lg xs:rounded-xl text-[11px] xs:text-xs sm:text-sm md:text-sm font-semibold border-2 transition-all touch-manipulation disabled:opacity-50 min-h-[44px] active:scale-95 flex flex-col items-center justify-center gap-0.5 ${formData.gender === label
                   ? "bg-orange-500 text-white border-orange-600 shadow-lg"
                   : "bg-white text-gray-700 border-gray-300 hover:border-orange-500 hover:text-orange-600 active:bg-gray-50"
                   }`}
@@ -572,9 +572,9 @@ export function CreateMatchScreen() {
         </div>
 
         {/* Fecha y Hora */}
-        <div className="grid grid-cols-2 gap-2 xs:gap-3 sm:gap-4 mb-4 xs:mb-5 sm:mb-6">
+        <div className="grid grid-cols-2 gap-1.5 xs:gap-2 sm:gap-3 mb-2 xs:mb-3 sm:mb-4">
           <div className="w-full min-w-0">
-            <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1.5 xs:mb-2 sm:mb-3 md:mb-2">
+            <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1 xs:mb-1.5 sm:mb-2 md:mb-1.5">
               Fecha <span className="text-red-500">*</span>
             </label>
             <Input
@@ -583,7 +583,7 @@ export function CreateMatchScreen() {
               onChange={(e) => handleInputChange("date", e.target.value)}
               min={today}
               max={maxDate}
-              className={`font-sans px-3 xs:px-4 min-h-[48px] text-sm xs:text-base rounded-lg xs:rounded-xl border-2 w-full ${fieldErrors.date ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50`}
+              className={`font-sans px-2 xs:px-3 min-h-[44px] text-sm xs:text-base rounded-lg xs:rounded-xl border-2 w-full ${fieldErrors.date ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50`}
               required
               disabled={isLoading}
               placeholder="dd/mm/yyyy"
@@ -599,7 +599,7 @@ export function CreateMatchScreen() {
             )}
           </div>
           <div className="w-full min-w-0">
-            <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1.5 xs:mb-2 sm:mb-3 md:mb-2">
+            <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1 xs:mb-1.5 sm:mb-2 md:mb-1.5">
               Hora <span className="text-red-500">*</span>
             </label>
             <div className="relative flex items-center">
@@ -607,7 +607,7 @@ export function CreateMatchScreen() {
               <select
                 value={formData.time}
                 onChange={(e) => handleInputChange("time", e.target.value)}
-                className={`font-sans w-full pl-9 xs:pl-10 sm:pl-12 pr-3 xs:pr-4 min-h-[48px] rounded-lg xs:rounded-xl border-2 ${fieldErrors.time ? 'border-red-500' : 'border-gray-300'} bg-white text-gray-900 text-sm xs:text-base font-medium focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex items-center`}
+                className={`font-sans w-full pl-8 xs:pl-9 sm:pl-10 pr-2 xs:pr-3 min-h-[44px] rounded-lg xs:rounded-xl border-2 ${fieldErrors.time ? 'border-red-500' : 'border-gray-300'} bg-white text-gray-900 text-sm xs:text-base font-medium focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex items-center`}
                 required
                 disabled={isLoading}
               >
@@ -629,8 +629,8 @@ export function CreateMatchScreen() {
         </div>
 
         {/* Ubicación */}
-        <div className="mb-5 sm:mb-6">
-          <label className="block text-sm sm:text-base font-semibold text-gray-900 mb-2 sm:mb-3">
+        <div className="mb-3 xs:mb-4 sm:mb-5">
+          <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1 xs:mb-1.5 sm:mb-2 md:mb-1.5">
             Ubicación <span className="text-red-500">*</span>
           </label>
           <AddressAutocomplete
@@ -656,8 +656,8 @@ export function CreateMatchScreen() {
         </div>
 
         {/* Costo */}
-        <div className="mb-5 sm:mb-6">
-          <label className="block text-sm sm:text-base font-semibold text-gray-900 mb-2 sm:mb-3">
+        <div className="mb-3 xs:mb-4 sm:mb-5">
+          <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1 xs:mb-1.5 sm:mb-2 md:mb-1.5">
             Costo del partido ($UYU) <span className="text-red-500">*</span>
           </label>
           <div className="relative">
@@ -689,8 +689,8 @@ export function CreateMatchScreen() {
         </div>
 
         {/* Duración */}
-        <div className="mb-5 sm:mb-6">
-          <label className="block text-sm sm:text-base font-semibold text-gray-900 mb-2 sm:mb-3">
+        <div className="mb-3 xs:mb-4 sm:mb-5">
+          <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1 xs:mb-1.5 sm:mb-2 md:mb-1.5">
             Duración (minutos)
           </label>
           <div className="relative">
@@ -716,8 +716,8 @@ export function CreateMatchScreen() {
         </div>
 
         {/* Descripción */}
-        <div className="mb-6 sm:mb-8">
-          <label className="block text-sm sm:text-base font-semibold text-gray-900 mb-2 sm:mb-3">
+        <div className="mb-4 xs:mb-5 sm:mb-6">
+          <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1 xs:mb-1.5 sm:mb-2 md:mb-1.5">
             Descripción <span className="text-red-500">*</span>
           </label>
           <Textarea
@@ -752,7 +752,7 @@ export function CreateMatchScreen() {
         </div>
 
         {/* Submit Button */}
-        <div className="pb-6 sm:pb-8">
+        <div className="pb-4 xs:pb-5 sm:pb-6">
           <Button
             type="submit"
             disabled={
@@ -762,7 +762,7 @@ export function CreateMatchScreen() {
               !formData.time ||
               !formData.location
             }
-            className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white min-h-[56px] text-base sm:text-lg font-semibold rounded-xl sm:rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl touch-manipulation active:scale-[0.98]"
+            className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white min-h-[48px] xs:min-h-[52px] sm:min-h-[56px] text-sm xs:text-base sm:text-lg font-semibold rounded-xl sm:rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl touch-manipulation active:scale-[0.98]"
           >
             {isLoading ? (
               <span className="flex items-center justify-center">

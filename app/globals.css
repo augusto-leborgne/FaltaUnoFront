@@ -38,11 +38,24 @@
 
 /* Ensure consistent font sizes */
 html {
-  font-size: 16px;
+  font-size: 14px; /* Reducido de 16px para iPhone SE y dispositivos pequeños */
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
   /* Prevent pull-to-refresh on mobile */
   overscroll-behavior-y: contain;
+}
+
+/* Escalar fuente para dispositivos más grandes */
+@media screen and (min-width: 375px) {
+  html {
+    font-size: 15px;
+  }
+}
+
+@media screen and (min-width: 414px) {
+  html {
+    font-size: 16px;
+  }
 }
 
 /* Prevent horizontal overflow */
@@ -92,6 +105,7 @@ body {
 
 @theme inline {
   /* Custom breakpoints for better mobile responsiveness */
+  --breakpoint-xxs: 320px;
   --breakpoint-xs: 360px;
   --breakpoint-sm: 640px;
   --breakpoint-md: 768px;
