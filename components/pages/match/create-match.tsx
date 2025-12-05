@@ -520,7 +520,7 @@ export function CreateMatchScreen() {
           <label className="block text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4">
             Tipo de partido <span className="text-red-500">*</span>
           </label>
-          <div className="flex gap-2 sm:gap-3">
+          <div className="flex justify-center gap-3 sm:gap-4">
             {Object.values(TipoPartido).map((type) => {
               const shortLabel = type === TipoPartido.FUTBOL_5 ? 'F5' 
                 : type === TipoPartido.FUTBOL_7 ? 'F7'
@@ -532,7 +532,7 @@ export function CreateMatchScreen() {
                   type="button"
                   onClick={() => handleInputChange("type", type)}
                   disabled={isLoading}
-                  className={`flex-1 px-4 sm:px-6 py-3.5 sm:py-4 rounded-xl text-base sm:text-lg font-bold border-2 transition-all touch-manipulation disabled:opacity-50 min-h-[56px] active:scale-95 flex items-center justify-center ${formData.type === type
+                  className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full text-base sm:text-lg font-bold border-2 transition-all touch-manipulation disabled:opacity-50 active:scale-95 flex items-center justify-center ${formData.type === type
                     ? "bg-green-600 text-white border-green-600 shadow-lg"
                     : "bg-white text-gray-700 border-gray-300 hover:border-green-600 hover:text-green-600 active:bg-gray-50"
                     }`}
@@ -556,13 +556,13 @@ export function CreateMatchScreen() {
                 type="button"
                 onClick={() => handleInputChange("gender", label)}
                 disabled={isLoading}
-                className={`flex-1 px-3 sm:px-4 py-3.5 sm:py-4 rounded-xl text-sm sm:text-base font-semibold border-2 transition-all touch-manipulation disabled:opacity-50 min-h-[56px] active:scale-95 flex flex-col items-center justify-center gap-1 ${formData.gender === label
+                className={`flex-1 px-2 sm:px-3 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base font-semibold border-2 transition-all touch-manipulation disabled:opacity-50 min-h-[52px] active:scale-95 flex flex-col items-center justify-center gap-0.5 ${formData.gender === label
                   ? "bg-orange-500 text-white border-orange-600 shadow-lg"
                   : "bg-white text-gray-700 border-gray-300 hover:border-orange-500 hover:text-orange-600 active:bg-gray-50"
                   }`}
               >
-                <span className="text-xl">{icon}</span>
-                <span className="text-xs sm:text-sm">{label}</span>
+                <span className="text-lg sm:text-xl">{icon}</span>
+                <span className="text-xs">{label}</span>
               </button>
             ))}
           </div>
@@ -582,7 +582,7 @@ export function CreateMatchScreen() {
                 onChange={(e) => handleInputChange("date", e.target.value)}
                 min={today}
                 max={maxDate}
-                className={`pl-11 sm:pl-12 min-h-[56px] text-base rounded-xl border-2 w-full ${fieldErrors.date ? 'border-red-500' : 'border-gray-300'}`}
+                className={`pl-11 sm:pl-12 h-[52px] text-base rounded-xl border-2 w-full ${fieldErrors.date ? 'border-red-500' : 'border-gray-300'}`}
                 required
                 disabled={isLoading}
               />
@@ -603,7 +603,7 @@ export function CreateMatchScreen() {
               <select
                 value={formData.time}
                 onChange={(e) => handleInputChange("time", e.target.value)}
-                className={`w-full pl-11 sm:pl-12 pr-4 min-h-[56px] rounded-xl border-2 ${fieldErrors.time ? 'border-red-500' : 'border-gray-300'} bg-white text-gray-900 text-base font-medium focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation`}
+                className={`w-full pl-11 sm:pl-12 pr-4 h-[52px] rounded-xl border-2 ${fieldErrors.time ? 'border-red-500' : 'border-gray-300'} bg-white text-gray-900 text-base font-medium focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation`}
                 required
                 disabled={isLoading}
               >
