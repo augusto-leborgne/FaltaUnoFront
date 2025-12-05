@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { DateSelector } from "@/components/ui/date-selector"
 import { useRouter } from "next/navigation"
-import { User, ChevronDown, AlertCircle, X, Camera, Upload } from "lucide-react"
+import { User, ChevronDown, AlertCircle, X, Camera, Upload, ArrowLeft } from "lucide-react"
 import AddressAutocomplete from "@/components/google-maps/address-autocomplete"
 import { AuthService } from "@/lib/auth"
 import { useAuth } from "@/hooks/use-auth"
@@ -961,16 +961,33 @@ export function ProfileSetupForm() {
     }
   }
 
+  const handleBackToLogin = () => {
+    AuthService.logout()
+    router.replace('/login')
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-orange-50">
       {/* Header moderno */}
       <div className="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-10">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-          <div className="text-center">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-              Completa tu perfil
-            </h1>
-            <p className="text-xs sm:text-sm text-gray-600 mt-1 sm:mt-2">Un paso más para empezar a jugar</p>
+          <div className="relative flex items-center justify-center">
+            {/* Botón volver */}
+            <button
+              type="button"
+              onClick={handleBackToLogin}
+              className="absolute left-0 p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors"
+              aria-label="Volver a login"
+            >
+              <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
+            </button>
+            
+            <div className="text-center">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                Completa tu perfil
+              </h1>
+              <p className="text-xs sm:text-sm text-gray-600 mt-1 sm:mt-2">Un paso más para empezar a jugar</p>
+            </div>
           </div>
         </div>
       </div>
