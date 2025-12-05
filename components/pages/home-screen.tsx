@@ -287,9 +287,9 @@ export function HomeScreen() {
   const user = AuthService.getUser()
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-green-50 via-white to-orange-50 flex flex-col overflow-x-hidden pb-24 sm:pb-24">
+    <div className="min-h-screen w-full bg-gradient-to-br from-green-50 via-white to-orange-50 flex flex-col overflow-x-hidden pb-20 sm:pb-24 safe-bottom">
       {/* HEADER - Estilo Falta Uno */}
-      <div className="w-full bg-gradient-to-r from-green-500 via-green-600 to-green-500 pt-8 sm:pt-10 pb-20 sm:pb-24 px-4 sm:px-6 relative overflow-hidden">
+      <div className="w-full bg-gradient-to-r from-green-500 via-green-600 to-green-500 pt-6 sm:pt-8 md:pt-10 pb-16 sm:pb-20 md:pb-24 px-3 xs:px-4 sm:px-6 relative overflow-hidden safe-top">
         {/* Patrón de fondo tipo cancha */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 border-2 border-white rounded-full"></div>

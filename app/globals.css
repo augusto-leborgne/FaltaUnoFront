@@ -91,6 +91,14 @@ body {
 }
 
 @theme inline {
+  /* Custom breakpoints for better mobile responsiveness */
+  --breakpoint-xs: 360px;
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+  
   /* Using system fonts instead of Geist fonts */
   --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -653,4 +661,221 @@ img {
     width: 24px !important;
     height: 24px !important;
   }
+}
+
+/* ========================================
+   MOBILE RESPONSIVENESS IMPROVEMENTS
+   ======================================== */
+
+/* Touch target sizing - WCAG AA compliance (minimum 44x44px) */
+.btn-touch, button, a, [role="button"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Ensure proper spacing on all screen sizes */
+@media (max-width: 640px) {
+  /* Small phones (< 360px) */
+  @media (max-width: 359px) {
+    .container {
+      padding-left: 12px !important;
+      padding-right: 12px !important;
+    }
+    
+    /* Reduce font sizes slightly for very small screens */
+    h1 { font-size: 1.5rem !important; }
+    h2 { font-size: 1.25rem !important; }
+    h3 { font-size: 1.125rem !important; }
+  }
+  
+  /* Standard phones (360px - 390px) */
+  @media (min-width: 360px) and (max-width: 390px) {
+    .container {
+      padding-left: 14px !important;
+      padding-right: 14px !important;
+    }
+  }
+  
+  /* Larger phones (> 390px) */
+  @media (min-width: 391px) {
+    .container {
+      padding-left: 16px !important;
+      padding-right: 16px !important;
+    }
+  }
+}
+
+/* Prevent text overflow on all screens */
+.truncate-adaptive {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+/* Flexible grid for different screen sizes */
+.grid-responsive {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+@media (max-width: 360px) {
+  .grid-responsive {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Adaptive padding for cards */
+.card-adaptive {
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .card-adaptive {
+    padding: 1.5rem;
+  }
+}
+
+/* Safe area insets for notched devices (iPhone X, etc.) */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  
+  .safe-top {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+  
+  .safe-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* Flexible images - prevent overflow */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Better button sizing for different devices */
+.btn-sm-adaptive {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.btn-md-adaptive {
+  padding: 0.625rem 1rem;
+  font-size: 0.9375rem;
+}
+
+.btn-lg-adaptive {
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+}
+
+@media (min-width: 640px) {
+  .btn-sm-adaptive {
+    padding: 0.625rem 1rem;
+    font-size: 0.9375rem;
+  }
+  
+  .btn-md-adaptive {
+    padding: 0.75rem 1.25rem;
+    font-size: 1rem;
+  }
+  
+  .btn-lg-adaptive {
+    padding: 0.875rem 1.5rem;
+    font-size: 1.0625rem;
+  }
+}
+
+/* Adaptive input fields */
+input, select, textarea {
+  font-size: 16px !important; /* Prevent zoom on iOS */
+  min-height: 44px;
+}
+
+/* Better touch targets for small screens */
+@media (max-width: 640px) {
+  /* Increase tap targets on mobile */
+  button, a[role="button"], [onclick] {
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+
+/* Landscape mode optimization for phones */
+@media (max-height: 500px) and (orientation: landscape) {
+  .min-h-screen {
+    min-height: auto !important;
+  }
+  
+  /* Reduce vertical padding in landscape */
+  .py-adaptive {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+}
+
+/* Custom xs breakpoint utilities (360px+) */
+@media (min-width: 360px) {
+  .xs\:text-xs { font-size: 0.75rem; line-height: 1rem; }
+  .xs\:text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+  .xs\:text-base { font-size: 1rem; line-height: 1.5rem; }
+  .xs\:text-lg { font-size: 1.125rem; line-height: 1.75rem; }
+  .xs\:text-xl { font-size: 1.25rem; line-height: 1.75rem; }
+  .xs\:text-2xl { font-size: 1.5rem; line-height: 2rem; }
+  .xs\:text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
+  
+  .xs\:w-9 { width: 2.25rem; }
+  .xs\:w-10 { width: 2.5rem; }
+  .xs\:w-11 { width: 2.75rem; }
+  .xs\:w-12 { width: 3rem; }
+  .xs\:w-14 { width: 3.5rem; }
+  
+  .xs\:h-9 { height: 2.25rem; }
+  .xs\:h-10 { height: 2.5rem; }
+  .xs\:h-11 { height: 2.75rem; }
+  .xs\:h-12 { height: 3rem; }
+  .xs\:h-14 { height: 3.5rem; }
+  
+  .xs\:p-2 { padding: 0.5rem; }
+  .xs\:p-2\.5 { padding: 0.625rem; }
+  .xs\:p-3 { padding: 0.75rem; }
+  .xs\:p-4 { padding: 1rem; }
+  
+  .xs\:px-2 { padding-left: 0.5rem; padding-right: 0.5rem; }
+  .xs\:px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
+  .xs\:px-4 { padding-left: 1rem; padding-right: 1rem; }
+  
+  .xs\:py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+  .xs\:py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+  .xs\:py-4 { padding-top: 1rem; padding-bottom: 1rem; }
+  
+  .xs\:mb-1 { margin-bottom: 0.25rem; }
+  .xs\:mb-2 { margin-bottom: 0.5rem; }
+  .xs\:mb-3 { margin-bottom: 0.75rem; }
+  .xs\:mb-4 { margin-bottom: 1rem; }
+  .xs\:mb-6 { margin-bottom: 1.5rem; }
+  .xs\:mb-8 { margin-bottom: 2rem; }
+  
+  .xs\:gap-1 { gap: 0.25rem; }
+  .xs\:gap-1\.5 { gap: 0.375rem; }
+  .xs\:gap-2 { gap: 0.5rem; }
+  .xs\:gap-3 { gap: 0.75rem; }
+  .xs\:gap-4 { gap: 1rem; }
+  
+  .xs\:rounded-xl { border-radius: 0.75rem; }
+  .xs\:rounded-2xl { border-radius: 1rem; }
+  .xs\:rounded-lg { border-radius: 0.5rem; }
+  
+  .xs\:min-w-\[20px\] { min-width: 20px; }
+  .xs\:min-h-\[120px\] { min-height: 120px; }
+  .xs\:min-h-\[130px\] { min-height: 130px; }
+  .xs\:-mt-12 { margin-top: -3rem; }
+  
+  .xs\:ring-3 { box-shadow: 0 0 0 3px var(--tw-ring-color); }
 }
