@@ -367,11 +367,11 @@ export function SearchScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex flex-col pb-24 sm:pb-24">
+    <div className="min-h-screen bg-white flex flex-col pb-20 xs:pb-24 sm:pb-28 safe-bottom">
       {/* Header */}
-      <div className="pt-12 sm:pt-16 pb-4 px-4 sm:px-6 border-b border-gray-100">
-        <div className="flex items-center justify-between mb-4 gap-3">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Buscar</h1>
+      <div className="pt-10 xs:pt-12 sm:pt-16 pb-3 xs:pb-4 px-3 xs:px-4 sm:px-6 border-b border-gray-100 safe-top">
+        <div className="flex items-center justify-between mb-3 xs:mb-4 gap-2 xs:gap-3">
+          <h1 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">Buscar</h1>
 
           {/* Map View Toggle - Solo mostrar si hay partidos en resultados */}
           {results.some(r => r.tipo === "partido") && (
@@ -379,22 +379,23 @@ export function SearchScreen() {
               onClick={() => setShowMapView(true)}
               size="sm"
               variant="outline"
-              className="flex items-center gap-2 min-h-[44px] px-3 sm:px-4 touch-manipulation active:scale-95 transition-transform"
+              className="flex items-center gap-1.5 xs:gap-2 min-h-[44px] px-2.5 xs:px-3 sm:px-4 touch-manipulation active:scale-95 transition-transform"
+              aria-label="Ver en mapa"
             >
-              <Map className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="hidden sm:inline">Mapa</span>
+              <Map className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline text-xs xs:text-sm">Mapa</span>
             </Button>
           )}
         </div>
 
         {/* Search Input */}
-        <div className="relative mb-4">
-          <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
+        <div className="relative mb-3 xs:mb-4">
+          <Search className="absolute left-2.5 xs:left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5" />
           <Input
             placeholder="Buscar usuarios o partidos..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 sm:pl-12 pr-12 bg-gray-50 border-gray-200 rounded-xl min-h-[48px] text-base"
+            className="pl-9 xs:pl-10 sm:pl-12 pr-10 xs:pr-12 bg-gray-50 border-gray-200 rounded-lg xs:rounded-xl min-h-[48px] text-base"
           />
           {searchQuery && (
             <button
@@ -402,20 +403,21 @@ export function SearchScreen() {
                 setSearchQuery("")
                 setResults([])
               }}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 hover:bg-gray-200 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation active:scale-95"
+              className="absolute right-1.5 xs:right-2 top-1/2 transform -translate-y-1/2 p-2 hover:bg-gray-200 active:bg-gray-300 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation active:scale-95"
+              aria-label="Limpiar búsqueda"
             >
-              <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+              <X className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5 text-gray-400" />
             </button>
           )}
         </div>
 
         {/* Filters Row */}
-        <div className="flex items-center gap-2 mb-3 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex items-center gap-1.5 xs:gap-2 mb-2 xs:mb-3 overflow-x-auto pb-2 -mx-3 px-3 xs:-mx-4 xs:px-4 sm:mx-0 sm:px-0 scrollbar-hide">
           {["todos", "usuarios", "partidos"].map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f as any)}
-              className={`px-4 sm:px-5 py-2.5 rounded-full text-sm sm:text-base font-medium transition-all whitespace-nowrap min-h-[44px] touch-manipulation active:scale-95 ${filter === f
+              className={`px-3 xs:px-4 sm:px-5 py-2 xs:py-2.5 rounded-full text-xs xs:text-sm sm:text-base font-medium transition-all whitespace-nowrap min-h-[44px] touch-manipulation active:scale-95 ${filter === f
                 ? "bg-green-600 text-white shadow-md"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300"
                 }`}
@@ -426,25 +428,25 @@ export function SearchScreen() {
 
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full text-sm sm:text-base font-medium transition-all whitespace-nowrap min-h-[44px] touch-manipulation active:scale-95 ${hasActiveFilters
+            className={`flex items-center gap-1.5 xs:gap-2 px-3 xs:px-4 sm:px-5 py-2 xs:py-2.5 rounded-full text-xs xs:text-sm sm:text-base font-medium transition-all whitespace-nowrap min-h-[44px] touch-manipulation active:scale-95 ${hasActiveFilters
               ? "bg-orange-100 text-orange-800 border-2 border-orange-300 shadow-sm"
               : "bg-gray-100 text-gray-700 hover:bg-gray-200 active:bg-gray-300"
               }`}
+            aria-label="Mostrar filtros"
           >
-            <SlidersHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
-            <span className="hidden sm:inline">Filtros</span>
-            <span className="sm:hidden">Filtros</span>
+            <SlidersHorizontal className="w-4 h-4 xs:w-4.5 xs:h-4.5 sm:w-5 sm:h-5" />
+            <span className="hidden xs:inline">Filtros</span>
             {hasActiveFilters && ` (${Object.values(filters).filter(v => v !== "todos").length})`}
           </button>
         </div>
 
         {/* Advanced Filters Panel */}
         {showFilters && (
-          <div className="bg-gray-50 rounded-xl sm:rounded-2xl p-4 sm:p-5 mb-3 space-y-4 sm:space-y-5">
+          <div className="bg-gray-50 rounded-lg xs:rounded-xl sm:rounded-2xl p-3 xs:p-4 sm:p-5 mb-2 xs:mb-3 space-y-3 xs:space-y-4 sm:space-y-5">
             {/* Género Filter */}
             <div>
-              <label className="text-xs sm:text-sm font-semibold text-gray-700 mb-2.5 block">Género</label>
-              <div className="flex gap-2 flex-wrap">
+              <label className="text-xs xs:text-sm font-semibold text-gray-700 mb-2 xs:mb-2.5 block">Género</label>
+              <div className="flex gap-1.5 xs:gap-2 flex-wrap">
                 {["todos", "MASCULINO", "FEMENINO", "MIXTO"].map((g) => (
                   <button
                     key={g}
@@ -553,28 +555,28 @@ export function SearchScreen() {
       </div>
 
       {/* Results */}
-      <div className="flex-1 px-4 sm:px-6 py-4 sm:py-6 pb-24 overflow-y-auto">
+      <div className="flex-1 px-3 xs:px-4 sm:px-6 py-3 xs:py-4 sm:py-6 pb-24 xs:pb-28 sm:pb-32 overflow-y-auto">
         {loading ? (
           <SearchSkeleton />
         ) : filteredResults.length === 0 && searchQuery ? (
           <EmptyState message="No se encontraron resultados" />
         ) : searchQuery === "" ? (
           <div>
-            <EmptyState message="Escribe para buscar usuarios o partidos" icon={<Search className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300" />} />
+            <EmptyState message="Escribe para buscar usuarios o partidos" icon={<Search className="w-10 h-10 xs:w-12 xs:h-12 sm:w-16 sm:h-16 text-gray-300" />} />
 
             {/* Recent Searches */}
             {recentSearches.length > 0 && (
-              <div className="mt-6 sm:mt-8">
-                <div className="flex items-center justify-between mb-3 sm:mb-4">
-                  <h3 className="text-sm sm:text-base font-semibold text-gray-900">Búsquedas recientes</h3>
+              <div className="mt-5 xs:mt-6 sm:mt-8">
+                <div className="flex items-center justify-between mb-2 xs:mb-3 sm:mb-4">
+                  <h3 className="text-xs xs:text-sm sm:text-base font-semibold text-gray-900">Búsquedas recientes</h3>
                   <button
                     onClick={clearRecentSearches}
-                    className="text-xs sm:text-sm text-gray-500 hover:text-gray-700 font-medium px-2 py-1 rounded-lg hover:bg-gray-100 min-h-[36px] touch-manipulation active:scale-95"
+                    className="text-xs xs:text-sm text-gray-500 hover:text-gray-700 active:text-gray-900 font-medium px-2 py-1 rounded-lg hover:bg-gray-100 active:bg-gray-200 min-h-[40px] touch-manipulation active:scale-95"
                   >
                     Limpiar
                   </button>
                 </div>
-                <div className="space-y-2 sm:space-y-3">
+                <div className="space-y-2 xs:space-y-2.5 sm:space-y-3">
                   {recentSearches.map((search, idx) => (
                     <button
                       key={idx}

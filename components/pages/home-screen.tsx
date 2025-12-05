@@ -454,7 +454,7 @@ export function HomeScreen() {
       )}
 
       {/* PRÓXIMOS PARTIDOS */}
-      <div className="w-full px-4 sm:px-6 py-4 sm:py-6 pb-24 sm:pb-24">
+      <div className="w-full px-3 xs:px-4 sm:px-6 py-3 xs:py-4 sm:py-6 pb-24 xs:pb-28 sm:pb-32">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">

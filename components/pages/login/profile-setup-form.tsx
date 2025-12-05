@@ -967,42 +967,42 @@ export function ProfileSetupForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-orange-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-orange-50 safe-top safe-bottom">
       {/* Header moderno */}
-      <div className="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+      <div className="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-10 safe-top">
+        <div className="max-w-2xl mx-auto px-3 xs:px-4 sm:px-6 py-3 xs:py-4 sm:py-6">
           <div className="relative flex items-center justify-center">
             {/* Botón volver */}
             <button
               type="button"
               onClick={handleBackToLogin}
-              className="absolute left-0 p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors"
+              className="absolute left-0 p-2 rounded-lg hover:bg-gray-100 active:bg-gray-200 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
               aria-label="Volver a login"
             >
-              <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" />
+              <ArrowLeft className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6 sm:h-6 text-gray-600" />
             </button>
             
             <div className="text-center">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+              <h1 className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">
                 Completa tu perfil
               </h1>
-              <p className="text-xs sm:text-sm text-gray-600 mt-1 sm:mt-2">Un paso más para empezar a jugar</p>
+              <p className="text-xs xs:text-sm text-gray-600 mt-1 xs:mt-1.5 sm:mt-2">Un paso más para empezar a jugar</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-4 sm:py-8 pb-16 sm:pb-20">
+      <div className="max-w-2xl mx-auto px-3 xs:px-4 sm:px-6 py-3 xs:py-4 sm:py-8 pb-24 xs:pb-28 sm:pb-32">
         <form
           ref={formRef}
           onSubmit={handleSubmit}
-          className="space-y-6"
+          className="space-y-4 xs:space-y-5 sm:space-y-6"
         >
           {/* Foto de perfil - Diseño destacado */}
-          <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg p-4 sm:p-8 border border-gray-100">
+          <div className="bg-white rounded-xl xs:rounded-2xl sm:rounded-3xl shadow-lg p-3 xs:p-4 sm:p-8 border border-gray-100">
             <div className="flex flex-col items-center text-center">
-              <div className="relative group mb-3 sm:mb-4">
-                <Avatar className="w-24 h-24 sm:w-32 sm:h-32 border-2 sm:border-4 border-primary/20 shadow-xl relative overflow-hidden transition-transform active:scale-105">
+              <div className="relative group mb-3 xs:mb-3.5 sm:mb-4">
+                <Avatar className="w-20 h-20 xs:w-24 xs:h-24 sm:w-32 sm:h-32 border-2 xs:border-3 sm:border-4 border-primary/20 shadow-xl relative overflow-hidden transition-transform active:scale-105">
                   {formData.photoPreviewUrl ? (
                     <Image
                       src={formData.photoPreviewUrl}
@@ -1014,7 +1014,7 @@ export function ProfileSetupForm() {
                     />
                   ) : (
                     <AvatarFallback className="bg-gradient-to-br from-primary/10 to-orange-100">
-                      <User className="w-12 h-12 sm:w-16 sm:h-16 text-gray-400" />
+                      <User className="w-10 h-10 xs:w-12 xs:h-12 sm:w-16 sm:h-16 text-gray-400" />
                     </AvatarFallback>
                   )}
                 </Avatar>
