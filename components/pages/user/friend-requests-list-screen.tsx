@@ -147,7 +147,7 @@ export function FriendRequestsListScreen() {
   return (
     <div className="min-h-screen bg-white flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
       {/* Header */}
-      <div className="pt-16 pb-6 px-6 border-b border-gray-100">
+      <div className="pt-6 xs:pt-8 sm:pt-10 md:pt-12 pb-3 sm:pb-4 md:pb-5 px-3 sm:px-4 md:px-6 border-b border-gray-100 bg-white safe-top">
         <div className="flex items-center gap-2 xs:gap-3 sm:gap-4 mb-4">
           <button
             onClick={handleBack}

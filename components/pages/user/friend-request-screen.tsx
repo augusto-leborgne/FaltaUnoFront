@@ -136,7 +136,7 @@ export function FriendRequestScreen({ userId }: FriendRequestScreenProps) {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      <div className="pt-12 xs:pt-14 sm:pt-16 md:pt-18 pb-2 xs:pb-3 sm:pb-4 sm:pb-5 md:pb-6 px-2 xs:px-3 sm:px-4 md:px-6 border-b border-gray-100">
+      <div className="pt-6 xs:pt-8 sm:pt-10 md:pt-12 pb-3 sm:pb-4 md:pb-5 px-3 sm:px-4 md:px-6 border-b border-gray-100 bg-white safe-top">
         <div className="flex items-center space-x-3 xs:space-x-2 xs:space-x-3 sm:space-x-4">
           <button onClick={handleBack} className="p-2 xs:p-2.5 -ml-2 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] flex items-center justify-center active:scale-95 transition-transform">
             <ArrowLeft className="w-4 xs:w-5 h-4 xs:h-5 text-gray-600" />
