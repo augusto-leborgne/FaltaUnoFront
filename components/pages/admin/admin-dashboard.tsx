@@ -611,7 +611,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-gray-50 pb-18 xs:pb-20 sm:pb-22 md:pb-24">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white border-b border-gray-100 safe-top">
-        <div className="mx-auto max-w-6xl mt-3 xs:mt-4 sm:mt-5 pt-6 xs:pt-8 sm:pt-10 md:pt-12 pb-3 sm:pb-4 md:pb-5 px-3 sm:px-4 md:px-6">
+        <div className="mx-auto max-w-6xl pt-6 xs:pt-8 sm:pt-10 md:pt-12 pb-3 sm:pb-4 md:pb-5 px-3 sm:px-4 md:px-6">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 xs:gap-3 flex-1 min-w-0">
               <button

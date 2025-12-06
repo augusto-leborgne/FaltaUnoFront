@@ -236,7 +236,7 @@ export function ChatsScreen() {
     <div className="min-h-screen bg-white flex flex-col pb-18 xs:pb-20 sm:pb-22 md:pb-24 safe-bottom">
       {/* Header Compacto como Partidos y Mis Partidos */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-10 safe-top">
-        <div className="mt-3 xs:mt-4 sm:mt-5 pt-6 xs:pt-8 sm:pt-10 md:pt-12 pb-3 sm:pb-4 md:pb-5 px-3 sm:px-4 md:px-6">
+        <div className="pt-6 xs:pt-8 sm:pt-10 md:pt-12 pb-3 sm:pb-4 md:pb-5 px-3 sm:px-4 md:px-6">
           <div className="flex items-center justify-between">
             <h1 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">Chats</h1>
             <button

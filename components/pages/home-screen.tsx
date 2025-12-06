@@ -289,7 +289,7 @@ export function HomeScreen() {
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-green-50 via-white to-orange-50 flex flex-col overflow-x-hidden scroll-safe-bottom">
       {/* HEADER - Estilo Falta Uno - Banner verde limpio sin decoraciones */}
-      <div className="w-full bg-gradient-to-r from-green-500 via-green-600 to-green-500 safe-top mt-3 xs:mt-4 sm:mt-5 pt-3 sm:pt-5 md:pt-7 pb-14 sm:pb-18 md:pb-22 px-2 xs:px-3 sm:px-4 md:px-6 relative overflow-hidden">
+      <div className="w-full bg-gradient-to-r from-green-500 via-green-600 to-green-500 safe-top pt-3 sm:pt-5 md:pt-7 pb-14 sm:pb-18 md:pb-22 px-3 xs:px-4 sm:px-5 md:px-6 relative overflow-hidden">
         {/* Top bar */}
         <div className="relative z-10 flex items-center justify-between mb-4 sm:mb-6">
           <div className="flex items-center gap-2">
