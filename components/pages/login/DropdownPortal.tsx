@@ -57,7 +57,8 @@ export function DropdownPortal({
         dropdownHeight = Math.min(dropdownHeight, spaceAbove - 8);
         top = rect.top + scrollY - dropdownHeight - 4;
       } else {
-        dropdownHeight = Math.min(dropdownHeight, Math.max(spaceBelow - 8, 200));
+        // Calculate actual needed height to prevent empty space
+        dropdownHeight = Math.min(dropdownHeight, spaceBelow - 8);
       }
 
       let left = rect.left + scrollX;

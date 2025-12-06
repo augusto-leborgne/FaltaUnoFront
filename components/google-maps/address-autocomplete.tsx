@@ -474,16 +474,17 @@ export function AddressAutocomplete({
           autoComplete="off"
         />
         {/* Indicador de búsqueda o botón limpiar - FIJO a la derecha */}
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
           {isSearching ? (
             <LoadingSpinner size="sm" variant="gray" />
           ) : query ? (
             <button
               type="button"
               onClick={handleClear}
-              className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-md hover:bg-gray-100 active:bg-gray-200"
+              className="text-gray-500 hover:text-gray-700 transition-colors p-1.5 rounded-md hover:bg-gray-200 active:bg-gray-300 cursor-pointer"
+              aria-label="Limpiar ubicación"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
           ) : null}
         </div>
@@ -507,14 +508,15 @@ export function AddressAutocomplete({
             <button
               type="button"
               onClick={() => setShowMap(false)}
-              className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded hover:bg-gray-100"
+              className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded hover:bg-gray-100 cursor-pointer"
+              aria-label="Cerrar vista previa"
             >
               <X className="w-3 h-3" />
             </button>
           </div>
-          <div className="relative w-full h-32 sm:h-40 bg-gray-100">
+          <div className="relative w-full h-48 sm:h-56 bg-gray-100">
             <img
-              src={`https://maps.googleapis.com/maps/api/staticmap?center=${selectedLocation.lat},${selectedLocation.lng}&zoom=16&size=600x300&scale=2&markers=color:green%7C${selectedLocation.lat},${selectedLocation.lng}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`}
+              src={`https://maps.googleapis.com/maps/api/staticmap?center=${selectedLocation.lat},${selectedLocation.lng}&zoom=17&size=600x400&scale=2&markers=color:red%7Csize:mid%7C${selectedLocation.lat},${selectedLocation.lng}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`}
               alt="Vista del mapa"
               className="w-full h-full object-cover"
             />

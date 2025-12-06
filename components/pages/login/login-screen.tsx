@@ -54,16 +54,27 @@ export function LoginScreen() {
 
   const handleEmailChange = (value: string) => {
     setEmail(value)
-    const emailError = validateField('email', value)
-    setFieldErrors(prev => ({ ...prev, email: emailError || undefined }))
+    // ✅ Solo limpiar error anterior, no validar mientras escribe
+    setFieldErrors(prev => ({ ...prev, email: undefined }))
     if (error) setError("")
   }
 
   const handlePasswordChange = (value: string) => {
     setPassword(value)
-    const passwordError = validateField('password', value)
-    setFieldErrors(prev => ({ ...prev, password: passwordError || undefined }))
+    // ✅ Solo limpiar error anterior, no validar mientras escribe
+    setFieldErrors(prev => ({ ...prev, password: undefined }))
     if (error) setError("")
+  }
+
+  // ✅ Validar solo cuando el usuario sale del campo (onBlur)
+  const handleEmailBlur = () => {
+    const emailError = validateField('email', email)
+    setFieldErrors(prev => ({ ...prev, email: emailError || undefined }))
+  }
+
+  const handlePasswordBlur = () => {
+    const passwordError = validateField('password', password)
+    setFieldErrors(prev => ({ ...prev, password: passwordError || undefined }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -264,6 +275,7 @@ export function LoginScreen() {
               type="email"
               value={email}
               onChange={(e) => handleEmailChange(e.target.value)}
+              onBlur={handleEmailBlur}
               placeholder="tu@email.com"
               autoComplete="email"
               required
@@ -282,6 +294,7 @@ export function LoginScreen() {
               type="password"
               value={password}
               onChange={(e) => handlePasswordChange(e.target.value)}
+              onBlur={handlePasswordBlur}
               placeholder="********"
               autoComplete="current-password"
               required

@@ -204,6 +204,13 @@ export function ProfileSetupForm() {
 
   const handleFieldChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }))
+    // ✅ Solo limpiar error, no validar mientras escribe
+    setFieldErrors(prev => ({ ...prev, [field]: undefined }))
+  }
+
+  // ✅ Validar solo cuando el usuario sale del campo (onBlur)
+  const handleFieldBlur = (field: string) => {
+    const value = formData[field as keyof typeof formData]
     const fieldError = validateField(field, value)
     setFieldErrors(prev => ({ ...prev, [field]: fieldError || undefined }))
   }
@@ -671,7 +678,9 @@ export function ProfileSetupForm() {
           const inlineMessage = describePhotoValidation(validationResult)
           setPhotoError(inlineMessage)
           setFieldErrors(prev => ({ ...prev, photo: inlineMessage }))
-          // Keep modal open so user can adjust crop or cancel
+          // ✅ Cerrar modal automáticamente para que el usuario pueda intentar de nuevo
+          setShowCropModal(false)
+          setImageToCrop('')
           return
         }
 
@@ -1060,7 +1069,7 @@ export function ProfileSetupForm() {
                   </div>
                 )}
               </div>
-              <h3 className="text-sm xs:text-base md:text-base sm:text-lg font-semibold text-gray-900 mb-1">Foto de perfil</h3>
+              <h3 className="text-sm xs:text-base md:text-base sm:text-lg font-semibold text-gray-900 mb-1">Foto de perfil *</h3>
               <p className="text-xs sm:text-sm text-gray-500 mb-2 sm:mb-3 px-2">
                 {formData.photo ? "¡Foto cargada! Puedes cambiarla" : "Agrega una foto para que te reconozcan"}
               </p>
@@ -1109,6 +1118,7 @@ export function ProfileSetupForm() {
                     placeholder="Juan"
                     value={formData.name}
                     onChange={(e) => handleFieldChange('name', e.target.value)}
+                    onBlur={() => handleFieldBlur('name')}
                     className={`${fieldErrors.name ? 'border-red-500 focus:ring-red-500' : 'focus:ring-primary'} placeholder:text-gray-300 text-sm sm:text-base h-10 sm:h-auto`}
                     maxLength={50}
                     required
@@ -1123,6 +1133,7 @@ export function ProfileSetupForm() {
                     placeholder="Pérez"
                     value={formData.surname}
                     onChange={(e) => handleFieldChange('surname', e.target.value)}
+                    onBlur={() => handleFieldBlur('surname')}
                     className={`${fieldErrors.surname ? 'border-red-500 focus:ring-red-500' : 'focus:ring-primary'} placeholder:text-gray-300 text-sm sm:text-base h-10 sm:h-auto`}
                     maxLength={50}
                     required
@@ -1277,6 +1288,7 @@ export function ProfileSetupForm() {
                     placeholder="175"
                     value={formData.height}
                     onChange={(e) => handleFieldChange('height', e.target.value)}
+                    onBlur={() => handleFieldBlur('height')}
                     className={`${fieldErrors.height ? 'border-red-500' : 'focus:ring-orange-500'} placeholder:text-gray-300 text-sm sm:text-base h-10 sm:h-auto`}
                     min="100"
                     max="250"
@@ -1293,6 +1305,7 @@ export function ProfileSetupForm() {
                     placeholder="70"
                     value={formData.weight}
                     onChange={(e) => handleFieldChange('weight', e.target.value)}
+                    onBlur={() => handleFieldBlur('weight')}
                     className={`${fieldErrors.weight ? 'border-red-500' : 'focus:ring-orange-500'} placeholder:text-gray-300 text-sm sm:text-base h-10 sm:h-auto`}
                     min="30"
                     max="200"
@@ -1326,8 +1339,13 @@ export function ProfileSetupForm() {
           {/* Botón de submit - USANDO BUTTON NATIVO PARA DESCARTAR PROBLEMAS CON EL COMPONENTE */}
           <button
             type="submit"
-            disabled={isUploading}
-            className="w-full bg-primary active:bg-primary/90 text-white py-4 sm:py-6 rounded-xl sm:rounded-2xl text-sm xs:text-base md:text-base sm:text-lg font-semibold shadow-lg active:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isUploading || Object.values(fieldErrors).some(error => error !== undefined)}
+            className={cn(
+              "w-full py-4 sm:py-6 rounded-xl sm:rounded-2xl text-sm xs:text-base md:text-base sm:text-lg font-semibold shadow-lg transition-all",
+              isUploading || Object.values(fieldErrors).some(error => error !== undefined)
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-primary active:bg-primary/90 text-white active:shadow-xl"
+            )}
           >
             {isUploading ? (
               <span className="flex items-center justify-center">
