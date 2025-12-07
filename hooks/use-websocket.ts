@@ -232,3 +232,55 @@ export function usePartidoChat(partidoId?: string, onMessage?: WebSocketCallback
     connectionState: webSocketClient.getConnectionState(),
   }
 }
+
+/**
+ * Hook para suscribirse a eventos globales de partidos (creación, cancelación)
+ * Útil para actualizar listas de partidos en tiempo real
+ */
+export function useGlobalPartidos(onEvent?: WebSocketCallback) {
+  const unsubscribeRef = useRef<(() => void) | null>(null)
+  const onEventRef = useRef(onEvent)
+
+  useEffect(() => {
+    onEventRef.current = onEvent
+  }, [onEvent])
+
+  const stableCallback = useCallback((event: WebSocketEvent) => {
+    onEventRef.current?.(event)
+  }, [])
+
+  useEffect(() => {
+    let active = true
+
+    const subscribe = async () => {
+      try {
+        logger.log('[useGlobalPartidos] Suscribiendo a eventos globales de partidos')
+        
+        const unsubscribe = await webSocketClient.subscribeToGlobalPartidos(stableCallback)
+
+        if (active) {
+          unsubscribeRef.current = unsubscribe
+        } else {
+          unsubscribe()
+        }
+      } catch (error) {
+        logger.error('[useGlobalPartidos] Error suscribiendo:', error)
+      }
+    }
+
+    subscribe()
+
+    return () => {
+      active = false
+      if (unsubscribeRef.current) {
+        unsubscribeRef.current()
+        unsubscribeRef.current = null
+      }
+    }
+  }, [stableCallback])
+
+  return {
+    isConnected: webSocketClient.isConnected(),
+    connectionState: webSocketClient.getConnectionState(),
+  }
+}

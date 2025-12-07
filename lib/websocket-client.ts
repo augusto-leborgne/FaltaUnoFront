@@ -10,13 +10,18 @@ import { AppMetrics } from './observability'
 
 export type WebSocketEventType =
   | 'PARTIDO_UPDATED'
+  | 'PARTIDO_CREATED'
+  | 'PARTIDO_CANCELLED'
+  | 'PARTIDO_CANCELLED_GLOBAL'
+  | 'PARTIDO_COMPLETED'
   | 'INSCRIPCION_CREATED'
   | 'INSCRIPCION_STATUS_CHANGED'
   | 'INSCRIPCION_CANCELLED'
-  | 'PARTIDO_CANCELLED'
-  | 'PARTIDO_COMPLETED'
   | 'NEW_MESSAGE'
   | 'USER_TYPING'
+  | 'FRIEND_REQUEST_RECEIVED'
+  | 'FRIEND_REQUEST_ACCEPTED'
+  | 'NEW_NOTIFICATION'
 
 export interface WebSocketEvent {
   type: WebSocketEventType
@@ -266,6 +271,45 @@ class WebSocketClient {
       subscription.unsubscribe()
       this.subscriptions.delete(subscriptionKey)
       logger.log(`[WebSocket] ✅ Desuscrito del chat: ${destination}`)
+    }
+  }
+
+  /**
+   * Suscribirse a eventos globales de partidos (creación, cancelación)
+   */
+  async subscribeToGlobalPartidos(callback: WebSocketCallback): Promise<() => void> {
+    await this.connect()
+
+    if (!this.client?.connected) {
+      throw new Error('WebSocket no conectado')
+    }
+
+    const destination = '/topic/partidos'
+    const subscriptionKey = 'global-partidos'
+
+    if (this.subscriptions.has(subscriptionKey)) {
+      this.subscriptions.get(subscriptionKey).unsubscribe()
+    }
+
+    const subscription = this.client.subscribe(destination, (message: IMessage) => {
+      try {
+        const event: WebSocketEvent = JSON.parse(message.body)
+        logger.log(`[WebSocket] 🌎 Evento global de partido:`, event.type, event)
+        AppMetrics.websocketMessage('GLOBAL_' + event.type)
+        callback(event)
+      } catch (error) {
+        logger.error('[WebSocket] Error procesando evento global:', error)
+        AppMetrics.error('websocket_global_parse_error')
+      }
+    })
+
+    this.subscriptions.set(subscriptionKey, subscription)
+    logger.log(`[WebSocket] ✅ Suscrito a eventos globales: ${destination}`)
+
+    return () => {
+      subscription.unsubscribe()
+      this.subscriptions.delete(subscriptionKey)
+      logger.log(`[WebSocket] ✅ Desuscrito de eventos globales`)
     }
   }
 

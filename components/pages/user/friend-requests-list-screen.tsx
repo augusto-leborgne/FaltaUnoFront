@@ -12,6 +12,8 @@ import { AuthService } from "@/lib/auth"
 import { AmistadAPI, API_BASE } from "@/lib/api"
 import { formatDateRegional } from "@/lib/utils"
 import { LoadingSpinner, InlineSpinner } from "@/components/ui/loading-spinner"
+import { useUserNotifications } from "@/hooks/use-websocket"
+import { WebSocketEvent } from "@/lib/websocket-client"
 
 interface FriendRequest {
   id: string
@@ -33,6 +35,29 @@ export function FriendRequestsListScreen() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [processingId, setProcessingId] = useState<string | null>(null)
+
+  // ============================================
+  // WEBSOCKET - Actualizaciones en tiempo real
+  // ============================================
+  
+  const handleWebSocketEvent = (event: WebSocketEvent) => {
+    logger.log('[FriendRequestsList] Evento WebSocket recibido:', event.type)
+    
+    switch (event.type) {
+      case 'FRIEND_REQUEST_RECEIVED':
+        // Nueva solicitud recibida - recargar lista
+        logger.log('[FriendRequestsList] Nueva solicitud recibida')
+        loadFriendRequests()
+        break
+        
+      case 'FRIEND_REQUEST_ACCEPTED':
+        // Una de nuestras solicitudes fue aceptada (no afecta esta lista)
+        break
+    }
+  }
+  
+  const user = AuthService.getUser()
+  useUserNotifications(user?.id, handleWebSocketEvent)
 
   useEffect(() => {
     loadFriendRequests()

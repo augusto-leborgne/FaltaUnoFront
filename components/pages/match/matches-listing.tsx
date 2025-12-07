@@ -22,6 +22,8 @@ import {
   InscripcionEstado
 } from "@/lib/api"
 import { formatMatchDate } from "@/lib/utils" // ✅ FIX: Import for date formatting without timezone issues
+import { useGlobalPartidos } from "@/hooks/use-websocket"
+import { WebSocketEvent } from "@/lib/websocket-client"
 
 export function MatchesListing() {
   const router = useRouter()
@@ -42,6 +44,34 @@ export function MatchesListing() {
     { label: "Fútbol 5", type: "match-type" },
     { label: "Cerca", type: "location" },
   ]
+
+  // ============================================
+  // WEBSOCKET - Actualizaciones en tiempo real
+  // ============================================
+  
+  const handleWebSocketEvent = (event: WebSocketEvent) => {
+    logger.log('[MatchesListing] Evento WebSocket recibido:', event.type)
+    
+    switch (event.type) {
+      case 'PARTIDO_CREATED':
+        // Agregar nuevo partido a la lista
+        if (event.partido) {
+          setMatches(prev => [event.partido, ...prev])
+          logger.log('[MatchesListing] Partido creado agregado a la lista')
+        }
+        break
+        
+      case 'PARTIDO_CANCELLED_GLOBAL':
+        // Remover partido cancelado de la lista
+        if (event.partidoId) {
+          setMatches(prev => prev.filter(m => m.id !== event.partidoId))
+          logger.log('[MatchesListing] Partido cancelado removido de la lista')
+        }
+        break
+    }
+  }
+  
+  useGlobalPartidos(handleWebSocketEvent)
 
   // ============================================
   // EFECTOS
