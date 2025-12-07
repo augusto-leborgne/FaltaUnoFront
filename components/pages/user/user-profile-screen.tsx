@@ -136,21 +136,30 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
           const estadoJson = await estadoRes.json()
           const estado = estadoJson?.data
           
+          logger.log("[UserProfile] Estado de amistad recibido:", estado)
+          
           if (estado?.existe) {
-            if (estado.estado === 'ACEPTADA') {
+            if (estado.estado === 'ACEPTADO') {
+              logger.log("[UserProfile] Son amigos - estado ACEPTADO")
               setFriendStatus('friends')
             } else if (estado.estado === 'PENDIENTE') {
               // Si solicitudEnviada es true, yo envié la solicitud
               // Si solicitudRecibida es true, yo recibí la solicitud
               if (estado.solicitudEnviada) {
+                logger.log("[UserProfile] Solicitud pendiente enviada")
                 setFriendStatus('pending-sent')
               } else if (estado.solicitudRecibida) {
+                logger.log("[UserProfile] Solicitud pendiente recibida")
                 setFriendStatus('pending-received')
               }
             }
           } else {
+            logger.log("[UserProfile] No existe relación de amistad")
             setFriendStatus('none')
           }
+        } else {
+          logger.error("[UserProfile] Error al verificar estado de amistad - Status:", estadoRes.status)
+          setFriendStatus('none')
         }
       } catch (error) {
         logger.error("[UserProfile] Error verificando estado de amistad:", error)

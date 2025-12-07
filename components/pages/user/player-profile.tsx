@@ -40,7 +40,7 @@ function PlayerProfile({ playerId }: PlayerProfileProps) {
   const [requestSent, setRequestSent] = useState(false)
   const [friendshipStatus, setFriendshipStatus] = useState<{
     exists: boolean
-    estado?: "PENDIENTE" | "ACEPTADA"
+    estado?: "PENDIENTE" | "ACEPTADO"
     amistadId?: string
   } | null>(null)
   const [removingFriend, setRemovingFriend] = useState(false)
@@ -273,7 +273,7 @@ function PlayerProfile({ playerId }: PlayerProfileProps) {
 
         {/* Friend Request Button */}
         <div className="mb-8">
-          {friendshipStatus?.estado === "ACEPTADA" ? (
+          {friendshipStatus?.estado === "ACEPTADO" ? (
             <Button
               onClick={handleRemoveFriend}
               disabled={removingFriend}
