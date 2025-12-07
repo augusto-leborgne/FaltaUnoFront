@@ -470,6 +470,18 @@ main,
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
   }
+  
+  /* Add cursor pointer to all interactive elements */
+  button,
+  [role="button"],
+  a:not([href=""]),
+  [onclick],
+  [type="submit"],
+  [type="button"],
+  [type="reset"],
+  .cursor-pointer {
+    cursor: pointer !important;
+  }
 }
 
 /* Smooth scrolling for mobile */
