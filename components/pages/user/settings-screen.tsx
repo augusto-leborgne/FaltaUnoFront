@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { UserAvatar } from "@/components/ui/user-avatar"
-import { ArrowLeft, Camera, Save, Bell, AlertCircle, Trash2, Upload, X, Settings as SettingsIcon } from "lucide-react"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { ArrowLeft, Camera, Save, Bell, AlertCircle, Trash2, Upload, X, Settings as SettingsIcon, User, Shield, Mail, MapPin } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { AuthService } from "@/lib/auth"
 import { useAuth } from "@/hooks/use-auth"
@@ -588,10 +589,17 @@ export function SettingsScreen() {
       />
 
       <PageContent>
-        {/* Success Message */}
+        {/* Success Toast - Fixed at bottom center */}
         {success && (
-          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl text-green-800">
-            ✅ Cambios guardados exitosamente
+          <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
+            <div className="bg-green-600 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 min-w-[280px]">
+              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <span className="font-semibold">Cambios guardados exitosamente</span>
+            </div>
           </div>
         )}
 
@@ -604,19 +612,28 @@ export function SettingsScreen() {
         )}
 
         {/* Profile Photo Section */}
-        <FormSection>
-          <FormSectionTitle>
-            <Camera className="w-5 h-5 inline mr-2 text-blue-600" />
-            Foto de perfil
-          </FormSectionTitle>
-          <div className="flex flex-col items-center gap-2 xs:gap-3 sm:gap-4">
-            <div className="relative">
-              <UserAvatar
-                photo={avatar}
-                name={formData.name}
-                surname={formData.surname}
-                className="w-24 h-24 sm:w-32 sm:h-32"
-              />
+        <div className="bg-gradient-to-br from-green-50 to-blue-50 rounded-2xl p-6 sm:p-8 border border-green-100">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center">
+              <Camera className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900">Foto de perfil</h3>
+              <p className="text-sm text-gray-600">Tu imagen en la comunidad</p>
+            </div>
+          </div>
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative group">
+              <Avatar className="w-32 h-32 sm:w-40 sm:h-40 ring-4 ring-green-100 ring-offset-4 transition-all group-hover:ring-green-200">
+                {avatar ? (
+                  <AvatarImage src={avatar} alt={`${formData.name} ${formData.surname}`} className="object-cover" />
+                ) : null}
+                <AvatarFallback className="bg-gradient-to-br from-green-400 to-green-600 text-white text-3xl sm:text-4xl font-bold">
+                  {formData.name && formData.surname
+                    ? `${formData.name[0]}${formData.surname[0]}`.toUpperCase()
+                    : "?"}
+                </AvatarFallback>
+              </Avatar>
               <button
                 type="button"
                 onClick={(e) => {
@@ -624,9 +641,9 @@ export function SettingsScreen() {
                   e.stopPropagation()
                   setShowPhotoOptions(!showPhotoOptions)
                 }}
-                className="absolute bottom-0 right-0 w-10 h-10 sm:w-12 sm:h-12 bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded-full shadow-lg hover:shadow-xl transition-all active:scale-95 flex items-center justify-center"
+                className="absolute -bottom-2 -right-2 w-14 h-14 bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-full shadow-xl hover:shadow-2xl transition-all active:scale-95 flex items-center justify-center group-hover:scale-110"
               >
-                <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
+                <Camera className="w-6 h-6" />
               </button>
               {/* Popover con opciones de foto */}
               {showPhotoOptions && (
@@ -691,74 +708,103 @@ export function SettingsScreen() {
               onChange={handleFileSelect}
               className="hidden"
             />
+            <p className="text-xs text-center text-gray-500 max-w-xs">Sube una foto clara de tu rostro para que otros jugadores te reconozcan</p>
           </div>
-        </FormSection>
+        </div>
 
         {/* Personal Information */}
-        <FormSection>
-          <FormSectionTitle>
-            <svg className="w-5 h-5 inline mr-2 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-            Información personal
-          </FormSectionTitle>
-          <div className="space-y-4">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-gray-200 shadow-sm">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
+              <User className="w-5 h-5 text-white" />
+            </div>
             <div>
-              <Label htmlFor="name">Nombre</Label>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900">Información personal</h3>
+              <p className="text-sm text-gray-600">Tus datos básicos</p>
+            </div>
+          </div>
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                <div className="w-5 h-5 bg-blue-100 rounded flex items-center justify-center">
+                  <User className="w-3 h-3 text-blue-600" />
+                </div>
+                Nombre
+              </Label>
               <Input
                 id="name"
                 value={formData.name}
                 disabled
-                className="bg-gray-50"
+                className="bg-gray-50 border-gray-200 h-12 text-base font-medium"
               />
-              <p className="text-xs text-gray-500 mt-1">No se puede modificar</p>
+              <p className="text-xs text-gray-500">Este dato no se puede modificar</p>
             </div>
 
-            <div>
-              <Label htmlFor="surname">Apellido</Label>
+            <div className="space-y-2">
+              <Label htmlFor="surname" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                <div className="w-5 h-5 bg-blue-100 rounded flex items-center justify-center">
+                  <User className="w-3 h-3 text-blue-600" />
+                </div>
+                Apellido
+              </Label>
               <Input
                 id="surname"
                 value={formData.surname}
                 disabled
-                className="bg-gray-50"
+                className="bg-gray-50 border-gray-200 h-12 text-base font-medium"
               />
-              <p className="text-xs text-gray-500 mt-1">No se puede modificar</p>
+              <p className="text-xs text-gray-500">Este dato no se puede modificar</p>
             </div>
 
-            <div>
-              <Label htmlFor="email">Email</Label>
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                <div className="w-5 h-5 bg-blue-100 rounded flex items-center justify-center">
+                  <Mail className="w-3 h-3 text-blue-600" />
+                </div>
+                Correo electrónico
+              </Label>
               <Input
                 id="email"
                 type="email"
                 value={formData.email}
                 disabled
-                className="bg-gray-50"
+                className="bg-gray-50 border-gray-200 h-12 text-base font-medium"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                {authMethod === "google" ? "Autenticado con Google" : "No se puede modificar"}
+              <p className="text-xs text-gray-500">
+                {authMethod === "google" ? "✅ Autenticado con Google" : "Este dato no se puede modificar"}
               </p>
             </div>
           </div>
-        </FormSection>
+        </div>
 
         {/* Football Profile */}
-        <FormSection>
-          <FormSectionTitle>
-            <svg className="w-5 h-5 inline mr-2 text-green-600" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
-            </svg>
-            Perfil futbolístico
-          </FormSectionTitle>
-          <div className="space-y-4">
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-green-100 shadow-sm">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-md">
+              <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
+              </svg>
+            </div>
             <div>
-              <Label htmlFor="position">Posición preferida</Label>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900">Perfil deportivo</h3>
+              <p className="text-sm text-gray-600">Tus datos como jugador</p>
+            </div>
+          </div>
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="position" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                <div className="w-5 h-5 bg-green-100 rounded flex items-center justify-center">
+                  <MapPin className="w-3 h-3 text-green-600" />
+                </div>
+                Posición preferida
+              </Label>
               <select
                 id="position"
                 value={formData.position}
                 onChange={(e) => handleInputChange("position", e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full h-12 px-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white text-base font-medium transition-all"
               >
-                <option value="">Seleccionar posición</option>
+                <option value="">⚽ Selecciona tu posición</option>
                 {positions.map((pos) => (
                   <option key={pos} value={pos}>
                     {pos}
@@ -767,47 +813,56 @@ export function SettingsScreen() {
               </select>
             </div>
 
-            <div>
-              <Label htmlFor="height">Altura (cm)</Label>
-              <Input
-                id="height"
-                type="number"
-                value={formData.height}
-                onChange={(e) => handleInputChange("height", e.target.value)}
-                placeholder="170"
-                min="100"
-                max="250"
-              />
-              {fieldErrors.height && (
-                <p className="text-xs text-red-600 mt-1">{fieldErrors.height}</p>
-              )}
-            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="height" className="text-sm font-semibold text-gray-700">Altura (cm)</Label>
+                <Input
+                  id="height"
+                  type="number"
+                  value={formData.height}
+                  onChange={(e) => handleInputChange("height", e.target.value)}
+                  placeholder="170"
+                  min="100"
+                  max="250"
+                  className="h-12 text-base font-medium"
+                />
+                {fieldErrors.height && (
+                  <p className="text-xs text-red-600 mt-1">{fieldErrors.height}</p>
+                )}
+              </div>
 
-            <div>
-              <Label htmlFor="weight">Peso (kg)</Label>
-              <Input
-                id="weight"
-                type="number"
-                value={formData.weight}
-                onChange={(e) => handleInputChange("weight", e.target.value)}
-                placeholder="70"
-                min="30"
-                max="200"
-              />
-              {fieldErrors.weight && (
-                <p className="text-xs text-red-600 mt-1">{fieldErrors.weight}</p>
-              )}
+              <div className="space-y-2">
+                <Label htmlFor="weight" className="text-sm font-semibold text-gray-700">Peso (kg)</Label>
+                <Input
+                  id="weight"
+                  type="number"
+                  value={formData.weight}
+                  onChange={(e) => handleInputChange("weight", e.target.value)}
+                  placeholder="70"
+                  min="30"
+                  max="200"
+                  className="h-12 text-base font-medium"
+                />
+                {fieldErrors.weight && (
+                  <p className="text-xs text-red-600 mt-1">{fieldErrors.weight}</p>
+                )}
+              </div>
             </div>
           </div>
-        </FormSection>
+        </div>
 
         {/* Notification Preferences */}
-        <FormSection>
-          <FormSectionTitle>
-            <Bell className="w-5 h-5 inline mr-2 text-blue-600" />
-            Notificaciones
-          </FormSectionTitle>
-          <div className="space-y-4">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-gray-200 shadow-sm">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md">
+              <Bell className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900">Notificaciones</h3>
+              <p className="text-sm text-gray-600">Gestiona tus alertas</p>
+            </div>
+          </div>
+          <div className="space-y-3">
             {Object.entries(notificationPreferences).map(([key, value]) => (
               <div key={key} className="flex items-center justify-between py-3 sm:py-4 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] xs:min-h-[48px] xs:min-h-[52px] sm:min-h-[56px] px-4 sm:px-5 bg-white rounded-xl hover:bg-gray-50 transition-colors border border-gray-100">
                 <span className="text-sm sm:text-base text-gray-800 font-medium">
@@ -831,26 +886,31 @@ export function SettingsScreen() {
               </div>
             ))}
           </div>
-        </FormSection>
+        </div>
 
         {/* Danger Zone */}
-        <FormSection>
-          <div className="flex items-center gap-2 mb-4">
-            <AlertCircle className="w-5 h-5 text-red-600" />
-            <h3 className="text-sm xs:text-base md:text-base sm:text-lg font-bold text-red-600">Zona de peligro</h3>
+        <div className="bg-gradient-to-br from-red-50 to-pink-50 rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-red-200 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-md">
+              <AlertCircle className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg sm:text-xl font-bold text-red-600">Zona de peligro</h3>
+              <p className="text-xs text-red-600/80">Acciones irreversibles</p>
+            </div>
           </div>
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-gray-700 mb-5">
             Una vez que elimines tu cuenta, no hay vuelta atrás. Por favor, está seguro.
           </p>
           <Button
             onClick={() => setShowDeleteConfirm(true)}
             variant="destructive"
-            className="w-full"
+            className="w-full h-12 text-base font-semibold shadow-md hover:shadow-lg transition-all"
           >
-            <Trash2 className="w-4 h-4 mr-2" />
-            Eliminar cuenta
+            <Trash2 className="w-5 h-5 mr-2" />
+            Eliminar cuenta permanentemente
           </Button>
-        </FormSection>
+        </div>
       </PageContent>
 
       {/* Camera Modal */}
