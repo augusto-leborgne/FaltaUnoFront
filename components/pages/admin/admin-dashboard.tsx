@@ -2020,6 +2020,11 @@ export default function AdminDashboard() {
                       <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-3 py-1 text-xs font-semibold text-red-700">
                         Eliminado
                       </span>
+                    ) : selectedUser.bannedAt ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
+                        <ShieldOff className="h-3 w-3" />
+                        Baneado
+                      </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
                         Activo
@@ -2052,17 +2057,44 @@ export default function AdminDashboard() {
                   )}
                 </Button>
                 {!selectedUser.deleted_at && (
-                  <Button
-                    variant="destructive"
-                    onClick={() => {
-                      setSelectedUser(null)
-                      openDeleteModal(selectedUser.id)
-                    }}
-                    className="w-full sm:w-auto"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Eliminar Usuario
-                  </Button>
+                  <>
+                    {selectedUser.bannedAt ? (
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedUser(null)
+                          handleUnbanUser(selectedUser.id)
+                        }}
+                        className="w-full sm:w-auto text-green-600 hover:text-green-700 hover:bg-green-50 border-green-300"
+                      >
+                        <Shield className="h-4 w-4 mr-2" />
+                        Desbanear Usuario
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="destructive"
+                        onClick={() => {
+                          setSelectedUser(null)
+                          openBanModal(selectedUser)
+                        }}
+                        className="w-full sm:w-auto"
+                      >
+                        <ShieldOff className="h-4 w-4 mr-2" />
+                        Banear Usuario
+                      </Button>
+                    )}
+                    <Button
+                      variant="destructive"
+                      onClick={() => {
+                        setSelectedUser(null)
+                        openDeleteModal(selectedUser.id)
+                      }}
+                      className="w-full sm:w-auto"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Eliminar Usuario
+                    </Button>
+                  </>
                 )}
               </div>
             </div>
@@ -2263,11 +2295,11 @@ export default function AdminDashboard() {
           onClick={closeBanModal}
         >
           <div
-            className="max-w-md w-full bg-white rounded-lg shadow-xl p-6"
+            className="max-w-md w-full bg-white rounded-lg shadow-xl max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-4 p-6 pb-0">
               <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
                 <ShieldOff className="h-6 w-6 text-red-600" />
               </div>
@@ -2282,7 +2314,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Body */}
-            <div className="mb-6 space-y-4">
+            <div className="mb-6 space-y-4 px-6">
               {/* Tipo de baneo */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">
@@ -2376,7 +2408,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Footer */}
-            <div className="flex gap-3">
+            <div className="flex gap-3 p-6 pt-0">
               <Button
                 onClick={closeBanModal}
                 variant="outline"
