@@ -87,7 +87,12 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       // Usar API_BASE centralizado desde api.ts
       // Usuario
       const userRes = await fetch(`${API_BASE}/api/usuarios/${userId}`, {
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        headers: { 
+          Authorization: `Bearer ${token}`, 
+          "Content-Type": "application/json",
+          "Cache-Control": "no-cache"
+        },
+        cache: "no-store"
       })
 
       if (!userRes.ok) {
@@ -256,7 +261,8 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
         setFriendStatus('none')
         setMutualFriends([]) // Limpiar amigos en común
         alert("Amigo eliminado correctamente")
-        await loadUserProfile()
+        // Recargar después de un pequeño delay para asegurar que el backend procesó el cambio
+        setTimeout(() => loadUserProfile(), 500)
       } else {
         alert(response.message || "Error al eliminar amigo")
       }
@@ -380,7 +386,8 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
         } as any : null)
         alert(`Usuario baneado ${banType === "permanent" ? "permanentemente" : `por ${banDuration} días`}`)
         closeBanModal()
-        await loadUserProfile() // Recargar perfil para mostrar estado de baneo
+        // Recargar después de un pequeño delay para asegurar que el backend procesó el cambio
+        setTimeout(() => loadUserProfile(), 500)
       } else {
         alert("Error al banear usuario")
       }
@@ -411,7 +418,8 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
           return rest
         })
         alert("Usuario desbaneado correctamente")
-        await loadUserProfile()
+        // Recargar después de un pequeño delay para asegurar que el backend procesó el cambio
+        setTimeout(() => loadUserProfile(), 500)
       } else {
         alert("Error al desbanear usuario")
       }
@@ -440,7 +448,8 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
         // Actualización optimista del estado
         setUser(prev => prev ? { ...prev, rol: newRole } as any : null)
         alert(`Rol cambiado a ${newRole} correctamente`)
-        await loadUserProfile()
+        // Recargar después de un pequeño delay para asegurar que el backend procesó el cambio
+        setTimeout(() => loadUserProfile(), 500)
       } else {
         alert("Error al cambiar rol")
       }
