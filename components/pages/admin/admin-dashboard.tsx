@@ -423,6 +423,7 @@ export default function AdminDashboard() {
     setBanReason("")
     setBanDuration(7)
     setBanType("temporary")
+    setSelectedUser(null)
   }
 
   const handleBanUser = async () => {
@@ -2061,9 +2062,9 @@ export default function AdminDashboard() {
                     {selectedUser.bannedAt ? (
                       <Button
                         variant="outline"
-                        onClick={() => {
+                        onClick={async () => {
                           setSelectedUser(null)
-                          handleUnbanUser(selectedUser.id)
+                          await handleUnbanUser(selectedUser.id)
                         }}
                         className="w-full sm:w-auto text-green-600 hover:text-green-700 hover:bg-green-50 border-green-300"
                       >
@@ -2074,7 +2075,6 @@ export default function AdminDashboard() {
                       <Button
                         variant="destructive"
                         onClick={() => {
-                          setSelectedUser(null)
                           openBanModal(selectedUser)
                         }}
                         className="w-full sm:w-auto"
