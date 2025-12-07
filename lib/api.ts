@@ -145,6 +145,8 @@ export interface Usuario {
   deleted_at?: string; // Para soft-deleted users (ISO 8601)
   bannedAt?: string; // ISO 8601 timestamp
   banReason?: string;
+  banUntil?: string; // ISO 8601 timestamp
+  bannedBy?: string; // UUID del admin que baneó
   lastActivityAt?: string; // ISO 8601 timestamp
   createdAt?: string; // ISO 8601 timestamp
   deletedAt?: string; // ISO 8601 timestamp (mismo que deleted_at, para consistencia)

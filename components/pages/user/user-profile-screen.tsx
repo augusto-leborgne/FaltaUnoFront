@@ -42,6 +42,12 @@ interface Usuario {
   ubicacion?: string
   cedula?: string
   created_at?: string
+  rol?: string // 'USER' | 'ADMIN'
+  bannedAt?: string // ISO 8601 timestamp
+  banReason?: string
+  banUntil?: string // ISO 8601 timestamp
+  bannedBy?: string // UUID del admin que baneó
+  deleted_at?: string // Para soft-deleted users (ISO 8601)
 }
 
 interface UserProfileScreenProps {
@@ -89,10 +95,8 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       const userRes = await fetch(`${API_BASE}/api/usuarios/${userId}`, {
         headers: { 
           Authorization: `Bearer ${token}`, 
-          "Content-Type": "application/json",
-          "Cache-Control": "no-cache"
-        },
-        cache: "no-store"
+          "Content-Type": "application/json"
+        }
       })
 
       if (!userRes.ok) {
@@ -257,12 +261,8 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       const response = await AmistadAPI.eliminarAmistad(amistad.id)
 
       if (response.success) {
-        // Actualización optimista del estado
-        setFriendStatus('none')
-        setMutualFriends([]) // Limpiar amigos en común
         alert("Amigo eliminado correctamente")
-        // Recargar después de un pequeño delay para asegurar que el backend procesó el cambio
-        setTimeout(() => loadUserProfile(), 500)
+        await loadUserProfile()
       } else {
         alert(response.message || "Error al eliminar amigo")
       }
@@ -378,16 +378,9 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       })
 
       if (response.ok) {
-        // Actualización optimista del estado
-        setUser(prev => prev ? { 
-          ...prev, 
-          bannedAt: new Date().toISOString(),
-          banReason: banReason,
-        } as any : null)
         alert(`Usuario baneado ${banType === "permanent" ? "permanentemente" : `por ${banDuration} días`}`)
         closeBanModal()
-        // Recargar después de un pequeño delay para asegurar que el backend procesó el cambio
-        setTimeout(() => loadUserProfile(), 500)
+        await loadUserProfile()
       } else {
         alert("Error al banear usuario")
       }
@@ -411,15 +404,8 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       })
 
       if (response.ok) {
-        // Actualización optimista del estado
-        setUser(prev => {
-          if (!prev) return null
-          const { bannedAt, banReason, banUntil, bannedBy, ...rest } = prev as any
-          return rest
-        })
         alert("Usuario desbaneado correctamente")
-        // Recargar después de un pequeño delay para asegurar que el backend procesó el cambio
-        setTimeout(() => loadUserProfile(), 500)
+        await loadUserProfile()
       } else {
         alert("Error al desbanear usuario")
       }
@@ -430,7 +416,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
   }
 
   const handleToggleRole = async () => {
-    const newRole = (user as any).rol === "ADMIN" ? "USER" : "ADMIN"
+    const newRole = user?.rol === "ADMIN" ? "USER" : "ADMIN"
     if (!confirm(`¿Cambiar rol a ${newRole}?`)) return
 
     try {
@@ -445,11 +431,8 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       })
 
       if (response.ok) {
-        // Actualización optimista del estado
-        setUser(prev => prev ? { ...prev, rol: newRole } as any : null)
         alert(`Rol cambiado a ${newRole} correctamente`)
-        // Recargar después de un pequeño delay para asegurar que el backend procesó el cambio
-        setTimeout(() => loadUserProfile(), 500)
+        await loadUserProfile()
       } else {
         alert("Error al cambiar rol")
       }
@@ -522,7 +505,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
 
   const fullName = `${user.nombre || ""} ${user.apellido || ""}`.trim() || "Usuario"
   const edad = calcularEdad(user.fechaNacimiento)
-  const fotoBase64 = (user as any).foto_perfil || (user as any).fotoPerfil
+  const fotoBase64 = user?.foto_perfil || user?.fotoPerfil
   const averageRating =
     reviews.length > 0
       ? (
@@ -563,9 +546,9 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
             </Avatar>
             <div className="flex-1 min-w-0">
               <h2 className="text-xs xs:text-sm sm:text-base md:text-lg md:text-xl md:text-xl font-bold text-foreground truncate">{fullName}</h2>
-              <p className="text-xs xs:text-sm text-muted-foreground truncate">{(user as any).posicion || "Sin posición preferida"}</p>
-              {(user as any).ubicacion && (
-                <p className="text-xs xs:text-sm text-muted-foreground truncate">{(user as any).ubicacion}</p>
+              <p className="text-xs xs:text-sm text-muted-foreground truncate">{user?.posicion || "Sin posición preferida"}</p>
+              {user?.ubicacion && (
+                <p className="text-xs xs:text-sm text-muted-foreground truncate">{user?.ubicacion}</p>
               )}
               {user.celular && <p className="text-xs xs:text-sm text-muted-foreground">{user.celular}</p>}
             </div>
@@ -688,12 +671,12 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                 </div>
 
                 {/* Ban/Unban */}
-                {(user as any).bannedAt ? (
+                {user?.bannedAt ? (
                   <div className="space-y-2">
                     <div className="bg-red-50 border border-red-200 rounded-lg xs:rounded-xl p-2.5 xs:p-3">
                       <p className="text-[10px] xs:text-xs font-medium text-red-700">Usuario Baneado</p>
                       <p className="text-[10px] xs:text-xs text-red-600 mt-1">
-                        Razón: {(user as any).banReason || "Sin razón especificada"}
+                        Razón: {user?.banReason || "Sin razón especificada"}
                       </p>
                     </div>
                     <Button
@@ -722,11 +705,11 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
                   className="w-full border-blue-300 text-blue-700 hover:bg-blue-50 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
                 >
                   <Shield className="w-3.5 xs:w-4 h-3.5 xs:h-4 mr-1.5 xs:mr-2" />
-                  {(user as any).rol === "ADMIN" ? "Quitar Admin" : "Hacer Admin"}
+                  {user?.rol === "ADMIN" ? "Quitar Admin" : "Hacer Admin"}
                 </Button>
 
                 {/* Delete User */}
-                {!(user as any).deleted_at && (
+                {!user?.deleted_at && (
                   <Button
                     onClick={handleDeleteUser}
                     variant="outline"
