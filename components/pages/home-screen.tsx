@@ -142,11 +142,12 @@ export function HomeScreen() {
         const matchesData = matchesResult.value
         const partidos = Array.isArray(matchesData.data) ? matchesData.data : []
 
-        // Filtrar solo próximos partidos
+        // Filtrar solo próximos partidos DISPONIBLES o CONFIRMADOS (excluir CANCELADO y COMPLETADO)
         const now = new Date()
         const proximos = partidos.filter((p: any) => {
           const fechaPartido = new Date(`${p.fecha}T${p.hora}`)
-          return fechaPartido > now
+          const estadoValido = p.estado === 'DISPONIBLE' || p.estado === 'CONFIRMADO'
+          return fechaPartido > now && estadoValido
         }).slice(0, 5)
 
         setUpcomingMatches(proximos)
@@ -487,7 +488,7 @@ export function HomeScreen() {
                       </Badge>
                     </div>
                     <Badge className={`${getSpotsLeftColor(spotsLeft)} hover:bg-current text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1 whitespace-nowrap flex-shrink-0`}>
-                      {spotsLeft === 0 ? "Completo" : `${spotsLeft} lugar${spotsLeft !== 1 ? 'es' : ''}`}
+                      {spotsLeft === 0 ? "Completo" : spotsLeft === 1 ? "Falta 1" : `Faltan ${spotsLeft}`}
                     </Badge>
                   </div>
 

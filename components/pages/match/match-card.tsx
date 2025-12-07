@@ -49,6 +49,13 @@ function MatchCardComponent({
     return "bg-green-500";
   };
 
+  // Formatear texto de disponibilidad: "Falta 1" o "Faltan n"
+  const getDisponibilidadText = () => {
+    if (estaLleno) return "Completo";
+    if (cuposDisponibles === 1) return "Falta 1";
+    return `Faltan ${cuposDisponibles}`;
+  };
+
   // Formatear fecha y hora
   const fechaFormateada = formatDateRegional(match.fecha);
   const tipoFormateado = formatMatchType(match.tipoPartido || match.tipo_partido || "");
@@ -70,7 +77,7 @@ function MatchCardComponent({
         
         {/* Cupos Badge */}
         <Badge className={`${getCuposColor()} text-white`}>
-          {estaLleno ? "Completo" : `${cuposDisponibles} cupos`}
+          {getDisponibilidadText()}
         </Badge>
       </div>
 

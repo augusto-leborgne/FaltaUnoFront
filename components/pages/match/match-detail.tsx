@@ -480,7 +480,7 @@ export default function MatchDetail({ matchId }: MatchDetailProps) {
               )}
             </div>
             <Badge className={`${getSpotsLeftColor(spotsLeft)} hover:bg-current text-xs xs:text-sm sm:text-base px-2.5 xs:px-3 py-1 font-semibold whitespace-nowrap flex-shrink-0`}>
-              {spotsLeft === 0 ? "Completo" : `Quedan ${spotsLeft}`}
+              {spotsLeft === 0 ? "Completo" : spotsLeft === 1 ? "Falta 1" : `Faltan ${spotsLeft}`}
             </Badge>
           </div>
 

@@ -169,10 +169,13 @@ export function MyMatchesScreen() {
     if (spotsLeft === 0) {
       return <Badge className="bg-red-100 text-red-800 hover:bg-red-100 text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1 whitespace-nowrap">Completo</Badge>
     }
-    if (spotsLeft <= 3) {
-      return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1 whitespace-nowrap">{spotsLeft} lugar{spotsLeft !== 1 ? 'es' : ''}</Badge>
+    if (spotsLeft === 1) {
+      return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1 whitespace-nowrap">Falta 1</Badge>
     }
-    return <Badge className="bg-green-100 text-green-800 hover:bg-green-100 text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1 whitespace-nowrap">{spotsLeft} lugares</Badge>
+    if (spotsLeft <= 3) {
+      return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100 text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1 whitespace-nowrap">Faltan {spotsLeft}</Badge>
+    }
+    return <Badge className="bg-green-100 text-green-800 hover:bg-green-100 text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1 whitespace-nowrap">Faltan {spotsLeft}</Badge>
   }
 
   if (loading) {
