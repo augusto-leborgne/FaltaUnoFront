@@ -463,6 +463,37 @@ export default function AdminDashboard() {
     }
   }
 
+  const handleUnbanUser = async (userId: string) => {
+    if (!confirm("¿Estás seguro de que deseas desbanear a este usuario?")) {
+      return
+    }
+
+    try {
+      setError(null)
+      await authenticatedFetch(`${API_URL}/admin/usuarios/${userId}/unban`, {
+        method: "PUT",
+      })
+
+      // Actualizar lista de usuarios
+      setUsuarios((prev) =>
+        prev.map((u) =>
+          u.id === userId ? { ...u, bannedAt: undefined } : u
+        )
+      )
+
+      setSuccessMessage("Usuario desbaneado correctamente")
+      setTimeout(() => setSuccessMessage(null), 3000)
+      // Recargar datos
+      if (user && user.rol === "ADMIN") {
+        window.location.reload()
+      }
+    } catch (error) {
+      logger.error("[AdminDashboard] Error desbaneando usuario:", error)
+      setError("Error al desbanear usuario: " + (error instanceof Error ? error.message : "Error desconocido"))
+      setTimeout(() => setError(null), 5000)
+    }
+  }
+
   const handleResolveReport = async (reportId: number, action: string) => {
     try {
       setError(null)
@@ -1034,23 +1065,46 @@ export default function AdminDashboard() {
                                 >
                                   <Eye className="h-4 w-4" />
                                 </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleToggleRole(usuario.id, usuario.rol || "USER")}
-                                  title={
-                                    usuario.rol === "ADMIN"
-                                      ? "Quitar permisos de admin"
-                                      : "Hacer administrador"
-                                  }
-                                >
-                                  {usuario.rol === "ADMIN" ? (
-                                    <ShieldOff className="h-4 w-4" />
-                                  ) : (
+                                {usuario.bannedAt ? (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleUnbanUser(usuario.id)}
+                                    title="Desbanear usuario"
+                                    className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                                  >
                                     <Shield className="h-4 w-4" />
-                                  )}
-                                </Button>
-                                {!usuario.deleted_at && (
+                                  </Button>
+                                ) : (
+                                  <>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => openBanModal(usuario)}
+                                      title="Banear usuario"
+                                      className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                                    >
+                                      <ShieldOff className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleToggleRole(usuario.id, usuario.rol || "USER")}
+                                      title={
+                                        usuario.rol === "ADMIN"
+                                          ? "Quitar permisos de admin"
+                                          : "Hacer administrador"
+                                      }
+                                    >
+                                      {usuario.rol === "ADMIN" ? (
+                                        <ShieldOff className="h-4 w-4" />
+                                      ) : (
+                                        <Shield className="h-4 w-4" />
+                                      )}
+                                    </Button>
+                                  </>
+                                )}
+                                {!usuario.deleted_at && !usuario.bannedAt && (
                                   <Button
                                     variant="destructive"
                                     size="sm"
@@ -1142,25 +1196,48 @@ export default function AdminDashboard() {
                           <Eye className="h-3 w-3 mr-1" />
                           Ver
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleToggleRole(usuario.id, usuario.rol || "USER")}
-                          className="flex-1"
-                        >
-                          {usuario.rol === "ADMIN" ? (
-                            <>
+                        {usuario.bannedAt ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleUnbanUser(usuario.id)}
+                            className="flex-1 text-green-600 hover:text-green-700"
+                          >
+                            <Shield className="h-3 w-3 mr-1" />
+                            Desbanear
+                          </Button>
+                        ) : (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openBanModal(usuario)}
+                              className="flex-1 text-orange-600 hover:text-orange-700"
+                            >
                               <ShieldOff className="h-3 w-3 mr-1" />
-                              Quitar
-                            </>
-                          ) : (
-                            <>
-                              <Shield className="h-3 w-3 mr-1" />
-                              Admin
-                            </>
-                          )}
-                        </Button>
-                        {!usuario.deleted_at && (
+                              Banear
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleToggleRole(usuario.id, usuario.rol || "USER")}
+                              className="flex-1"
+                            >
+                              {usuario.rol === "ADMIN" ? (
+                                <>
+                                  <ShieldOff className="h-3 w-3 mr-1" />
+                                  Quitar
+                                </>
+                              ) : (
+                                <>
+                                  <Shield className="h-3 w-3 mr-1" />
+                                  Admin
+                                </>
+                              )}
+                            </Button>
+                          </>
+                        )}
+                        {!usuario.deleted_at && !usuario.bannedAt && (
                           <Button
                             variant="destructive"
                             size="sm"
@@ -1667,7 +1744,17 @@ export default function AdminDashboard() {
                                       <Eye className="h-3 w-3 mr-1" />
                                       Ver perfil
                                     </Button>
-                                    {!user.bannedAt && (
+                                    {user.bannedAt ? (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleUnbanUser(user.id)}
+                                        className="text-xs text-green-600 hover:text-green-700 hover:bg-green-50"
+                                      >
+                                        <Shield className="h-3 w-3 mr-1" />
+                                        Desbanear
+                                      </Button>
+                                    ) : (
                                       <Button
                                         size="sm"
                                         variant="destructive"
@@ -1710,20 +1797,32 @@ export default function AdminDashboard() {
                             ))}
 
                             {/* Acciones rápidas del grupo */}
-                            {pendingReports > 0 && !user.bannedAt && (
+                            {pendingReports > 0 && (
                               <div className="p-3 bg-gray-50 border-t">
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => {
-                                    openBanModal(user)
-                                    setBanReason(`Usuario con ${totalReports} reportes`)
-                                  }}
-                                  className="w-full text-xs"
-                                >
-                                  <ShieldOff className="h-3 w-3 mr-1" />
-                                  Banear usuario ({totalReports} reportes)
-                                </Button>
+                                {user.bannedAt ? (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleUnbanUser(user.id)}
+                                    className="w-full text-xs text-green-600 hover:text-green-700 hover:bg-green-50"
+                                  >
+                                    <Shield className="h-3 w-3 mr-1" />
+                                    Desbanear usuario
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => {
+                                      openBanModal(user)
+                                      setBanReason(`Usuario con ${totalReports} reportes`)
+                                    }}
+                                    className="w-full text-xs"
+                                  >
+                                    <ShieldOff className="h-3 w-3 mr-1" />
+                                    Banear usuario ({totalReports} reportes)
+                                  </Button>
+                                )}
                               </div>
                             )}
                           </div>
