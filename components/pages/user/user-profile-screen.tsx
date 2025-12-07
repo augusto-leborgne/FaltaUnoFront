@@ -123,18 +123,47 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
         setReviews(revJson?.data || [])
       }
 
-      // Verificar estado de amistad
-      const amigosResponse = await AmistadAPI.listarAmigos()
-      const pendientesEnviadasResponse = await AmistadAPI.listarSolicitudesEnviadas()
-      const pendientesRecibidasResponse = await AmistadAPI.listarSolicitudesPendientes()
+      // Verificar estado de amistad usando endpoint específico
+      try {
+        const estadoRes = await fetch(`${API_BASE}/api/amistades/estado/${userId}`, {
+          headers: { 
+            Authorization: `Bearer ${token}`, 
+            "Content-Type": "application/json" 
+          },
+        })
+        
+        if (estadoRes.ok) {
+          const estadoJson = await estadoRes.json()
+          const estado = estadoJson?.data
+          
+          if (estado?.existe) {
+            if (estado.estado === 'ACEPTADA') {
+              setFriendStatus('friends')
+            } else if (estado.estado === 'PENDIENTE') {
+              // Si solicitudEnviada es true, yo envié la solicitud
+              // Si solicitudRecibida es true, yo recibí la solicitud
+              if (estado.solicitudEnviada) {
+                setFriendStatus('pending-sent')
+              } else if (estado.solicitudRecibida) {
+                setFriendStatus('pending-received')
+              }
+            }
+          } else {
+            setFriendStatus('none')
+          }
+        }
+      } catch (error) {
+        logger.error("[UserProfile] Error verificando estado de amistad:", error)
+        setFriendStatus('none')
+      }
 
-      // Obtener amigos del usuario actual
-      const misAmigos = amigosResponse.success && amigosResponse.data ?
-        amigosResponse.data.map((amistad: any) => amistad.amigo?.id || amistad.amigoId) : []
+      // Obtener amigos en común
+      try {
+        const amigosResponse = await AmistadAPI.listarAmigos()
+        const misAmigos = amigosResponse.success && amigosResponse.data ?
+          amigosResponse.data.map((amistad: any) => amistad.amigo?.id || amistad.amigoId) : []
 
-      // Obtener amigos del usuario que estamos viendo
-      if (misAmigos.length > 0) {
-        try {
+        if (misAmigos.length > 0) {
           const userFriendsRes = await fetch(`${API_BASE}/api/amistades/amigos/${userId}`, {
             headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
           })
@@ -150,48 +179,9 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
             setMutualFriends(amigosEnComun)
             logger.log("[UserProfile] Amigos en común encontrados:", amigosEnComun.length)
           }
-        } catch (error) {
-          logger.error("[UserProfile] Error cargando amigos en común:", error)
         }
-      }
-
-      // Verificar si ya son amigos
-      if (amigosResponse.success && amigosResponse.data) {
-        const esAmigo = amigosResponse.data.some((amistad: any) => {
-          // El amigo puede estar en cualquier dirección de la relación
-          const amigoId = amistad.amigo?.id || amistad.amigoId
-          const usuarioId1 = amistad.usuario?.id || amistad.usuarioId
-          
-          // Verificar ambas direcciones de la amistad
-          return amigoId === userId || usuarioId1 === userId
-        })
-        if (esAmigo) {
-          setFriendStatus('friends')
-          setLoading(false)
-          return
-        }
-      }
-
-      // Verificar si hay solicitud enviada
-      if (pendientesEnviadasResponse.success && pendientesEnviadasResponse.data) {
-        const solicitudEnviada = pendientesEnviadasResponse.data.some((solicitud: any) =>
-          solicitud.amigoId === userId || solicitud.amigo?.id === userId
-        )
-        if (solicitudEnviada) {
-          setFriendStatus('pending-sent')
-          setLoading(false)
-          return
-        }
-      }
-
-      // Verificar si hay solicitud recibida
-      if (pendientesRecibidasResponse.success && pendientesRecibidasResponse.data) {
-        const solicitudRecibida = pendientesRecibidasResponse.data.some((solicitud: any) =>
-          solicitud.usuarioId === userId || solicitud.usuario?.id === userId
-        )
-        if (solicitudRecibida) {
-          setFriendStatus('pending-received')
-        }
+      } catch (error) {
+        logger.error("[UserProfile] Error cargando amigos en común:", error)
       }
     } catch (err: any) {
       if (err?.name !== "AbortError") {
