@@ -217,7 +217,9 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       const response = await AmistadAPI.enviarSolicitud(userId)
 
       if (response.success) {
+        // Actualización optimista del estado
         setFriendStatus('pending-sent')
+        alert("Solicitud enviada correctamente")
       } else {
         alert(response.message || "Error al enviar solicitud")
       }
@@ -250,8 +252,11 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       const response = await AmistadAPI.eliminarAmistad(amistad.id)
 
       if (response.success) {
+        // Actualización optimista del estado
         setFriendStatus('none')
         setMutualFriends([]) // Limpiar amigos en común
+        alert("Amigo eliminado correctamente")
+        await loadUserProfile()
       } else {
         alert(response.message || "Error al eliminar amigo")
       }
@@ -280,7 +285,9 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       const response = await AmistadAPI.aceptarSolicitud(solicitud.id)
 
       if (response.success) {
+        // Actualización optimista del estado
         setFriendStatus('friends')
+        alert("Solicitud aceptada correctamente")
         // Reload to get mutual friends
         await loadUserProfile()
       } else {
@@ -315,7 +322,9 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       const response = await AmistadAPI.rechazarSolicitud(solicitud.id)
 
       if (response.success) {
+        // Actualización optimista del estado
         setFriendStatus('none')
+        alert("Solicitud rechazada")
       } else {
         alert(response.message || "Error al rechazar solicitud")
       }
@@ -363,9 +372,15 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       })
 
       if (response.ok) {
+        // Actualización optimista del estado
+        setUser(prev => prev ? { 
+          ...prev, 
+          bannedAt: new Date().toISOString(),
+          banReason: banReason,
+        } as any : null)
         alert(`Usuario baneado ${banType === "permanent" ? "permanentemente" : `por ${banDuration} días`}`)
         closeBanModal()
-        loadUserProfile() // Recargar perfil para mostrar estado de baneo
+        await loadUserProfile() // Recargar perfil para mostrar estado de baneo
       } else {
         alert("Error al banear usuario")
       }
@@ -389,8 +404,14 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       })
 
       if (response.ok) {
+        // Actualización optimista del estado
+        setUser(prev => {
+          if (!prev) return null
+          const { bannedAt, banReason, banUntil, bannedBy, ...rest } = prev as any
+          return rest
+        })
         alert("Usuario desbaneado correctamente")
-        loadUserProfile()
+        await loadUserProfile()
       } else {
         alert("Error al desbanear usuario")
       }
@@ -416,8 +437,10 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       })
 
       if (response.ok) {
+        // Actualización optimista del estado
+        setUser(prev => prev ? { ...prev, rol: newRole } as any : null)
         alert(`Rol cambiado a ${newRole} correctamente`)
-        loadUserProfile()
+        await loadUserProfile()
       } else {
         alert("Error al cambiar rol")
       }
