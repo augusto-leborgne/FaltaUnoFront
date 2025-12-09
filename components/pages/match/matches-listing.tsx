@@ -337,6 +337,25 @@ export function MatchesListing() {
 
         {/* Search and Filters */}
         <div className="px-2 xs:px-3 sm:px-4 md:px-6 md:px-8 pt-3 xs:pt-4 sm:pt-5 pb-2.5 xs:pb-3 sm:pb-4">
+          {/* Search bar and Filter button - Above map */}
+          <div className="flex items-center gap-2 xs:gap-3 mb-3 xs:mb-4">
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="Buscar partido..."
+                className="w-full px-3 xs:px-4 py-2.5 xs:py-3 rounded-lg xs:rounded-xl border-2 border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 text-xs xs:text-sm transition-all"
+              />
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              className="rounded-lg xs:rounded-xl flex-shrink-0 border-2 border-gray-200 hover:bg-gray-50 active:bg-gray-100 min-h-[40px] xs:min-h-[44px] min-w-[40px] xs:min-w-[44px] flex items-center justify-center touch-manipulation active:scale-95"
+            >
+              <Filter className="w-4 xs:w-5 h-4 xs:h-5" />
+            </Button>
+          </div>
+
           {/* Interactive Map - Responsive height - Estilo Airbnb */}
           <MatchesMapViewEnhanced
             matches={matches}
@@ -364,32 +383,6 @@ export function MatchesListing() {
             className="h-[220px] xs:h-[250px] sm:h-[300px] md:h-[350px] mb-3 xs:mb-4 sm:mb-6 rounded-lg xs:rounded-xl sm:rounded-2xl overflow-hidden shadow-md"
           />
 
-          {/* Quick Filters - Better mobile scroll */}
-          <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-3 mb-3 xs:mb-4">
-            <div className="flex gap-1.5 xs:gap-2 flex-1 overflow-x-auto pb-1 scrollbar-hide -mx-3 xs:-mx-4 px-3 xs:px-4 sm:mx-0 sm:px-0">
-              {quickFilters.map((filter) => (
-                <button
-                  key={filter.label}
-                  onClick={() => toggleFilter(filter.label)}
-                  className={`px-3 xs:px-4 sm:px-5 py-2.5 xs:py-2.5 sm:py-3 rounded-lg xs:rounded-xl text-xs xs:text-sm sm:text-base font-semibold transition-all duration-200 touch-manipulation min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] whitespace-nowrap active:scale-95 ${selectedFilters.includes(filter.label)
-                    ? "bg-orange-500 text-white shadow-lg"
-                    : "bg-white text-gray-700 border-2 border-gray-200 hover:bg-orange-50 active:bg-orange-100 hover:border-orange-300"
-                    }`}
-                >
-                  {filter.label}
-                </button>
-              ))}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
-              className="rounded-lg xs:rounded-xl flex-shrink-0 border-2 border-gray200 hover:bg-gray-50 active:bg-gray-100 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] flex items-center justify-center touch-manipulation active:scale-95"
-            >
-              <Filter className="w-4.5 xs:w-5 h-4.5 xs:h-5" />
-            </Button>
-          </div>
-
           {/* Active Filters Count */}
           {selectedFilters.length > 0 && (
             <div className="mb-2.5 xs:mb-3 flex items-center justify-between bg-orange-50 rounded-lg p-2 xs:p-2.5 sm:p-3">
@@ -407,7 +400,7 @@ export function MatchesListing() {
             </div>
           )}
 
-          {/* Advanced Filters - Better mobile layout */}
+          {/* Advanced Filters - Complete */}
           {showAdvancedFilters && (
             <div className="bg-white border border-gray-200 rounded-lg xs:rounded-xl sm:rounded-2xl p-2.5 xs:p-3 sm:p-4 mb-3 xs:mb-4 shadow-sm">
               <div className="flex items-center justify-between mb-2.5 xs:mb-3">
@@ -421,7 +414,7 @@ export function MatchesListing() {
                   <X className="w-4 h-4" />
                 </Button>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-3 xs:space-y-4">
                 {/* Tipo de partido */}
                 <div>
                   <h4 className="text-[10px] xs:text-xs sm:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2">Tipo de partido</h4>
@@ -430,9 +423,9 @@ export function MatchesListing() {
                       <button
                         key={type}
                         onClick={() => toggleFilter(type)}
-                        className={`px-2.5 xs:px-3 py-1.5 xs:py-1.5 sm:py-2 rounded-full text-[10px] xs:text-xs sm:text-sm font-medium transition-all duration-200 touch-manipulation min-h-[36px] xs:min-h-[40px] ${selectedFilters.includes(type)
-                          ? "bg-orange-500 text-white shadow-md"
-                          : "bg-gray-50 text-gray-700 border border-gray-200 hover:bg-orange-50 active:border-orange-300"
+                        className={`px-2.5 xs:px-3 py-1.5 xs:py-2 rounded-full text-[10px] xs:text-xs sm:text-sm font-medium transition-all duration-200 touch-manipulation min-h-[32px] xs:min-h-[36px] ${selectedFilters.includes(type)
+                          ? "bg-green-600 text-white shadow-md"
+                          : "bg-gray-50 text-gray-700 border border-gray-200 hover:bg-green-50 active:border-green-300"
                           }`}
                       >
                         {type}
@@ -440,6 +433,95 @@ export function MatchesListing() {
                     ))}
                   </div>
                 </div>
+
+                {/* Género */}
+                <div>
+                  <h4 className="text-[10px] xs:text-xs sm:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2">Género</h4>
+                  <div className="flex flex-wrap gap-1.5 xs:gap-2">
+                    {["Mixto", "Hombres", "Mujeres"].map((gender) => (
+                      <button
+                        key={gender}
+                        onClick={() => toggleFilter(gender)}
+                        className={`px-2.5 xs:px-3 py-1.5 xs:py-2 rounded-full text-[10px] xs:text-xs sm:text-sm font-medium transition-all duration-200 touch-manipulation min-h-[32px] xs:min-h-[36px] ${selectedFilters.includes(gender)
+                          ? "bg-green-600 text-white shadow-md"
+                          : "bg-gray-50 text-gray-700 border border-gray-200 hover:bg-green-50 active:border-green-300"
+                          }`}
+                      >
+                        {gender}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Fecha */}
+                <div>
+                  <h4 className="text-[10px] xs:text-xs sm:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2">Fecha</h4>
+                  <div className="flex flex-wrap gap-1.5 xs:gap-2">
+                    {["Hoy", "Mañana", "Esta semana", "Próximos 7 días"].map((date) => (
+                      <button
+                        key={date}
+                        onClick={() => toggleFilter(date)}
+                        className={`px-2.5 xs:px-3 py-1.5 xs:py-2 rounded-full text-[10px] xs:text-xs sm:text-sm font-medium transition-all duration-200 touch-manipulation min-h-[32px] xs:min-h-[36px] ${selectedFilters.includes(date)
+                          ? "bg-green-600 text-white shadow-md"
+                          : "bg-gray-50 text-gray-700 border border-gray-200 hover:bg-green-50 active:border-green-300"
+                          }`}
+                      >
+                        {date}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Duración */}
+                <div>
+                  <h4 className="text-[10px] xs:text-xs sm:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2">Duración</h4>
+                  <div className="flex flex-wrap gap-1.5 xs:gap-2">
+                    {["60 min", "90 min", "120 min", "150 min"].map((duration) => (
+                      <button
+                        key={duration}
+                        onClick={() => toggleFilter(duration)}
+                        className={`px-2.5 xs:px-3 py-1.5 xs:py-2 rounded-full text-[10px] xs:text-xs sm:text-sm font-medium transition-all duration-200 touch-manipulation min-h-[32px] xs:min-h-[36px] ${selectedFilters.includes(duration)
+                          ? "bg-green-600 text-white shadow-md"
+                          : "bg-gray-50 text-gray-700 border border-gray-200 hover:bg-green-50 active:border-green-300"
+                          }`}
+                      >
+                        {duration}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Precio */}
+                <div>
+                  <h4 className="text-[10px] xs:text-xs sm:text-sm font-medium text-gray-700 mb-1.5 xs:mb-2">Precio por jugador</h4>
+                  <div className="flex flex-wrap gap-1.5 xs:gap-2">
+                    {["Gratis", "Hasta $200", "$200-$400", "Más de $400"].map((price) => (
+                      <button
+                        key={price}
+                        onClick={() => toggleFilter(price)}
+                        className={`px-2.5 xs:px-3 py-1.5 xs:py-2 rounded-full text-[10px] xs:text-xs sm:text-sm font-medium transition-all duration-200 touch-manipulation min-h-[32px] xs:min-h-[36px] ${selectedFilters.includes(price)
+                          ? "bg-green-600 text-white shadow-md"
+                          : "bg-gray-50 text-gray-700 border border-gray-200 hover:bg-green-50 active:border-green-300"
+                          }`}
+                      >
+                        {price}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Botón limpiar filtros */}
+                {selectedFilters.length > 0 && (
+                  <div className="pt-2 border-t border-gray-200">
+                    <Button
+                      onClick={clearFilters}
+                      variant="outline"
+                      className="w-full text-gray-700 hover:bg-gray-50 border-gray-300 text-xs xs:text-sm"
+                    >
+                      Limpiar todos los filtros ({selectedFilters.length})
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -468,7 +468,7 @@ export function CreateMatchScreen() {
   return (
     <div className="min-h-screen bg-white flex flex-col safe-bottom">
       {/* Header */}
-      <div className="w-full pt-3 xs:pt-4 sm:pt-6 md:pt-8 pb-2.5 xs:pb-3 sm:pb-3.5 md:pb-4 px-3 xs:px-4 sm:px-5 md:px-6 border-b border-gray-100 bg-white safe-top">
+      <div className="w-full pt-2.5 xs:pt-3 sm:pt-4 md:pt-6 pb-2 xs:pb-2.5 sm:pb-3 md:pb-3.5 px-2.5 xs:px-3 sm:px-4 md:px-5 border-b border-gray-100 bg-white safe-top">
         <div className="flex items-center justify-between gap-2 xs:gap-3">
           <div className="flex items-center gap-2 xs:gap-3 flex-1 min-w-0">
             <button
@@ -486,7 +486,7 @@ export function CreateMatchScreen() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex-1 px-3 xs:px-4 sm:px-5 md:px-6 py-3 xs:py-4 sm:py-5 pb-20 xs:pb-22 sm:pb-24 md:pb-28 overflow-y-auto max-w-2xl mx-auto w-full">
+      <form onSubmit={handleSubmit} className="flex-1 px-2.5 xs:px-3 sm:px-4 md:px-5 py-2.5 xs:py-3 sm:py-4 pb-20 xs:pb-22 sm:pb-24 md:pb-28 overflow-y-auto max-w-2xl mx-auto w-full">
         {/* Success Message */}
         {success && (
           <div className="mb-3 xs:mb-4 sm:mb-5 md:mb-6 p-3 xs:p-4 sm:p-5 bg-primary/10 border-2 border-primary/30 rounded-xl sm:rounded-2xl flex items-start gap-2 xs:gap-3">
@@ -540,19 +540,19 @@ export function CreateMatchScreen() {
                   type="button"
                   onClick={() => handleInputChange("type", type)}
                   disabled={isLoading}
-                  className={`p-3 xs:p-3.5 sm:p-4 rounded-xl xs:rounded-2xl border-2 transition-all touch-manipulation disabled:opacity-50 active:scale-[0.97] text-left min-h-[56px] xs:min-h-[64px] ${formData.type === type
+                  className={`p-2.5 xs:p-3 sm:p-3.5 md:p-4 rounded-lg xs:rounded-xl sm:rounded-2xl border-2 transition-all touch-manipulation disabled:opacity-50 active:scale-[0.97] text-left min-h-[52px] xs:min-h-[56px] sm:min-h-[64px] ${formData.type === type
                     ? "bg-gradient-to-br from-green-500 to-green-600 text-white border-green-600 shadow-lg"
                     : "bg-white text-gray-700 border-gray-200 hover:border-green-400 hover:shadow-md"
                     }`}
                   aria-label={config.label}
                 >
-                  <div className="flex items-center gap-2 xs:gap-2.5 sm:gap-3">
-                    <span className="text-xl xs:text-2xl sm:text-3xl flex-shrink-0">{config.emoji}</span>
+                  <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-2.5 md:gap-3">
+                    <span className="text-lg xs:text-xl sm:text-2xl md:text-3xl flex-shrink-0">{config.emoji}</span>
                     <div className="flex-1 min-w-0">
-                      <div className={`text-xs xs:text-sm sm:text-base font-bold truncate ${formData.type === type ? 'text-white' : 'text-gray-900'}`}>
+                      <div className={`text-[11px] xs:text-xs sm:text-sm md:text-base font-bold truncate ${formData.type === type ? 'text-white' : 'text-gray-900'}`}>
                         {config.label}
                       </div>
-                      <div className={`text-[10px] xs:text-xs sm:text-sm font-medium mt-0.5 truncate ${formData.type === type ? 'text-green-100' : 'text-gray-500'}`}>
+                      <div className={`text-[9px] xs:text-[10px] sm:text-xs md:text-sm font-medium mt-0.5 truncate ${formData.type === type ? 'text-green-100' : 'text-gray-500'}`}>
                         {config.players}
                       </div>
                     </div>
@@ -575,14 +575,14 @@ export function CreateMatchScreen() {
                 type="button"
                 onClick={() => handleInputChange("gender", label)}
                 disabled={isLoading}
-                className={`flex-1 min-w-0 px-2 xs:px-3 py-3 xs:py-3.5 rounded-lg xs:rounded-xl text-xs xs:text-sm font-bold transition-all touch-manipulation disabled:opacity-50 active:scale-95 flex items-center justify-center gap-1.5 xs:gap-2 min-h-[48px] ${formData.gender === label
+                className={`flex-1 min-w-0 px-2 xs:px-2.5 sm:px-3 py-2.5 xs:py-3 sm:py-3.5 rounded-lg xs:rounded-xl text-xs xs:text-sm font-bold transition-all touch-manipulation disabled:opacity-50 active:scale-95 flex items-center justify-center gap-1.5 xs:gap-2 min-h-[44px] xs:min-h-[48px] ${formData.gender === label
                   ? "bg-white text-orange-600 shadow-md"
                   : "text-gray-600 hover:text-gray-900"
                   }`}
                 aria-label={`Género ${label}`}
               >
-                <span className="text-base xs:text-lg flex-shrink-0">{icon}</span>
-                <span className="text-[11px] xs:text-xs sm:text-sm font-bold truncate">{label}</span>
+                <span className="text-xs xs:text-sm sm:text-base flex-shrink-0">{icon}</span>
+                <span className="text-[9px] xs:text-[10px] sm:text-xs font-bold truncate">{label}</span>
               </button>
             ))}
           </div>
@@ -595,14 +595,14 @@ export function CreateMatchScreen() {
           </label>
           <div className="grid grid-cols-2 gap-2 xs:gap-3">
             <div className="w-full">
-              <div className="text-xs xs:text-xs sm:text-sm font-semibold text-gray-600 mb-1.5 xs:mb-2">Fecha</div>
+              <div className="text-[10px] xs:text-xs sm:text-sm font-semibold text-gray-600 mb-1 xs:mb-1.5 sm:mb-2">Fecha</div>
               <Input
                 type="date"
                 value={formData.date}
                 onChange={(e) => handleInputChange("date", e.target.value)}
                 min={today}
                 max={maxDate}
-                className={`px-3 xs:px-4 h-11 xs:h-12 text-xs xs:text-sm font-medium rounded-lg xs:rounded-xl border-2 w-full ${fieldErrors.date ? 'border-red-500' : 'border-gray-200'} focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-50 shadow-sm hover:shadow-md transition-all bg-white`}
+                className={`px-2.5 xs:px-3 sm:px-4 h-10 xs:h-11 sm:h-12 text-[11px] xs:text-xs sm:text-sm font-medium rounded-lg xs:rounded-xl border-2 w-full ${fieldErrors.date ? 'border-red-500' : 'border-gray-200'} focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-50 shadow-sm hover:shadow-md transition-all bg-white`}
                 required
                 disabled={isLoading}
               />
@@ -614,11 +614,11 @@ export function CreateMatchScreen() {
               )}
             </div>
             <div className="w-full">
-              <div className="text-xs xs:text-xs sm:text-sm font-semibold text-gray-600 mb-1.5 xs:mb-2">Hora</div>
+              <div className="text-[10px] xs:text-xs sm:text-sm font-semibold text-gray-600 mb-1 xs:mb-1.5 sm:mb-2">Hora</div>
               <select
                 value={formData.time}
                 onChange={(e) => handleInputChange("time", e.target.value)}
-                className={`w-full px-3 xs:px-4 h-11 xs:h-12 rounded-lg xs:rounded-xl border-2 ${fieldErrors.time ? 'border-red-500' : 'border-gray-200'} bg-white text-gray-900 text-xs xs:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-50 shadow-sm hover:shadow-md transition-all cursor-pointer`}
+                className={`w-full px-2.5 xs:px-3 sm:px-4 h-10 xs:h-11 sm:h-12 rounded-lg xs:rounded-xl border-2 ${fieldErrors.time ? 'border-red-500' : 'border-gray-200'} bg-white text-gray-900 text-[11px] xs:text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-50 shadow-sm hover:shadow-md transition-all cursor-pointer`}
                 required
                 disabled={isLoading}
               >
@@ -671,9 +671,9 @@ export function CreateMatchScreen() {
           <label className="block text-sm xs:text-sm sm:text-base font-bold text-gray-900 mb-2 xs:mb-2.5">
             💰 Costo del partido <span className="text-red-500">*</span>
           </label>
-          <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl xs:rounded-2xl p-3 xs:p-4 border-2 border-gray-200">
-            <div className="flex items-center gap-2 xs:gap-3 mb-2 xs:mb-3">
-              <span className="text-xl xs:text-2xl font-bold text-gray-700 flex-shrink-0">$</span>
+          <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg xs:rounded-xl sm:rounded-2xl p-2.5 xs:p-3 sm:p-4 border-2 border-gray-200">
+            <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-3 mb-2 xs:mb-2.5 sm:mb-3">
+              <span className="text-lg xs:text-xl sm:text-2xl font-bold text-gray-700 flex-shrink-0">$</span>
               <Input
                 type="number"
                 min="0"
@@ -682,11 +682,11 @@ export function CreateMatchScreen() {
                 value={formData.totalPrice}
                 onChange={(e) => handleInputChange("totalPrice", e.target.value === "" ? 0 : parseFloat(e.target.value))}
                 placeholder="0"
-                className={`flex-1 px-3 xs:px-4 h-11 xs:h-12 text-base xs:text-lg font-bold rounded-lg xs:rounded-xl border-2 ${fieldErrors.totalPrice ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-green-500 focus:border-green-500 shadow-sm bg-white`}
+                className={`flex-1 px-2.5 xs:px-3 sm:px-4 h-10 xs:h-11 sm:h-12 text-sm xs:text-base sm:text-lg font-bold rounded-lg xs:rounded-xl border-2 ${fieldErrors.totalPrice ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-green-500 focus:border-green-500 shadow-sm bg-white`}
                 required
                 disabled={isLoading}
               />
-              <span className="text-xs xs:text-sm font-bold text-gray-500 flex-shrink-0">UYU</span>
+              <span className="text-[10px] xs:text-xs sm:text-sm font-bold text-gray-500 flex-shrink-0">UYU</span>
             </div>
             {fieldErrors.totalPrice && (
               <p className="text-[10px] xs:text-xs text-red-600 mb-2 xs:mb-3 flex items-center">
@@ -695,13 +695,13 @@ export function CreateMatchScreen() {
               </p>
             )}
             {formData.totalPrice > 0 ? (
-              <div className="bg-green-500 text-white rounded-lg xs:rounded-xl p-2.5 xs:p-3 text-center">
-                <p className="text-[10px] xs:text-xs font-semibold mb-0.5">Costo por jugador</p>
-                <p className="text-xl xs:text-2xl font-bold">${pricePerPlayer}</p>
+              <div className="bg-green-500 text-white rounded-lg xs:rounded-xl p-2 xs:p-2.5 sm:p-3 text-center">
+                <p className="text-[9px] xs:text-[10px] sm:text-xs font-semibold mb-0.5">Costo por jugador</p>
+                <p className="text-lg xs:text-xl sm:text-2xl font-bold">${pricePerPlayer}</p>
               </div>
             ) : (
-              <div className="bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg xs:rounded-xl p-2.5 xs:p-3 text-center">
-                <p className="text-xs xs:text-sm font-bold">🎉 Partido Gratuito</p>
+              <div className="bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg xs:rounded-xl p-2 xs:p-2.5 sm:p-3 text-center">
+                <p className="text-[11px] xs:text-xs sm:text-sm font-bold">🎉 Partido Gratuito</p>
               </div>
             )}
           </div>
@@ -793,36 +793,24 @@ export function CreateMatchScreen() {
               !formData.time ||
               !formData.location
             }
-            className="w-full bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 hover:from-green-700 hover:via-emerald-700 hover:to-teal-700 text-white h-14 xs:h-16 text-base xs:text-lg font-bold rounded-xl xs:rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xl hover:shadow-2xl touch-manipulation active:scale-[0.97] border-none relative overflow-hidden group"
+            className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white h-11 xs:h-12 sm:h-14 text-sm xs:text-base sm:text-lg font-bold rounded-lg xs:rounded-xl sm:rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl touch-manipulation active:scale-[0.97] border-none"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
             {isLoading ? (
-              <span className="flex items-center justify-center relative z-10">
-                <LoadingSpinner size="sm" variant="white" className="mr-2 xs:mr-3" />
-                <span className="text-sm xs:text-base">Creando tu partido...</span>
+              <span className="flex items-center justify-center">
+                <LoadingSpinner size="sm" variant="white" className="mr-2" />
+                <span className="text-xs xs:text-sm sm:text-base">Creando...</span>
               </span>
             ) : success ? (
-              <span className="flex items-center justify-center relative z-10">
-                <svg className="w-5 xs:w-6 h-5 xs:h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <span className="flex items-center justify-center">
+                <svg className="w-4 xs:w-5 sm:w-6 h-4 xs:h-5 sm:h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
-                <span className="text-sm xs:text-base">¡Partido creado!</span>
+                <span className="text-xs xs:text-sm sm:text-base">¡Partido creado!</span>
               </span>
             ) : (
-              <span className="flex items-center justify-center relative z-10">
-                <span className="text-xl xs:text-2xl mr-2 xs:mr-3">⚽</span>
-                <span className="text-base xs:text-lg">Crear Partido</span>
-              </span>
+              <span>Crear Partido</span>
             )}
           </Button>
-          <div className="mt-3 xs:mt-4 text-center">
-            <p className="text-[10px] xs:text-xs text-gray-500 leading-relaxed">
-              🌍 Tu partido será visible para todos los jugadores
-            </p>
-            <p className="text-[10px] xs:text-xs text-gray-400 mt-1">
-              Recibirás notificaciones cuando alguien se inscriba
-            </p>
-          </div>
         </div>
       </form>
 

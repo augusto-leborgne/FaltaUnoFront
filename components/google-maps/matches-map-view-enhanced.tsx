@@ -444,76 +444,21 @@ export function MatchesMapViewEnhanced({
         </div>
       )}
 
-      {/* Controles superiores - Buscador */}
+      {/* Botón para centrar en ubicación actual - Esquina superior derecha */}
       {isMapReady && (
-        <div className="absolute top-3 left-3 right-3 z-10 flex gap-2">
-          {showSearch ? (
-            <div className="flex-1 flex gap-2">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input
-                  ref={searchInputRef}
-                  type="text"
-                  placeholder="Buscar ubicación..."
-                  value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                  className="pl-10 pr-10 bg-white shadow-lg border-0 h-11 text-sm"
-                />
-                {searchValue && (
-                  <button
-                    onClick={() => {
-                      setSearchValue("")
-                      if (searchInputRef.current) {
-                        searchInputRef.current.value = ""
-                      }
-                    }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => {
-                  setShowSearch(false)
-                  setSearchValue("")
-                }}
-                className="bg-white shadow-lg border-0 h-11 w-11"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          ) : (
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setShowSearch(true)}
-              className="bg-white shadow-lg border-0 h-11 w-11"
-              title="Buscar ubicación"
-            >
-              <Search className="w-4 h-4" />
-            </Button>
-          )}
-        </div>
-      )}
-
-      {/* Botón para centrar en ubicación actual */}
-      {isMapReady && (
-        <div className="absolute bottom-20 right-3 z-10 flex flex-col gap-2">
+        <div className="absolute top-3 right-3 z-10">
           <Button
             variant="outline"
             size="icon"
             onClick={centerOnCurrentLocation}
             disabled={isGettingLocation}
-            className="bg-white shadow-lg border-0 h-12 w-12 rounded-full hover:bg-blue-50"
+            className="bg-white shadow-lg border-0 h-10 w-10 xs:h-11 xs:w-11 rounded-full hover:bg-blue-50"
             title="Centrar en mi ubicación"
           >
             {isGettingLocation ? (
-              <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+              <Loader2 className="w-4 h-4 xs:w-5 xs:h-5 animate-spin text-blue-600" />
             ) : (
-              <Crosshair className="w-5 h-5 text-blue-600" />
+              <Crosshair className="w-4 h-4 xs:w-5 xs:h-5 text-blue-600" />
             )}
           </Button>
         </div>
