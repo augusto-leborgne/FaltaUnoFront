@@ -150,6 +150,12 @@ export function MatchesListing() {
 
       let partidos = response.data || []
 
+      logger.log(`[MatchesListing] Partidos recibidos del backend: ${partidos.length}`)
+
+      // Filtrar solo partidos DISPONIBLES (no confirmados, cancelados o completados)
+      partidos = partidos.filter((p) => p.estado === PartidoEstado.DISPONIBLE)
+      logger.log(`[MatchesListing] Partidos después de filtrar DISPONIBLES: ${partidos.length}`)
+
       // Filtrar partidos futuros (cliente)
       const now = new Date()
       partidos = partidos.filter((p) => {
@@ -160,6 +166,7 @@ export function MatchesListing() {
           return true
         }
       })
+      logger.log(`[MatchesListing] Partidos después de filtrar futuros: ${partidos.length}`)
 
       // Ordenar por fecha (más cercanos primero)
       partidos.sort((a, b) => {
