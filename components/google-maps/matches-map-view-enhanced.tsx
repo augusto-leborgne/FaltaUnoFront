@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { logger } from "@/lib/logger"
 import { useMapBounds, MapBounds } from "@/hooks/use-map-bounds"
+import { MarkerClusterer } from "@googlemaps/markerclusterer"
 
 interface MatchesMapViewEnhancedProps {
   matches: PartidoDTO[]
@@ -354,8 +355,65 @@ export function MatchesMapViewEnhanced({
 
     markersRef.current = newMarkers
 
-    // TODO: Implementar clustering cuando hay muchos marcadores en poco zoom
-    // Por ahora mostramos todos los marcadores individuales
+    // Limpiar clusterer anterior
+    if (markerClustererRef.current) {
+      markerClustererRef.current.clearMarkers()
+      markerClustererRef.current = null
+    }
+
+    // Crear clusterer para agrupar marcadores cercanos
+    if (newMarkers.length > 0 && googleMapRef.current) {
+      markerClustererRef.current = new MarkerClusterer({
+        map: googleMapRef.current,
+        markers: newMarkers,
+        renderer: {
+          render: ({ count, position }, stats) => {
+            // Renderizar cluster personalizado
+            const clusterContent = document.createElement("div")
+            clusterContent.innerHTML = `
+              <div style="
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                width: 48px;
+                height: 48px;
+                border-radius: 50%;
+                border: 3px solid white;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                font-weight: bold;
+                color: white;
+                font-size: 16px;
+              " onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
+                ${count}
+              </div>
+            `
+
+            const clusterMarker = new window.google.maps.marker.AdvancedMarkerElement({
+              position,
+              content: clusterContent,
+              zIndex: Number(window.google.maps.Marker.MAX_ZINDEX) + count,
+            })
+
+            // Al hacer click en cluster, hacer zoom para enfocar
+            clusterMarker.addListener("gmp-click", () => {
+              if (googleMapRef.current) {
+                googleMapRef.current.setCenter(position)
+                const currentZoom = googleMapRef.current.getZoom() || 13
+                googleMapRef.current.setZoom(currentZoom + 3) // Zoom +3 para separar marcadores
+                logger.log('[MatchesMapEnhanced] Cluster clickeado, zoom:', currentZoom + 3)
+              }
+            })
+
+            return clusterMarker
+          }
+        }
+      })
+
+      logger.log('[MatchesMapEnhanced] Clustering activado con', newMarkers.length, 'marcadores')
+    }
     
   }, [matches, isMapReady, selectedMatchId, onMarkerClick, currentZoom])
 

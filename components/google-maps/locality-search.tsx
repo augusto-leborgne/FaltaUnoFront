@@ -109,8 +109,30 @@ export function LocalitySearch({
 
       const response: any = await AutocompleteSuggestion.fetchAutocompleteSuggestions(request)
       
-      if (response?.suggestions) {
-        const predictions = response.suggestions.map((s: any) => s.placePrediction)
+      logger.log('[LocalitySearch] Response:', response)
+      
+      if (response?.suggestions && response.suggestions.length > 0) {
+        // Convertir a formato compatible con AutocompletePrediction
+        const predictions: any[] = response.suggestions.map((suggestion: any) => {
+          const placePred = suggestion.placePrediction
+          const mainText = placePred?.structuredFormat?.mainText?.text || placePred?.text?.text || ''
+          const secondaryText = placePred?.structuredFormat?.secondaryText?.text || ''
+          
+          return {
+            description: placePred?.text?.text || '',
+            place_id: placePred?.placeId || '',
+            matched_substrings: placePred?.text?.matches || [],
+            structured_formatting: {
+              main_text: mainText,
+              main_text_matched_substrings: placePred?.structuredFormat?.mainText?.matches || [],
+              secondary_text: secondaryText,
+            },
+            terms: [],
+            types: placePred?.types || [],
+          }
+        })
+        
+        logger.log('[LocalitySearch] Predictions:', predictions)
         setSuggestions(predictions)
         setShowSuggestions(true)
       } else {
@@ -239,16 +261,16 @@ export function LocalitySearch({
         />
 
         {isSearching && (
-          <Loader2 className="absolute right-3 xs:right-4 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-gray-400" />
+          <Loader2 className="absolute right-2 xs:right-2.5 top-1/2 -translate-y-1/2 w-4 xs:w-4.5 h-4 xs:h-4.5 animate-spin text-gray-400" />
         )}
 
         {query && !isSearching && (
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-3 xs:right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+            className="absolute right-2 xs:right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors p-1 touch-manipulation active:scale-95"
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 xs:w-4.5 h-4 xs:h-4.5" />
           </button>
         )}
       </div>
