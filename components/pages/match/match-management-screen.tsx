@@ -544,9 +544,7 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
     }
 
     try {
-      // 🎯 ACTUALIZACIÓN OPTIMISTA: Remover jugador de la lista inmediatamente
-      const jugadorBackup = jugadores.find(j => j.id === jugadorId)
-      setJugadores(prev => prev.filter(j => j.id !== jugadorId))
+      // 🎯 ACTUALIZACIÓN OPTIMISTA: Actualizar contador inmediatamente
       setMatch(prev => prev ? {
         ...prev,
         jugadoresActuales: Math.max(0, (prev.jugadoresActuales || 0) - 1)
@@ -558,6 +556,9 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
         title: "Jugador removido",
         description: "El jugador ha sido removido del partido",
       })
+      
+      // Recargar para actualizar la lista completa
+      await loadMatchData()
 
     } catch (err) {
       logger.error("[MatchManagement] Error removiendo:", err)

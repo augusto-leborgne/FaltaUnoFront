@@ -377,19 +377,10 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       })
 
       if (response.ok) {
-        // Actualización optimista del estado
-        const now = new Date().toISOString()
-        const until = banType === "permanent" ? null : new Date(Date.now() + (banDuration || 7) * 24 * 60 * 60 * 1000).toISOString()
-        setUser(prev => prev ? {
-          ...prev,
-          bannedAt: now,
-          banReason: banReason,
-          banUntil: until,
-          bannedBy: currentUser?.id
-        } : null)
-        
         alert(`Usuario baneado ${banType === "permanent" ? "permanentemente" : `por ${banDuration} días`}`)
         closeBanModal()
+        // Recargar datos para reflejar el baneo
+        await loadUserProfile()
       } else {
         alert("Error al banear usuario")
       }
@@ -413,16 +404,9 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       })
 
       if (response.ok) {
-        // Actualización optimista del estado
-        setUser(prev => prev ? {
-          ...prev,
-          bannedAt: undefined,
-          banReason: undefined,
-          banUntil: undefined,
-          bannedBy: undefined
-        } : null)
-        
         alert("Usuario desbaneado correctamente")
+        // Recargar datos para reflejar el desbaneo
+        await loadUserProfile()
       } else {
         alert("Error al desbanear usuario")
       }

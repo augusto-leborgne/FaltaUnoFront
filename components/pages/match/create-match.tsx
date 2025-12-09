@@ -531,6 +531,7 @@ export function CreateMatchScreen() {
                 [TipoPartido.FUTBOL_5]: { label: 'Fútbol 5', players: '10 jugadores', emoji: '⚽' },
                 [TipoPartido.FUTBOL_7]: { label: 'Fútbol 7', players: '14 jugadores', emoji: '🥅' },
                 [TipoPartido.FUTBOL_8]: { label: 'Fútbol 8', players: '16 jugadores', emoji: '🏟️' },
+                [TipoPartido.FUTBOL_9]: { label: 'Fútbol 9', players: '18 jugadores', emoji: '⚽' },
                 [TipoPartido.FUTBOL_11]: { label: 'Fútbol 11', players: '22 jugadores', emoji: '🏆' },
               }[type]
               return (
@@ -723,7 +724,7 @@ export function CreateMatchScreen() {
                   : "bg-white text-gray-700 border-gray-200 hover:border-blue-400 hover:shadow-md font-medium"
                   }`}
               >
-                <div className="text-base font-bold">{mins}'</div>
+                <div className="text-base font-bold">{mins}&apos;</div>
               </button>
             ))}
           </div>
