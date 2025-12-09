@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { AuthService } from "@/lib/auth"
 import { MatchesMapViewEnhanced } from "@/components/google-maps/matches-map-view-enhanced"
+import { LocalitySearch } from "@/components/google-maps/locality-search"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { PageContainer, PageContent } from "@/components/ui/page-container"
 import { PageHeader } from "@/components/ui/page-header"
@@ -39,6 +40,11 @@ export function MatchesListing() {
   const [userInscriptions, setUserInscriptions] = useState<Map<string, { estado: InscripcionEstado | null }>>(new Map())
   const [initialLoad, setInitialLoad] = useState(true) // Nuevo: detectar primera carga
   const [userLocation, setUserLocation] = useState<{ lat: number, lng: number } | undefined>()
+  
+  // Estados para búsqueda de localidad
+  const [searchQuery, setSearchQuery] = useState("")
+  const [searchBounds, setSearchBounds] = useState<google.maps.LatLngBounds | null>(null)
+  const [searchCenter, setSearchCenter] = useState<{ lat: number; lng: number } | null>(null)
 
   // Filtros rápidos
   const quickFilters = [
@@ -337,13 +343,18 @@ export function MatchesListing() {
 
         {/* Search and Filters */}
         <div className="px-2 xs:px-3 sm:px-4 md:px-6 md:px-8 pt-3 xs:pt-4 sm:pt-5 pb-2.5 xs:pb-3 sm:pb-4">
-          {/* Search bar and Filter button - Above map */}
+          {/* Locality Search bar and Filter button - Above map */}
           <div className="flex items-center gap-2 xs:gap-3 mb-3 xs:mb-4">
             <div className="flex-1">
-              <input
-                type="text"
-                placeholder="Buscar partido..."
-                className="w-full px-3 xs:px-4 py-2.5 xs:py-3 rounded-lg xs:rounded-xl border-2 border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 text-xs xs:text-sm transition-all"
+              <LocalitySearch
+                value={searchQuery}
+                onChange={(location, bounds, center) => {
+                  setSearchQuery(location)
+                  setSearchBounds(bounds || null)
+                  setSearchCenter(center || null)
+                  logger.log('[MatchesListing] Localidad seleccionada:', location, bounds, center)
+                }}
+                placeholder="Buscar barrio, ciudad o departamento..."
               />
             </div>
             <Button
@@ -362,6 +373,9 @@ export function MatchesListing() {
             selectedMatchId={selectedMatchId}
             currentUserId={AuthService.getUser()?.id}
             userLocation={userLocation}
+            searchBounds={searchBounds}
+            searchCenter={searchCenter}
+            hasSearchQuery={!!searchQuery}
             onMarkerClick={(matchId) => {
               const match = matches.find(m => m.id === matchId)
               const currentUser = AuthService.getUser()

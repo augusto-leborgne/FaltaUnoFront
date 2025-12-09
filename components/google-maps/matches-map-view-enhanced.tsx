@@ -20,6 +20,9 @@ interface MatchesMapViewEnhancedProps {
   onBoundsChange?: (visibleMatches: PartidoDTO[]) => void
   currentUserId?: string
   userLocation?: { lat: number, lng: number } // Ubicación del usuario (barrio)
+  searchBounds?: google.maps.LatLngBounds | null // Bounds de la búsqueda de localidad
+  searchCenter?: { lat: number; lng: number } | null // Centro de la localidad buscada
+  hasSearchQuery?: boolean // Si hay una búsqueda activa
   className?: string
 }
 
@@ -30,6 +33,9 @@ export function MatchesMapViewEnhanced({
   onBoundsChange,
   currentUserId,
   userLocation,
+  searchBounds,
+  searchCenter,
+  hasSearchQuery = false,
   className = "",
 }: MatchesMapViewEnhancedProps) {
   // Refs
@@ -184,6 +190,29 @@ export function MatchesMapViewEnhanced({
       }
     }
   }, [containerReady, userLocation])
+
+  // ============================================
+  // AJUSTAR MAPA A BOUNDS DE BÚSQUEDA
+  // ============================================
+  useEffect(() => {
+    if (!isMapReady || !googleMapRef.current) return
+    
+    // Si hay bounds de búsqueda, ajustar mapa a la región buscada
+    if (searchBounds) {
+      googleMapRef.current.fitBounds(searchBounds, {
+        top: 50,
+        right: 50,
+        bottom: 50,
+        left: 50,
+      })
+      logger.log('[MatchesMapEnhanced] Mapa ajustado a bounds de búsqueda')
+    } else if (searchCenter) {
+      // Si solo hay centro sin bounds, centrar con zoom apropiado
+      googleMapRef.current.setCenter(searchCenter)
+      googleMapRef.current.setZoom(13)
+      logger.log('[MatchesMapEnhanced] Mapa centrado en localidad buscada')
+    }
+  }, [isMapReady, searchBounds, searchCenter])
 
   // ============================================
   // INICIALIZAR AUTOCOMPLETE (búsqueda)
@@ -421,19 +450,34 @@ export function MatchesMapViewEnhanced({
     )
   }
 
-  if (matches.length === 0) {
+  // Mostrar mensaje cuando no hay búsqueda activa
+  if (!hasSearchQuery) {
     return (
-      <div className={`bg-gray-100 rounded-2xl flex items-center justify-center p-8 ${className}`}>
+      <div className={`bg-gradient-to-br from-blue-50 via-green-50 to-emerald-50 rounded-lg xs:rounded-xl sm:rounded-2xl flex items-center justify-center p-6 xs:p-8 sm:p-10 ${className}`}>
+        <div className="text-center max-w-sm">
+          <MapPin className="w-12 xs:w-14 sm:w-16 h-12 xs:h-14 sm:h-16 text-green-600 mx-auto mb-3 xs:mb-4" />
+          <p className="text-gray-900 font-bold text-sm xs:text-base sm:text-lg mb-2">Busca partidos en tu zona</p>
+          <p className="text-gray-600 text-xs xs:text-sm sm:text-base leading-relaxed">
+            Ingresa un barrio, ciudad o departamento en el buscador para ver partidos disponibles en esa zona
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  if (matches.length === 0 && hasSearchQuery) {
+    return (
+      <div className={`bg-gray-100 rounded-lg xs:rounded-xl sm:rounded-2xl flex items-center justify-center p-6 xs:p-8 ${className}`}>
         <div className="text-center">
           <Navigation className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-          <p className="text-gray-600 text-sm">No hay partidos para mostrar</p>
+          <p className="text-gray-600 text-xs xs:text-sm">No hay partidos en esta zona</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className={`relative bg-gray-100 rounded-2xl overflow-hidden ${className}`}>
+    <div className={`relative bg-gray-100 rounded-lg xs:rounded-xl sm:rounded-2xl overflow-hidden ${className}`}>
       {/* Contenedor del mapa */}
       <div ref={setMapRef} className="w-full h-full" />
 
@@ -444,21 +488,21 @@ export function MatchesMapViewEnhanced({
         </div>
       )}
 
-      {/* Botón para centrar en ubicación actual - Esquina superior derecha */}
+      {/* Botón para centrar en ubicación actual - Pegado a la esquina superior derecha */}
       {isMapReady && (
-        <div className="absolute top-3 right-3 z-10">
+        <div className="absolute top-2 right-2 z-10">
           <Button
             variant="outline"
             size="icon"
             onClick={centerOnCurrentLocation}
             disabled={isGettingLocation}
-            className="bg-white shadow-lg border-0 h-10 w-10 xs:h-11 xs:w-11 rounded-full hover:bg-blue-50"
+            className="bg-white shadow-lg border-0 h-9 w-9 xs:h-10 xs:w-10 rounded-full hover:bg-blue-50"
             title="Centrar en mi ubicación"
           >
             {isGettingLocation ? (
-              <Loader2 className="w-4 h-4 xs:w-5 xs:h-5 animate-spin text-blue-600" />
+              <Loader2 className="w-3.5 h-3.5 xs:w-4 xs:h-4 animate-spin text-blue-600" />
             ) : (
-              <Crosshair className="w-4 h-4 xs:w-5 xs:h-5 text-blue-600" />
+              <Crosshair className="w-3.5 h-3.5 xs:w-4 xs:h-4 text-blue-600" />
             )}
           </Button>
         </div>
