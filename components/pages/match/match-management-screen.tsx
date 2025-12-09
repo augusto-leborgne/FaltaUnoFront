@@ -431,6 +431,10 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
 
   const handleRejectRequest = async (inscripcionId: string) => {
     try {
+      // 🎯 ACTUALIZACIÓN OPTIMISTA: Remover solicitud inmediatamente
+      const solicitudBackup = solicitudes.find(s => s.id === inscripcionId)
+      setSolicitudes(prev => prev.filter(s => s.id !== inscripcionId))
+
       await InscripcionAPI.rechazar(inscripcionId)
 
       toast({
@@ -438,10 +442,11 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
         description: "La solicitud ha sido rechazada",
       })
 
-      await loadMatchData()
-
     } catch (err) {
       logger.error("[MatchManagement] Error rechazando:", err)
+
+      // ✅ REVERTIR cambio optimista en caso de error
+      await loadMatchData()
 
       // ✅ MEJORADO: Mensajes de error más específicos
       let errorMessage = "Error al rechazar solicitud"
@@ -488,6 +493,9 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
     }
 
     try {
+      // 🎯 ACTUALIZACIÓN OPTIMISTA: Cambiar estado inmediatamente
+      setMatch(prev => prev ? { ...prev, estado: PartidoEstado.CONFIRMADO } : null)
+      
       const response = await PartidoAPI.confirmar(matchId)
 
       if (!response.success) {
@@ -503,6 +511,8 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
 
     } catch (err) {
       logger.error("[MatchManagement] Error confirmando:", err)
+      // ✅ REVERTIR cambio optimista en caso de error
+      await loadMatchData()
       const errorMessage = err instanceof Error ? err.message : "Error al confirmar partido"
       toast({
         title: "Error",
@@ -534,6 +544,14 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
     }
 
     try {
+      // 🎯 ACTUALIZACIÓN OPTIMISTA: Remover jugador de la lista inmediatamente
+      const jugadorBackup = jugadores.find(j => j.id === jugadorId)
+      setJugadores(prev => prev.filter(j => j.id !== jugadorId))
+      setMatch(prev => prev ? {
+        ...prev,
+        jugadoresActuales: Math.max(0, (prev.jugadoresActuales || 0) - 1)
+      } : null)
+      
       await PartidoAPI.removerJugador(matchId, jugadorId)
 
       toast({
@@ -541,10 +559,10 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
         description: "El jugador ha sido removido del partido",
       })
 
-      await loadMatchData()
-
     } catch (err) {
       logger.error("[MatchManagement] Error removiendo:", err)
+      // ✅ REVERTIR cambio optimista en caso de error
+      await loadMatchData()
       const errorMessage = err instanceof Error ? err.message : "Error al remover jugador"
       toast({
         title: "Error",
@@ -613,6 +631,9 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
     }
 
     try {
+      // Actualización optimista del estado
+      setMatch(prev => prev ? { ...prev, estado: "CANCELADO" } : null)
+      
       const response = await PartidoAPI.cancelar(matchId)
 
       if (response.success) {
@@ -620,9 +641,9 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
           title: "Partido cancelado",
           description: "El partido ha sido cancelado exitosamente",
         })
-        // Recargar datos
-        await loadMatchData()
       } else {
+        // Revertir en caso de error
+        await loadMatchData()
         toast({
           title: "Error",
           description: response.message || "Error al cancelar el partido",
@@ -631,6 +652,8 @@ export function MatchManagementScreen({ matchId }: MatchManagementScreenProps) {
       }
     } catch (err) {
       logger.error("[MatchManagement] Error cancelando partido:", err)
+      // Revertir en caso de error
+      await loadMatchData()
       toast({
         title: "Error",
         description: "Error al cancelar el partido",

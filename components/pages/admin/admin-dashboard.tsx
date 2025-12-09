@@ -453,10 +453,6 @@ export default function AdminDashboard() {
       setSuccessMessage(`Usuario baneado ${banType === "permanent" ? "permanentemente" : `por ${banDuration} días`}`)
       setTimeout(() => setSuccessMessage(null), 3000)
       closeBanModal()
-      // Recargar datos para reflejar el baneo
-      if (user && user.rol === "ADMIN") {
-        window.location.reload()
-      }
     } catch (error) {
       logger.error("[AdminDashboard] Error baneando usuario:", error)
       setError("Error al banear usuario: " + (error instanceof Error ? error.message : "Error desconocido"))
@@ -484,10 +480,6 @@ export default function AdminDashboard() {
 
       setSuccessMessage("Usuario desbaneado correctamente")
       setTimeout(() => setSuccessMessage(null), 3000)
-      // Recargar datos
-      if (user && user.rol === "ADMIN") {
-        window.location.reload()
-      }
     } catch (error) {
       logger.error("[AdminDashboard] Error desbaneando usuario:", error)
       setError("Error al desbanear usuario: " + (error instanceof Error ? error.message : "Error desconocido"))

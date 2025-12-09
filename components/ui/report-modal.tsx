@@ -12,6 +12,7 @@ interface ReportModalProps {
   onClose: () => void
   reportedUserId: string
   reportedUserName: string
+  onReportSuccess?: () => void
 }
 
 const REPORT_REASONS = [
@@ -26,7 +27,7 @@ const REPORT_REASONS = [
   { value: "OTRO", label: "Otro" },
 ]
 
-export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName }: ReportModalProps) {
+export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName, onReportSuccess }: ReportModalProps) {
   const [reason, setReason] = useState("")
   const [description, setDescription] = useState("")
   const [loading, setLoading] = useState(false)
@@ -76,6 +77,12 @@ export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName 
       }
 
       setSuccess(true)
+      
+      // Llamar callback de éxito si existe
+      if (onReportSuccess) {
+        onReportSuccess()
+      }
+      
       setTimeout(() => {
         onClose()
         setSuccess(false)

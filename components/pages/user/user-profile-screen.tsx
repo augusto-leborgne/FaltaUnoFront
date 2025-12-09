@@ -65,6 +65,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
   const [error, setError] = useState<string | null>(null)
   const [reportModalOpen, setReportModalOpen] = useState(false)
   const [showAdminActions, setShowAdminActions] = useState(false)
+  const [userReported, setUserReported] = useState(false)
   
   // Estados para modal de baneo
   const [showBanModal, setShowBanModal] = useState(false)
@@ -243,30 +244,23 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
     }
 
     try {
-      // Primero necesitamos encontrar el amistadId
-      const amigosResponse = await AmistadAPI.listarAmigos()
-      if (!amigosResponse.success || !amigosResponse.data) {
-        throw new Error("No se pudo obtener la lista de amigos")
-      }
-
-      const amistad = amigosResponse.data.find((a: any) =>
-        (a.amigo?.id === userId) || (a.amigoId === userId)
-      )
-
-      if (!amistad || !amistad.id) {
-        throw new Error("No se encontró la amistad")
-      }
-
-      const response = await AmistadAPI.eliminarAmistad(amistad.id)
+      // Actualización optimista del estado
+      setFriendStatus('none')
+      
+      // El backend espera el ID del amigo (userId), no el ID de la amistad
+      const response = await AmistadAPI.eliminarAmistad(userId)
 
       if (response.success) {
         alert("Amigo eliminado correctamente")
-        await loadUserProfile()
       } else {
+        // Revertir en caso de error
+        setFriendStatus('friends')
         alert(response.message || "Error al eliminar amigo")
       }
     } catch (error) {
       logger.error("Error removing friend:", error)
+      // Revertir en caso de error
+      setFriendStatus('friends')
       alert("Error al eliminar amigo")
     }
   }
@@ -287,15 +281,18 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
         throw new Error("No se encontró la solicitud")
       }
 
+      // Actualización optimista del estado
+      setFriendStatus('friends')
+      
       const response = await AmistadAPI.aceptarSolicitud(solicitud.id)
 
       if (response.success) {
-        // Actualización optimista del estado
-        setFriendStatus('friends')
         alert("Solicitud aceptada correctamente")
         // Reload to get mutual friends
         await loadUserProfile()
       } else {
+        // Revertir en caso de error
+        setFriendStatus('pending-received')
         alert(response.message || "Error al aceptar solicitud")
       }
     } catch (error) {
@@ -324,13 +321,16 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
         throw new Error("No se encontró la solicitud")
       }
 
+      // Actualización optimista del estado
+      setFriendStatus('none')
+      
       const response = await AmistadAPI.rechazarSolicitud(solicitud.id)
 
       if (response.success) {
-        // Actualización optimista del estado
-        setFriendStatus('none')
         alert("Solicitud rechazada")
       } else {
+        // Revertir en caso de error
+        setFriendStatus('pending-received')
         alert(response.message || "Error al rechazar solicitud")
       }
     } catch (error) {
@@ -377,9 +377,19 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       })
 
       if (response.ok) {
+        // Actualización optimista del estado
+        const now = new Date().toISOString()
+        const until = banType === "permanent" ? null : new Date(Date.now() + (banDuration || 7) * 24 * 60 * 60 * 1000).toISOString()
+        setUser(prev => prev ? {
+          ...prev,
+          bannedAt: now,
+          banReason: banReason,
+          banUntil: until,
+          bannedBy: currentUser?.id
+        } : null)
+        
         alert(`Usuario baneado ${banType === "permanent" ? "permanentemente" : `por ${banDuration} días`}`)
         closeBanModal()
-        await loadUserProfile()
       } else {
         alert("Error al banear usuario")
       }
@@ -403,8 +413,16 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       })
 
       if (response.ok) {
+        // Actualización optimista del estado
+        setUser(prev => prev ? {
+          ...prev,
+          bannedAt: undefined,
+          banReason: undefined,
+          banUntil: undefined,
+          bannedBy: undefined
+        } : null)
+        
         alert("Usuario desbaneado correctamente")
-        await loadUserProfile()
       } else {
         alert("Error al desbanear usuario")
       }
@@ -430,8 +448,10 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
       })
 
       if (response.ok) {
+        // Actualización optimista del estado
+        setUser(prev => prev ? { ...prev, rol: newRole } : null)
+        
         alert(`Rol cambiado a ${newRole} correctamente`)
-        await loadUserProfile()
       } else {
         alert("Error al cambiar rol")
       }
@@ -652,14 +672,21 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
             )}
 
             {/* Report Button */}
-            <Button
-              onClick={() => setReportModalOpen(true)}
-              variant="outline"
-              className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
-            >
-              <Flag className="w-3.5 xs:w-4 h-3.5 xs:h-4 mr-1.5 xs:mr-2" />
-              Reportar usuario
-            </Button>
+            {userReported ? (
+              <div className="w-full border-2 border-green-200 bg-green-50 text-green-700 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base flex items-center justify-center">
+                <Flag className="w-3.5 xs:w-4 h-3.5 xs:h-4 mr-1.5 xs:mr-2" />
+                Usuario reportado ✓
+              </div>
+            ) : (
+              <Button
+                onClick={() => setReportModalOpen(true)}
+                variant="outline"
+                className="w-full border-gray-300 text-gray-700 hover:bg-gray-50 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] py-2.5 xs:py-3 rounded-xl text-sm xs:text-base"
+              >
+                <Flag className="w-3.5 xs:w-4 h-3.5 xs:h-4 mr-1.5 xs:mr-2" />
+                Reportar usuario
+              </Button>
+            )}
 
             {/* Admin Actions */}
             {isAdmin && (
@@ -827,6 +854,7 @@ export default function UserProfileScreen({ userId }: UserProfileScreenProps) {
         onClose={() => setReportModalOpen(false)}
         reportedUserId={userId}
         reportedUserName={fullName}
+        onReportSuccess={() => setUserReported(true)}
       />
 
       {/* Ban Modal */}
