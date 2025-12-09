@@ -449,7 +449,7 @@ export function AddressAutocomplete({
     <div ref={containerRef} className="relative">
       {/* Input */}
       <div className="relative">
-        <MapPin className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 pointer-events-none ${
+        <MapPin className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 pointer-events-none z-10 ${
           hasSelectedAddress 
             ? 'text-green-600' 
             : hasError || (required && query && !hasSelectedAddress)
@@ -458,12 +458,12 @@ export function AddressAutocomplete({
         }`} />
         <input
           ref={inputRef}
-          className={`w-full py-3 pl-10 pr-10 rounded-xl border bg-white focus:outline-none focus:ring-2 disabled:bg-gray-100 disabled:cursor-not-allowed text-sm sm:text-base h-10 sm:h-auto ${
+          className={`w-full h-12 pl-11 pr-10 rounded-xl border-2 bg-white focus:outline-none focus:ring-2 disabled:bg-gray-100 disabled:cursor-not-allowed text-sm shadow-sm hover:shadow-md transition-shadow ${
             hasSelectedAddress 
               ? 'border-green-500 bg-green-50 focus:ring-green-500 focus:border-transparent' 
               : hasError || (required && query && !hasSelectedAddress)
               ? 'border-red-500 focus:ring-red-500 focus:border-transparent'
-              : 'border-gray-300 focus:ring-green-500 focus:border-transparent'
+              : 'border-gray-200 focus:ring-green-500 focus:border-transparent'
           }`}
           placeholder={placeholder}
           value={query}

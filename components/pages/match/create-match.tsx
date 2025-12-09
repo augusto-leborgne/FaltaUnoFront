@@ -521,11 +521,11 @@ export function CreateMatchScreen() {
         )}
 
         {/* Tipo de partido */}
-        <div className="mb-1.5 xs:mb-2 sm:mb-3 md:mb-4 md:mb-5">
-          <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1.5 xs:mb-2 sm:mb-3 md:mb-2">
+        <div className="mb-5 xs:mb-6">
+          <label className="block text-sm font-bold text-gray-900 mb-3">
             Tipo de partido <span className="text-red-500">*</span>
           </label>
-          <div className="flex justify-center gap-1.5 xs:gap-2 sm:gap-3">
+          <div className="flex justify-start gap-3">
             {Object.values(TipoPartido).map((type) => {
               const shortLabel = type === TipoPartido.FUTBOL_5 ? 'F5' 
                 : type === TipoPartido.FUTBOL_7 ? 'F7'
@@ -537,9 +537,9 @@ export function CreateMatchScreen() {
                   type="button"
                   onClick={() => handleInputChange("type", type)}
                   disabled={isLoading}
-                  className={`font-sans w-11 xs:w-12 sm:w-13 md:w-12 h-11 xs:h-12 sm:h-13 md:h-12 rounded-full text-xs xs:text-sm sm:text-base md:text-lg md:text-base font-bold border-2 transition-all touch-manipulation disabled:opacity-50 active:scale-95 flex items-center justify-center min-w-[36px] xxs:min-w-[38px] xs:min-w-[40px] sm:min-w-[42px] md:min-w-[44px] xxs:min-w-[42px] xs:min-w-[44px] sm:min-w-[46px] md:min-w-[48px] min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] ${formData.type === type
-                    ? "bg-green-600 text-white border-green-600 shadow-lg"
-                    : "bg-white text-gray-700 border-gray-300 hover:border-green-600 hover:text-green-600 active:bg-gray-50"
+                  className={`w-14 h-14 rounded-full text-base font-bold border-2 transition-all touch-manipulation disabled:opacity-50 active:scale-95 flex items-center justify-center shadow-sm hover:shadow-md ${formData.type === type
+                    ? "bg-gradient-to-br from-green-500 to-green-600 text-white border-green-600 shadow-lg ring-2 ring-green-200"
+                    : "bg-white text-gray-700 border-gray-200 hover:border-green-500 hover:bg-green-50"
                     }`}
                   aria-label={`Tipo ${shortLabel}`}
                 >
@@ -551,25 +551,25 @@ export function CreateMatchScreen() {
         </div>
 
         {/* Género */}
-        <div className="mb-1.5 xs:mb-2 sm:mb-3 md:mb-4 md:mb-5">
-          <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1.5 xs:mb-2 sm:mb-3 md:mb-2">
+        <div className="mb-5 xs:mb-6">
+          <label className="block text-sm font-bold text-gray-900 mb-3">
             Género <span className="text-red-500">*</span>
           </label>
-          <div className="flex gap-1.5 xs:gap-2 sm:gap-2.5">
+          <div className="flex gap-2.5">
             {[{label: "Mixto", icon: "👥"}, {label: "Hombres", icon: "👨"}, {label: "Mujeres", icon: "👩"}].map(({label, icon}) => (
               <button
                 key={label}
                 type="button"
                 onClick={() => handleInputChange("gender", label)}
                 disabled={isLoading}
-                className={`font-sans flex-1 px-1 xs:px-1.5 sm:px-2 md:px-2 py-1.5 xs:py-2 rounded-lg xs:rounded-xl text-[11px] xs:text-xs sm:text-sm md:text-sm font-semibold border-2 transition-all touch-manipulation disabled:opacity-50 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] active:scale-95 flex flex-col items-center justify-center gap-0.5 ${formData.gender === label
-                  ? "bg-orange-500 text-white border-orange-600 shadow-lg"
-                  : "bg-white text-gray-700 border-gray-300 hover:border-orange-500 hover:text-orange-600 active:bg-gray-50"
+                className={`flex-1 px-4 py-3 rounded-xl text-sm font-semibold border-2 transition-all touch-manipulation disabled:opacity-50 active:scale-[0.98] flex items-center justify-center gap-2 shadow-sm hover:shadow-md min-h-[48px] ${formData.gender === label
+                  ? "bg-gradient-to-br from-orange-500 to-orange-600 text-white border-orange-600 shadow-lg ring-2 ring-orange-200"
+                  : "bg-white text-gray-700 border-gray-200 hover:border-orange-500 hover:bg-orange-50"
                   }`}
                 aria-label={`Género ${label}`}
               >
-                <span className="text-xs xs:text-sm sm:text-base md:text-lg">{icon}</span>
-                <span className="text-[10px] xs:text-[11px] sm:text-xs leading-tight">{label}</span>
+                <span className="text-lg">{icon}</span>
+                <span>{label}</span>
               </button>
             ))}
           </div>
@@ -578,40 +578,39 @@ export function CreateMatchScreen() {
         {/* Fecha y Hora */}
         <div className="grid grid-cols-2 gap-1.5 xs:gap-2 sm:gap-3 mb-1.5 xs:mb-2 sm:mb-3 md:mb-4">
           <div className="w-full min-w-0">
-            <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1 xs:mb-1.5 sm:mb-2 md:mb-1.5">
+            <label className="block text-sm font-bold text-gray-900 mb-2">
               Fecha <span className="text-red-500">*</span>
             </label>
-            <Input
-              type="date"
-              value={formData.date}
-              onChange={(e) => handleInputChange("date", e.target.value)}
-              min={today}
-              max={maxDate}
-              className={`font-sans px-2 xs:px-3 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] text-sm xs:text-base rounded-lg xs:rounded-xl border-2 w-full ${fieldErrors.date ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50`}
-              required
-              disabled={isLoading}
-              placeholder="dd/mm/yyyy"
-            />
-            {!fieldErrors.date && !formData.date && (
-              <p className="font-sans text-[10px] xs:text-xs text-gray-500 mt-1">Formato: dd/mm/yyyy</p>
-            )}
+            <div className="relative">
+              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none z-10" />
+              <Input
+                type="date"
+                value={formData.date}
+                onChange={(e) => handleInputChange("date", e.target.value)}
+                min={today}
+                max={maxDate}
+                className={`pl-11 pr-3 h-12 text-sm text-center rounded-xl border-2 w-full ${fieldErrors.date ? 'border-red-500' : 'border-gray-200'} focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-50 shadow-sm hover:shadow-md transition-shadow`}
+                required
+                disabled={isLoading}
+              />
+            </div>
             {fieldErrors.date && (
-              <p className="font-sans text-[10px] xs:text-xs sm:text-sm text-red-600 mt-1 flex items-center">
-                <AlertCircle className="w-3 h-3 xs:w-3.5 xs:h-3.5 mr-1 flex-shrink-0" />
+              <p className="text-xs text-red-600 mt-1.5 flex items-center">
+                <AlertCircle className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
                 <span className="truncate">{fieldErrors.date}</span>
               </p>
             )}
           </div>
           <div className="w-full min-w-0">
-            <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1 xs:mb-1.5 sm:mb-2 md:mb-1.5">
+            <label className="block text-sm font-bold text-gray-900 mb-2">
               Hora <span className="text-red-500">*</span>
             </label>
-            <div className="relative flex items-center">
-              <Clock className="absolute left-2 xs:left-3 sm:left-4 w-4 h-4 xs:w-5 xs:h-5 text-gray-400 pointer-events-none z-10" />
+            <div className="relative">
+              <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none z-10" />
               <select
                 value={formData.time}
                 onChange={(e) => handleInputChange("time", e.target.value)}
-                className={`font-sans w-full pl-8 xs:pl-9 sm:pl-10 pr-2 xs:pr-3 min-h-[40px] xxs:min-h-[42px] xs:min-h-[44px] sm:min-h-[46px] md:min-h-[48px] rounded-lg xs:rounded-xl border-2 ${fieldErrors.time ? 'border-red-500' : 'border-gray-300'} bg-white text-gray-900 text-sm xs:text-base font-medium focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation flex items-center`}
+                className={`w-full pl-11 pr-8 h-12 rounded-xl border-2 ${fieldErrors.time ? 'border-red-500' : 'border-gray-200'} bg-white text-gray-900 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation shadow-sm hover:shadow-md transition-shadow appearance-none`}
                 required
                 disabled={isLoading}
               >
@@ -622,10 +621,15 @@ export function CreateMatchScreen() {
                   </option>
                 ))}
               </select>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
             </div>
             {fieldErrors.time && (
-              <p className="font-sans text-[10px] xs:text-xs sm:text-sm text-red-600 mt-1 flex items-center">
-                <AlertCircle className="w-3 h-3 xs:w-3.5 xs:h-3.5 mr-1 flex-shrink-0" />
+              <p className="text-xs text-red-600 mt-1.5 flex items-center">
+                <AlertCircle className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
                 <span className="truncate">{fieldErrors.time}</span>
               </p>
             )}
@@ -633,8 +637,8 @@ export function CreateMatchScreen() {
         </div>
 
         {/* Ubicación */}
-        <div className="mb-1.5 xs:mb-2 sm:mb-3 md:mb-4 md:mb-5">
-          <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1 xs:mb-1.5 sm:mb-2 md:mb-1.5">
+        <div className="mb-5 xs:mb-6">
+          <label className="block text-sm font-bold text-gray-900 mb-2">
             Ubicación <span className="text-red-500">*</span>
           </label>
           <AddressAutocomplete
@@ -646,13 +650,13 @@ export function CreateMatchScreen() {
             hasError={!!fieldErrors.location}
           />
           {fieldErrors.location && (
-            <p className="text-xs sm:text-sm text-red-600 mt-2 flex items-center">
+            <p className="text-xs text-red-600 mt-1.5 flex items-center">
               <AlertCircle className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
               {fieldErrors.location}
             </p>
           )}
           {formData.location && !locationCoordinates && !fieldErrors.location && (
-            <p className="text-xs sm:text-sm text-orange-600 mt-2 flex items-center">
+            <p className="text-xs text-orange-600 mt-1.5 flex items-center">
               <AlertCircle className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
               Ubicación aproximada (sin coordenadas exactas)
             </p>
@@ -660,12 +664,12 @@ export function CreateMatchScreen() {
         </div>
 
         {/* Costo */}
-        <div className="mb-1.5 xs:mb-2 sm:mb-3 md:mb-4 md:mb-5">
-          <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1 xs:mb-1.5 sm:mb-2 md:mb-1.5">
+        <div className="mb-5 xs:mb-6">
+          <label className="block text-sm font-bold text-gray-900 mb-2">
             Costo del partido ($UYU) <span className="text-red-500">*</span>
           </label>
           <div className="relative">
-            <DollarSign className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none z-10" />
             <Input
               type="number"
               min="0"
@@ -674,35 +678,35 @@ export function CreateMatchScreen() {
               value={formData.totalPrice}
               onChange={(e) => handleInputChange("totalPrice", e.target.value === "" ? 0 : parseFloat(e.target.value))}
               placeholder="Ingresa 0 si es gratis"
-              className={`pl-11 sm:pl-12 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] xs:min-h-[52px] text-sm xs:text-base md:text-base rounded-xl border-2 w-full ${fieldErrors.totalPrice ? 'border-red-500' : 'border-gray-300'}`}
+              className={`pl-11 pr-4 h-12 text-sm rounded-xl border-2 w-full ${fieldErrors.totalPrice ? 'border-red-500' : 'border-gray-200'} focus:ring-2 focus:ring-green-500 focus:border-transparent shadow-sm hover:shadow-md transition-shadow`}
               required
               disabled={isLoading}
             />
           </div>
           {fieldErrors.totalPrice && (
-            <p className="text-xs sm:text-sm text-red-600 mt-1.5 flex items-center">
+            <p className="text-xs text-red-600 mt-1.5 flex items-center">
               <AlertCircle className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
               {fieldErrors.totalPrice}
             </p>
           )}
           {formData.totalPrice > 0 && (
-            <p className="text-sm sm:text-base text-gray-600 mt-2 font-semibold">
-              ${pricePerPlayer} por jugador
+            <p className="text-sm text-green-600 mt-2 font-semibold">
+              💰 ${pricePerPlayer} por jugador
             </p>
           )}
         </div>
 
         {/* Duración */}
-        <div className="mb-1.5 xs:mb-2 sm:mb-3 md:mb-4 md:mb-5">
-          <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1 xs:mb-1.5 sm:mb-2 md:mb-1.5">
-            Duración (minutos)
+        <div className="mb-5 xs:mb-6">
+          <label className="block text-sm font-bold text-gray-900 mb-2">
+            Duración (minutos) <span className="text-red-500">*</span>
           </label>
           <div className="relative">
-            <Clock className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none z-10" />
+            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none z-10" />
             <select
               value={formData.duration || 60}
               onChange={(e) => handleInputChange("duration", parseInt(e.target.value))}
-              className={`w-full pl-11 sm:pl-12 pr-4 min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] xs:min-h-[52px] rounded-xl border-2 ${fieldErrors.duration ? 'border-red-500' : 'border-gray-300'} bg-white text-gray-900 text-sm xs:text-base md:text-base font-medium focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation`}
+              className={`w-full pl-11 pr-8 h-12 rounded-xl border-2 ${fieldErrors.duration ? 'border-red-500' : 'border-gray-200'} bg-white text-gray-900 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation shadow-sm hover:shadow-md transition-shadow appearance-none`}
               disabled={isLoading}
             >
               <option value={60}>60 minutos</option>
@@ -710,9 +714,14 @@ export function CreateMatchScreen() {
               <option value={120}>120 minutos</option>
               <option value={150}>150 minutos</option>
             </select>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
           </div>
           {fieldErrors.duration && (
-            <p className="text-xs sm:text-sm text-red-600 mt-1.5 flex items-center">
+            <p className="text-xs text-red-600 mt-1.5 flex items-center">
               <AlertCircle className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
               {fieldErrors.duration}
             </p>
@@ -720,43 +729,43 @@ export function CreateMatchScreen() {
         </div>
 
         {/* Descripción */}
-        <div className="mb-3 xs:mb-4 sm:mb-5 md:mb-6">
-          <label className="block font-sans text-xs xs:text-sm sm:text-base md:text-sm font-semibold text-gray-900 mb-1 xs:mb-1.5 sm:mb-2 md:mb-1.5">
+        <div className="mb-6">
+          <label className="block text-sm font-bold text-gray-900 mb-2">
             Descripción <span className="text-red-500">*</span>
           </label>
           <Textarea
             placeholder="Describe la modalidad del partido (ej: 2 tiempos de 30 min), detalles de la cancha (ubicación exacta, superficie, vestuarios, estacionamiento, etc.)"
             value={formData.description}
             onChange={(e) => handleInputChange("description", e.target.value)}
-            className={`min-h-[120px] py-3 sm:py-4 px-4 rounded-xl sm:rounded-2xl resize-none text-sm xs:text-base md:text-base border-2 w-full ${fieldErrors.description ? 'border-red-500' : 'border-gray-300'}`}
-            rows={4}
+            className={`min-h-[120px] py-3 px-4 rounded-xl resize-none text-sm border-2 w-full ${fieldErrors.description ? 'border-red-500' : 'border-gray-200'} focus:ring-2 focus:ring-green-500 focus:border-transparent shadow-sm hover:shadow-md transition-shadow`}
+            rows={5}
             disabled={isLoading}
             maxLength={500}
             required
           />
           {fieldErrors.description && (
-            <p className="text-xs sm:text-sm text-red-600 mt-1.5 flex items-center">
+            <p className="text-xs text-red-600 mt-1.5 flex items-center">
               <AlertCircle className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
               {fieldErrors.description}
             </p>
           )}
-          <p className="text-xs sm:text-sm text-gray-500 mt-1.5 font-medium">
+          <p className="text-xs text-gray-500 mt-1.5 font-medium">
             {formData.description.length}/500 caracteres
           </p>
 
           {/* Disclaimer sobre reservas */}
-          <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-orange-50 border-2 border-orange-200 rounded-xl">
-            <p className="text-xs sm:text-sm text-orange-800 flex items-start leading-relaxed">
-              <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 mr-2 mt-0.5 flex-shrink-0" />
+          <div className="mt-4 p-4 bg-gradient-to-br from-orange-50 to-orange-100 border-2 border-orange-300 rounded-xl shadow-sm">
+            <p className="text-xs text-orange-900 flex items-start leading-relaxed">
+              <AlertCircle className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" />
               <span>
-                <strong className="font-semibold">Importante:</strong> Falta Uno no gestiona reservas de canchas. Es responsabilidad del organizador coordinar y pagar la reserva de la cancha.
+                <strong className="font-bold">Importante:</strong> Falta Uno no gestiona reservas de canchas. Es responsabilidad del organizador coordinar y pagar la reserva de la cancha.
               </span>
             </p>
           </div>
         </div>
 
         {/* Submit Button */}
-        <div className="pb-2 xs:pb-3 sm:pb-4 sm:pb-5 md:pb-6">
+        <div className="pb-4">
           <Button
             type="submit"
             disabled={
@@ -766,7 +775,7 @@ export function CreateMatchScreen() {
               !formData.time ||
               !formData.location
             }
-            className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white min-h-[44px] xxs:min-h-[46px] xs:min-h-[48px] sm:min-h-[50px] md:min-h-[52px] xs:min-h-[48px] xs:min-h-[52px] sm:min-h-[48px] xs:min-h-[48px] xs:min-h-[52px] sm:min-h-[56px] text-xs xs:text-sm sm:text-base md:text-lg font-semibold rounded-xl sm:rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl touch-manipulation active:scale-[0.98]"
+            className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 active:from-green-800 active:to-green-900 text-white h-14 text-base font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl touch-manipulation active:scale-[0.98] ring-2 ring-green-200 hover:ring-green-300"
           >
             {isLoading ? (
               <span className="flex items-center justify-center">
@@ -778,10 +787,10 @@ export function CreateMatchScreen() {
                 ✓ Partido creado
               </span>
             ) : (
-              "Crear Partido"
+              "⚽ Crear Partido"
             )}
           </Button>
-          <p className="text-center text-sm sm:text-base text-gray-500 mt-3 sm:mt-4 px-4">
+          <p className="text-center text-sm text-gray-500 mt-3 px-4">
             Tu partido será visible para otros jugadores
           </p>
         </div>
