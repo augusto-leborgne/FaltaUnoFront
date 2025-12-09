@@ -521,29 +521,41 @@ export function CreateMatchScreen() {
         )}
 
         {/* Tipo de partido */}
-        <div className="mb-5 xs:mb-6">
+        <div className="mb-6">
           <label className="block text-sm font-bold text-gray-900 mb-3">
-            Tipo de partido <span className="text-red-500">*</span>
+            ⚽ Tipo de partido <span className="text-red-500">*</span>
           </label>
-          <div className="flex justify-start gap-3">
+          <div className="grid grid-cols-2 gap-2.5">
             {Object.values(TipoPartido).map((type) => {
-              const shortLabel = type === TipoPartido.FUTBOL_5 ? 'F5' 
-                : type === TipoPartido.FUTBOL_7 ? 'F7'
-                : type === TipoPartido.FUTBOL_8 ? 'F8'
-                : 'F11'
+              const config = {
+                [TipoPartido.FUTBOL_5]: { label: 'Fútbol 5', players: '10 jugadores', emoji: '⚽' },
+                [TipoPartido.FUTBOL_7]: { label: 'Fútbol 7', players: '14 jugadores', emoji: '🥅' },
+                [TipoPartido.FUTBOL_8]: { label: 'Fútbol 8', players: '16 jugadores', emoji: '🏟️' },
+                [TipoPartido.FUTBOL_11]: { label: 'Fútbol 11', players: '22 jugadores', emoji: '🏆' },
+              }[type]
               return (
                 <button
                   key={type}
                   type="button"
                   onClick={() => handleInputChange("type", type)}
                   disabled={isLoading}
-                  className={`w-14 h-14 rounded-full text-base font-bold border-2 transition-all touch-manipulation disabled:opacity-50 active:scale-95 flex items-center justify-center shadow-sm hover:shadow-md ${formData.type === type
-                    ? "bg-gradient-to-br from-green-500 to-green-600 text-white border-green-600 shadow-lg ring-2 ring-green-200"
-                    : "bg-white text-gray-700 border-gray-200 hover:border-green-500 hover:bg-green-50"
+                  className={`p-3.5 rounded-2xl border-2 transition-all touch-manipulation disabled:opacity-50 active:scale-[0.97] text-left ${formData.type === type
+                    ? "bg-gradient-to-br from-green-500 to-green-600 text-white border-green-600 shadow-lg"
+                    : "bg-white text-gray-700 border-gray-200 hover:border-green-400 hover:shadow-md"
                     }`}
-                  aria-label={`Tipo ${shortLabel}`}
+                  aria-label={config.label}
                 >
-                  {shortLabel}
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-2xl">{config.emoji}</span>
+                    <div className="flex-1">
+                      <div className={`text-sm font-bold ${formData.type === type ? 'text-white' : 'text-gray-900'}`}>
+                        {config.label}
+                      </div>
+                      <div className={`text-xs font-medium mt-0.5 ${formData.type === type ? 'text-green-100' : 'text-gray-500'}`}>
+                        {config.players}
+                      </div>
+                    </div>
+                  </div>
                 </button>
               )
             })}
@@ -551,66 +563,61 @@ export function CreateMatchScreen() {
         </div>
 
         {/* Género */}
-        <div className="mb-5 xs:mb-6">
+        <div className="mb-6">
           <label className="block text-sm font-bold text-gray-900 mb-3">
-            Género <span className="text-red-500">*</span>
+            👤 Género <span className="text-red-500">*</span>
           </label>
-          <div className="flex gap-2.5">
+          <div className="p-1.5 bg-gray-100 rounded-2xl flex gap-1">
             {[{label: "Mixto", icon: "👥"}, {label: "Hombres", icon: "👨"}, {label: "Mujeres", icon: "👩"}].map(({label, icon}) => (
               <button
                 key={label}
                 type="button"
                 onClick={() => handleInputChange("gender", label)}
                 disabled={isLoading}
-                className={`flex-1 px-4 py-3 rounded-xl text-sm font-semibold border-2 transition-all touch-manipulation disabled:opacity-50 active:scale-[0.98] flex items-center justify-center gap-2 shadow-sm hover:shadow-md min-h-[48px] ${formData.gender === label
-                  ? "bg-gradient-to-br from-orange-500 to-orange-600 text-white border-orange-600 shadow-lg ring-2 ring-orange-200"
-                  : "bg-white text-gray-700 border-gray-200 hover:border-orange-500 hover:bg-orange-50"
+                className={`flex-1 px-3 py-3 rounded-xl text-sm font-bold transition-all touch-manipulation disabled:opacity-50 active:scale-95 flex items-center justify-center gap-2 ${formData.gender === label
+                  ? "bg-white text-orange-600 shadow-md"
+                  : "text-gray-600 hover:text-gray-900"
                   }`}
                 aria-label={`Género ${label}`}
               >
                 <span className="text-lg">{icon}</span>
-                <span>{label}</span>
+                <span className="text-sm font-bold">{label}</span>
               </button>
             ))}
           </div>
         </div>
 
         {/* Fecha y Hora */}
-        <div className="grid grid-cols-2 gap-1.5 xs:gap-2 sm:gap-3 mb-1.5 xs:mb-2 sm:mb-3 md:mb-4">
-          <div className="w-full min-w-0">
-            <label className="block text-sm font-bold text-gray-900 mb-2">
-              Fecha <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none z-10" />
+        <div className="mb-6">
+          <label className="block text-sm font-bold text-gray-900 mb-3">
+            📅 Fecha y hora <span className="text-red-500">*</span>
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="w-full">
+              <div className="text-xs font-semibold text-gray-600 mb-2">Fecha</div>
               <Input
                 type="date"
                 value={formData.date}
                 onChange={(e) => handleInputChange("date", e.target.value)}
                 min={today}
                 max={maxDate}
-                className={`pl-11 pr-3 h-12 text-sm text-center rounded-xl border-2 w-full ${fieldErrors.date ? 'border-red-500' : 'border-gray-200'} focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-50 shadow-sm hover:shadow-md transition-shadow`}
+                className={`px-4 h-12 text-sm font-medium rounded-xl border-2 w-full ${fieldErrors.date ? 'border-red-500' : 'border-gray-200'} focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-50 shadow-sm hover:shadow-md transition-all bg-white`}
                 required
                 disabled={isLoading}
               />
+              {fieldErrors.date && (
+                <p className="text-xs text-red-600 mt-1.5 flex items-center">
+                  <AlertCircle className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
+                  <span className="truncate">{fieldErrors.date}</span>
+                </p>
+              )}
             </div>
-            {fieldErrors.date && (
-              <p className="text-xs text-red-600 mt-1.5 flex items-center">
-                <AlertCircle className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
-                <span className="truncate">{fieldErrors.date}</span>
-              </p>
-            )}
-          </div>
-          <div className="w-full min-w-0">
-            <label className="block text-sm font-bold text-gray-900 mb-2">
-              Hora <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none z-10" />
+            <div className="w-full">
+              <div className="text-xs font-semibold text-gray-600 mb-2">Hora</div>
               <select
                 value={formData.time}
                 onChange={(e) => handleInputChange("time", e.target.value)}
-                className={`w-full pl-11 pr-8 h-12 rounded-xl border-2 ${fieldErrors.time ? 'border-red-500' : 'border-gray-200'} bg-white text-gray-900 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation shadow-sm hover:shadow-md transition-shadow appearance-none`}
+                className={`w-full px-4 h-12 rounded-xl border-2 ${fieldErrors.time ? 'border-red-500' : 'border-gray-200'} bg-white text-gray-900 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-50 shadow-sm hover:shadow-md transition-all cursor-pointer`}
                 required
                 disabled={isLoading}
               >
@@ -621,25 +628,20 @@ export function CreateMatchScreen() {
                   </option>
                 ))}
               </select>
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </div>
+              {fieldErrors.time && (
+                <p className="text-xs text-red-600 mt-1.5 flex items-center">
+                  <AlertCircle className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
+                  <span className="truncate">{fieldErrors.time}</span>
+                </p>
+              )}
             </div>
-            {fieldErrors.time && (
-              <p className="text-xs text-red-600 mt-1.5 flex items-center">
-                <AlertCircle className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
-                <span className="truncate">{fieldErrors.time}</span>
-              </p>
-            )}
           </div>
         </div>
 
         {/* Ubicación */}
-        <div className="mb-5 xs:mb-6">
+        <div className="mb-6">
           <label className="block text-sm font-bold text-gray-900 mb-2">
-            Ubicación <span className="text-red-500">*</span>
+            📍 Ubicación de la cancha <span className="text-red-500">*</span>
           </label>
           <AddressAutocomplete
             value={formData.location}
@@ -664,61 +666,66 @@ export function CreateMatchScreen() {
         </div>
 
         {/* Costo */}
-        <div className="mb-5 xs:mb-6">
+        <div className="mb-6">
           <label className="block text-sm font-bold text-gray-900 mb-2">
-            Costo del partido ($UYU) <span className="text-red-500">*</span>
+            💰 Costo del partido <span className="text-red-500">*</span>
           </label>
-          <div className="relative">
-            <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none z-10" />
-            <Input
-              type="number"
-              min="0"
-              max="1000000"
-              step="10"
-              value={formData.totalPrice}
-              onChange={(e) => handleInputChange("totalPrice", e.target.value === "" ? 0 : parseFloat(e.target.value))}
-              placeholder="Ingresa 0 si es gratis"
-              className={`pl-11 pr-4 h-12 text-sm rounded-xl border-2 w-full ${fieldErrors.totalPrice ? 'border-red-500' : 'border-gray-200'} focus:ring-2 focus:ring-green-500 focus:border-transparent shadow-sm hover:shadow-md transition-shadow`}
-              required
-              disabled={isLoading}
-            />
+          <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 border-2 border-gray-200">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-2xl font-bold text-gray-700">$</span>
+              <Input
+                type="number"
+                min="0"
+                max="1000000"
+                step="10"
+                value={formData.totalPrice}
+                onChange={(e) => handleInputChange("totalPrice", e.target.value === "" ? 0 : parseFloat(e.target.value))}
+                placeholder="0"
+                className={`flex-1 px-4 h-12 text-lg font-bold rounded-xl border-2 ${fieldErrors.totalPrice ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-green-500 focus:border-green-500 shadow-sm bg-white`}
+                required
+                disabled={isLoading}
+              />
+              <span className="text-sm font-bold text-gray-500">UYU</span>
+            </div>
+            {fieldErrors.totalPrice && (
+              <p className="text-xs text-red-600 flex items-center">
+                <AlertCircle className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
+                {fieldErrors.totalPrice}
+              </p>
+            )}
+            {formData.totalPrice > 0 ? (
+              <div className="bg-green-500 text-white rounded-xl p-3 text-center">
+                <p className="text-xs font-semibold mb-0.5">Costo por jugador</p>
+                <p className="text-2xl font-bold">${pricePerPlayer}</p>
+              </div>
+            ) : (
+              <div className="bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-xl p-3 text-center">
+                <p className="text-sm font-bold">🎉 Partido Gratuito</p>
+              </div>
+            )}
           </div>
-          {fieldErrors.totalPrice && (
-            <p className="text-xs text-red-600 mt-1.5 flex items-center">
-              <AlertCircle className="w-3.5 h-3.5 mr-1 flex-shrink-0" />
-              {fieldErrors.totalPrice}
-            </p>
-          )}
-          {formData.totalPrice > 0 && (
-            <p className="text-sm text-green-600 mt-2 font-semibold">
-              💰 ${pricePerPlayer} por jugador
-            </p>
-          )}
         </div>
 
         {/* Duración */}
-        <div className="mb-5 xs:mb-6">
+        <div className="mb-6">
           <label className="block text-sm font-bold text-gray-900 mb-2">
-            Duración (minutos) <span className="text-red-500">*</span>
+            ⏱️ Duración del partido <span className="text-red-500">*</span>
           </label>
-          <div className="relative">
-            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none z-10" />
-            <select
-              value={formData.duration || 60}
-              onChange={(e) => handleInputChange("duration", parseInt(e.target.value))}
-              className={`w-full pl-11 pr-8 h-12 rounded-xl border-2 ${fieldErrors.duration ? 'border-red-500' : 'border-gray-200'} bg-white text-gray-900 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation shadow-sm hover:shadow-md transition-shadow appearance-none`}
-              disabled={isLoading}
-            >
-              <option value={60}>60 minutos</option>
-              <option value={90}>90 minutos</option>
-              <option value={120}>120 minutos</option>
-              <option value={150}>150 minutos</option>
-            </select>
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
+          <div className="grid grid-cols-4 gap-2">
+            {[60, 90, 120, 150].map((mins) => (
+              <button
+                key={mins}
+                type="button"
+                onClick={() => handleInputChange("duration", mins)}
+                disabled={isLoading}
+                className={`py-3 rounded-xl border-2 transition-all touch-manipulation disabled:opacity-50 active:scale-95 ${formData.duration === mins
+                  ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white border-blue-600 shadow-lg font-bold"
+                  : "bg-white text-gray-700 border-gray-200 hover:border-blue-400 hover:shadow-md font-medium"
+                  }`}
+              >
+                <div className="text-base font-bold">{mins}'</div>
+              </button>
+            ))}
           </div>
           {fieldErrors.duration && (
             <p className="text-xs text-red-600 mt-1.5 flex items-center">
@@ -731,14 +738,14 @@ export function CreateMatchScreen() {
         {/* Descripción */}
         <div className="mb-6">
           <label className="block text-sm font-bold text-gray-900 mb-2">
-            Descripción <span className="text-red-500">*</span>
+            📝 Descripción e información adicional <span className="text-red-500">*</span>
           </label>
           <Textarea
-            placeholder="Describe la modalidad del partido (ej: 2 tiempos de 30 min), detalles de la cancha (ubicación exacta, superficie, vestuarios, estacionamiento, etc.)"
+            placeholder="Describe la modalidad (ej: 2 tiempos de 30 min), superficie (césped, sintético), servicios (vestuarios, estacionamiento), nivel requerido, etc."
             value={formData.description}
             onChange={(e) => handleInputChange("description", e.target.value)}
-            className={`min-h-[120px] py-3 px-4 rounded-xl resize-none text-sm border-2 w-full ${fieldErrors.description ? 'border-red-500' : 'border-gray-200'} focus:ring-2 focus:ring-green-500 focus:border-transparent shadow-sm hover:shadow-md transition-shadow`}
-            rows={5}
+            className={`min-h-[140px] py-4 px-4 rounded-2xl resize-none text-sm border-2 w-full ${fieldErrors.description ? 'border-red-500' : 'border-gray-200'} focus:ring-2 focus:ring-green-500 focus:border-green-500 shadow-sm hover:shadow-md transition-all bg-white font-medium leading-relaxed`}
+            rows={6}
             disabled={isLoading}
             maxLength={500}
             required
@@ -749,23 +756,33 @@ export function CreateMatchScreen() {
               {fieldErrors.description}
             </p>
           )}
-          <p className="text-xs text-gray-500 mt-1.5 font-medium">
-            {formData.description.length}/500 caracteres
-          </p>
+          <div className="flex items-center justify-between mt-2">
+            <p className="text-xs text-gray-500 font-medium">
+              {formData.description.length}/500 caracteres
+            </p>
+            <p className="text-xs text-gray-400">
+              Mín. 10 caracteres
+            </p>
+          </div>
 
           {/* Disclaimer sobre reservas */}
-          <div className="mt-4 p-4 bg-gradient-to-br from-orange-50 to-orange-100 border-2 border-orange-300 rounded-xl shadow-sm">
-            <p className="text-xs text-orange-900 flex items-start leading-relaxed">
-              <AlertCircle className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" />
-              <span>
-                <strong className="font-bold">Importante:</strong> Falta Uno no gestiona reservas de canchas. Es responsabilidad del organizador coordinar y pagar la reserva de la cancha.
-              </span>
-            </p>
+          <div className="mt-4 p-4 bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 border-2 border-orange-200 rounded-2xl shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <AlertCircle className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-orange-900 mb-1">⚠️ Importante</p>
+                <p className="text-xs text-orange-800 leading-relaxed">
+                  Falta Uno no gestiona reservas de canchas. Es tu responsabilidad como organizador coordinar y pagar la reserva.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Submit Button */}
-        <div className="pb-4">
+        <div className="pb-4 pt-2">
           <Button
             type="submit"
             disabled={
@@ -775,24 +792,36 @@ export function CreateMatchScreen() {
               !formData.time ||
               !formData.location
             }
-            className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 active:from-green-800 active:to-green-900 text-white h-14 text-base font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl touch-manipulation active:scale-[0.98] ring-2 ring-green-200 hover:ring-green-300"
+            className="w-full bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 hover:from-green-700 hover:via-emerald-700 hover:to-teal-700 text-white h-16 text-lg font-bold rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-xl hover:shadow-2xl touch-manipulation active:scale-[0.97] border-none relative overflow-hidden group"
           >
+            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
             {isLoading ? (
-              <span className="flex items-center justify-center">
-                <LoadingSpinner size="sm" variant="white" className="mr-2" />
-                Creando partido...
+              <span className="flex items-center justify-center relative z-10">
+                <LoadingSpinner size="sm" variant="white" className="mr-3" />
+                <span className="text-base">Creando tu partido...</span>
               </span>
             ) : success ? (
-              <span className="flex items-center justify-center">
-                ✓ Partido creado
+              <span className="flex items-center justify-center relative z-10">
+                <svg className="w-6 h-6 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
+                <span className="text-base">¡Partido creado!</span>
               </span>
             ) : (
-              "⚽ Crear Partido"
+              <span className="flex items-center justify-center relative z-10">
+                <span className="text-2xl mr-3">⚽</span>
+                <span>Crear Partido</span>
+              </span>
             )}
           </Button>
-          <p className="text-center text-sm text-gray-500 mt-3 px-4">
-            Tu partido será visible para otros jugadores
-          </p>
+          <div className="mt-4 text-center">
+            <p className="text-xs text-gray-500 leading-relaxed">
+              🌍 Tu partido será visible para todos los jugadores
+            </p>
+            <p className="text-xs text-gray-400 mt-1">
+              Recibirás notificaciones cuando alguien se inscriba
+            </p>
+          </div>
         </div>
       </form>
 
