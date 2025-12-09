@@ -66,43 +66,26 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
     logger.log('[MatchChat] 📡 WebSocket event:', event.type, event)
 
     if (event.type === 'NEW_MESSAGE' && event.mensaje) {
-      // Agregar nuevo mensaje al estado
+      // ⚡ FIX: Si el mensaje es mío, NO agregarlo (ya está optimista)
+      if (event.mensaje.usuarioId === currentUser?.id) {
+        logger.log('[MatchChat] Reemplazando mensaje optimista con el real')
+        // Solo reemplazar el optimista con el real
+        setMessages(prev => prev.map(m =>
+          m.id.startsWith('temp-') &&
+            m.usuarioId === event.mensaje.usuarioId &&
+            m.contenido === event.mensaje.contenido
+            ? event.mensaje
+            : m
+        ))
+        return
+      }
+
+      // Mensaje de otro usuario - agregarlo
       setMessages(prev => {
-        // ⚡ FIX: Evitar duplicados por ID exacto
+        // Evitar duplicados por ID exacto
         const existsById = prev.some(m => m.id === event.mensaje.id)
         if (existsById) {
           logger.log('[MatchChat] Skipping duplicate message by ID:', event.mensaje.id)
-          return prev
-        }
-
-        // ⚡ FIX: Check for optimistic message FIRST (before duplicate detection)
-        // This ensures temp messages are properly replaced
-        const hasOptimistic = prev.some(m => m.id.startsWith('temp-') &&
-          m.usuarioId === event.mensaje.usuarioId &&
-          m.contenido === event.mensaje.contenido)
-
-        if (hasOptimistic) {
-          logger.log('[MatchChat] Replacing optimistic message with real one')
-          // Reemplazar el mensaje optimista con el real
-          return prev.map(m =>
-            m.id.startsWith('temp-') &&
-              m.usuarioId === event.mensaje.usuarioId &&
-              m.contenido === event.mensaje.contenido
-              ? event.mensaje
-              : m
-          )
-        }
-
-        // ⚡ FIX: Only check for very recent duplicates if NOT an optimistic replacement
-        // (this prevents real duplicates from other sources)
-        const isVeryRecent = prev.some(m =>
-          m.usuarioId === event.mensaje.usuarioId &&
-          m.contenido === event.mensaje.contenido &&
-          Math.abs(new Date(m.createdAt).getTime() - new Date(event.mensaje.createdAt).getTime()) < 1000
-        )
-
-        if (isVeryRecent) {
-          logger.log('[MatchChat] Skipping very recent duplicate')
           return prev
         }
 
@@ -124,12 +107,11 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
     }
 
     // 🔥 Manejar evento de "usuario está escribiendo"
-    if (event.type === 'USER_TYPING' && event.userId && event.userId !== currentUser?.id) {
+    if (event.type === 'USER_TYPING') {
       const { userId, userName, isTyping } = event
 
-      // ⚡ FIX: Double-check it's not the current user (extra safety)
-      if (userId === currentUser?.id) {
-        logger.warn('[MatchChat] Ignoring own typing event')
+      // ⚡ FIX: NUNCA mostrar typing propio
+      if (!userId || userId === currentUser?.id) {
         return
       }
 
@@ -778,21 +760,19 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
                   {/* Avatar con foto - SIEMPRE visible */}
                   {!isOwn ? (
                     <div
-                      className="w-7 h-7 xs:w-8 xs:h-8 sm:w-9 sm:h-9 cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all flex-shrink-0 shadow-md touch-manipulation rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-blue-600 relative"
+                      className="w-7 h-7 xs:w-8 xs:h-8 sm:w-9 sm:h-9 cursor-pointer hover:ring-2 hover:ring-blue-300 transition-all flex-shrink-0 shadow-md touch-manipulation rounded-full overflow-hidden relative"
                       onClick={() => handleUserClick(msg.usuarioId)}
                     >
-                      <img
-                        src={getUserPhotoUrlMemo(msg.usuarioId)}
-                        alt={userName}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none'
-                        }}
-                      />
-                      {/* Fallback con iniciales */}
-                      <div className="w-full h-full flex items-center justify-center text-white text-[10px] xs:text-xs sm:text-sm font-bold">
-                        {initials}
-                      </div>
+                      <Avatar className="w-full h-full">
+                        <AvatarImage 
+                          src={getUserPhotoUrlMemo(msg.usuarioId)} 
+                          alt={userName}
+                          className="object-cover"
+                        />
+                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white text-[10px] xs:text-xs sm:text-sm font-bold">
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
                     </div>
                   ) : null}
 
@@ -885,8 +865,8 @@ export function MatchChatScreen({ matchId }: MatchChatScreenProps) {
         </div>
       )}
 
-      {/* Message Input - Mobile friendly */}
-      <div className="border-t-2 border-blue-100 bg-white shadow-lg">
+      {/* Message Input - Mobile friendly - FIXED para que no desaparezca al scrollear */}
+      <div className="sticky bottom-0 left-0 right-0 z-20 border-t-2 border-blue-100 bg-white shadow-lg">
         {/* Reply preview mejorado - Mobile */}
         {replyingTo && (
           <div className="px-2.5 xs:px-3 pt-1.5 xs:pt-2 pb-1 xs:pb-1.5 bg-blue-50">
