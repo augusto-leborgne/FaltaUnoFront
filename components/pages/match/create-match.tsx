@@ -158,7 +158,6 @@ export function CreateMatchScreen() {
     switch (field) {
       case "date":
         if (!value) return "Selecciona una fecha"
-        // ⚡ FIX: Use date-only comparison to avoid timezone offset issues
         const today = new Date().toISOString().split('T')[0]
         if (value < today) return "La fecha no puede ser en el pasado"
 
@@ -171,11 +170,15 @@ export function CreateMatchScreen() {
 
       case "time":
         if (!value) return "Selecciona una hora"
-        // Validar que sea hora futura si es hoy
+        // Validar que sea al menos 2 horas adelante
         if (formData.date) {
           const dateTime = new Date(`${formData.date}T${value}`)
           const now = new Date()
-          if (dateTime <= now) return "La hora debe ser futura"
+          const minTime = new Date(now.getTime() + 2 * 60 * 60 * 1000) // 2 horas adelante
+          
+          if (dateTime < minTime) {
+            return "El partido debe ser al menos 2 horas desde ahora"
+          }
         }
         return null
 
@@ -225,13 +228,14 @@ export function CreateMatchScreen() {
       return "Debes seleccionar una hora"
     }
 
-    // Validar que sea fecha y hora futuras (permitir hoy si la hora es futura)
+    // Validar que sea al menos 2 horas adelante
     try {
       const dateTime = new Date(`${formData.date}T${formData.time}`)
       const now = new Date()
+      const minTime = new Date(now.getTime() + 2 * 60 * 60 * 1000) // 2 horas adelante
 
-      if (dateTime <= now) {
-        return "La fecha y hora deben ser futuras (al menos 15 minutos adelante)"
+      if (dateTime < minTime) {
+        return "El partido debe ser al menos 2 horas desde ahora"
       }
     } catch {
       return "Fecha u hora inválidas"
@@ -275,6 +279,26 @@ export function CreateMatchScreen() {
   const handleBack = () => {
     if (isLoading) return
     router.back()
+  }
+
+  // Verificar si el formulario es válido para habilitar/deshabilitar botón
+  const isFormValid = () => {
+    // Verificar que no haya errores de campo
+    const hasFieldErrors = Object.values(fieldErrors).some(error => error !== undefined && error !== null)
+    if (hasFieldErrors) return false
+    
+    // Verificar campos requeridos
+    if (!formData.date || !formData.time || !formData.location || !formData.description) {
+      return false
+    }
+    
+    // Verificar descripción mínima
+    if (formData.description.trim().length < 10) return false
+    
+    // Verificar coordenadas de ubicación
+    if (!locationCoordinates) return false
+    
+    return true
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -446,10 +470,10 @@ export function CreateMatchScreen() {
         const minuteStr = minute.toString().padStart(2, '0')
         const timeStr = `${hourStr}:${minuteStr}`
 
-        // Si es hoy, solo mostrar horas futuras (con al menos 15 minutos de margen)
+        // Si es hoy, solo mostrar horas al menos 2 horas en el futuro
         if (isToday) {
           const timeDate = new Date(`${formData.date}T${timeStr}`)
-          const minTime = new Date(now.getTime() + 15 * 60000) // +15 minutos
+          const minTime = new Date(now.getTime() + 2 * 60 * 60 * 1000) // 2 horas adelante
           if (timeDate < minTime) continue
         }
 
@@ -486,7 +510,7 @@ export function CreateMatchScreen() {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex-1 px-2.5 xs:px-3 sm:px-4 md:px-5 py-2.5 xs:py-3 sm:py-4 pb-20 xs:pb-22 sm:pb-24 md:pb-28 overflow-y-auto max-w-2xl mx-auto w-full">
+      <form onSubmit={handleSubmit} className="flex-1 px-2.5 xs:px-3 sm:px-4 md:px-5 py-2.5 xs:py-3 sm:py-4 pb-24 xs:pb-28 sm:pb-32 md:pb-36 overflow-y-auto max-w-2xl mx-auto w-full">
         {/* Success Message */}
         {success && (
           <div className="mb-3 xs:mb-4 sm:mb-5 md:mb-6 p-3 xs:p-4 sm:p-5 bg-primary/10 border-2 border-primary/30 rounded-xl sm:rounded-2xl flex items-start gap-2 xs:gap-3">
@@ -499,24 +523,6 @@ export function CreateMatchScreen() {
               <p className="text-primary text-xs xs:text-sm sm:text-base font-semibold">¡Partido creado!</p>
               <p className="text-primary/80 text-[11px] xs:text-xs sm:text-sm">Redirigiendo...</p>
             </div>
-          </div>
-        )}
-
-        {/* Error Message */}
-        {error && (
-          <div className="mb-4 xs:mb-5 sm:mb-6 p-3 xs:p-4 sm:p-5 bg-red-50 border-2 border-red-200 rounded-xl sm:rounded-2xl flex items-start gap-2 xs:gap-3">
-            <AlertCircle className="w-4 xs:w-5 h-4 xs:h-5 text-red-600 flex-shrink-0 mt-0.5" />
-            <div className="flex-1 min-w-0">
-              <p className="text-red-600 text-xs xs:text-sm sm:text-base font-semibold">Error</p>
-              <p className="text-red-600 text-[11px] xs:text-xs sm:text-sm break-words">{error}</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setError("")}
-              className="text-red-600 hover:text-red-700 min-w-[36px] xs:min-w-[40px] min-h-[36px] xs:min-h-[40px] flex items-center justify-center touch-manipulation active:scale-95 text-base xs:text-lg flex-shrink-0"
-            >
-              ✕
-            </button>
           </div>
         )}
 
@@ -783,15 +789,13 @@ export function CreateMatchScreen() {
         </div>
 
         {/* Submit Button */}
-        <div className="pb-3 xs:pb-4 pt-2 xs:pt-3">
+        <div className="pb-6 xs:pb-8 pt-2 xs:pt-3">
           <Button
             type="submit"
             disabled={
               isLoading ||
               success ||
-              !formData.date ||
-              !formData.time ||
-              !formData.location
+              !isFormValid()
             }
             className="w-full bg-green-600 hover:bg-green-700 active:bg-green-800 text-white h-11 xs:h-12 sm:h-14 text-sm xs:text-base sm:text-lg font-bold rounded-lg xs:rounded-xl sm:rounded-2xl disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl touch-manipulation active:scale-[0.97] border-none"
           >
@@ -811,6 +815,17 @@ export function CreateMatchScreen() {
               <span>Crear Partido</span>
             )}
           </Button>
+          
+          {/* Error Message - Below button */}
+          {error && (
+            <div className="mt-3 xs:mt-4 p-2.5 xs:p-3 bg-red-50 border-2 border-red-200 rounded-lg xs:rounded-xl flex items-start gap-2">
+              <AlertCircle className="w-4 xs:w-5 h-4 xs:h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-red-600 text-xs xs:text-sm font-semibold mb-0.5">Error</p>
+                <p className="text-red-600 text-[11px] xs:text-xs break-words">{error}</p>
+              </div>
+            </div>
+          )}
         </div>
       </form>
 
