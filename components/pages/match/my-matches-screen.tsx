@@ -11,7 +11,7 @@ import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { AuthService } from "@/lib/auth"
 import { PartidoAPI, PartidoDTO } from "@/lib/api"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import { formatMatchDate } from "@/lib/utils"
+import { formatMatchDate, formatSpotsLeft, formatLocation } from "@/lib/utils"
 import { PageContainer, PageContent } from "@/components/ui/page-container"
 import { PageHeader } from "@/components/ui/page-header"
 
@@ -313,9 +313,9 @@ export function MyMatchesScreen() {
                       </div>
 
                       {/* Location - Better truncation on mobile */}
-                      <div className="flex items-start text-gray-600 text-sm sm:text-base">
-                        <MapPin className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 flex-shrink-0 mt-0.5" />
-                        <span className="line-clamp-2 sm:line-clamp-1 font-medium">{match.nombreUbicacion}</span>
+                      <div className="flex items-start text-gray-600 text-xs sm:text-sm">
+                        <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 flex-shrink-0 mt-0.5" />
+                        <span className="line-clamp-2 sm:line-clamp-1">{formatLocation(match.nombreUbicacion)}</span>
                       </div>
                     </div>
 
@@ -328,7 +328,7 @@ export function MyMatchesScreen() {
                           <span className="text-gray-400 font-medium">/{match.cantidadJugadores}</span>
                         </span>
                       </div>
-                      <span className="text-sm sm:text-base text-green-600 font-bold">
+                      <span className="text-sm sm:text-base text-green-600 font-semibold">
                         {activeTab === "Creados" ? "Gestionar →" : "Ver detalles →"}
                       </span>
                     </div>

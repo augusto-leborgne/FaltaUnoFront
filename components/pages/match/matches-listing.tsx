@@ -22,7 +22,7 @@ import {
   InscripcionAPI,
   InscripcionEstado
 } from "@/lib/api"
-import { formatMatchDate } from "@/lib/utils" // ✅ FIX: Import for date formatting without timezone issues
+import { formatMatchDate, formatSpotsLeft, formatLocation } from "@/lib/utils" // ✅ FIX: Import for date formatting without timezone issues
 import { useGlobalPartidos } from "@/hooks/use-websocket"
 import { WebSocketEvent } from "@/lib/websocket-client"
 
@@ -596,7 +596,7 @@ export function MatchesListing() {
                         </Badge>
                       </div>
                       <Badge className={`${getSpotsLeftColor(spotsLeft)} hover:bg-current text-[10px] xs:text-xs sm:text-sm px-2 xs:px-2.5 py-1 sm:px-3 sm:py-1.5 whitespace-nowrap flex-shrink-0 font-semibold`}>
-                        {spotsLeft === 0 ? "Completo" : `${spotsLeft} lugar${spotsLeft !== 1 ? 'es' : ''}`}
+                        {formatSpotsLeft(spotsLeft)}
                       </Badge>
                     </div>
 
@@ -617,9 +617,9 @@ export function MatchesListing() {
                       </div>
 
                       {/* Location */}
-                      <div className="flex items-start text-gray-600 text-xs xs:text-sm sm:text-base">
-                        <MapPin className="w-3.5 xs:w-4 sm:w-5 h-3.5 xs:h-4 sm:h-5 mr-1 xs:mr-1.5 flex-shrink-0 mt-0.5" />
-                        <span className="line-clamp-2 sm:line-clamp-1 font-medium">{match.nombreUbicacion}</span>
+                      <div className="flex items-start text-gray-600 text-xs xs:text-sm">
+                        <MapPin className="w-3.5 xs:w-4 h-3.5 xs:h-4 mr-1 flex-shrink-0 mt-0.5" />
+                        <span className="line-clamp-2 sm:line-clamp-1">{formatLocation(match.nombreUbicacion)}</span>
                       </div>
                     </div>
 
@@ -629,7 +629,7 @@ export function MatchesListing() {
                         <span className="font-bold text-gray-900">{match.jugadoresActuales}</span>
                         <span className="text-gray-400 font-medium">/{match.cantidadJugadores}</span>
                       </span>
-                      <span className="text-xs xs:text-sm sm:text-base text-green-600 font-bold">
+                      <span className="text-xs xs:text-sm sm:text-base text-green-600 font-semibold">
                         Ver detalles →
                       </span>
                     </div>

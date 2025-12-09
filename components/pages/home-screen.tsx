@@ -16,7 +16,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { useNotifications } from "@/hooks/use-notifications"
 import { useCurrentUser } from "@/hooks/use-current-user"
 import { apiCache } from "@/lib/api-cache-manager"
-import { formatDateShort, formatMatchType, formatMatchDate, getSpotsLeftColor } from "@/lib/utils"
+import { formatDateShort, formatMatchType, formatMatchDate, getSpotsLeftColor, formatSpotsLeft, formatLocation } from "@/lib/utils"
 
 interface Partido {
   id: string
@@ -488,7 +488,7 @@ export function HomeScreen() {
                       </Badge>
                     </div>
                     <Badge className={`${getSpotsLeftColor(spotsLeft)} hover:bg-current text-xs sm:text-sm px-2 py-0.5 sm:px-2.5 sm:py-1 whitespace-nowrap flex-shrink-0`}>
-                      {spotsLeft === 0 ? "Completo" : spotsLeft === 1 ? "Falta 1" : `Faltan ${spotsLeft}`}
+                      {formatSpotsLeft(spotsLeft)}
                     </Badge>
                   </div>
 
@@ -515,7 +515,7 @@ export function HomeScreen() {
                     {/* Location */}
                     <div className="flex items-start text-gray-600 text-xs sm:text-sm">
                       <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 flex-shrink-0 mt-0.5" />
-                      <span className="line-clamp-2 sm:line-clamp-1">{match.nombre_ubicacion}</span>
+                      <span className="line-clamp-2 sm:line-clamp-1">{formatLocation(match.nombre_ubicacion)}</span>
                     </div>
                   </div>
 
@@ -525,7 +525,7 @@ export function HomeScreen() {
                       <span className="font-semibold text-gray-900">{match.jugadores_actuales}</span>
                       <span className="text-gray-400">/{match.cantidad_jugadores}</span>
                     </span>
-                    <span className="text-xs sm:text-sm text-green-600 font-semibold">
+                    <span className="text-xs sm:text-sm text-green-600">
                       Ver detalles →
                     </span>
                   </div>

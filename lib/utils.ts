@@ -287,3 +287,40 @@ export function getSpotsLeftColor(spotsLeft: number): string {
   if (spotsLeft <= 3) return "bg-yellow-100 text-yellow-800";
   return "bg-green-100 text-green-800";
 }
+
+/**
+ * Formatea el texto de disponibilidad de cupos
+ * @param spotsLeft Cupos disponibles
+ * @returns Texto formateado: "Falta 1" o "Faltan n"
+ */
+export function formatSpotsLeft(spotsLeft: number): string {
+  if (spotsLeft === 0) return "Completo";
+  if (spotsLeft === 1) return "Falta 1";
+  return `Faltan ${spotsLeft}`;
+}
+
+/**
+ * Formatea el nombre de ubicación para mostrar en cards
+ * Si es un lugar específico (sin calle y número), muestra solo el nombre
+ * Si es una dirección completa, la reduce a lo esencial
+ * @param location Nombre completo de la ubicación
+ * @returns Ubicación formateada
+ */
+export function formatLocation(location?: string | null): string {
+  if (!location) return "Ubicación no especificada";
+  
+  // Si tiene coma, es dirección completa - tomar solo la primera parte
+  if (location.includes(',')) {
+    const parts = location.split(',');
+    // Si la primera parte tiene número, es calle - tomar calle y número
+    const firstPart = parts[0].trim();
+    if (/\d/.test(firstPart)) {
+      return firstPart; // "Bvar. Artigas 1234"
+    }
+    // Si no tiene número, es un lugar - mostrar completo hasta el barrio/ciudad
+    return parts.slice(0, 2).join(',').trim(); // "Polideportivo Norte, Montevideo"
+  }
+  
+  // Si no tiene coma, es nombre simple de lugar
+  return location;
+}

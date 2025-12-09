@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Calendar, Clock, Users } from "lucide-react";
 import { PartidoDTO, InscripcionEstado } from "@/lib/api";
-import { formatDateRegional, formatMatchType } from "@/lib/utils";
+import { formatDateRegional, formatMatchType, formatLocation } from "@/lib/utils";
 
 interface MatchCardProps {
   match: PartidoDTO;
@@ -68,10 +68,10 @@ function MatchCardComponent({
       {/* Header */}
       <div className="flex justify-between items-start mb-2.5 xs:mb-3 gap-2">
         <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-base xs:text-lg sm:text-xl truncate">{match.nombreUbicacion || match.nombre_ubicacion}</h3>
+          <h3 className="font-bold text-base xs:text-lg sm:text-xl truncate">{formatDateRegional(match.fecha)}</h3>
           <p className="text-xs xs:text-sm text-gray-600 flex items-center gap-1 mt-1 truncate">
             <MapPin className="w-3 xs:w-3.5 h-3 xs:h-3.5 flex-shrink-0" />
-            <span className="truncate">{match.direccionUbicacion || match.direccion_ubicacion || "Ubicación sin especificar"}</span>
+            <span className="truncate">{formatLocation(match.nombreUbicacion || match.nombre_ubicacion)}</span>
           </p>
         </div>
         
