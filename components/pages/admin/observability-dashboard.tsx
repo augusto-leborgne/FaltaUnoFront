@@ -225,28 +225,28 @@ export function ObservabilityDashboard() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 xs:space-y-5 sm:space-y-6 p-3 xs:p-4 sm:p-5 md:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Observabilidad</h1>
-          <p className="text-muted-foreground">
+      <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-3 xs:gap-4">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-xl xs:text-2xl sm:text-3xl font-bold truncate">Observabilidad</h1>
+          <p className="text-xs xs:text-sm text-muted-foreground truncate">
             Última actualización: {new Date(metrics.timestamp).toLocaleString("es-UY")}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant={autoRefresh ? "default" : "secondary"}>
-            {autoRefresh ? "Auto-refresh: ON" : "Auto-refresh: OFF"}
+        <div className="flex items-center gap-1.5 xs:gap-2 flex-shrink-0">
+          <Badge variant={autoRefresh ? "default" : "secondary"} className="text-xs xs:text-sm whitespace-nowrap">
+            {autoRefresh ? "Auto: ON" : "Auto: OFF"}
           </Badge>
           <button
             onClick={() => setAutoRefresh(!autoRefresh)}
-            className="px-3 py-1 text-sm border rounded-md hover:bg-accent"
+            className="px-2 xs:px-3 py-1.5 xs:py-2 text-xs xs:text-sm border rounded-md hover:bg-accent min-h-[36px] xs:min-h-[40px] touch-manipulation"
           >
             {autoRefresh ? "Pausar" : "Activar"}
           </button>
           <button
             onClick={fetchMetrics}
-            className="px-3 py-1 text-sm border rounded-md hover:bg-accent"
+            className="px-2 xs:px-3 py-1.5 xs:py-2 text-xs xs:text-sm border rounded-md hover:bg-accent min-h-[36px] xs:min-h-[40px] touch-manipulation"
           >
             Actualizar
           </button>
@@ -255,20 +255,20 @@ export function ObservabilityDashboard() {
 
       {/* Alertas */}
       {metrics.alerts.length > 0 && (
-        <div className="space-y-2">
-          <h2 className="text-xl font-semibold">Alertas</h2>
+        <div className="space-y-2 xs:space-y-2.5">
+          <h2 className="text-lg xs:text-xl font-semibold">Alertas</h2>
           {metrics.alerts.map((alert, idx) => (
-            <Card key={idx} className={`p-4 border ${getAlertColor(alert.level)}`}>
-              <div className="flex items-start gap-3">
+            <Card key={idx} className={`p-3 xs:p-4 border ${getAlertColor(alert.level)}`}>
+              <div className="flex items-start gap-2 xs:gap-3">
                 {getAlertIcon(alert.level)}
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge variant="outline">{alert.category}</Badge>
-                    <span className="text-sm font-semibold">{alert.message}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-1.5 xs:gap-2 mb-1">
+                    <Badge variant="outline" className="text-xs">{alert.category}</Badge>
+                    <span className="text-xs xs:text-sm font-semibold break-words">{alert.message}</span>
                   </div>
-                  <p className="text-sm text-muted-foreground mb-2">{alert.details}</p>
-                  <p className="text-xs text-muted-foreground">
-                    <strong>Acción recomendada:</strong> {alert.action}
+                  <p className="text-xs xs:text-sm text-muted-foreground mb-2 break-words">{alert.details}</p>
+                  <p className="text-[10px] xs:text-xs text-muted-foreground break-words">
+                    <strong>Acción:</strong> {alert.action}
                   </p>
                 </div>
               </div>
@@ -279,96 +279,100 @@ export function ObservabilityDashboard() {
 
       {/* Tabs */}
       <Tabs defaultValue="performance" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="performance">
-            <Activity className="h-4 w-4 mr-2" />
-            Rendimiento
+        <div className="overflow-x-auto -mx-3 xs:-mx-4 sm:-mx-5 md:-mx-6 px-3 xs:px-4 sm:px-5 md:px-6">
+          <TabsList className="inline-flex sm:grid w-auto sm:w-full sm:grid-cols-5 gap-1">
+          <TabsTrigger value="performance" className="whitespace-nowrap text-xs xs:text-sm">
+            <Activity className="h-3.5 xs:h-4 w-3.5 xs:w-4 mr-1 xs:mr-2" />
+            <span className="hidden xs:inline">Rendimiento</span>
+            <span className="xs:hidden">Perf</span>
           </TabsTrigger>
-          <TabsTrigger value="costs">
-            <DollarSign className="h-4 w-4 mr-2" />
+          <TabsTrigger value="costs" className="whitespace-nowrap text-xs xs:text-sm">
+            <DollarSign className="h-3.5 xs:h-4 w-3.5 xs:w-4 mr-1 xs:mr-2" />
             Costos
           </TabsTrigger>
-          <TabsTrigger value="users">
-            <Users className="h-4 w-4 mr-2" />
+          <TabsTrigger value="users" className="whitespace-nowrap text-xs xs:text-sm">
+            <Users className="h-3.5 xs:h-4 w-3.5 xs:w-4 mr-1 xs:mr-2" />
             Usuarios
           </TabsTrigger>
-          <TabsTrigger value="system">
-            <Server className="h-4 w-4 mr-2" />
+          <TabsTrigger value="system" className="whitespace-nowrap text-xs xs:text-sm">
+            <Server className="h-3.5 xs:h-4 w-3.5 xs:w-4 mr-1 xs:mr-2" />
             Sistema
           </TabsTrigger>
-          <TabsTrigger value="database">
-            <Database className="h-4 w-4 mr-2" />
-            Base de Datos
+          <TabsTrigger value="database" className="whitespace-nowrap text-xs xs:text-sm">
+            <Database className="h-3.5 xs:h-4 w-3.5 xs:w-4 mr-1 xs:mr-2" />
+            <span className="hidden xs:inline">Base de Datos</span>
+            <span className="xs:hidden">BD</span>
           </TabsTrigger>
         </TabsList>
+        </div>
 
         {/* Performance Tab */}
-        <TabsContent value="performance" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Tiempo Promedio</p>
-                  <p className="text-2xl font-bold">{metrics.performance.avgResponseTime.toFixed(1)}ms</p>
+        <TabsContent value="performance" className="space-y-3 xs:space-y-4 mt-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 xs:gap-3 sm:gap-4">
+            <Card className="p-3 xs:p-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] xs:text-xs sm:text-sm text-muted-foreground truncate">Tiempo Prom.</p>
+                  <p className="text-lg xs:text-xl sm:text-2xl font-bold truncate">{metrics.performance.avgResponseTime.toFixed(1)}ms</p>
                 </div>
-                <Clock className="h-8 w-8 text-blue-500" />
+                <Clock className="h-6 xs:h-7 sm:h-8 w-6 xs:w-7 sm:w-8 text-blue-500 flex-shrink-0" />
               </div>
             </Card>
 
-            <Card className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">P95 Latency</p>
-                  <p className="text-2xl font-bold">{metrics.performance.p95ResponseTime.toFixed(1)}ms</p>
+            <Card className="p-3 xs:p-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] xs:text-xs sm:text-sm text-muted-foreground truncate">P95 Latency</p>
+                  <p className="text-lg xs:text-xl sm:text-2xl font-bold truncate">{metrics.performance.p95ResponseTime.toFixed(1)}ms</p>
                 </div>
-                <Zap className="h-8 w-8 text-yellow-500" />
+                <Zap className="h-6 xs:h-7 sm:h-8 w-6 xs:w-7 sm:w-8 text-yellow-500 flex-shrink-0" />
               </div>
             </Card>
 
-            <Card className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Req/min</p>
-                  <p className="text-2xl font-bold">{metrics.performance.requestsPerMinute}</p>
+            <Card className="p-3 xs:p-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] xs:text-xs sm:text-sm text-muted-foreground truncate">Req/min</p>
+                  <p className="text-lg xs:text-xl sm:text-2xl font-bold truncate">{metrics.performance.requestsPerMinute}</p>
                 </div>
-                <BarChart3 className="h-8 w-8 text-purple-500" />
+                <BarChart3 className="h-6 xs:h-7 sm:h-8 w-6 xs:w-7 sm:w-8 text-purple-500 flex-shrink-0" />
               </div>
             </Card>
 
-            <Card className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Success Rate</p>
-                  <p className="text-2xl font-bold">{metrics.performance.successRate.toFixed(1)}%</p>
+            <Card className="p-3 xs:p-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] xs:text-xs sm:text-sm text-muted-foreground truncate">Success Rate</p>
+                  <p className="text-lg xs:text-xl sm:text-2xl font-bold truncate">{metrics.performance.successRate.toFixed(1)}%</p>
                 </div>
                 {metrics.performance.successRate >= 99 ? (
-                  <CheckCircle className="h-8 w-8 text-green-500" />
+                  <CheckCircle className="h-6 xs:h-7 sm:h-8 w-6 xs:w-7 sm:w-8 text-green-500 flex-shrink-0" />
                 ) : (
-                  <AlertTriangle className="h-8 w-8 text-red-500" />
+                  <AlertTriangle className="h-6 xs:h-7 sm:h-8 w-6 xs:w-7 sm:w-8 text-red-500 flex-shrink-0" />
                 )}
               </div>
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <Card className="p-4">
-              <h3 className="text-lg font-semibold mb-4">Top Endpoints (Llamadas)</h3>
-              <div className="space-y-2">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 xs:gap-4">
+            <Card className="p-3 xs:p-4">
+              <h3 className="text-sm xs:text-base sm:text-lg font-semibold mb-3 xs:mb-4">Top Endpoints (Llamadas)</h3>
+              <div className="space-y-1.5 xs:space-y-2">
                 {Object.entries(metrics.performance.endpointCalls)
                   .sort(([, a], [, b]) => b - a)
                   .slice(0, 5)
                   .map(([endpoint, calls]) => (
-                    <div key={endpoint} className="flex justify-between items-center">
-                      <span className="text-sm truncate max-w-xs">{endpoint}</span>
-                      <Badge variant="secondary">{calls}</Badge>
+                    <div key={endpoint} className="flex justify-between items-center gap-2">
+                      <span className="text-xs xs:text-sm truncate flex-1 min-w-0">{endpoint}</span>
+                      <Badge variant="secondary" className="text-xs flex-shrink-0">{calls}</Badge>
                     </div>
                   ))}
               </div>
             </Card>
 
-            <Card className="p-4">
-              <h3 className="text-lg font-semibold mb-4">Endpoints Más Lentos</h3>
-              <div className="space-y-2">
+            <Card className="p-3 xs:p-4">
+              <h3 className="text-sm xs:text-base sm:text-lg font-semibold mb-3 xs:mb-4">Endpoints Más Lentos</h3>
+              <div className="space-y-1.5 xs:space-y-2">
                 {Object.entries(metrics.performance.slowestEndpoints)
                   .sort(([, a], [, b]) => b - a)
                   .slice(0, 5)
@@ -384,8 +388,8 @@ export function ObservabilityDashboard() {
         </TabsContent>
 
         {/* Costs Tab */}
-        <TabsContent value="costs" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <TabsContent value="costs" className="space-y-3 xs:space-y-4 mt-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 xs:gap-3 sm:gap-4">
             <Card className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -489,8 +493,8 @@ export function ObservabilityDashboard() {
         </TabsContent>
 
         {/* Users Tab */}
-        <TabsContent value="users" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <TabsContent value="users" className="space-y-3 xs:space-y-4 mt-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 xs:gap-3 sm:gap-4">
             <Card className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -580,8 +584,8 @@ export function ObservabilityDashboard() {
         </TabsContent>
 
         {/* System Tab */}
-        <TabsContent value="system" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <TabsContent value="system" className="space-y-3 xs:space-y-4 mt-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 xs:gap-3 sm:gap-4">
             <Card className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -652,8 +656,8 @@ export function ObservabilityDashboard() {
         </TabsContent>
 
         {/* Database Tab */}
-        <TabsContent value="database" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <TabsContent value="database" className="space-y-3 xs:space-y-4 mt-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 xs:gap-3 sm:gap-4">
             <Card className="p-4">
               <div className="flex items-center justify-between">
                 <div>

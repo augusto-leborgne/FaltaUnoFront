@@ -62,63 +62,64 @@ function MatchCardComponent({
 
   return (
     <div
-      className="bg-white rounded-lg border p-4 hover:shadow-md transition-all cursor-pointer"
+      className="bg-white rounded-xl xs:rounded-2xl border-2 border-gray-100 p-3 xs:p-4 sm:p-5 hover:shadow-lg hover:border-green-200 transition-all cursor-pointer touch-manipulation active:scale-[0.98]"
       onClick={() => match.id && onViewDetails(match.id)}
     >
       {/* Header */}
-      <div className="flex justify-between items-start mb-3">
-        <div className="flex-1">
-          <h3 className="font-bold text-lg">{match.nombreUbicacion || match.nombre_ubicacion}</h3>
-          <p className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-            <MapPin className="w-3 h-3" />
-            {match.direccionUbicacion || match.direccion_ubicacion || "Ubicación sin especificar"}
+      <div className="flex justify-between items-start mb-2.5 xs:mb-3 gap-2">
+        <div className="flex-1 min-w-0">
+          <h3 className="font-bold text-base xs:text-lg sm:text-xl truncate">{match.nombreUbicacion || match.nombre_ubicacion}</h3>
+          <p className="text-xs xs:text-sm text-gray-600 flex items-center gap-1 mt-1 truncate">
+            <MapPin className="w-3 xs:w-3.5 h-3 xs:h-3.5 flex-shrink-0" />
+            <span className="truncate">{match.direccionUbicacion || match.direccion_ubicacion || "Ubicación sin especificar"}</span>
           </p>
         </div>
         
         {/* Cupos Badge */}
-        <Badge className={`${getCuposColor()} text-white`}>
+        <Badge className={`${getCuposColor()} text-white text-xs xs:text-sm font-bold whitespace-nowrap flex-shrink-0`}>
           {getDisponibilidadText()}
         </Badge>
       </div>
 
       {/* Info Row */}
-      <div className="flex flex-wrap gap-2 mb-3 text-sm text-gray-600">
-        <div className="flex items-center gap-1">
-          <Calendar className="w-4 h-4" />
-          <span>{fechaFormateada}</span>
+      <div className="flex flex-wrap gap-2 xs:gap-2.5 mb-2.5 xs:mb-3 text-xs xs:text-sm text-gray-600">
+        <div className="flex items-center gap-1 xs:gap-1.5">
+          <Calendar className="w-3.5 xs:w-4 h-3.5 xs:h-4 flex-shrink-0" />
+          <span className="font-medium">{fechaFormateada}</span>
         </div>
-        <div className="flex items-center gap-1">
-          <Clock className="w-4 h-4" />
-          <span>{match.hora}</span>
+        <div className="flex items-center gap-1 xs:gap-1.5">
+          <Clock className="w-3.5 xs:w-4 h-3.5 xs:h-4 flex-shrink-0" />
+          <span className="font-medium">{match.hora}</span>
         </div>
-        <div className="flex items-center gap-1">
-          <Users className="w-4 h-4" />
-          <span>{tipoFormateado}</span>
+        <div className="flex items-center gap-1 xs:gap-1.5">
+          <Users className="w-3.5 xs:w-4 h-3.5 xs:h-4 flex-shrink-0" />
+          <span className="font-medium">{tipoFormateado}</span>
         </div>
       </div>
 
       {/* Tags */}
-      <div className="flex flex-wrap gap-2 mb-3">
-        <Badge variant="outline">{match.nivel || "Intermedio"}</Badge>
-        <Badge variant="outline">{match.genero || "Mixto"}</Badge>
+      <div className="flex flex-wrap gap-1.5 xs:gap-2 mb-3 xs:mb-3.5">
+        <Badge variant="outline" className="text-xs xs:text-sm font-semibold">{match.nivel || "Intermedio"}</Badge>
+        <Badge variant="outline" className="text-xs xs:text-sm font-semibold">{match.genero || "Mixto"}</Badge>
         {(match.precioTotal || match.precio_total) && cantidadJugadores > 0 && (
-          <Badge variant="outline">
+          <Badge variant="outline" className="text-xs xs:text-sm font-semibold">
             ${(((match.precioTotal || match.precio_total || 0) / cantidadJugadores).toFixed(0))} p/p
           </Badge>
         )}
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+      <div className="flex gap-2 xs:gap-2.5" onClick={(e) => e.stopPropagation()}>
         {estaInscrito ? (
           <>
-            <Button size="sm" variant="outline" className="flex-1" disabled>
+            <Button size="sm" variant="outline" className="flex-1 min-h-[44px] text-xs xs:text-sm font-semibold" disabled>
               ✓ Inscrito
             </Button>
             {onCancel && match.id && (
               <Button
                 size="sm"
                 variant="destructive"
+                className="min-h-[44px] text-xs xs:text-sm font-semibold"
                 onClick={() => onCancel(match.id!)}
               >
                 Cancelar
@@ -126,18 +127,18 @@ function MatchCardComponent({
             )}
           </>
         ) : tieneSolicitud ? (
-          <Button size="sm" variant="outline" className="flex-1" disabled>
+          <Button size="sm" variant="outline" className="flex-1 min-h-[44px] text-xs xs:text-sm font-semibold" disabled>
             Solicitud Pendiente
           </Button>
         ) : estaLleno ? (
-          <Button size="sm" variant="outline" className="flex-1" disabled>
+          <Button size="sm" variant="outline" className="flex-1 min-h-[44px] text-xs xs:text-sm font-semibold" disabled>
             Completo
           </Button>
         ) : (
           onJoin && match.id && (
             <Button
               size="sm"
-              className="flex-1"
+              className="flex-1 min-h-[44px] text-xs xs:text-sm font-semibold"
               onClick={() => onJoin(match.id!)}
             >
               Unirse
@@ -148,6 +149,7 @@ function MatchCardComponent({
           <Button
             size="sm"
             variant="outline"
+            className="min-h-[44px] min-w-[64px] text-xs xs:text-sm font-semibold"
             onClick={() => onViewDetails(match.id!)}
           >
             Ver

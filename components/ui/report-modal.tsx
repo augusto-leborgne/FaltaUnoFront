@@ -107,52 +107,52 @@ export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName,
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 xs:p-4 sm:p-6 bg-black/50">
-      <div className="bg-white rounded-xl xs:rounded-2xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 xs:p-5 sm:p-6 bg-black/50 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 xs:p-5 sm:p-6 border-b">
-          <div className="flex items-center space-x-2 xs:space-x-3 min-w-0 flex-1">
-            <div className="w-8 xs:w-9 sm:w-10 h-8 xs:h-9 sm:h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-              <AlertTriangle className="w-4 xs:w-4.5 sm:w-5 h-4 xs:h-4.5 sm:h-5 text-red-600" />
+        <div className="flex items-center justify-between p-4 xs:p-5 sm:p-6 border-b sticky top-0 bg-white z-10">
+          <div className="flex items-center space-x-2.5 xs:space-x-3 min-w-0 flex-1">
+            <div className="w-9 xs:w-10 h-9 xs:h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+              <AlertTriangle className="w-5 xs:w-5.5 h-5 xs:h-5.5 text-red-600" />
             </div>
             <div className="min-w-0 flex-1">
-              <h2 className="text-sm xs:text-base sm:text-lg md:text-base font-bold text-gray-900 truncate">Reportar usuario</h2>
+              <h2 className="text-base xs:text-lg font-bold text-gray-900 truncate">Reportar usuario</h2>
               <p className="text-xs xs:text-sm text-gray-600 truncate">{reportedUserName}</p>
             </div>
           </div>
           <button
             onClick={handleClose}
             disabled={loading}
-            className="p-2 xs:p-2.5 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50 flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
+            className="p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-full transition-colors disabled:opacity-50 flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation"
           >
-            <X className="w-4 xs:w-5 h-4 xs:h-5" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {success ? (
-          <div className="p-6 xs:p-8 text-center">
-            <div className="w-14 xs:w-16 h-14 xs:h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 xs:mb-4">
-              <svg className="w-7 xs:w-8 h-7 xs:h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="p-8 xs:p-10 text-center">
+            <div className="w-16 xs:w-20 h-16 xs:h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 xs:w-10 h-8 xs:h-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h3 className="text-base xs:text-lg md:text-base font-bold text-gray-900 mb-1.5 xs:mb-2">Reporte enviado</h3>
-            <p className="text-xs xs:text-sm sm:text-base text-gray-600">
+            <h3 className="text-lg xs:text-xl font-bold text-gray-900 mb-2">Reporte enviado</h3>
+            <p className="text-sm xs:text-base text-gray-600 leading-relaxed">
               Gracias por ayudarnos a mantener la comunidad segura. Revisaremos este reporte.
             </p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="p-4 xs:p-5 sm:p-6 space-y-3 xs:space-y-4">
+          <form onSubmit={handleSubmit} className="p-4 xs:p-5 sm:p-6 space-y-4">
             {/* Reason Selection */}
             <div>
-              <label className="block text-xs xs:text-sm font-medium text-gray-900 mb-1.5 xs:mb-2">
+              <label className="block text-sm xs:text-base font-semibold text-gray-900 mb-2">
                 Motivo del reporte <span className="text-red-500">*</span>
               </label>
               <select
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 disabled={loading}
-                className="w-full px-3 xs:px-4 py-2.5 xs:py-3 text-sm xs:text-base border border-gray-300 rounded-lg xs:rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50 min-h-[48px]"
+                className="w-full px-4 py-3 text-sm xs:text-base border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary disabled:opacity-50 min-h-[52px] bg-white font-medium"
                 required
               >
                 <option value="">Selecciona un motivo</option>
@@ -166,7 +166,7 @@ export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName,
 
             {/* Description */}
             <div>
-              <label className="block text-xs xs:text-sm font-medium text-gray-900 mb-1.5 xs:mb-2">
+              <label className="block text-sm xs:text-base font-semibold text-gray-900 mb-2">
                 Descripción <span className="text-red-500">*</span>
               </label>
               <textarea
@@ -174,19 +174,19 @@ export function ReportModal({ isOpen, onClose, reportedUserId, reportedUserName,
                 onChange={(e) => setDescription(e.target.value)}
                 disabled={loading}
                 rows={4}
-                className="w-full px-3 xs:px-4 py-2.5 xs:py-3 text-sm xs:text-base border border-gray-300 rounded-lg xs:rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent resize-none disabled:opacity-50"
+                className="w-full px-4 py-3 text-sm xs:text-base border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary resize-none disabled:opacity-50 bg-white font-medium leading-relaxed"
                 placeholder="Describe el motivo del reporte (mínimo 10 caracteres)..."
                 required
                 minLength={10}
               />
-              <p className="text-[10px] xs:text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 mt-1.5 font-medium">
                 {description.length}/200 caracteres
               </p>
             </div>
 
             {/* Info */}
-            <div className="bg-amber-50 border border-amber-200 rounded-lg xs:rounded-xl p-3 xs:p-4">
-              <p className="text-[10px] xs:text-xs text-amber-800">
+            <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4">
+              <p className="text-xs xs:text-sm text-amber-900 leading-relaxed font-medium">
                 • Los reportes son anónimos
                 <br />
                 • Puedes hacer máximo 5 reportes por mes

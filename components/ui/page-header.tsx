@@ -34,29 +34,29 @@ export function PageHeader({
   }
 
   return (
-    <div className="w-full pt-6 xs:pt-8 sm:pt-10 md:pt-12 pb-3 sm:pb-4 md:pb-5 px-3 sm:px-4 md:px-6 border-b border-gray-100 bg-white safe-top">
-      <div className="flex items-center justify-between gap-3">
+    <div className="w-full pt-4 xs:pt-6 sm:pt-8 md:pt-10 pb-3 xs:pb-3.5 sm:pb-4 md:pb-5 px-3 xs:px-4 sm:px-5 md:px-6 border-b border-gray-100 bg-white safe-top">
+      <div className="flex items-center justify-between gap-2 xs:gap-3">
         <div className="flex items-center gap-2 xs:gap-3 flex-1 min-w-0">
           {showBack && (
             <button
               onClick={handleBack}
-              className="p-2 xs:p-2.5 hover:bg-gray-100 active:bg-gray-200 rounded-lg xs:rounded-xl transition-colors touch-manipulation min-w-[40px] xs:min-w-[44px] sm:min-w-[48px] min-h-[40px] xs:min-h-[44px] sm:min-h-[48px] flex items-center justify-center active:scale-95 flex-shrink-0"
+              className="p-2.5 xs:p-3 hover:bg-gray-100 active:bg-gray-200 rounded-lg xs:rounded-xl transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center active:scale-95 flex-shrink-0"
               aria-label="Volver"
             >
-              <ArrowLeft className="w-5 h-5 xs:w-5.5 xs:h-5.5 sm:w-6 sm:h-6 text-gray-700" />
+              <ArrowLeft className="w-5 h-5 xs:w-5.5 sm:w-6 text-gray-700" />
             </button>
           )}
           
-          <div className="flex items-center gap-2 flex-1 min-w-0">
+          <div className="flex items-center gap-2 xs:gap-2.5 flex-1 min-w-0">
             {Icon && (
-              <div className="w-8 h-8 xs:w-9 xs:h-9 sm:w-10 sm:h-10 bg-green-100 rounded-lg xs:rounded-xl flex items-center justify-center flex-shrink-0">
-                <Icon className="w-4 h-4 xs:w-5 xs:h-5 sm:w-5.5 sm:h-5.5 text-green-600" />
+              <div className="w-9 xs:w-10 sm:w-11 h-9 xs:h-10 sm:h-11 bg-green-100 rounded-lg xs:rounded-xl flex items-center justify-center flex-shrink-0">
+                <Icon className="w-5 xs:w-5.5 sm:w-6 h-5 xs:h-5.5 sm:h-6 text-green-600" />
               </div>
             )}
             
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <h1 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold text-gray-900 truncate">
+                <h1 className="text-lg xs:text-xl sm:text-2xl font-bold text-gray-900 truncate">
                   {title}
                 </h1>
                 {badge}
