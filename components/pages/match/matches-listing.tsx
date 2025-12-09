@@ -2,14 +2,14 @@
 
 
 import { logger } from '@/lib/logger'
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { MapPin, Plus, Filter, X, AlertCircle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { BottomNavigation } from "@/components/ui/bottom-navigation"
 import { AuthService } from "@/lib/auth"
-import { MatchesMapView } from "@/components/google-maps/matches-map-view"
+import { MatchesMapViewEnhanced } from "@/components/google-maps/matches-map-view-enhanced"
 import { LoadingSpinner } from "@/components/ui/loading-spinner"
 import { PageContainer, PageContent } from "@/components/ui/page-container"
 import { PageHeader } from "@/components/ui/page-header"
@@ -30,6 +30,7 @@ export function MatchesListing() {
 
   // Estados
   const [matches, setMatches] = useState<PartidoDTO[]>([])
+  const [visibleMatches, setVisibleMatches] = useState<PartidoDTO[]>([]) // Partidos visibles en el mapa
   const [loading, setLoading] = useState(false) // Cambiar a false para mostrar UI inmediatamente
   const [error, setError] = useState("")
   const [selectedFilters, setSelectedFilters] = useState<string[]>([])
@@ -37,6 +38,7 @@ export function MatchesListing() {
   const [selectedMatchId, setSelectedMatchId] = useState<string | undefined>()
   const [userInscriptions, setUserInscriptions] = useState<Map<string, { estado: InscripcionEstado | null }>>(new Map())
   const [initialLoad, setInitialLoad] = useState(true) // Nuevo: detectar primera carga
+  const [userLocation, setUserLocation] = useState<{ lat: number, lng: number } | undefined>()
 
   // Filtros rápidos
   const quickFilters = [
@@ -79,6 +81,7 @@ export function MatchesListing() {
 
   useEffect(() => {
     loadMatches()
+    loadUserLocation()
 
     // Recargar cuando el usuario vuelve a la pantalla
     const handleFocus = () => {
@@ -90,6 +93,13 @@ export function MatchesListing() {
     window.addEventListener('focus', handleFocus)
     return () => window.removeEventListener('focus', handleFocus)
   }, [selectedFilters])
+
+  // Inicializar visibleMatches con todos los matches al cargar
+  useEffect(() => {
+    if (matches.length > 0 && visibleMatches.length === 0) {
+      setVisibleMatches(matches)
+    }
+  }, [matches])
 
   // ============================================
   // FUNCIONES DE CARGA
@@ -178,6 +188,26 @@ export function MatchesListing() {
     } finally {
       setLoading(false)
       setInitialLoad(false)
+    }
+  }
+
+  // Cargar ubicación del usuario (barrio)
+  const loadUserLocation = async () => {
+    try {
+      const user = AuthService.getUser()
+      if (!user?.id) return
+
+      // TODO: Obtener ubicación del perfil del usuario desde backend
+      // Por ahora usar Montevideo centro como fallback
+      // Cuando tengas el endpoint de perfil, descomentar:
+      // const profile = await UsuarioAPI.getProfile(user.id)
+      // if (profile.latitud && profile.longitud) {
+      //   setUserLocation({ lat: Number(profile.latitud), lng: Number(profile.longitud) })
+      // }
+      
+      logger.log('[MatchesListing] Ubicación del usuario cargada')
+    } catch (err) {
+      logger.error('[MatchesListing] Error cargando ubicación del usuario:', err)
     }
   }
 
@@ -300,11 +330,12 @@ export function MatchesListing() {
 
         {/* Search and Filters */}
         <div className="px-2 xs:px-3 sm:px-4 md:px-6 md:px-8 pt-3 xs:pt-4 sm:pt-5 pb-2.5 xs:pb-3 sm:pb-4">
-          {/* Interactive Map - Responsive height */}
-          <MatchesMapView
+          {/* Interactive Map - Responsive height - Estilo Airbnb */}
+          <MatchesMapViewEnhanced
             matches={matches}
             selectedMatchId={selectedMatchId}
-            currentUserId={AuthService.getUser()?.id} // NUEVO: Pasar ID del usuario
+            currentUserId={AuthService.getUser()?.id}
+            userLocation={userLocation}
             onMarkerClick={(matchId) => {
               const match = matches.find(m => m.id === matchId)
               const currentUser = AuthService.getUser()
@@ -317,6 +348,11 @@ export function MatchesListing() {
                 setSelectedMatchId(matchId)
                 router.push(`/matches/${matchId}`)
               }
+            }}
+            onBoundsChange={(visible) => {
+              // Actualizar partidos visibles cuando el mapa se mueva
+              setVisibleMatches(visible)
+              logger.debug('[MatchesListing] Partidos visibles:', visible.length)
             }}
             className="h-[220px] xs:h-[250px] sm:h-[300px] md:h-[350px] mb-3 xs:mb-4 sm:mb-6 rounded-lg xs:rounded-xl sm:rounded-2xl overflow-hidden shadow-md"
           />
@@ -402,22 +438,24 @@ export function MatchesListing() {
           )}
         </div>
 
-        {/* Matches List - Better mobile spacing */}
+        {/* Matches List - Better mobile spacing - Solo partidos visibles en mapa */}
         <div className="px-2 xs:px-3 sm:px-4 md:px-6 md:px-8 pb-18 xs:pb-20 sm:pb-22 md:pb-24">
           {loading ? (
             <div className="text-center py-12">
               <LoadingSpinner size="lg" variant="green" text="Cargando partidos..." />
             </div>
-          ) : matches.length === 0 ? (
+          ) : visibleMatches.length === 0 ? (
             <div className="text-center py-10 xs:py-12 sm:py-16">
               <div className="w-14 xs:w-16 sm:w-20 h-14 xs:h-16 sm:h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 xs:mb-4">
                 <MapPin className="w-7 xs:w-8 sm:w-10 h-7 xs:h-8 sm:h-10 text-gray-400" />
               </div>
-              <p className="text-gray-700 font-medium mb-2 text-xs xs:text-sm sm:text-base md:text-lg">No se encontraron partidos</p>
+              <p className="text-gray-700 font-medium mb-2 text-xs xs:text-sm sm:text-base md:text-lg">No hay partidos en esta zona</p>
               <p className="text-xs xs:text-sm sm:text-base text-gray-500 mb-5 xs:mb-6 px-3 xs:px-4">
-                {selectedFilters.length > 0
-                  ? "Intenta ajustar los filtros"
-                  : "Crea un nuevo partido"}
+                {matches.length > 0
+                  ? "Mueve el mapa para ver otros partidos"
+                  : selectedFilters.length > 0
+                    ? "Intenta ajustar los filtros"
+                    : "Crea un nuevo partido"}
               </p>
               <Button
                 onClick={selectedFilters.length > 0 ? clearFilters : handleCreateMatch}
@@ -435,7 +473,7 @@ export function MatchesListing() {
             </div>
           ) : (
             <div className="space-y-2.5 xs:space-y-3 sm:space-y-4">
-              {matches.map((match) => {
+              {visibleMatches.map((match) => {
                 const spotsLeft = (match.cantidadJugadores ?? 0) - (match.jugadoresActuales ?? 0)
 
                 return (
